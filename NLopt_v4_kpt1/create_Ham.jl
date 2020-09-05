@@ -1,3 +1,18 @@
+function create_Ham_O2()
+    atoms = Atoms(xyz_string=
+        """
+        2
+        
+        O       0.622978       0.00000000       0.00000000
+        O      -0.622978       0.00000000       0.00000000
+        """, LatVecs=gen_lattice_sc(16.0))
+    pspfiles = [joinpath(DIR_PSP, "O-q6.gth")]
+    ecutwfc = 15.0
+    return Hamiltonian( atoms, pspfiles, ecutwfc, extra_states=4 )
+end
+
+
+
 function create_Ham_atom(atsymb::String, pspfile::String)
     atoms = Atoms(xyz_string_frac=
         """

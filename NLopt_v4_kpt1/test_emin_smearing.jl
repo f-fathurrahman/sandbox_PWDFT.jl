@@ -39,8 +39,14 @@ function main_scf(Ham::Hamiltonian; kT=0.01)
     print_ebands(Ham.electrons, Ham.pw.gvecw.kpoints)
 end
 
+#main(create_Ham_O2(), kT=0.01)
+main_scf(create_Ham_O2(), kT=0.01)
+
+#main(create_Ham_atom("Ni", "Ni-q10.gth"), kT=0.01)
+#main_scf(create_Ham_atom("Ni", "Ni-q10.gth"), kT=0.01)
+
 #main(create_Ham_atom("Co", "Co-q9.gth"), kT=0.01)
-main_scf(create_Ham_atom("Co", "Co-q9.gth"), kT=0.01)
+#main_scf(create_Ham_atom("Co", "Co-q9.gth"), kT=0.01)
 
 #main(create_Ham_atom_Al_smearing(), kT=0.001)
 #main_scf(create_Ham_atom_Al_smearing(), kT=0.001)
