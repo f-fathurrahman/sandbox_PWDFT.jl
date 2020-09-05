@@ -1,5 +1,10 @@
-function KS_solve_Emin_SD_Haux!( Ham::Hamiltonian, evars::ElecVars;
-    etot_conv_thr=1e-6, skip_initial_diag=false, startingrhoe=:gaussian, NiterMax=100, kT=0.01
+function KS_solve_Emin_SD_Haux!(
+    Ham::Hamiltonian, evars::ElecVars;
+    etot_conv_thr=1e-6,
+    skip_initial_diag=false,
+    startingrhoe=:gaussian,
+    NiterMax=100,
+    kT=0.01
 )
 
     Nstates = Ham.electrons.Nstates

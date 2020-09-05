@@ -71,9 +71,9 @@ function calc_energies_grad!(
 
     dmuContrib = sum(dmuNum)/sum(dmuDen)
     dBzContrib = 0.0 # not used
-    println("fprime     = ", fprime)
-    println("fprimeNum  = ", fprimeNum)
-    println("dmuContrib = ", dmuContrib)
+    #println("fprime     = ", fprime)
+    #println("fprimeNum  = ", fprimeNum)
+    #println("dmuContrib = ", dmuContrib)
 
     gradF0 = zeros(ComplexF64,Nstates,Nstates)
     gradF = zeros(ComplexF64,Nstates,Nstates)
