@@ -34,7 +34,7 @@ function G_to_R!( pw::PWGridGamma, fG::Array{ComplexF64,1} )
     Ns = pw.Ns
     Npoints = prod(Ns)
     plan = pw.planbw
-    fG[:] = reshape( plan*reshape(fG[:],Ns), Npoints )
+    @views fG[:] = reshape( plan*reshape(fG[:],Ns), Npoints )
     return
 end
 
@@ -97,7 +97,7 @@ function R_to_G!( pw::PWGridGamma, fR::Array{ComplexF64,1} )
     Ns = pw.Ns
     plan = pw.planfw
     Npoints = prod(Ns)
-    fR[:] = reshape( plan*reshape(fR[:],Ns), Npoints )
+    @views fR[:] = reshape( plan*reshape(fR[:],Ns), Npoints )
     return
 end
 

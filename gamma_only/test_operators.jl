@@ -62,10 +62,14 @@ function test_01()
                 joinpath(DIR_PSP, "H-q1.gth")]
 
     # Initialize Hamiltonian
-    ecutwfc = 30.0
+    ecutwfc = 50.0
     Ham = HamiltonianGamma( atoms, pspfiles, ecutwfc )
 
     Ham_ = Hamiltonian( atoms, pspfiles, ecutwfc )
+
+    # Compare the size of Hamiltonian
+    println("Size Ham gamma   = ", Base.summarysize(Ham) /1024/1024)
+    println("Size Ham (usual) = ", Base.summarysize(Ham_)/1024/1024)
 
     psis = randn_BlochWavefuncGamma(Ham)
     ortho_check(psis)

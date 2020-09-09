@@ -15,7 +15,16 @@ function op_V_loc( Ham::HamiltonianGamma, psis::BlochWavefuncGamma )
 
 end
 
+# apply V_Ps_loc, Hartree, and XC potentials
+function op_V_loc( Ham::HamiltonianGamma, psi::Array{ComplexF64,2} )
+    ispin = Ham.ispin
+    V_loc = @view Ham.potentials.Total[:,ispin]
+    return op_V_loc( Ham.pw, V_loc, psi )
+end
 
+#
+# only apply V_Ps_loc
+#
 function op_V_Ps_loc( Ham::Hamiltonian, psis::BlochWavefuncGamma )
 
     Nstates = size(psis.data[1],2) # Nstates should be similar for all Bloch states
@@ -31,22 +40,14 @@ function op_V_Ps_loc( Ham::Hamiltonian, psis::BlochWavefuncGamma )
 
 end
 
-
-# apply V_Ps_loc, Hartree, and XC potentials
-function op_V_loc( Ham::HamiltonianGamma, psi::Array{ComplexF64,2} )
-    ispin = Ham.ispin
-    V_loc = @view Ham.potentials.Total[:,ispin]
-    return op_V_loc( Ham.pw, V_loc, psi )
-end
-
-# only apply V_Ps_loc
 function op_V_Ps_loc( Ham::HamiltonianGamma, psi::Array{ComplexF64,2} )
     return op_V_loc( Ham.pw, Ham.potentials.Ps_loc, psi )
 end
 
+
+#
 # apply general V_loc
-# ik must be given to get information about
-# mapping between psi in G-space to real space
+#
 function op_V_loc( pw::PWGridGamma, V_loc, psi::Array{ComplexF64,2} )
 
     Ns = pw.Ns
@@ -62,7 +63,8 @@ function op_V_loc( pw::PWGridGamma, V_loc, psi::Array{ComplexF64,2} )
     Vpsi = zeros(ComplexF64, Ngw, Nstates)
 
     for ist in 1:Nstates
-        ctmp .= 0.0 + im*0.0
+        #ctmp .= 0.0 + im*0.0
+        fill!(ctmp, 0.0 + im*0.0)
         ctmp[1] = psi[1,ist]
         for igw in 2:Ngw
             idx = idx_gw2r[igw]
