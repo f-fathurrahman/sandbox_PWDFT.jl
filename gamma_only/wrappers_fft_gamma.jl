@@ -25,7 +25,7 @@ function G_to_R( pw::PWGridGamma, fG::Array{ComplexF64,2} )
     plan = pw.planbw
     out = zeros( ComplexF64, size(fG) )
     for ic = 1:size(fG,2)
-        out[:,ic] = reshape( plan*reshape(fG[:,ic],Ns), Npoints )
+        @views out[:,ic] = reshape( plan*reshape(fG[:,ic],Ns), Npoints )
     end
     return out
 end
@@ -43,7 +43,7 @@ function G_to_R!( pw::PWGridGamma, fG::Array{ComplexF64,2} )
     Npoints = prod(Ns)
     plan = pw.planbw
     for ic = 1:size(fG,2)
-        fG[:,ic] = reshape( plan*reshape(fG[:,ic],Ns), Npoints )
+        @views fG[:,ic] = reshape( plan*reshape(fG[:,ic],Ns), Npoints )
     end
     return
 end
@@ -77,7 +77,7 @@ function R_to_G( pw::PWGridGamma, fR::Array{ComplexF64,2} )
     Ncol = size(fR,2)
     out = zeros( ComplexF64, size(fR) )
     for ic = 1:Ncol
-        out[:,ic] = reshape( plan*reshape(fR[:,ic],Ns), Npoints )
+        @views out[:,ic] = reshape( plan*reshape(fR[:,ic],Ns), Npoints )
     end
     return out
 end
@@ -88,7 +88,7 @@ function R_to_G!( pw::PWGridGamma, fR::Array{ComplexF64,2} )
     Npoints = prod(Ns)
     Ncol = size(fR,2)
     for ic = 1:Ncol
-        fR[:,ic] = reshape( plan*reshape(fR[:,ic],Ns), Npoints )
+        @views fR[:,ic] = reshape( plan*reshape(fR[:,ic],Ns), Npoints )
     end
     return
 end
@@ -120,7 +120,7 @@ function G_to_R( Ns::Tuple{Int64,Int64,Int64}, fG::Array{ComplexF64,2} )
     Npoints = prod(Ns)
     out = zeros( ComplexF64, size(fG) ) # Is this safe?
     for ic = 1:size(fG)[2]
-        out[:,ic] = reshape( ifft( reshape(fG[:,ic],Ns) ), Npoints )
+        @views out[:,ic] = reshape( ifft( reshape(fG[:,ic],Ns) ), Npoints )
     end
     return out
 end
@@ -145,7 +145,7 @@ function R_to_G( Ns::Tuple{Int64,Int64,Int64}, fR::Array{ComplexF64,2} )
     Ncol = size(fR)[2]
     out = zeros( ComplexF64, size(fR) )
     for ic = 1:Ncol
-        out[:,ic] = reshape( fft( reshape(fR[:,ic],Ns) ), Npoints )
+        @views out[:,ic] = reshape( fft( reshape(fR[:,ic],Ns) ), Npoints )
     end
     return out
 end
