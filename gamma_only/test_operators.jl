@@ -111,8 +111,6 @@ function test_01()
     println("Using dot_BlochWavefuncGamma: ", s2)
     println("diff: ", s1-s2, " (should be small)")
 
-
-
     println("\ndot the different wavefunc")
     #
     @time s1 = dot(psiks,psiks2)
@@ -124,20 +122,24 @@ function test_01()
     println("Using dot_BlochWavefuncGamma: ", s2)
     println("diff: ", s1-s2, " (should be small)")
 
+    println("\nCompare calc_rhoe:")
+    #
     println("Using Gamma-point trick")
     Rhoe = calc_rhoe(Ham, psis); print("time calc_rhoe: ")
     @time Rhoe = calc_rhoe(Ham, psis)
-
+    #
     println("Using usual kpt")
     Rhoe_ = calc_rhoe(Ham_, psiks); print("time calc_rhoe: ")
     @time Rhoe = calc_rhoe(Ham_, psiks)
 
+
     update!(Ham, Rhoe)
     update!(Ham_, Rhoe_)
-
     #compare_potentials(Ham, Ham_)
 
+    #
     # Compare the result of applying operators
+    #
 
     println("\nCompare op_K result")
     #

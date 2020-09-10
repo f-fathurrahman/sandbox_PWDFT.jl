@@ -62,14 +62,18 @@ function main(molname; gamma_only=true)
 
 end
 
-#main(joinpath(DIR_STRUCTURES, "DATA_G2_mols", "H2O.xyz"))
-#main(joinpath(DIR_STRUCTURES, "DATA_G2_mols", "NH3.xyz"))
-#main(joinpath(DIR_STRUCTURES, "DATA_G2_mols", "SiH4.xyz"))
 
-main("N2H4", gamma_only=true)
-main("N2H4", gamma_only=false)
+function main()
+    Nargs = length(ARGS)
+    if Nargs >= 1
+        molname = ARGS[1]
+    else
+        molname = "H2O"
+    end
+    for i in 1:2
+        main(molname, gamma_only=true)
+        main(molname, gamma_only=false)
+    end
+end
 
-main("N2H4", gamma_only=true)
-main("N2H4", gamma_only=false)
-
-#main(joinpath(DIR_STRUCTURES, "DATA_G2_mols", "CO2.xyz"))
+main()
