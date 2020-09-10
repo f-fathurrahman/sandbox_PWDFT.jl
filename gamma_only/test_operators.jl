@@ -124,8 +124,13 @@ function test_01()
     println("Using dot_BlochWavefuncGamma: ", s2)
     println("diff: ", s1-s2, " (should be small)")
 
-    Rhoe = calc_rhoe(Ham, psis)
-    Rhoe_ = calc_rhoe(Ham_, psiks)
+    println("Using Gamma-point trick")
+    Rhoe = calc_rhoe(Ham, psis); print("time calc_rhoe: ")
+    @time Rhoe = calc_rhoe(Ham, psis)
+
+    println("Using usual kpt")
+    Rhoe_ = calc_rhoe(Ham_, psiks); print("time calc_rhoe: ")
+    @time Rhoe = calc_rhoe(Ham_, psiks)
 
     update!(Ham, Rhoe)
     update!(Ham_, Rhoe_)
