@@ -15,7 +15,7 @@ function calc_rhoe!(
     Npoints = prod(Ns)
     Nstates = size(psis.data[1],2)
 
-    psiR = zeros(ComplexF64, Npoints)
+    psiR = zeros(ComplexF64, Ns)
 
     # dont forget to zero out the Rhoe first
     fill!(Rhoe, 0.0)

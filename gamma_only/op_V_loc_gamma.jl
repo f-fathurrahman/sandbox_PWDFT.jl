@@ -59,7 +59,7 @@ function op_V_loc( pw::PWGridGamma, V_loc, psi::Array{ComplexF64,2} )
     idx_gw2rm = pw.gvecw.idx_gw2rm
     Ngw = pw.gvecw.Ngw
 
-    ctmp = zeros(ComplexF64, Npoints) # reduce memory requirement
+    ctmp = zeros(ComplexF64, Ns) # reduce memory requirement
     Vpsi = zeros(ComplexF64, Ngw, Nstates)
 
     for ist in 1:Nstates
@@ -111,7 +111,7 @@ function op_V_loc( pw::PWGridGamma, V_loc, psi::Array{ComplexF64,1} )
     Ns = pw.Ns
     CellVolume  = pw.CellVolume
     Npoints = prod(Ns)
-    ctmp = zeros(ComplexF64, Npoints)
+    ctmp = zeros(ComplexF64, Ns)
     
     idx_gw2r = pw.gvecw.idx_gw2r
     idx_gw2rm = pw.gvecw.idx_gw2rm
