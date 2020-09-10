@@ -99,7 +99,7 @@ function calc_grad!( Ham::Hamiltonian, ψ::Array{ComplexF64,2}, g::Array{Complex
     Hsub = ψ' * Hψ
     Hψ = Hψ - ψ*Hsub
     for ist in 1:Nstates
-        g[:,ist] = wk_ik * Focc[ist,ikspin] * Hψ[:,ist]
+        @views g[:,ist] = wk_ik * Focc[ist,ikspin] * Hψ[:,ist]
     end
     return
 end
@@ -122,7 +122,7 @@ function calc_grad!( Ham::Hamiltonian, ψ::Array{ComplexF64,2}, g::Array{Complex
     Hsub[:] = ψ' * Hψ
     Hψ = Hψ - ψ*Hsub
     for ist in 1:Nstates
-        g[:,ist] = wk_ik * Focc[ist,ikspin] * Hψ[:,ist]
+        @views g[:,ist] = wk_ik * Focc[ist,ikspin] * Hψ[:,ist]
     end
 
     return
