@@ -36,12 +36,13 @@ include("linmin_grad_gamma.jl")
 
 include("unfold_BlochWavefuncGamma.jl")
 
-include(joinpath(DIR_PWDFT, "sandbox", "get_default_psp.jl"))
+include("../get_default_psp.jl")
 
-function main(filename)
+function main(molname; gamma_only=true)
 
     Random.seed!(1234)
 
+    filename = joinpath(DIR_STRUCTURES, "DATA_G2_mols", molname*".xyz")
     atoms = Atoms(ext_xyz_file=filename)
     pspfiles = get_default_psp(atoms)
     
@@ -49,18 +50,26 @@ function main(filename)
     
     Ham = HamiltonianGamma(atoms, pspfiles, ecutwfc )
     psis = randn_BlochWavefuncGamma(Ham)
-    @time KS_solve_Emin_PCG_dot!( Ham, psis, NiterMax=200 )
     
-    #Ham_ = Hamiltonian( atoms, pspfiles, ecutwfc, use_symmetry=false )
-    #psiks = unfold_BlochWavefuncGamma( Ham.pw, Ham_.pw, psis )
-    #@time KS_solve_Emin_PCG_dot!( Ham_, psiks, startingrhoe=:random, skip_initial_diag=true, NiterMax=200 )
-    #@time KS_solve_Emin_PCG!( Ham_, psiks, startingrhoe=:random, skip_initial_diag=true )
-    #@time KS_solve_Emin_PCG!( Ham_, psiks )
+    if gamma_only
+        @time KS_solve_Emin_PCG_dot!( Ham, psis, NiterMax=200 )
+    else
+        Ham_ = Hamiltonian( atoms, pspfiles, ecutwfc, use_symmetry=false )
+        psiks = unfold_BlochWavefuncGamma( Ham.pw, Ham_.pw, psis )
+        @time KS_solve_Emin_PCG_dot!( Ham_, psiks, startingrhoe=:random,
+            skip_initial_diag=true, NiterMax=200 )
+    end
 
 end
 
 #main(joinpath(DIR_STRUCTURES, "DATA_G2_mols", "H2O.xyz"))
 #main(joinpath(DIR_STRUCTURES, "DATA_G2_mols", "NH3.xyz"))
 #main(joinpath(DIR_STRUCTURES, "DATA_G2_mols", "SiH4.xyz"))
-#main(joinpath(DIR_STRUCTURES, "DATA_G2_mols", "N2H4.xyz"))
-main(joinpath(DIR_STRUCTURES, "DATA_G2_mols", "CO2.xyz"))
+
+main("N2H4", gamma_only=true)
+main("N2H4", gamma_only=false)
+
+main("N2H4", gamma_only=true)
+main("N2H4", gamma_only=false)
+
+#main(joinpath(DIR_STRUCTURES, "DATA_G2_mols", "CO2.xyz"))
