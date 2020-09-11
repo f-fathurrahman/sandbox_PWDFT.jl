@@ -1,4 +1,4 @@
-using CuArrays
+using CUDA
 using FFTW
 
 #CuArrays.allowscalar(false)
