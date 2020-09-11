@@ -117,7 +117,7 @@ function update!( Ham::HamiltonianGamma, Rhoe::Array{Float64,2} )
     # Copy Rhoe
     Ham.rhoe[:] = Rhoe[:]
 
-    Ham.potentials.Hartree = real( G_to_R( Ham.pw, Poisson_solve(Ham.pw, Rhoe) ) )
+    Poisson_solve!( Ham.pw, Ham.rhoe, Ham.potentials.Hartree )
     
     if Ham.xcfunc == "PBE"
         Ham.potentials.XC[:] = calc_Vxc_PBE( Ham.xc_calc, Ham.pw, Rhoe )

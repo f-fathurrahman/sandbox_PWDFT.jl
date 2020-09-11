@@ -70,7 +70,10 @@ function test_main( ecutwfc_Ry::Float64 )
     #
     # Calculate Ehartree using reciprocal space
     #
-    rhoG = R_to_G( pw, rho[:] ) / Npoints  # XXX normalize by Npoints
+    rhoG = zeros(ComplexF64,Ns)
+    rhoG[:] = rho[:]
+    R_to_G!(pw, rhoG)
+    rhoG[:] = rhoG[:]/Npoints  # XXX normalize by Npoints
     EhartreeG = 0.0
     Ng = pw.gvec.Ng
     G = pw.gvec.G
