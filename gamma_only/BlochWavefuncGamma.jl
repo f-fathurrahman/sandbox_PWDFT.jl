@@ -25,6 +25,12 @@ function dot_BlochWavefuncGamma( v1::BlochWavefuncGamma, v2::BlochWavefuncGamma 
 
 end
 
+import LinearAlgebra: dot
+function dot(v1::BlochWavefuncGamma, v2::BlochWavefuncGamma)
+    return dot_BlochWavefuncGamma(v1,v2)
+end
+
+
 function dot_BlochWavefuncGamma( v1::Array{ComplexF64,2}, v2::Array{ComplexF64,2} )
     
     c = dot(v1, v2)
@@ -160,13 +166,13 @@ function ortho_sqrt_gamma!( psis::BlochWavefuncGamma )
     C = zeros(ComplexF64,Nstates,Nstates)
     for i in 1:Nspin
         C = overlap_gamma(psis.data[i], psis.data[i])
-        psis.data[i][:,:] = psis.data[i][:,:]*inv(sqrt(C))
+        @views psis.data[i][:,:] = psis.data[i][:,:]*inv(sqrt(C))
     end
     return
 end
 
 function ortho_sqrt_gamma!( psi::Array{ComplexF64,2} )
     C = overlap_gamma(psi, psi)
-    psi[:,:] = psi[:,:]*inv(sqrt(C))
+    @views psi[:,:] = psi[:,:]*inv(sqrt(C))
     return
 end
