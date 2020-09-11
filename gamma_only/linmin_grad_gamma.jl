@@ -1,21 +1,15 @@
-function linmin_grad!( Ham::HamiltonianGamma,
-    psis::BlochWavefuncGamma,
-    g::BlochWavefuncGamma,
-    d::BlochWavefuncGamma;
+function linmin_grad!(
+    Ham::HamiltonianGamma, psis::BlochWavefuncGamma,
+    g::BlochWavefuncGamma, d::BlochWavefuncGamma,
+    psic::BlochWavefuncGamma, gt::BlochWavefuncGamma;
     αt = 3e-5
 )
-
-    psic = zeros_BlochWavefuncGamma(Ham)
-    gt = zeros_BlochWavefuncGamma(Ham)
 
     Nspin = length(psis)
     for i in 1:Nspin
         psic.data[i] = psis.data[i] + αt*d.data[i]
-        #ortho_GS_gamma!(psic.data[i])
         ortho_sqrt_gamma!(psic.data[i])
     end
-    
-    #println("dot(psic) = ", dot_BlochWavefuncGamma(psic,psic))
 
     Rhoe = calc_rhoe(Ham, psic)
     update!(Ham, Rhoe)

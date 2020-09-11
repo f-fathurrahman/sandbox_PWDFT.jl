@@ -19,6 +19,8 @@ function KS_solve_Emin_PCG_dot!(
     g     = zeros_BlochWavefuncGamma(Ham)
     Kg    = zeros_BlochWavefuncGamma(Ham)
     gPrev = zeros_BlochWavefuncGamma(Ham)
+    psic = zeros_BlochWavefuncGamma(Ham)
+    gt = zeros_BlochWavefuncGamma(Ham)
 
     Hsub = Vector{Matrix{ComplexF64}}(undef,Nspin)
     for ispin in 1:Nspin
@@ -75,7 +77,6 @@ function KS_solve_Emin_PCG_dot!(
         end
 
         if β < 0.0
-            #println("Resetting β")
             β = 0.0
         end
 
@@ -91,24 +92,17 @@ function KS_solve_Emin_PCG_dot!(
             d.data[i] = -Kg.data[i] + β*d.data[i]
         end
 
-        #constrain_search_dir!( d, psis )
-
-        α = linmin_grad!( Ham, psis, g, d )
+        α = linmin_grad!( Ham, psis, g, d, psic, gt )
         # Limite the value of α if it is too big.
         # At least found in the case of NH3
         if α > 2.0
             α = 2.0
         end
-        #println()
-        #println("dot(g,d) = ", dot_BlochWavefuncGamma(g,d))
-        #println("α = ", α)
-
         Rhoe_old = copy(Ham.rhoe)
         
         # Update psis
         for i in 1:Nspin
             psis.data[i] = psis.data[i] + α*d.data[i]
-            #ortho_GS_gamma!( psis.data[i] )
             ortho_sqrt_gamma!( psis.data[i] )
         end
 
@@ -147,15 +141,6 @@ function KS_solve_Emin_PCG_dot!(
         Ham.electrons.ebands[:,ispin] = evals
         psis.data[ispin] = psis.data[ispin]*evecs
     end
-
-    #if verbose && print_final_ebands
-    #    @printf("\n")
-    #    @printf("----------------------------\n")
-    #    @printf("Final Kohn-Sham eigenvalues:\n")
-    #    @printf("----------------------------\n")
-    #    @printf("\n")
-    #    print_ebands(Ham.electrons, Ham.pw.gvecw.kpoints, unit="eV")
-    #end
 
     if verbose && print_final_energies
         @printf("\n")
