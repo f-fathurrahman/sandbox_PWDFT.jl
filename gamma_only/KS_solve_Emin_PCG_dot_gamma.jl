@@ -75,7 +75,7 @@ function KS_solve_Emin_PCG_dot!(
         end
 
         if β < 0.0
-            println("Resetting β")
+            #println("Resetting β")
             β = 0.0
         end
 
