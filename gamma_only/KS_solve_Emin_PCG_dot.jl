@@ -11,8 +11,10 @@ function KS_solve_Emin_PCG_dot!(
     Nkspin = length(psiks)
 
     g = zeros_BlochWavefunc(Ham)
-    Kg = zeros_BlochWavefunc(Ham)
-    gPrev = zeros_BlochWavefunc(Ham)
+    Kg = deepcopy(g)
+    gPrev = deepcopy(g)
+    psic = deepcopy(g)
+    gt = deepcopy(g)
 
     Npoints = prod(Ham.pw.Ns)
     Nspin = Ham.electrons.Nspin
@@ -53,17 +55,17 @@ function KS_solve_Emin_PCG_dot!(
         @printf("\n")
     end
 
-    Rhoe_old = zeros(Float64,Npoints,2)
+    #Rhoe_old = zeros(Float64,Npoints,2)
     kpoints = Ham.pw.gvecw.kpoints
 
     for iter in 1:NiterMax
 
-        gKnorm = dot_BlochWavefunc(g, Kg)
+        gKnorm = 2*real(dot(g, Kg))
         
         if !force_grad_dir    
-            dotgd = dot_BlochWavefunc(g, d)
+            dotgd = 2*real(dot(g, d))
             if gPrevUsed
-                dotgPrevKg = dot_BlochWavefunc(gPrev, Kg)
+                dotgPrevKg = 2*real(dot(gPrev, Kg))
             else
                 dotgPrevKg = 0.0
             end
@@ -71,7 +73,6 @@ function KS_solve_Emin_PCG_dot!(
         end
 
         if β < 0.0
-            #println("Resetting β")
             β = 0.0
         end
 
@@ -87,24 +88,20 @@ function KS_solve_Emin_PCG_dot!(
             d[i] = -Kg[i] + β*d[i]
         end
 
-        #constrain_search_dir!( d, psiks )
-
-        α = linmin_grad!( Ham, psiks, g, d, Etot )
+        α = linmin_grad!( Ham, psiks, g, d, psic, gt )
         # Limite the value of α if it is too big.
         # At least found in the case of NH3
         if α > 2.0
             α = 2.0
         end
 
-        Rhoe_old = copy(Ham.rhoe)
+        #Rhoe_old = copy(Ham.rhoe)
 
         # Update psiks
-        #do_step!( psiks, α, d )
         for i in 1:Nspin
             psiks[i] = psiks[i] + α*d[i]
             ortho_sqrt!( psiks[i] )
         end
-        #println("α = ", α)
         
         # Calculate rhoe, update rhoe, calc energies and grad
         Etot = calc_energies_grad!( Ham, psiks, g, Kg )

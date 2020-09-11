@@ -1,13 +1,17 @@
-function linmin_grad!( Ham::Hamiltonian, psiks, g, d, E_orig; αt = 3e-5 )
-
-    psic = zeros_BlochWavefunc(Ham)
-    gt = zeros_BlochWavefunc(Ham)
-
+function linmin_grad!(
+    Ham::Hamiltonian, psiks::BlochWavefunc,
+    g::BlochWavefunc, d::BlochWavefunc,
+    psic::BlochWavefunc, gt::BlochWavefunc;
+    αt = 3e-5
+)
     Nkspin = length(psiks)
     for i in 1:Nkspin
         psic[i] = psiks[i] + αt*d[i]
-        ortho_gram_schmidt!( psic[i] )
+        ortho_sqrt!( psic[i] )
     end
+
+    Rhoe = calc_rhoe(Ham, psic)
+    update!(Ham, Rhoe)
 
     calc_grad!( Ham, psic, gt )
 
