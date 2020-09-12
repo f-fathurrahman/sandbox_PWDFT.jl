@@ -40,6 +40,7 @@ include("../get_default_psp.jl")
 
 include("calc_forces_Ps_loc.jl")
 include("calc_forces_Ps_nloc.jl")
+include("calc_forces.jl")
 
 function main(molname)
 
@@ -53,7 +54,6 @@ function main(molname)
     
     Ham = HamiltonianGamma(atoms, pspfiles, ecutwfc )
     psis = randn_BlochWavefuncGamma(Ham)
-    #
     Ham_ = Hamiltonian( atoms, pspfiles, ecutwfc, use_symmetry=false )
     psiks = unfold_BlochWavefuncGamma( Ham.pw, Ham_.pw, psis )
 
@@ -63,13 +63,11 @@ function main(molname)
 
     # Gamma-only
     F_Ps_loc  = zeros(3, Ham.atoms.Natoms)
-    #calc_forces_Ps_loc!(Ham.atoms, Ham.pw, Ham.pspots, Ham.rhoe, F_Ps_loc)
     calc_forces_Ps_loc!(Ham, F_Ps_loc)
     println("F_Ps_loc:")
     display(F_Ps_loc'); println()
 
     F_Ps_loc_  = zeros(3,atoms.Natoms)
-    #calc_forces_Ps_loc!(Ham_.atoms, Ham_.pw, Ham_.pspots, Ham_.rhoe, F_Ps_loc_)
     calc_forces_Ps_loc!(Ham_, F_Ps_loc_)
     println("F_Ps_loc_:")
     display(F_Ps_loc_'); println()
@@ -77,16 +75,23 @@ function main(molname)
 
     # Gamma-only
     F_Ps_nloc  = zeros(3, Ham.atoms.Natoms)
-    #calc_forces_Ps_loc!(Ham.atoms, Ham.pw, Ham.pspots, Ham.rhoe, F_Ps_loc)
     calc_forces_Ps_nloc!(Ham, psis, F_Ps_nloc)
     println("F_Ps_nloc:")
     display(F_Ps_nloc'); println()
 
     F_Ps_nloc_  = zeros(3,atoms.Natoms)
-    #calc_forces_Ps_loc!(Ham_.atoms, Ham_.pw, Ham_.pspots, Ham_.rhoe, F_Ps_loc_)
     calc_forces_Ps_nloc!(Ham_, psiks, F_Ps_nloc_)
     println("F_Ps_nloc_:")
     display(F_Ps_nloc_'); println()
+
+    forces = calc_forces(Ham, psis)
+    forces_ = calc_forces(Ham_, psiks)
+
+    println("forces = ")
+    display(forces'); println()
+
+    println("forces_ = ")
+    display(forces_'); println()
 
 end
 
