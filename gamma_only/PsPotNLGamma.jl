@@ -64,8 +64,7 @@ function PsPotNLGamma( atoms::Atoms, pw::PWGridGamma, pspots::Array{PsPot_GTH,1}
     for ia = 1:Natoms
         isp = atm2species[ia]
         psp = pspots[isp]
-        for l = 0:psp.lmax
-        for m = -l:l
+        for l = 0:psp.lmax, m = -l:l
         for iprj = 1:psp.Nproj_l[l+1]
             ibeta = ibeta + 1
             for igk = 1:Ngw
@@ -80,7 +79,6 @@ function PsPotNLGamma( atoms::Atoms, pw::PWGridGamma, pspots::Array{PsPot_GTH,1}
                 betaNL[igk,ibeta] =
                 (-1.0*im)^l * Ylm_real(l,m,g)*eval_proj_G(psp,l,iprj,Gm,pw.CellVolume)*Sf
             end
-        end
         end
         end
     end

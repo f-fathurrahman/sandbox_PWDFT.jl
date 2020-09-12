@@ -39,8 +39,9 @@ include("unfold_BlochWavefuncGamma.jl")
 include("../get_default_psp.jl")
 
 include("calc_forces_Ps_loc.jl")
+include("calc_forces_Ps_nloc.jl")
 
-function main(molname; gamma_only=true)
+function main(molname)
 
     Random.seed!(1234)
 
@@ -52,27 +53,40 @@ function main(molname; gamma_only=true)
     
     Ham = HamiltonianGamma(atoms, pspfiles, ecutwfc )
     psis = randn_BlochWavefuncGamma(Ham)
+    #
+    Ham_ = Hamiltonian( atoms, pspfiles, ecutwfc, use_symmetry=false )
+    psiks = unfold_BlochWavefuncGamma( Ham.pw, Ham_.pw, psis )
 
-    if gamma_only
-        #
-        KS_solve_Emin_PCG_dot!( Ham, psis, NiterMax=200 )
-        F_Ps_loc  = zeros(3, Ham.atoms.Natoms)
-        #
-        calc_forces_Ps_loc!(Ham.atoms, Ham.pw, Ham.pspots, Ham.rhoe, F_Ps_loc)
-        println("F_Ps_loc:")
-        display(F_Ps_loc); println()
-    else
-        #
-        Ham_ = Hamiltonian( atoms, pspfiles, ecutwfc, use_symmetry=false )
-        psiks = unfold_BlochWavefuncGamma( Ham.pw, Ham_.pw, psis )
-        KS_solve_Emin_PCG_dot!( Ham_, psiks, startingrhoe=:random,
-            skip_initial_diag=true, NiterMax=200 )
-        #
-        F_Ps_loc_  = zeros(3,atoms.Natoms)
-        calc_forces_Ps_loc!(Ham_.atoms, Ham_.pw, Ham_.pspots, Ham_.rhoe, F_Ps_loc_)
-        println("F_Ps_loc_:")
-        display(F_Ps_loc_); println()
-    end
+    KS_solve_Emin_PCG_dot!( Ham, psis, NiterMax=200 )
+    KS_solve_Emin_PCG_dot!( Ham_, psiks, startingrhoe=:random,
+        skip_initial_diag=true, NiterMax=200 )
+
+    # Gamma-only
+    F_Ps_loc  = zeros(3, Ham.atoms.Natoms)
+    #calc_forces_Ps_loc!(Ham.atoms, Ham.pw, Ham.pspots, Ham.rhoe, F_Ps_loc)
+    calc_forces_Ps_loc!(Ham, F_Ps_loc)
+    println("F_Ps_loc:")
+    display(F_Ps_loc'); println()
+
+    F_Ps_loc_  = zeros(3,atoms.Natoms)
+    #calc_forces_Ps_loc!(Ham_.atoms, Ham_.pw, Ham_.pspots, Ham_.rhoe, F_Ps_loc_)
+    calc_forces_Ps_loc!(Ham_, F_Ps_loc_)
+    println("F_Ps_loc_:")
+    display(F_Ps_loc_'); println()
+
+
+    # Gamma-only
+    F_Ps_nloc  = zeros(3, Ham.atoms.Natoms)
+    #calc_forces_Ps_loc!(Ham.atoms, Ham.pw, Ham.pspots, Ham.rhoe, F_Ps_loc)
+    calc_forces_Ps_nloc!(Ham, psis, F_Ps_nloc)
+    println("F_Ps_nloc:")
+    display(F_Ps_nloc'); println()
+
+    F_Ps_nloc_  = zeros(3,atoms.Natoms)
+    #calc_forces_Ps_loc!(Ham_.atoms, Ham_.pw, Ham_.pspots, Ham_.rhoe, F_Ps_loc_)
+    calc_forces_Ps_nloc!(Ham_, psiks, F_Ps_nloc_)
+    println("F_Ps_nloc_:")
+    display(F_Ps_nloc_'); println()
 
 end
 
@@ -84,8 +98,7 @@ function main()
     else
         molname = "H2O"
     end
-    main(molname, gamma_only=true)
-    main(molname, gamma_only=false)
+    main(molname)
 end
 
 main()

@@ -1,5 +1,10 @@
 import PWDFT: calc_forces_Ps_loc!
 
+function calc_forces_Ps_loc!( Ham::HamiltonianGamma, F_Ps_loc::Array{Float64,2} )
+    calc_forces_Ps_loc!( Ham.atoms, Ham.pw, Ham.pspots, Ham.rhoe, F_Ps_loc )
+    return
+end
+
 function calc_forces_Ps_loc!(
     atoms::Atoms, pw::PWGridGamma, pspots::Array{PsPot_GTH,1},
     Rhoe::Array{Float64,2},
