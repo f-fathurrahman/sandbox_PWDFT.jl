@@ -7,7 +7,7 @@ const DIR_STRUCTURES = joinpath(DIR_PWDFT, "structures")
 
 include("calc_forces_NN.jl")
 
-function test_H2()
+function main()
     atoms = Atoms(xyz_string="""
     2
 
@@ -33,4 +33,4 @@ function test_H2()
 
 end
 
-test_H2()
+main()
