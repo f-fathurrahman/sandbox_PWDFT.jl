@@ -38,9 +38,10 @@ include("unfold_BlochWavefuncGamma.jl")
 
 include("../get_default_psp.jl")
 
-include("calc_forces_Ps_loc.jl")
-include("calc_forces_Ps_nloc.jl")
-include("calc_forces.jl")
+include("calc_forces_Ps_loc_gamma.jl")
+include("calc_forces_Ps_nloc_gamma.jl")
+include("calc_forces_NN_gamma.jl")
+include("calc_forces_gamma.jl")
 
 function main(molname)
 
