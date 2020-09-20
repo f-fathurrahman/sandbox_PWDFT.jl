@@ -112,7 +112,12 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     filetraj = open(fnametrj, "w")
     fileetot = open(fnameetot, "w")
 
-    NiterMax = 1000
+    FORCE_evAng = 2*Ry2eV/BOHR2ANG
+
+    #
+    # Start MD loop here
+    #
+    NiterMax = 10
     for iter = 1:NiterMax
 
         @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
@@ -122,8 +127,8 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             r = Ham.atoms.positions
             @printf(filetraj, "%3s %18.10f %18.10f %18.10f %18.10f %18.10f %18.10f\n",
                     Ham.atoms.SpeciesSymbols[isp],
-                    r[1,ia]/ANG2BOHR, r[2,ia]/ANG2BOHR, r[3,ia]/ANG2BOHR,
-                    forces[1,ia]*ANG2BOHR, forces[2,ia]*ANG2BOHR, forces[3,ia]*ANG2BOHR)
+                    r[1,ia]*BOHR2ANG, r[2,ia]*BOHR2ANG, r[3,ia]*BOHR2ANG,
+                    forces[1,ia]*FORCE_evAng, forces[2,ia]*FORCE_evAng, forces[3,ia]*FORCE_evAng)
         end
         flush(filetraj)
         flush(fileetot)
@@ -167,8 +172,8 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
         r = Ham.atoms.positions
         @printf(filetraj, "%3s %18.10f %18.10f %18.10f %18.10f %18.10f %18.10f\n",
                 Ham.atoms.SpeciesSymbols[isp],
-                r[1,ia]/ANG2BOHR, r[2,ia]/ANG2BOHR, r[3,ia]/ANG2BOHR,
-                forces[1,ia]*ANG2BOHR, forces[2,ia]*ANG2BOHR, forces[3,ia]*ANG2BOHR)
+                r[1,ia]*BOHR2ANG, r[2,ia]*BOHR2ANG, r[3,ia]*BOHR2ANG,
+                forces[1,ia]*FORCE_evAng, forces[2,ia]*FORCE_evAng, forces[3,ia]*FORCE_evAng)
     end
 
     close(filetraj)
