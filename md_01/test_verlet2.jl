@@ -112,7 +112,9 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     filetraj = open(fnametrj, "w")
     fileetot = open(fnameetot, "w")
 
-    FORCE_evAng = 2*Ry2eV/BOHR2ANG
+    #FORCE_evAng = 2*Ry2eV/BOHR2ANG
+    # XXX Xcrysden assumes the forces are in Ha/angstrom
+    FORCE_evAng = 1.0/BOHR2ANG
 
     #
     # Start MD loop here
