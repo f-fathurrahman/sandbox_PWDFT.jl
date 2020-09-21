@@ -77,11 +77,11 @@ function do_bfgs( molname::String; ecutwfc=15.0 )
 
     H = initial_hessian(Natoms)
 
-    NiterMax = 15
+    NiterMax = 50
     for iter = 1:NiterMax
 
-        println("Hessian = ")
-        display(H); println()
+        #println("Hessian = ")
+        #display(H); println()
 
         omega, V = eigen( Symmetric(H) )
         dr = V * (V'*f ./ abs.(omega))
