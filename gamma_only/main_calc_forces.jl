@@ -11,7 +11,7 @@ const DIR_STRUCTURES = joinpath(DIR_PWDFT, "structures")
 
 include("INC_gamma_only.jl")
 
-function main(molname)
+function do_calc_forces(molname)
 
     Random.seed!(1234)
 
@@ -72,7 +72,7 @@ function main()
     else
         molname = "H2O"
     end
-    main(molname)
+    do_calc_forces(molname)
 end
 
 main()
