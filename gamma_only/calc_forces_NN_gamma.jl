@@ -3,7 +3,7 @@ import PWDFT: calc_forces_NN, calc_forces_NN!
 
 function calc_forces_NN( pw::PWGridGamma, atoms::Atoms )
     F_NN = zeros(3, atoms.Natoms)
-    calc_forces_NN!( atoms, F_NN )
+    calc_forces_NN!( pw, atoms, F_NN )
     return F_NN
 end
 
@@ -47,9 +47,9 @@ function calc_forces_NN!(
         upperbound = charge^2 * sqrt(α/π) * erfc(sqrt(G2_max/2.0/α))
     end
 
-    println("α = ", α)
-    println("upperbound = ", upperbound)
-    println("G2_max = ", G2_max)
+    #println("α = ", α)
+    #println("upperbound = ", upperbound)
+    #println("G2_max = ", G2_max)
 
     Ng = pw.gvec.Ng
     G = pw.gvec.G
@@ -100,10 +100,10 @@ function calc_forces_NN!(
         end
     end
 
-    println("Reciprocal space sum contribution: ")
-    for ia in 1:Natoms
-        @printf("%18.10f %18.10f %18.10f\n", F_NN_G[1,ia], F_NN_G[2,ia], F_NN_G[3,ia])
-    end
+    #println("Reciprocal space sum contribution: ")
+    #for ia in 1:Natoms
+    #    @printf("%18.10f %18.10f %18.10f\n", F_NN_G[1,ia], F_NN_G[2,ia], F_NN_G[3,ia])
+    #end
 
 
     # Real space sum
@@ -168,10 +168,10 @@ function calc_forces_NN!(
         end
     end
 
-    println("Real space sum contribution: ")
-    for ia in 1:Natoms
-        @printf("%18.10f %18.10f %18.10f\n", F_NN_R[1,ia], F_NN_R[2,ia], F_NN_R[3,ia])
-    end
+    #println("Real space sum contribution: ")
+    #for ia in 1:Natoms
+    #    @printf("%18.10f %18.10f %18.10f\n", F_NN_R[1,ia], F_NN_R[2,ia], F_NN_R[3,ia])
+    #end
 
     F_NN[:] = F_NN_G[:] + F_NN_R[:]
 
