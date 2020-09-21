@@ -16,8 +16,9 @@ include("update_positions.jl")
 Random.seed!(1234)
 
 function initial_hessian( Natoms )
-    h = 70/(2*Ry2eV) * (ANG2BOHR^2)
-    #h = 70.0
+    #h = 70/(2*Ry2eV) * (ANG2BOHR^2)
+    # Convert to Ha/(bohr^2)
+    h = 70*eV2Ha/ANG2BOHR^2
     H = diagm( 0 => h*ones(3*Natoms) )
     return H
 end
@@ -42,23 +43,30 @@ function run_pwdft_jl!( Ham, psis )
     return sum(Ham.energies), forces
 end
 
-function main( ; molname="H2O", ecutwfc=15.0 )
+function do_bfgs( molname::String; ecutwfc=15.0 )
     
     filename = joinpath(DIR_STRUCTURES, "DATA_G2_mols", molname*".xyz")
     atoms = Atoms(ext_xyz_file=filename)
     pspfiles = get_default_psp(atoms)
     
-    Ham = HamiltonianGamma(atoms, pspfiles, ecutwfc )
+    Ham = HamiltonianGamma(atoms, pspfiles, ecutwfc)
 
     Natoms = Ham.atoms.Natoms
 
     psis = randn_BlochWavefuncGamma(Ham)
     energies, forces = run_pwdft_jl!(Ham, psis)
 
-    println("Initial r  =")
-    display(Ham.atoms.positions'); println()
-    println("Initial forces = ")
-    display(forces'); println()
+    filetraj = open("TRAJ_"*molname*".xyz", "w")
+
+    @printf(filetraj, "%d\n\n", Natoms)
+    atsymbs = atoms.atsymbs
+    τ = atoms.positions*BOHR2ANG # convert to Angstrom
+    FF = forces*(1/BOHR2ANG) # convert to Ha/Angstrom
+    for ia in 1:Natoms
+        @printf(filetraj, "%s %18.10f %18.10f %18.10f %18.10f %18.10f %18.10f\n",
+            atsymbs[ia], τ[1,ia], τ[2,ia], τ[3,ia],
+            forces[1,ia], forces[2,ia], forces[3,ia])
+    end
     
     MAXSTEP = 0.04*ANG2BOHR
 
@@ -94,8 +102,20 @@ function main( ; molname="H2O", ecutwfc=15.0 )
 
         energies_old = energies
         energies, forces = run_pwdft_jl!(Ham, psis)
-        
-        @printf("\nIter = %3d, Etot = %18.10f\n", iter, sum(energies))
+
+        @printf(filetraj, "%d\n\n", Natoms)
+        atsymbs = atoms.atsymbs
+        τ = atoms.positions*BOHR2ANG # convert to Angstrom
+        FF = forces*(1/BOHR2ANG) # convert to Ha/Angstrom
+        for ia in 1:Natoms
+            @printf(filetraj, "%s %18.10f %18.10f %18.10f %18.10f %18.10f %18.10f\n",
+                atsymbs[ia], τ[1,ia], τ[2,ia], τ[3,ia],
+                forces[1,ia], forces[2,ia], forces[3,ia])
+        end
+
+        fmax = norm(forces)
+
+        @printf("\nIter = %3d, Etot = %18.10f, fmax = %10.5e\n", iter, sum(energies), fmax)
         println("Forces = ")
         display(forces'); println()
         println("dr = ")
@@ -105,11 +125,28 @@ function main( ; molname="H2O", ecutwfc=15.0 )
         println("r (in Angstrom) =")
         display(Ham.atoms.positions' / ANG2BOHR); println()
 
+        if fmax < 0.01*eV2Ha/ANG2BOHR
+            println("BFGS is converged")
+            break
+        end
+
         f = vec(copy(forces))
         H = update_hessian( H_old, r, f, r0, f0 )
 
     end
 
+    close(filetraj)
+
+end
+
+function main()
+    Nargs = length(ARGS)
+    if Nargs >= 1
+        molname = ARGS[1]
+    else
+        molname = "H2O"
+    end
+    do_bfgs(molname)
 end
 
 main()
