@@ -47,10 +47,6 @@ function calc_forces_NN!(
         upperbound = charge^2 * sqrt(α/π) * erfc(sqrt(G2_max/2.0/α))
     end
 
-    #println("α = ", α)
-    #println("upperbound = ", upperbound)
-    #println("G2_max = ", G2_max)
-
     Ng = pw.gvec.Ng
     G = pw.gvec.G
     G2 = pw.gvec.G2
@@ -64,24 +60,12 @@ function calc_forces_NN!(
         end
     end
 
-    #println("Ng = ", pw.gvec.Ng)
-    #println("sum aux = ", sum(aux))
-    #println("some aux")
-    #for ig in 2:10
-    #    @printf("%8d %18.10f %18.10f %18.10f\n", ig, G2[ig], real(aux[ig]), imag(aux[ig]))
-    #end
-
     # Treat 2d cutoff is skipped
 
     # skip G2=0
     for ig in 2:Ng
         aux[ig] = aux[ig] * exp(-G2[ig]/α/4.0) / G2[ig]
     end
-
-    #println("some aux after modified")
-    #for ig in 2:10
-    #    @printf("%8d %18.10f %18.10f %18.10f\n", ig, G2[ig], real(aux[ig]), imag(aux[ig]))
-    #end
 
     F_NN_G = zeros(3,Natoms)
 
@@ -100,14 +84,7 @@ function calc_forces_NN!(
         end
     end
 
-    #println("Reciprocal space sum contribution: ")
-    #for ia in 1:Natoms
-    #    @printf("%18.10f %18.10f %18.10f\n", F_NN_G[1,ia], F_NN_G[2,ia], F_NN_G[3,ia])
-    #end
-
-
     # Real space sum
-
     dtau = zeros(Float64,3)
     T = zeros(Float64,3)
     F_NN_R = zeros(3,Natoms)
@@ -128,9 +105,6 @@ function calc_forces_NN!(
     mmm2 = round(Int64, tmax/t2m + 1.5)
     mmm3 = round(Int64, tmax/t3m + 1.5)
 
-    #println("tmax = ", tmax)
-    #@printf("Sum over real space: %d,%d,%d\n", mmm1, mmm2, mmm3)
-
     for ia in 1:Natoms, ja in ia+1:Natoms
 
         dtau[1] = tau[1,ia] - tau[1,ja]
@@ -140,8 +114,6 @@ function calc_forces_NN!(
         isp = atm2species[ia]
         jsp = atm2species[ja]
         ZiZj = Zvals[isp]*Zvals[jsp]
-
-        #@printf("\nia = %d ja = %d norm(dtau) = %f\n", ia, ja, norm(dtau))
 
         for i in -mmm1:mmm1, j in -mmm2:mmm2, k in -mmm3:mmm3
             T[1] = i*t1[1] + j*t2[1] + k*t3[1]
@@ -153,7 +125,6 @@ function calc_forces_NN!(
             D2 = D[1]^2 + D[2]^2 + D[3]^2
             Dmag = sqrt(D2)
             xx = _Herfc(η*Dmag)
-            #@printf("%3d %3d %3d Dmag = %f, xx = %f\n", i, j, k, Dmag, xx)
             df1 = η*xx*D[1]/D2*ZiZj
             df2 = η*xx*D[2]/D2*ZiZj
             df3 = η*xx*D[3]/D2*ZiZj
@@ -167,11 +138,6 @@ function calc_forces_NN!(
             F_NN_R[3,ja] = F_NN_R[3,ja] + df3
         end
     end
-
-    #println("Real space sum contribution: ")
-    #for ia in 1:Natoms
-    #    @printf("%18.10f %18.10f %18.10f\n", F_NN_R[1,ia], F_NN_R[2,ia], F_NN_R[3,ia])
-    #end
 
     F_NN[:] = F_NN_G[:] + F_NN_R[:]
 
