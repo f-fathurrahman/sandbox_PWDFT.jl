@@ -86,7 +86,7 @@ function KS_solve_Emin_SD_Haux!(
         else
             println()
         end
-        if abs(diffE) < 1e-6
+        if abs(diffE) < etot_conv_thr
             Nconverged = Nconverged + 1
         else
             Nconverged = 0

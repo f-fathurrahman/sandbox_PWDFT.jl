@@ -11,6 +11,19 @@ function create_Ham_O2()
     return Hamiltonian( atoms, pspfiles, ecutwfc, extra_states=4 )
 end
 
+function create_Ham_Si_dimer()
+    atoms = Atoms(xyz_string=
+        """
+        2
+
+        Si  0.0   0.0   0.0
+        Si  0.0   0.0   5.5
+        """, in_bohr=true, LatVecs=diagm([10.0, 10.0, 15.0])
+    )
+    pspfiles = [joinpath(DIR_PSP, "Si-q4.gth")]
+    ecutwfc = 15.0
+    return Hamiltonian( atoms, pspfiles, ecutwfc, extra_states=4 )
+end
 
 
 function create_Ham_atom(atsymb::String, pspfile::String)
