@@ -25,15 +25,20 @@ function do_calc(molname; gamma_only=true)
     Ham = HamiltonianGamma(atoms, pspfiles, ecutwfc)
     psis = randn_BlochWavefuncGamma(Ham)
 
+    Npoints = prod(Ham.pw.Ns)
+    Rhoe = zeros(Float64,Npoints,1)
+
     if gamma_only
+        calc_rhoe!(Ham, psis, Rhoe)
+        update!(Ham, Rhoe)
         evals = diag_Emin_PCG!(Ham, psis, verbose=true)
     else
         Ham_ = Hamiltonian( atoms, pspfiles, ecutwfc, use_symmetry=false )
         psiks = unfold_BlochWavefuncGamma( Ham.pw, Ham_.pw, psis )
+        calc_rhoe!(Ham_, psiks, Rhoe)
+        update!(Ham_, Rhoe)
         evals = diag_Emin_PCG!(Ham_, psiks, verbose=true)
     end
-
-
 
 end
 
