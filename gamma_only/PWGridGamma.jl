@@ -209,3 +209,78 @@ function PWGridGamma( ecutwfc::Float64, LatVecs::Array{Float64,2}; Ns_=(0,0,0) )
         planfw, planbw
     )
 end
+
+import PWDFT: op_nabla, op_nabla_dot
+
+function op_nabla( pw::PWGridGamma, Rhoe::Array{Float64,1} )
+    G = pw.gvec.G
+    Ng = pw.gvec.Ng
+    idx_g2r = pw.gvec.idx_g2r
+    idx_g2rm = pw.gvec.idx_g2rm
+    Npoints = prod(pw.Ns)
+
+    RhoeG = convert(Array{ComplexF64,1}, Rhoe)
+    R_to_G!(pw, RhoeG)
+    
+    ∇RhoeGx = zeros(ComplexF64, pw.Ns)
+    ∇RhoeGy = zeros(ComplexF64, pw.Ns)
+    ∇RhoeGz = zeros(ComplexF64, pw.Ns)
+    ∇Rhoe = zeros(Float64,3,Npoints)
+    
+    ∇RhoeGx[1] = 0.0
+    ∇RhoeGy[1] = 0.0
+    ∇RhoeGz[1] = 0.0
+    for ig in 2:Ng
+        ip = idx_g2r[ig]
+        ∇RhoeGx[ip] = im*G[1,ig]*RhoeG[ip]
+        ∇RhoeGy[ip] = im*G[2,ig]*RhoeG[ip]
+        ∇RhoeGz[ip] = im*G[3,ig]*RhoeG[ip]
+        #
+        # -G part
+        #
+        ipm = idx_g2rm[ig]
+        ∇RhoeGx[ipm] = -im*G[1,ig]*RhoeG[ipm]
+        ∇RhoeGy[ipm] = -im*G[2,ig]*RhoeG[ipm]
+        ∇RhoeGz[ipm] = -im*G[3,ig]*RhoeG[ipm]
+    end
+    @views ∇Rhoe[1,:] = real(G_to_R(pw, ∇RhoeGx))
+    @views ∇Rhoe[2,:] = real(G_to_R(pw, ∇RhoeGy))
+    @views ∇Rhoe[3,:] = real(G_to_R(pw, ∇RhoeGz))
+    return ∇Rhoe
+end
+
+
+# FIXME: different signature with PWGrid
+
+function op_nabla_dot(
+    pw::PWGridGamma,
+    hx::Array{Float64,1},
+    hy::Array{Float64,1},
+    hz::Array{Float64,1}
+)
+    G = pw.gvec.G
+    Ng = pw.gvec.Ng
+    idx_g2r = pw.gvec.idx_g2r
+    idx_g2rm = pw.gvec.idx_g2rm
+    Npoints = prod(pw.Ns)
+
+    hGx = convert(Array{ComplexF64,1}, hx)
+    hGy = convert(Array{ComplexF64,1}, hy)
+    hGz = convert(Array{ComplexF64,1}, hz)
+    R_to_G!(pw, hGx)
+    R_to_G!(pw, hGy)
+    R_to_G!(pw, hGz)
+    #
+    divhG_full = zeros(ComplexF64,pw.Ns)
+    # G=0 term is zero
+    for ig = 2:Ng
+        #
+        ip = idx_g2r[ig]
+        divhG_full[ip] = im*( G[1,ig]*hGx[ip] + G[2,ig]*hGy[ip] + G[3,ig]*hGz[ip] )
+        #
+        ipm = idx_g2rm[ig]
+        divhG_full[ipm] = -im*( G[1,ig]*hGx[ipm] + G[2,ig]*hGy[ipm] + G[3,ig]*hGz[ipm] )
+    end
+    G_to_R!(pw, divhG_full)
+    return real(divhG_full)
+end
