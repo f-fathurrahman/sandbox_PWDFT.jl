@@ -7,7 +7,7 @@ import PWDFT: G_to_R, G_to_R!, R_to_G, R_to_G!
 # Backward transform
 #
 
-# fG is assumeed to have size Npoints=Ns[1]*Ns[2]*Ns[3]
+# fG is assumed to have size Npoints=Ns[1]*Ns[2]*Ns[3]
 function G_to_R( pw::PWGridGamma, fG::Array{ComplexF64,1} )
     Ns = pw.Ns
     Npoints = prod(Ns)
@@ -21,7 +21,7 @@ function G_to_R( pw::PWGridGamma, fG::Array{ComplexF64,3} )
     return pw.planbw*fG
 end
 
-# fG is assumeed to have size Npoints=Ns[1]*Ns[2]*Ns[3]
+# fG is assumed to have size Npoints=Ns[1]*Ns[2]*Ns[3]
 function G_to_R!( pw::PWGridGamma, fG::Array{ComplexF64,1} )
     Ns = pw.Ns
     Npoints = prod(Ns)
