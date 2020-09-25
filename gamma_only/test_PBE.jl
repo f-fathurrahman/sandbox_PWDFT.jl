@@ -36,10 +36,10 @@ function calc_Vxc_PBE!(
     Npoints = size(Rhoe,1)
 
     # calculate gRhoe2
-    gRhoe = op_nabla(pw, Rhoe)
+    gRhoex, gRhoey, gRhoez = op_nabla(pw, Rhoe)
     gRhoe2 = zeros(Float64, Npoints)
     for ip = 1:Npoints
-        gRhoe2[ip] = gRhoe[1,ip]*gRhoe[1,ip] + gRhoe[2,ip]*gRhoe[2,ip] + gRhoe[3,ip]*gRhoe[3,ip]
+        gRhoe2[ip] = gRhoex[ip]^2 + gRhoey[ip]^2 + gRhoez[ip]^2
     end
 
     # h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
@@ -60,9 +60,9 @@ function calc_Vxc_PBE!(
         Vxc[ip] = vx + vc + v1x + v1c
         
         v2xc = v2x + v2c
-        hx[ip] = v2xc*gRhoe[1,ip]
-        hy[ip] = v2xc*gRhoe[2,ip]
-        hz[ip] = v2xc*gRhoe[3,ip]
+        hx[ip] = v2xc*gRhoex[ip]
+        hy[ip] = v2xc*gRhoey[ip]
+        hz[ip] = v2xc*gRhoez[ip]
     end
 
     dh = op_nabla_dot(pw, hx, hy, hz)

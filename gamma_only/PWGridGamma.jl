@@ -225,7 +225,6 @@ function op_nabla( pw::PWGridGamma, Rhoe::Array{Float64,1} )
     ∇RhoeGx = zeros(ComplexF64, pw.Ns)
     ∇RhoeGy = zeros(ComplexF64, pw.Ns)
     ∇RhoeGz = zeros(ComplexF64, pw.Ns)
-    ∇Rhoe = zeros(Float64,3,Npoints)
     
     ∇RhoeGx[1] = 0.0
     ∇RhoeGy[1] = 0.0
@@ -243,10 +242,10 @@ function op_nabla( pw::PWGridGamma, Rhoe::Array{Float64,1} )
         ∇RhoeGy[ipm] = -im*G[2,ig]*RhoeG[ipm]
         ∇RhoeGz[ipm] = -im*G[3,ig]*RhoeG[ipm]
     end
-    @views ∇Rhoe[1,:] = real(G_to_R(pw, ∇RhoeGx))
-    @views ∇Rhoe[2,:] = real(G_to_R(pw, ∇RhoeGy))
-    @views ∇Rhoe[3,:] = real(G_to_R(pw, ∇RhoeGz))
-    return ∇Rhoe
+    G_to_R!(pw, ∇RhoeGx)
+    G_to_R!(pw, ∇RhoeGy)
+    G_to_R!(pw, ∇RhoeGz)
+    return real(∇RhoeGx), real(∇RhoeGy), real(∇RhoeGz)
 end
 
 
