@@ -37,20 +37,20 @@ function calc_Vxc_PBE!(
 
     # calculate gRhoe2
     gRhoe = op_nabla(pw, Rhoe)
-    gRhoe2 = zeros( Float64, Npoints )
+    gRhoe2 = zeros(Float64, Npoints)
     for ip = 1:Npoints
         gRhoe2[ip] = gRhoe[1,ip]*gRhoe[1,ip] + gRhoe[2,ip]*gRhoe[2,ip] + gRhoe[3,ip]*gRhoe[3,ip]
     end
 
     # h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
-    hx = zeros(Float64,Npoints)
-    hy = zeros(Float64,Npoints)
-    hz = zeros(Float64,Npoints)
+    hx = zeros(ComplexF64, pw.Ns)
+    hy = zeros(ComplexF64, pw.Ns)
+    hz = zeros(ComplexF64, pw.Ns)
 
     for ip in 1:Npoints
-
+        #
         ρ = Rhoe[ip]
-
+        #
         _, vx = PWDFT.XC_x_slater( ρ )
         _, v1x, v2x = PWDFT.XC_x_pbe( ρ, gRhoe2[ip] )
         

@@ -254,9 +254,9 @@ end
 
 function op_nabla_dot(
     pw::PWGridGamma,
-    hx::Array{Float64,1},
-    hy::Array{Float64,1},
-    hz::Array{Float64,1}
+    hGx::Array{ComplexF64,3},
+    hGy::Array{ComplexF64,3},
+    hGz::Array{ComplexF64,3}
 )
     G = pw.gvec.G
     Ng = pw.gvec.Ng
@@ -264,14 +264,11 @@ function op_nabla_dot(
     idx_g2rm = pw.gvec.idx_g2rm
     Npoints = prod(pw.Ns)
 
-    hGx = convert(Array{ComplexF64,1}, hx)
-    hGy = convert(Array{ComplexF64,1}, hy)
-    hGz = convert(Array{ComplexF64,1}, hz)
     R_to_G!(pw, hGx)
     R_to_G!(pw, hGy)
     R_to_G!(pw, hGz)
     #
-    divhG_full = zeros(ComplexF64,pw.Ns)
+    divhG_full = zeros(ComplexF64, pw.Ns)
     # G=0 term is zero
     for ig = 2:Ng
         #
