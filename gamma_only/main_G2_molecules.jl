@@ -19,9 +19,9 @@ function do_calc(molname; gamma_only=true)
     atoms = Atoms(ext_xyz_file=filename)
     pspfiles = get_default_psp(atoms)
     
-    ecutwfc = 15.0
+    ecutwfc = 20.0
     
-    Ham = HamiltonianGamma(atoms, pspfiles, ecutwfc )
+    Ham = HamiltonianGamma(atoms, pspfiles, ecutwfc)
     psis = randn_BlochWavefuncGamma(Ham)
     
     if gamma_only
