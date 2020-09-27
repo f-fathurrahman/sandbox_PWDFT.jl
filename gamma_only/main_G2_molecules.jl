@@ -21,13 +21,13 @@ function do_calc(molname; gamma_only=true)
     
     ecutwfc = 20.0
     
-    Ham = HamiltonianGamma(atoms, pspfiles, ecutwfc)
+    Ham = HamiltonianGamma(atoms, pspfiles, ecutwfc, use_xc_internal=true)
     psis = randn_BlochWavefuncGamma(Ham)
     
     if gamma_only
         @time KS_solve_Emin_PCG_dot!( Ham, psis, NiterMax=200 )
     else
-        Ham_ = Hamiltonian( atoms, pspfiles, ecutwfc, use_symmetry=false )
+        Ham_ = Hamiltonian(atoms, pspfiles, ecutwfc, use_symmetry=false, use_xc_internal=true)
         psiks = unfold_BlochWavefuncGamma( Ham.pw, Ham_.pw, psis )
         @time KS_solve_Emin_PCG_dot!( Ham_, psiks, startingrhoe=:random,
             skip_initial_diag=true, NiterMax=200 )
