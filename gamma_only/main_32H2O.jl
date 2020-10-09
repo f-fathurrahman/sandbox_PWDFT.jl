@@ -121,6 +121,8 @@ function do_calc(;gamma_only=true)
     H      0.0492   0.9894   0.9207
     """, in_bohr=true, LatVecs=diagm([A,B,C]))
     pspfiles = get_default_psp(atoms)
+
+    write_xsf("TEMP_32H2O.xsf", atoms)
     
     ecutwfc = 15.0
     
@@ -140,4 +142,4 @@ function do_calc(;gamma_only=true)
 end
 
 
-do_calc(gamma_only=false)
+do_calc(gamma_only=true)
