@@ -11,14 +11,8 @@ function calc_energies_grad!( Ham, psiks, g, Kg )
 
     Rhoe = calc_rhoe( Ham, psiks )
     update!( Ham, Rhoe )
-    
-    #println("Nsyms = ", Ham.sym_info.Nsyms)
-
-    #println("Rhoe = ", Rhoe[1,1])
-    #println("Rhoe = ", Rhoe[2,1])
 
     Ham.energies = calc_energies( Ham, psiks )
-    #println(Ham.energies)
 
     Nspin = Ham.electrons.Nspin
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
@@ -28,9 +22,7 @@ function calc_energies_grad!( Ham, psiks, g, Kg )
         Ham.ik = ik
         i = ik + (ispin-1)*Nkpt
         calc_grad!( Ham, psiks[i], g[i] )
-        #Kg[i] = copy(g[i])
         Kprec!( ik, Ham.pw, g[i], Kg[i] )
-        #Kprec!( ik, Ham.pw, psiks[i], Ham.electrons.Focc[:,i], g[i], Kg[i] )
     end
 
     return sum( Ham.energies )
@@ -59,9 +51,7 @@ function calc_grad!( Ham::Hamiltonian, psiks::BlochWavefunc, g::BlochWavefunc, K
         Ham.ik = ik
         i = ik + (ispin-1)*Nkpt
         calc_grad!( Ham, psiks[i], g[i] )
-        #Kg[i] = copy(g[i])
         Kprec!( ik, Ham.pw, g[i], Kg[i] )
-        #Kprec!( ik, Ham.pw, psiks[i], Ham.electrons.Focc[:,i], g[i], Kg[i] )        
     end
     return
 end
@@ -116,9 +106,6 @@ function calc_grad!( Ham::Hamiltonian, ψ::Array{ComplexF64,2}, g::Array{Complex
     wk_ik = Ham.pw.gvecw.kpoints.wk[ik]
 
     Hψ = op_H( Ham, ψ )
-
-    #println("Hψ[1,1] = ", Hψ[1,1])
-
     Hsub[:] = ψ' * Hψ
     Hψ = Hψ - ψ*Hsub
     for ist in 1:Nstates
@@ -178,9 +165,6 @@ function Kprec!( ik::Int64, pw::PWGrid, ψ::Array{ComplexF64,2}, Focc_ikspin::Ar
             ig = idx_gw2g[igk]
             Gw2 = (G[1,ig] + k[1])^2 + (G[2,ig] + k[2])^2 + (G[3,ig] + k[3])^2
             x = 0.5*Gw2/KE_rollover
-            #precondFactor = 1 + x*(1 + x*(1 + x*(1 + x*(1 + x*(1 + x*(1 + x*(1 + x)))))))
-            #precondFactor = precondFactor/(1 + x*precondFactor)
-            #Kv[igk,ist] = v[igk,ist]*precondFactor
             num = (1 - x^8) #27 + 18*x + 12*x^2 + 8*x^3
             denum = (1 - x^9) #num + 16*x^4
             Kv[igk,ist] = v[igk,ist]*num/denum
@@ -228,20 +212,4 @@ function dot_BlochWavefunc(x::BlochWavefunc, y::BlochWavefunc)
         res = res + real( dot(x[i], y[i]) )*2.0
     end
     return res
-end
-
-function dot_BlochWavefunc( kpoints::KPoints, x::BlochWavefunc, y::BlochWavefunc )
-    Nkspin = length(x)    
-    res = 0.0
-    wk = kpoints.wk
-    NkFull = prod(kpoints.mesh)
-    for i in 1:Nkspin
-        #res = res + real( dot(x[i], y[i]) ) * 2 #* (wk[i]*NkFull)
-        #res = res + real( dot(x[i], y[i]) )*2.0/(wk[i]*Nelectrons) # FIXME use ikspin
-        res = res + real( dot(x[i], y[i]) )*2.0/(wk[i]*NkFull) # FIXME use ikspin
-        #res = res + real( dot(x[i], y[i]) )*2.0/(NkFull)
-        #res = res + real( dot(x[i], y[i]) )*2.0/(wk[i]*Nkspin) # FIXME use ikspin
-        #res = res + real( dot(x[i], y[i]) )*2.0*wk[i] # FIXME use ikspin
-    end
-    return res#*NkFull
 end
