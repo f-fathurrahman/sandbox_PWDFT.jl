@@ -6,17 +6,17 @@ function unfold_BlochWavefuncGamma( pw::PWGridGamma, pw_full::PWGrid, psis::Bloc
     
     Npoints = prod(pw.Ns)
     ctmp = zeros(ComplexF64,Npoints)
-
+    
     psiks = Vector{Array{ComplexF64,2}}(undef,Nspin)
     for ispin in 1:Nspin
-        psiks[ispin] = zeros(ComplexF64, pw_full.gvecw.Ngw[ispin], Nstates)
+        psiks[ispin] = zeros(ComplexF64, pw_full.gvecw.Ngw[1], Nstates)
     end
 
     for ispin in 1:Nspin
         
         psi = psis.data[ispin]
         
-        idx_gw2r_full = pw_full.gvecw.idx_gw2r[ispin]
+        idx_gw2r_full = pw_full.gvecw.idx_gw2r[1]
 
         for ist in 1:Nstates
             ctmp[1] = psi[1,ist]

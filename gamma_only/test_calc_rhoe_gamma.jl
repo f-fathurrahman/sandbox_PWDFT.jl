@@ -29,9 +29,9 @@ function test_01()
 
     # Initialize Hamiltonian
     ecutwfc = 15.0
-    Ham = HamiltonianGamma( atoms, pspfiles, ecutwfc )
+    Ham = HamiltonianGamma( atoms, pspfiles, ecutwfc, Nspin=2 )
 
-    Ham_ = Hamiltonian( atoms, pspfiles, ecutwfc )
+    Ham_ = Hamiltonian( atoms, pspfiles, ecutwfc, Nspin=2 )
 
     psis = randn_BlochWavefuncGamma(Ham)
     ortho_check(psis)
@@ -51,6 +51,7 @@ function test_01()
 
     Rhoe_ = calc_rhoe(Ham_, psiks)
 
+    println("Compare some Rhoe value:")
     for ip in 1:5
         @printf("%3d %18.10f %18.10f\n", ip, Rhoe[ip], Rhoe_[ip])
     end
