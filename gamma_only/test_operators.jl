@@ -142,6 +142,7 @@ function test_01()
     #
 
     println("\nCompare op_K result")
+    println("---------------------\n")
     #
     println("Using Gamma-point trick")
     Kpsis = op_K(Ham, psis); print("time op_K: ")
@@ -157,9 +158,17 @@ function test_01()
     println("dot(psiks,Hpsiks) = ", s2)
     println("diff = ", s1 - s1, " (should be small)")
 
-
+    println("Some Kpsi: (some symmetry should exist)")
+    for ig in 1:5
+        v1r = real(Kpsis.data[1][ig,1])
+        v1i = imag(Kpsis.data[1][ig,1])
+        v2r = real(Kpsiks[1][ig,1])
+        v2i = imag(Kpsiks[1][ig,1])
+        @printf("%5d (%18.10f,%18.10f) (%18.10f,%18.10f)\n", ig, v1r, v1i, v2r, v2i)
+    end
 
     println("\nCompare op_V_loc")
+    println("------------------\n")
     #
     println("Using Gamma-point trick")
     V_loc_psis = op_V_loc(Ham, psis); print("time op_V_loc: ")
@@ -174,9 +183,18 @@ function test_01()
     println("dot V_loc_psis  = ", s1)
     println("dot V_loc_psiks = ", s2)
     println("diff = ", s1 - s1, " (should be small)")
-
+    
+    println("Some Vloc_psi: (some symmetry should exist)")
+    for ig in 1:5
+        v1r = real(V_loc_psis.data[1][ig,1])
+        v1i = imag(V_loc_psis.data[1][ig,1])
+        v2r = real(V_loc_psiks[1][ig,1])
+        v2i = imag(V_loc_psiks[1][ig,1])
+        @printf("%5d (%18.10f,%18.10f) (%18.10f,%18.10f)\n", ig, v1r, v1i, v2r, v2i)
+    end
 
     println("\nCompare op_V_Ps_nloc")
+    println("----------------------\n")
     #
     println("Using Gamma-point trick")
     V_psis = op_V_Ps_nloc(Ham, psis); print("time op_V_Ps_nloc: ")
@@ -192,7 +210,17 @@ function test_01()
     println("dot V_Ps_nloc_psiks = ", s2)
     println("diff = ", s1 - s1, " (should be small)")
 
+    println("Some V_Ps_nloc_psi: (some symmetry should exist)")
+    for ig in 1:5
+        v1r = real(V_psis.data[1][ig,1])
+        v1i = imag(V_psis.data[1][ig,1])
+        v2r = real(V_psiks[1][ig,1])
+        v2i = imag(V_psiks[1][ig,1])
+        @printf("%5d (%18.10f,%18.10f) (%18.10f,%18.10f)\n", ig, v1r, v1i, v2r, v2i)
+    end
+
     println("\nCompare op_H")
+    println("-------------\n")
     #
     println("Using Gamma-point trick")
     Hpsis = op_H(Ham, psis); print("time op_H: ")

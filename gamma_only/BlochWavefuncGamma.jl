@@ -31,7 +31,6 @@ function dot(v1::BlochWavefuncGamma, v2::BlochWavefuncGamma)
 end
 
 
-#function dot_BlochWavefuncGamma( v1::Array{ComplexF64,2}, v2::Array{ComplexF64,2} )
 function dot_gamma( v1::Array{ComplexF64,2}, v2::Array{ComplexF64,2} )
     c = dot(v1, v2)
     s = c + conj(c)
@@ -83,20 +82,29 @@ end
 
 # random BlochWavefuncGamma from randn
 
-function randn_BlochWavefuncGamma( Ham::HamiltonianGamma )
-    return randn_BlochWavefuncGamma(Ham.pw.gvecw.Ngw, Ham.electrons.Nstates, Nspin=Ham.electrons.Nspin)
+function randn_BlochWavefuncGamma( Ham::HamiltonianGamma; zero_dc=false )
+    return randn_BlochWavefuncGamma(
+        Ham.pw.gvecw.Ngw, Ham.electrons.Nstates,
+        Nspin=Ham.electrons.Nspin, zero_dc=zero_dc
+    )
 end
 
-function randn_BlochWavefuncGamma( Nbasis::Int64, Nstates::Int64; Nspin=1 )
+function randn_BlochWavefuncGamma( Nbasis::Int64, Nstates::Int64; Nspin=1, zero_dc=false )
     #
     data = Vector{Array{ComplexF64,2}}(undef,Nspin)
     for ispin in 1:Nspin
         data[ispin] = randn(ComplexF64,Nbasis,Nstates)
-        # Set DC component (ig=1) to real number
-        for ist in 1:Nstates
-            data[ispin][1,ist] = data[ispin][1,ist] + conj(data[ispin][1,ist])
+        if zero_dc
+            # Set DC component to zero
+            for ist in 1:Nstates
+                data[ispin][1,ist] = 0.0
+            end
+        else
+            # Set DC component (ig=1) to real number
+            for ist in 1:Nstates
+                data[ispin][1,ist] = data[ispin][1,ist] + conj(data[ispin][1,ist])
+            end
         end
-        #ortho_GS_gamma!(data[ispin])
         ortho_sqrt_gamma!(data[ispin])
     end
 
