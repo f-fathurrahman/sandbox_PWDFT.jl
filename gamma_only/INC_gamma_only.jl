@@ -23,6 +23,9 @@ include("KS_solve_Emin_PCG_dot_gamma.jl")
 include("calc_energies_grad_gamma.jl")
 include("linmin_grad_gamma.jl")
 
+include("diag_Emin_PCG_gamma.jl")
+include("KS_solve_SCF_potmix_gamma.jl")
+
 include("unfold_BlochWavefuncGamma.jl")
 
 include("../get_default_psp.jl")

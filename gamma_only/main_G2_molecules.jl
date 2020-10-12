@@ -26,6 +26,7 @@ function do_calc(molname; gamma_only=true)
     
     if gamma_only
         @time KS_solve_Emin_PCG_dot!( Ham, psis, NiterMax=200 )
+        #@time KS_solve_SCF_potmix!( Ham, psis, startingrhoe=:random, NiterMax=200 )
     else
         Ham_ = Hamiltonian(atoms, pspfiles, ecutwfc, use_symmetry=false, use_xc_internal=true)
         psiks = unfold_BlochWavefuncGamma( Ham.pw, Ham_.pw, psis )
@@ -43,9 +44,9 @@ function main()
     else
         molname = "H2O"
     end
-    for i in 1:2
+    for i in 1:1
         do_calc(molname, gamma_only=true)
-        do_calc(molname, gamma_only=false)
+        #do_calc(molname, gamma_only=false)
     end
 end
 
