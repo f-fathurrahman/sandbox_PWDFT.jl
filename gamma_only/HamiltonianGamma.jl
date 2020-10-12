@@ -17,7 +17,6 @@ function HamiltonianGamma(
     ecutwfc::Float64 ;
     Nspin=1,
     Ns_=(0,0,0),
-    kpoints=nothing,
     xcfunc="VWN",
     use_xc_internal=false,
     extra_states=0,
