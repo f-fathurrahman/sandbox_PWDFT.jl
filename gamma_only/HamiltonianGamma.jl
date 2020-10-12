@@ -18,7 +18,6 @@ function HamiltonianGamma(
     Nspin=1,
     Ns_=(0,0,0),
     kpoints=nothing,
-    kpts_str="",
     xcfunc="VWN",
     use_xc_internal=false,
     extra_states=0,
