@@ -49,8 +49,10 @@ function main()
     println("Initial guess:")
     print_ebands_Hsub_eigs(Ham, evars)
 
-    KS_solve_Emin_SD_Haux!( Ham, evars, NiterMax=50 )
-    #KS_solve_Emin_PCG_Haux!( Ham, evars, NiterMax=10 )
+    #KS_solve_Emin_SD_Haux!( Ham, evars, NiterMax=50 ) # WORKS !!!
+    
+    KS_solve_Emin_PCG_Haux!( Ham, evars, NiterMax=50 )
+
     #KS_solve_Emin_PCG_Haux_v1!( Ham, evars, NiterMax=30 )
     #KS_solve_Emin_PCG_Haux_v2!( Ham, evars, NiterMax=50 )
     #mTS = calc_entropy( wk, kT, Ham.electrons.ebands, E_fermi, Nspin )
