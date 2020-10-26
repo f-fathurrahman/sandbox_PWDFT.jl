@@ -1,3 +1,10 @@
+function create_Ham_O2_smearing()
+    atoms = Atoms(ext_xyz_file=joinpath(DIR_STRUCTURES, "O2.xyz"))
+    pspfiles = [joinpath(DIR_PSP, "O-q6.gth")]
+    ecutwfc = 15.0
+    return Hamiltonian( atoms, pspfiles, ecutwfc, extra_states=4 )
+end
+
 function create_Ham_Pt_fcc_smearing(; meshk=[3,3,3])
     atoms = Atoms(xyz_string_frac=
         """
