@@ -178,6 +178,13 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
         
         energies, forces[:] = run_pwdft_jl!(Ham, psis)
         
+        # Alignment
+        for i in 1:Nspin
+            O = overlap_gamma(psis.data[i], psis_m0.data[i])
+            U = inv(sqrt(O' * O)) * O'
+            psis.data[i] = psis.data[i]*U
+        end
+        
         for i in 1:Nspin
             psis_m0.data[i][:,:] = psis.data[i][:,:]
         end
