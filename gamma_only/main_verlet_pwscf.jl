@@ -10,8 +10,7 @@ const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
 const DIR_STRUCTURES = joinpath(DIR_PWDFT, "structures")
 
 include(joinpath(DIR_PWDFT, "utilities", "PWSCF.jl"))
-include("INC_gamma_only.jl")
-include("update_positions.jl")
+include("../get_default_psp.jl")
 
 Random.seed!(1234)
 
@@ -25,7 +24,7 @@ function init_Ham_H2O()
     filename = joinpath(DIR_STRUCTURES, "DATA_G2_mols", "H2O.xyz")
     atoms = Atoms(ext_xyz_file=filename)
     pspfiles = get_default_psp(atoms)
-    Ham = HamiltonianGamma( atoms, pspfiles, ecutwfc )
+    Ham = Hamiltonian( atoms, pspfiles, ecutwfc )
     # Set masses
     Ham.atoms.masses[:] = [16.0, 2.0]*AMU_AU
 
@@ -39,17 +38,23 @@ function init_Ham_CO2()
     filename = joinpath("../md_01/CO2.xyz")
     atoms = Atoms(ext_xyz_file=filename)
     pspfiles = get_default_psp(atoms)
-    Ham = HamiltonianGamma( atoms, pspfiles, ecutwfc )
+    Ham = Hamiltonian( atoms, pspfiles, ecutwfc )
     # Set masses
     Ham.atoms.masses[:] = [14.0, 16.0]*AMU_AU
 
     return Ham
 end
 
-function run_pwdft_jl!( Ham, psis )
-    KS_solve_Emin_PCG_dot!( Ham, psis, skip_initial_diag=true, etot_conv_thr=1e-8 )
-    forces = calc_forces( Ham, psis )
-    return sum(Ham.energies), forces
+function run_pwscf( Ham )
+    run(`rm -rfv TEMP_pwscf_md/\*`)
+    write_pwscf( Ham, prefix_dir="TEMP_pwscf_md", etot_conv_thr=1e-8 )
+    cd("./TEMP_pwscf_md")
+    run(pipeline(`pw.x`, stdin="PWINPUT", stdout="LOG1"))
+    cd("../")
+
+    pwscf_energies = read_pwscf_etotal("TEMP_pwscf_md/LOG1")
+    pwscf_forces = read_pwscf_forces("TEMP_pwscf_md/LOG1")
+    return pwscf_energies, pwscf_forces
 end
 
 function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
@@ -60,8 +65,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
     Natoms = Ham.atoms.Natoms
 
-    psis = randn_BlochWavefuncGamma(Ham)
-    energies, forces = run_pwdft_jl!(Ham, psis)
+    energies, forces = run_pwscf(Ham)
 
     Etot = sum(energies)
 
@@ -122,9 +126,11 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             Ekin_ions = Ekin_ions + 0.5*m[isp]*ptot2
         end
         Etot_conserved = Etot + Ekin_ions
-        update_positions!( Ham, Ham.atoms.positions + dr )
+        
+        # Update positions
+        Ham.atoms.positions[:] = Ham.atoms.positions[:] + dr[:]
 
-        energies, forces[:] = run_pwdft_jl!(Ham, psis)
+        energies, forces[:] = run_pwscf(Ham)
         Etot = sum(energies)
 
         for ia in 1:Natoms
@@ -155,4 +161,4 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 end
 
 #main(init_Ham_H2O, fnametrj="TRAJ_H2O_v4.xyz", fnameetot="ETOT_H2O_v4.dat")
-main(init_Ham_CO2, fnametrj="TRAJ_CO2_v3.xyz", fnameetot="ETOT_CO2_v3.dat")
+main(init_Ham_CO2, fnametrj="TRAJ_CO2_v3_pwscf.xyz", fnameetot="ETOT_CO2_v3_pwscf.dat")
