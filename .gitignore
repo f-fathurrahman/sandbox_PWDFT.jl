@@ -2,6 +2,7 @@ TODO.md
 BLOGS.md
 
 IMG_*
+*.dat
 
 clean_cov_mem.sh
 do_coverage.sh
