@@ -16,9 +16,14 @@ include("update_positions.jl")
 Random.seed!(1234)
 
 # From QE
-const AMU_SI = 1.660538782e-27
-const ELECTRONMASS_SI = 9.10938215e-31
+const AMU_SI = 1.660538782e-27  # kg
+const ELECTRONMASS_SI = 9.10938215e-31 # kg
 const AMU_AU = AMU_SI / ELECTRONMASS_SI
+
+const H_PLANCK_SI = 6.62607015e-34      # J s
+const HARTREE_SI = 4.3597447222071e-18  # J
+const AU_SEC = H_PLANCK_SI/(2*pi)/HARTREE_SI
+const AU_PS  = AU_SEC*1.0e12
 
 function init_Ham_H2O()
     ecutwfc = 15.0
@@ -54,35 +59,25 @@ end
 
 function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     
+    dt_fs = 0.5
+    # Time step, in Ha atomic unit
+    dt = dt_fs*10e-16/AU_SEC
+    println("dt (au) = ", dt)
+    println("dt (ps) = ", dt*AU_PS)
+
     Ham = init_func()
 
     println(Ham.atoms.masses)
 
     Natoms = Ham.atoms.Natoms
 
-    psis = randn_BlochWavefuncGamma(Ham)
-    energies, forces = run_pwdft_jl!(Ham, psis)
-
-    Etot = sum(energies)
-
-    println("Initial r  =")
-    display(Ham.atoms.positions'); println()
-    println("Initial forces = ")
-    display(forces'); println()
-
     # Momenta
     p = zeros(Float64,3,Natoms)
-    Ekin_ions = 0.0  # assume initial velocities is zeroes
-    Etot_conserved = Etot + Ekin_ions
-
     dr = zeros(Float64,3,Natoms)
     v = zeros(Float64,3,Natoms)
     vtilde = zeros(Float64,3,Natoms)
     m = Ham.atoms.masses
     atm2species = Ham.atoms.atm2species
-
-    # Time step
-    dt = 10.0
 
     filetraj = open(fnametrj, "w")
     fileetot = open(fnameetot, "w")
@@ -91,14 +86,32 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     # XXX Xcrysden assumes the forces are in Ha/angstrom
     FORCE_evAng = 1.0/BOHR2ANG
 
+    # t = 0 for MD
+    psis = randn_BlochWavefuncGamma(Ham)
+    energies, forces = run_pwdft_jl!(Ham, psis)
+    Etot = sum(energies)
+
+    println("Forces = ")
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        atsymb = Ham.atoms.SpeciesSymbols[isp]
+        @printf("%3s %18.10f %18.10f %18.10f\n", atsymb,
+            forces[1,ia], forces[2,ia], forces[3,ia])
+    end
+
+    Ekin_ions = 0.0  # assume initial velocities are zeroes
+    Etot_conserved = Etot + Ekin_ions
+
     #
     # Start MD loop here
     #
-    NiterMax = 500
+    NiterMax = 10
     for iter = 1:NiterMax
 
         @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
-        @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n", (iter-1)*dt, Etot_conserved, Etot, Ekin_ions)
+        @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n",
+            AU_PS*(iter-1)*dt, Etot_conserved, Etot, Ekin_ions)
+
         for ia in 1:Natoms
             isp = atm2species[ia]
             r = Ham.atoms.positions
@@ -136,10 +149,19 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
         
         @printf("\nIter = %3d, Etot = %18.10f\n", iter, sum(energies))
 
+        println("Forces = ")
+        for ia in 1:Natoms
+            isp = atm2species[ia]
+            atsymb = Ham.atoms.SpeciesSymbols[isp]
+            @printf("%3s %18.10f %18.10f %18.10f\n", atsymb,
+                forces[1,ia], forces[2,ia], forces[3,ia])
+        end
+
     end
 
     @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
-    @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n", NiterMax*dt, Etot_conserved, Etot, Ekin_ions)
+    @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n",
+        AU_PS*NiterMax*dt, Etot_conserved, Etot, Ekin_ions)
     for ia in 1:Natoms
         isp = atm2species[ia]
         r = Ham.atoms.positions
@@ -155,4 +177,4 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 end
 
 #main(init_Ham_H2O, fnametrj="TRAJ_H2O_v4.xyz", fnameetot="ETOT_H2O_v4.dat")
-main(init_Ham_CO2, fnametrj="TRAJ_CO2_v3.xyz", fnameetot="ETOT_CO2_v3.dat")
+main(init_Ham_CO2, fnametrj="TRAJ_CO2_step10.xyz", fnameetot="ETOT_CO2_step10.dat")
