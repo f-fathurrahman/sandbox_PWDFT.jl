@@ -9,7 +9,8 @@ function main(prefix::String)
     @views Etot = data[2:Ndata,2]
     Etot0 = Etot[1]
     plt.clf()
-    plt.plot(data[2:Ndata,1], Etot .- Etot0, marker="o")
+    #plt.plot(data[2:Ndata,1], Etot .- Etot0, marker="o")
+    plt.plot(data[2:Ndata,1], Etot .- Etot0)
     plt.grid()
     plt.title(prefix)
     plt.savefig("IMG_"*prefix*".pdf")
