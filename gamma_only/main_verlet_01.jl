@@ -105,7 +105,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     #
     # Start MD loop here
     #
-    NiterMax = 10
+    NiterMax = 5000
     for iter = 1:NiterMax
 
         @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
@@ -177,4 +177,11 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 end
 
 #main(init_Ham_H2O, fnametrj="TRAJ_H2O_v4.xyz", fnameetot="ETOT_H2O_v4.dat")
-main(init_Ham_CO2, fnametrj="TRAJ_CO2_step10.xyz", fnameetot="ETOT_CO2_step10.dat")
+main(init_Ham_CO2,
+    fnametrj="TRAJ_CO2_noextrap.xyz",
+    fnameetot="ETOT_CO2_noextrap.dat"
+)
+#main(init_Ham_CO2,
+#    fnametrj="TRAJ_CO2_step10.xyz",
+#    fnameetot="ETOT_CO2_step10.dat"
+#)

@@ -10,7 +10,9 @@ const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
 const DIR_STRUCTURES = joinpath(DIR_PWDFT, "structures")
 
 include(joinpath(DIR_PWDFT, "utilities", "PWSCF.jl"))
-include("../get_default_psp.jl")
+include("INC_gamma_only.jl")
+include("update_positions.jl")
+include("find_extrap_alpha_beta.jl")
 
 Random.seed!(1234)
 
@@ -29,7 +31,7 @@ function init_Ham_H2O()
     filename = joinpath(DIR_STRUCTURES, "DATA_G2_mols", "H2O.xyz")
     atoms = Atoms(ext_xyz_file=filename)
     pspfiles = get_default_psp(atoms)
-    Ham = Hamiltonian( atoms, pspfiles, ecutwfc )
+    Ham = HamiltonianGamma( atoms, pspfiles, ecutwfc )
     # Set masses
     Ham.atoms.masses[:] = [16.0, 2.0]*AMU_AU
 
@@ -43,7 +45,7 @@ function init_Ham_CO2()
     filename = joinpath("../md_01/CO2.xyz")
     atoms = Atoms(ext_xyz_file=filename)
     pspfiles = get_default_psp(atoms)
-    Ham = Hamiltonian( atoms, pspfiles, ecutwfc )
+    Ham = HamiltonianGamma( atoms, pspfiles, ecutwfc )
     # Set masses
     Ham.atoms.masses[:] = [14.0, 16.0]*AMU_AU
 
@@ -51,15 +53,35 @@ function init_Ham_CO2()
 end
 
 function run_pwscf( Ham )
-    run(`rm -rfv TEMP_pwscf_md/\*`)
-    write_pwscf( Ham, prefix_dir="TEMP_pwscf_md", etot_conv_thr=1e-8 )
-    cd("./TEMP_pwscf_md")
-    run(pipeline(`mpirun -n 4 pw.x`, stdin="PWINPUT", stdout="LOG1"))
+    run(`rm -rfv TEMP_pwscf/\*`)
+    write_pwscf( Ham, prefix_dir="TEMP_pwscf" )
+    cd("./TEMP_pwscf")
+    run(pipeline(`pw.x`, stdin="PWINPUT", stdout="LOG1"))
     cd("../")
 
-    pwscf_energies = read_pwscf_etotal("TEMP_pwscf_md/LOG1")
-    pwscf_forces = read_pwscf_forces("TEMP_pwscf_md/LOG1")
+    pwscf_energies = read_pwscf_etotal("TEMP_pwscf/LOG1")
+    pwscf_forces = read_pwscf_forces("TEMP_pwscf/LOG1")
     return pwscf_energies, pwscf_forces
+end
+
+function run_pwdft_jl!( Ham, psis )
+    KS_solve_Emin_PCG_dot!( Ham, psis, skip_initial_diag=true, etot_conv_thr=1e-8 )
+    forces = calc_forces( Ham, psis )
+    return sum(Ham.energies), forces
+end
+
+# With alignment
+function run_pwdft_jl!( Ham, psis, psis_m0 )
+    KS_solve_Emin_PCG_dot!( Ham, psis, skip_initial_diag=true, etot_conv_thr=1e-8 )
+    # Alignment
+    Nspin = size(psis.data,1)
+    for i in 1:Nspin
+        O = overlap_gamma(psis.data[i], psis_m0.data[i])
+        U = inv(sqrt(O' * O)) * O'
+        psis.data[i] = psis.data[i]*U
+    end
+    forces = calc_forces( Ham, psis )
+    return sum(Ham.energies), forces
 end
 
 function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
@@ -75,20 +97,8 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     println(Ham.atoms.masses)
 
     Natoms = Ham.atoms.Natoms
-
-    energies, forces = run_pwscf(Ham)
-
-    Etot = sum(energies)
-
-    println("Initial r  =")
-    display(Ham.atoms.positions'); println()
-    println("Initial forces = ")
-    display(forces'); println()
-
     # Momenta
     p = zeros(Float64,3,Natoms)
-    Ekin_ions = 0.0  # assume initial velocities is zeroes
-    Etot_conserved = Etot + Ekin_ions
 
     dr = zeros(Float64,3,Natoms)
     v = zeros(Float64,3,Natoms)
@@ -103,15 +113,39 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     # XXX Xcrysden assumes the forces are in Ha/angstrom
     FORCE_evAng = 1.0/BOHR2ANG
 
+    tau_old = zeros(3,Natoms,3)
+    tau = zeros(3,Natoms)
+
+    psis = randn_BlochWavefuncGamma(Ham)
+    energies, forces = run_pwdft_jl!(Ham, psis)
+    
+    psis_m0 = deepcopy(psis) # after minimized
+    psis_m1 = deepcopy(psis) # initialize memory
+    psis_m2 = deepcopy(psis) # initialize memory
+
+    Etot = sum(energies)
+
+    println("Forces = ")
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        atsymb = Ham.atoms.SpeciesSymbols[isp]
+        @printf("%3s %18.10f %18.10f %18.10f\n", atsymb,
+            forces[1,ia], forces[2,ia], forces[3,ia])
+    end
+
+    Ekin_ions = 0.0  # assume initial velocities is zeroes
+    Etot_conserved = Etot + Ekin_ions
+
+    Nspin = Ham.electrons.Nspin
+
     #
     # Start MD loop here
     #
-    NiterMax = 500
+    NiterMax = 10
     for iter = 1:NiterMax
 
         @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
-        @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n",
-            AU_PS*(iter-1)*dt, Etot_conserved, Etot, Ekin_ions)
+        @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n", (iter-1)*dt, Etot_conserved, Etot, Ekin_ions)
         for ia in 1:Natoms
             isp = atm2species[ia]
             r = Ham.atoms.positions
@@ -122,6 +156,10 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
         end
         flush(filetraj)
         flush(fileetot)
+
+        tau_old[:,:,3] = tau_old[:,:,2]
+        tau_old[:,:,2] = tau_old[:,:,1]
+        tau_old[:,:,1] = Ham.atoms.positions[:,:]
 
         Ekin_ions = 0.0
         for ia in 1:Natoms
@@ -135,11 +173,39 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             Ekin_ions = Ekin_ions + 0.5*m[isp]*ptot2
         end
         Etot_conserved = Etot + Ekin_ions
-        
-        # Update positions
-        Ham.atoms.positions[:] = Ham.atoms.positions[:] + dr[:]
+        update_positions!( Ham, Ham.atoms.positions + dr )
 
-        energies, forces[:] = run_pwscf(Ham)
+        tau[:,:] = Ham.atoms.positions[:,:]
+
+        # Extrapolate wavefunction (1st order)
+        if iter > 3
+            α, β = find_extrap_alpha_beta(tau, tau_old)
+            #println("α = ", α)
+            #println("β = ", β)
+            #println("tau_old")
+            #display(tau_old); println()
+            #println("tau = ")
+            #display(tau); println()
+            for i in 1:Nspin
+                psis.data[i][:,:] = psis_m0.data[i][:,:] +
+                                    α*(psis_m0.data[i][:,:] - psis_m1.data[i][:,:]) +
+                                    β*(psis_m1.data[i][:,:] - psis_m2.data[i][:,:])
+                ortho_sqrt_gamma!( psis.data[i] )
+            end
+            #println("Check ortho: ", dot(psis,psis))
+        end
+
+        for i in 1:Nspin
+            psis_m2.data[i][:,:] = psis_m1.data[i][:,:]
+            psis_m1.data[i][:,:] = psis_m0.data[i][:,:]
+        end
+        
+        energies, forces[:] = run_pwdft_jl!(Ham, psis, psis_m0)
+
+        for i in 1:Nspin
+            psis_m0.data[i][:,:] = psis.data[i][:,:]
+        end
+
         Etot = sum(energies)
 
         for ia in 1:Natoms
@@ -150,12 +216,18 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
         end
         
         @printf("\nIter = %3d, Etot = %18.10f\n", iter, sum(energies))
+        println("Forces = ")
+        for ia in 1:Natoms
+            isp = atm2species[ia]
+            atsymb = Ham.atoms.SpeciesSymbols[isp]
+            @printf("%3s %18.10f %18.10f %18.10f\n", atsymb,
+                forces[1,ia], forces[2,ia], forces[3,ia])
+        end
 
     end
 
     @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
-    @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n",
-        AU_PS*NiterMax*dt, Etot_conserved, Etot, Ekin_ions)
+    @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n", NiterMax*dt, Etot_conserved, Etot, Ekin_ions)
     for ia in 1:Natoms
         isp = atm2species[ia]
         r = Ham.atoms.positions
@@ -171,4 +243,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 end
 
 #main(init_Ham_H2O, fnametrj="TRAJ_H2O_v4.xyz", fnameetot="ETOT_H2O_v4.dat")
-main(init_Ham_CO2, fnametrj="TRAJ_CO2_pwscf.xyz", fnameetot="ETOT_CO2_pwscf.dat")
+main(init_Ham_CO2,
+    fnametrj="TRAJ_CO2_step10_extrap2nd_new.xyz",
+    fnameetot="ETOT_CO2_step10_extrap2nd_new.dat"
+)
