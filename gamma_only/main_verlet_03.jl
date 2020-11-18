@@ -60,7 +60,7 @@ end
 
 function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
-    dt_fs = 0.5
+    dt_fs = 1.0
     # Time step, in Ha atomic unit
     dt = dt_fs*10e-16/AU_SEC
     println("dt (au) = ", dt)
@@ -119,7 +119,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     #
     # Start MD loop here
     #
-    NiterMax = 5000
+    NiterMax = 20
     for iter = 1:NiterMax
 
         @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
@@ -159,12 +159,6 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
         # Extrapolate wavefunction (1st order)
         if iter > 3
             α, β = find_extrap_alpha_beta(tau, tau_old)
-            #println("α = ", α)
-            #println("β = ", β)
-            #println("tau_old")
-            #display(tau_old); println()
-            #println("tau = ")
-            #display(tau); println()
             for i in 1:Nspin
                 psis.data[i][:,:] = psis_m0.data[i][:,:] +
                                     α*(psis_m0.data[i][:,:] - psis_m1.data[i][:,:]) +

@@ -31,7 +31,7 @@ function dot(v1::BlochWavefuncGamma, v2::BlochWavefuncGamma)
 end
 
 
-function dot_gamma( v1::Array{ComplexF64,2}, v2::Array{ComplexF64,2} )
+function dot_gamma( v1::Array{ComplexF64}, v2::Array{ComplexF64} )
     c = dot(v1, v2)
     s = c + conj(c)
     Nstates = size(v1,2)
