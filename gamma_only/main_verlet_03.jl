@@ -52,15 +52,22 @@ function init_Ham_CO2()
     return Ham
 end
 
-function run_pwdft_jl!( Ham, psis )
-    KS_solve_Emin_PCG_dot!( Ham, psis, skip_initial_diag=true, etot_conv_thr=1e-8 )
+function run_pwdft_jl!( Ham, psis; NiterMax=100, etot_conv_thr=1e-8 )
+    KS_solve_Emin_PCG_dot!( Ham, psis,
+        skip_initial_diag=true, etot_conv_thr=etot_conv_thr,
+        NiterMax=NiterMax
+    )
+    #KS_solve_SCF_potmix!( Ham, psis, 
+    #    startingrhoe=:random, etot_conv_thr=etot_conv_thr,
+    #    NiterMax=NiterMax, betamix=0.1
+    #)
     forces = calc_forces( Ham, psis )
     return sum(Ham.energies), forces
 end
 
 function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
-    dt_fs = 1.0
+    dt_fs = 0.5
     # Time step, in Ha atomic unit
     dt = dt_fs*10e-16/AU_SEC
     println("dt (au) = ", dt)
@@ -91,7 +98,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     tau = zeros(3,Natoms)
 
     psis = randn_BlochWavefuncGamma(Ham)
-    energies, forces = run_pwdft_jl!(Ham, psis)
+    energies, forces = run_pwdft_jl!(Ham, psis, etot_conv_thr=1e-10)
     
     psis_m0 = deepcopy(psis) # after minimized
     psis_m1 = deepcopy(psis) # initialize memory
@@ -119,7 +126,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     #
     # Start MD loop here
     #
-    NiterMax = 20
+    NiterMax = 5000
     for iter = 1:NiterMax
 
         @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
@@ -173,7 +180,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             psis_m1.data[i][:,:] = psis_m0.data[i][:,:]
         end
         
-        energies, forces[:] = run_pwdft_jl!(Ham, psis)
+        energies, forces[:] = run_pwdft_jl!(Ham, psis, etot_conv_thr=1e-10)
         
         # Alignment
         for i in 1:Nspin
