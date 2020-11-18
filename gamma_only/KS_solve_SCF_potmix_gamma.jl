@@ -132,14 +132,15 @@ function KS_solve_SCF_potmix!(
     for iterSCF = 1:NiterMax
 
         # determine convergence criteria for diagonalization
-        if iterSCF == 1
-            ethr = 0.1
-        elseif iterSCF == 2
-            ethr = 0.01
-        else
-            ethr = ethr/5.0
-            ethr = max( ethr, ethr_evals_last )
-        end
+        #if iterSCF == 1
+        #    ethr = 0.1
+        #elseif iterSCF == 2
+        #    ethr = 0.01
+        #else
+        #    ethr = ethr/5.0
+        #    ethr = max( ethr, ethr_evals_last )
+        #end
+        ethr = ethr_evals_last
 
         evals =
         diag_Emin_PCG!( Ham, psis, verbose=false, verbose_last=false, tol=ethr,
