@@ -58,7 +58,7 @@ function run_pwdft_jl!( Ham, psis; NiterMax=100, etot_conv_thr=1e-8 )
     )
     #KS_solve_SCF_potmix!( Ham, psis, 
     #    startingrhoe=:random, etot_conv_thr=etot_conv_thr,
-    #    NiterMax=NiterMax, betamix=0.1
+    #    NiterMax=NiterMax, betamix=0.5
     #)
     forces = calc_forces( Ham, psis )
     return sum(Ham.energies), forces
@@ -66,7 +66,7 @@ end
 
 function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
-    dt_fs = 0.5
+    dt_fs = 4.0
     # Time step, in Ha atomic unit
     dt = dt_fs*10e-16/AU_SEC
     println("dt (au) = ", dt)
@@ -78,7 +78,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
     # XL-BOMD parameters
     ω2 = 1.82/dt^2
-    α = 0.018 #18000.0
+    α = 0.018
     c0 = -6.0
     c1 = 14.0
     c2 = -8.0
@@ -108,6 +108,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     Nstates = Ham.electrons.Nstates
     O = zeros(ComplexF64,Nstates,Nstates)
     U = zeros(ComplexF64,Nstates,Nstates)
+    C = zeros(ComplexF64,Nstates,Nstates)
 
     psis = randn_BlochWavefuncGamma(Ham)
     psis_SC = deepcopy(psis) # initialize memory
@@ -118,7 +119,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     psis_m4 = deepcopy(psis) # initialize memory
     psis_m5 = deepcopy(psis) # initialize memory
 
-    energies, forces = run_pwdft_jl!(Ham, psis_SC)    
+    energies, forces = run_pwdft_jl!(Ham, psis_SC)
     psis_SC0 = deepcopy(psis_SC) # initialize memory
 
     # Initial condition for XL-BOMD
@@ -186,7 +187,9 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
                         c2*psis_m2.data[i] + c3*psis_m3.data[i] +
                         c4*psis_m4.data[i] + c5*psis_m5.data[i]
                     )
-                ortho_sqrt_gamma!( psis.data[i] )
+                #ortho_sqrt_gamma!( psis.data[i] )
+                C[:,:] = inv(sqrt(overlap_gamma(psis.data[i], psis.data[i])))
+                psis.data[i][:,:] = psis.data[i][:,:]*C
                 # Alignment ??
             end
             println("XL-BOMD check ortho: ", dot(psis,psis))
@@ -200,6 +203,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
                 U[:,:] = inv(sqrt(O*O')) * O
                 psis_SC.data[i][:,:] = psis_SC.data[i][:,:]*U
             end
+            println("XL-BOMD check ortho psis_SC: ", dot(psis_SC,psis_SC))
 
         else
             # The usual BOMD
@@ -210,7 +214,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             for i in 1:Nspin
                 O[:,:] = overlap_gamma(psis_SC.data[i], psis_SC0.data[i])
                 U[:,:] = inv(sqrt(O*O')) * O
-                psis_SC.data[i] = psis_SC.data[i]*U
+                psis_SC.data[i][:,:] = psis_SC.data[i][:,:]*U
             end
         end
         
