@@ -52,21 +52,21 @@ function init_Ham_CO2()
 end
 
 function run_pwdft_jl!( Ham, psis; NiterMax=100, etot_conv_thr=1e-8 )
-    KS_solve_Emin_PCG_dot!( Ham, psis,
-        skip_initial_diag=true, etot_conv_thr=etot_conv_thr,
-        NiterMax=NiterMax
-    )
-    #KS_solve_SCF_potmix!( Ham, psis, 
-    #    startingrhoe=:random, etot_conv_thr=etot_conv_thr,
-    #    NiterMax=NiterMax, betamix=0.1
+    #KS_solve_Emin_PCG_dot!( Ham, psis,
+    #    skip_initial_diag=true, etot_conv_thr=etot_conv_thr,
+    #    NiterMax=NiterMax
     #)
+    KS_solve_SCF_potmix!( Ham, psis, 
+        startingrhoe=:random, etot_conv_thr=etot_conv_thr,
+        NiterMax=NiterMax, betamix=0.1
+    )
     forces = calc_forces( Ham, psis )
     return sum(Ham.energies), forces
 end
 
 function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
-    dt_fs = 0.5
+    dt_fs = 1.0
     # Time step, in Ha atomic unit
     dt = dt_fs*10e-16/AU_SEC
     println("dt (au) = ", dt)
@@ -77,14 +77,16 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     Nspin = Ham.electrons.Nspin
 
     # XL-BOMD parameters
-    ω2 = 1.82/dt^2
-    α = 0.018 #18000.0
-    c0 = -6.0
-    c1 = 14.0
-    c2 = -8.0
-    c3 = -3.0
-    c4 = 4.0
-    c5 = -1.0
+    κ = 1.86
+    α = 0.0016
+    c0 = -36.0
+    c1 = 99.0
+    c2 = -88.0
+    c3 = 11.0
+    c4 = 32.0
+    c5 = -25.0
+    c6 = 8.0
+    c7 = -1.0
 
     println(Ham.atoms.masses)
 
@@ -117,6 +119,8 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     psis_m3 = deepcopy(psis) # initialize memory
     psis_m4 = deepcopy(psis) # initialize memory
     psis_m5 = deepcopy(psis) # initialize memory
+    psis_m6 = deepcopy(psis) # initialize memory
+    psis_m7 = deepcopy(psis) # initialize memory
 
     energies, forces = run_pwdft_jl!(Ham, psis_SC)    
     psis_SC0 = deepcopy(psis_SC) # initialize memory
@@ -142,8 +146,8 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     #
     # Start MD loop here
     #
-    NiterMax = 20
-    iter_start_XL = 5
+    NiterMax = 100
+    iter_start_XL = 7
 
     for iter = 1:NiterMax
 
@@ -180,16 +184,21 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             for i in 1:Nspin
                 #
                 psis.data[i][:,:] = 2*psis_m0.data[i] - psis_m1.data[i] +
-                    1.82 * ( psis_SC.data[i] - psis_m0.data[i] ) +
-                    α*(
+                    κ * ( psis_SC.data[i] - psis_m0.data[i] ) +
+                    α * (
                         c0*psis_m0.data[i] + c1*psis_m1.data[i] +
                         c2*psis_m2.data[i] + c3*psis_m3.data[i] +
-                        c4*psis_m4.data[i] + c5*psis_m5.data[i]
+                        c4*psis_m4.data[i] + c5*psis_m5.data[i] +
+                        c6*psis_m6.data[i] + c7*psis_m7.data[i]
                     )
-                ortho_sqrt_gamma!( psis.data[i] )
+                #ortho_sqrt_gamma!( psis.data[i] )
                 # Alignment ??
             end
             println("XL-BOMD check ortho: ", dot(psis,psis))
+            for ist in 1:Nstates
+                println(dot_gamma(psis.data[1][:,1], psis.data[1][:,ist]))
+            end
+            exit()
             for i in 1:Nspin
                 psis_SC.data[i][:,:] = psis.data[i][:,:]
             end
@@ -215,6 +224,8 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
         end
         
         for i in 1:Nspin
+            psis_m7.data[i][:,:] = psis_m6.data[i][:,:]
+            psis_m6.data[i][:,:] = psis_m5.data[i][:,:]
             psis_m5.data[i][:,:] = psis_m4.data[i][:,:]
             psis_m4.data[i][:,:] = psis_m3.data[i][:,:]
             psis_m3.data[i][:,:] = psis_m2.data[i][:,:]
@@ -273,8 +284,8 @@ end
 
 #main(init_Ham_H2O, fnametrj="TRAJ_H2O_v4.xyz", fnameetot="ETOT_H2O_v4.dat")
 main(init_Ham_CO2,
-    fnametrj="TRAJ_CO2_xlbomd.xyz",
-    fnameetot="ETOT_CO2_xlbomd.dat"
+    fnametrj="TRAJ_CO2_xlbomd_7.xyz",
+    fnameetot="ETOT_CO2_xlbomd_7.dat"
 )
 #main(init_Ham_CO2,
 #    fnametrj="TRAJ_CO2_step10_extrap2nd.xyz",
