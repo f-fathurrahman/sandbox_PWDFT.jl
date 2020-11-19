@@ -66,7 +66,7 @@ end
 
 function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
-    dt_fs = 4.0
+    dt_fs = 1.0
     # Time step, in Ha atomic unit
     dt = dt_fs*10e-16/AU_SEC
     println("dt (au) = ", dt)
@@ -77,7 +77,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     Nspin = Ham.electrons.Nspin
 
     # XL-BOMD parameters
-    ω2 = 1.82/dt^2
+    κ = 1.82
     α = 0.018
     c0 = -6.0
     c1 = 14.0
@@ -143,37 +143,54 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     #
     # Start MD loop here
     #
-    NiterMax = 20
+    NiterMax = 100
     iter_start_XL = 5
+
+    # 0-th iteration, initial condition
+    iter = 0
+    @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
+    @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n",
+            AU_PS*iter*dt, Etot_conserved, Etot, Ekin_ions)
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        r = Ham.atoms.positions
+        @printf(filetraj, "%3s %18.10f %18.10f %18.10f %18.10f %18.10f %18.10f\n",
+                Ham.atoms.SpeciesSymbols[isp],
+                r[1,ia]*BOHR2ANG, r[2,ia]*BOHR2ANG, r[3,ia]*BOHR2ANG,
+                forces[1,ia]*FORCE_evAng, forces[2,ia]*FORCE_evAng, forces[3,ia]*FORCE_evAng)
+    end
+    flush(filetraj)
+    flush(fileetot)
+
+    Etot = sum(energies)
+
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        for i in 1:3
+            v[i,ia] = vtilde[i,ia] + 0.5*dt*forces[i,ia]/m[isp]
+        end
+    end
+        
+    @printf("\nMD Iter = %3d, Etot = %18.10f\n", iter, sum(energies))
+    println("Forces = ")
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        atsymb = Ham.atoms.SpeciesSymbols[isp]
+        @printf("%3s %18.10f %18.10f %18.10f\n", atsymb,
+            forces[1,ia], forces[2,ia], forces[3,ia])
+    end
+
 
     for iter = 1:NiterMax
 
-        @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
-        @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n",
-            AU_PS*(iter-1)*dt, Etot_conserved, Etot, Ekin_ions)
+        # Update atomic positions
         for ia in 1:Natoms
             isp = atm2species[ia]
-            r = Ham.atoms.positions
-            @printf(filetraj, "%3s %18.10f %18.10f %18.10f %18.10f %18.10f %18.10f\n",
-                    Ham.atoms.SpeciesSymbols[isp],
-                    r[1,ia]*BOHR2ANG, r[2,ia]*BOHR2ANG, r[3,ia]*BOHR2ANG,
-                    forces[1,ia]*FORCE_evAng, forces[2,ia]*FORCE_evAng, forces[3,ia]*FORCE_evAng)
-        end
-        flush(filetraj)
-        flush(fileetot)
-
-        Ekin_ions = 0.0
-        for ia in 1:Natoms
-            isp = atm2species[ia]
-            ptot2 = 0.0
             for i in 1:3
                 vtilde[i,ia] = v[i,ia] + 0.5*dt*forces[i,ia]/m[isp]
                 dr[i,ia] = dt*vtilde[i,ia]
-                ptot2 = ptot2 + v[i,ia]^2
             end
-            Ekin_ions = Ekin_ions + 0.5*m[isp]*ptot2
         end
-        Etot_conserved = Etot + Ekin_ions
         update_positions!( Ham, Ham.atoms.positions + dr )
 
         if iter > iter_start_XL
@@ -181,8 +198,8 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             for i in 1:Nspin
                 #
                 psis.data[i][:,:] = 2*psis_m0.data[i] - psis_m1.data[i] +
-                    1.82 * ( psis_SC.data[i] - psis_m0.data[i] ) +
-                    α*(
+                    κ * ( psis_SC.data[i] - psis_m0.data[i] ) +
+                    α * (
                         c0*psis_m0.data[i] + c1*psis_m1.data[i] +
                         c2*psis_m2.data[i] + c3*psis_m3.data[i] +
                         c4*psis_m4.data[i] + c5*psis_m5.data[i]
@@ -237,17 +254,37 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             end
         end
 
-
         Etot = sum(energies)
 
+        # Update velocities
+        Ekin_ions = 0.0
         for ia in 1:Natoms
             isp = atm2species[ia]
+            ptot2 = 0.0
             for i in 1:3
                 v[i,ia] = vtilde[i,ia] + 0.5*dt*forces[i,ia]/m[isp]
+                ptot2 = ptot2 + v[i,ia]^2
             end
+            Ekin_ions = Ekin_ions + 0.5*m[isp]*ptot2
         end
         
-        @printf("\nIter = %3d, Etot = %18.10f\n", iter, sum(energies))
+        Etot_conserved = Etot + Ekin_ions
+
+        @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
+        @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n",
+                AU_PS*iter*dt, Etot_conserved, Etot, Ekin_ions)
+        for ia in 1:Natoms
+            isp = atm2species[ia]
+            r = Ham.atoms.positions
+            @printf(filetraj, "%3s %18.10f %18.10f %18.10f %18.10f %18.10f %18.10f\n",
+                    Ham.atoms.SpeciesSymbols[isp],
+                    r[1,ia]*BOHR2ANG, r[2,ia]*BOHR2ANG, r[3,ia]*BOHR2ANG,
+                    forces[1,ia]*FORCE_evAng, forces[2,ia]*FORCE_evAng, forces[3,ia]*FORCE_evAng)
+        end
+        flush(filetraj)
+        flush(fileetot)
+
+        @printf("\nMD Iter = %3d, Etot = %18.10f\n", iter, sum(energies))
         println("Forces = ")
         for ia in 1:Natoms
             isp = atm2species[ia]
@@ -256,18 +293,6 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
                 forces[1,ia], forces[2,ia], forces[3,ia])
         end
 
-    end
-
-    @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
-    @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n",
-        AU_PS*NiterMax*dt, Etot_conserved, Etot, Ekin_ions)
-    for ia in 1:Natoms
-        isp = atm2species[ia]
-        r = Ham.atoms.positions
-        @printf(filetraj, "%3s %18.10f %18.10f %18.10f %18.10f %18.10f %18.10f\n",
-                Ham.atoms.SpeciesSymbols[isp],
-                r[1,ia]*BOHR2ANG, r[2,ia]*BOHR2ANG, r[3,ia]*BOHR2ANG,
-                forces[1,ia]*FORCE_evAng, forces[2,ia]*FORCE_evAng, forces[3,ia]*FORCE_evAng)
     end
 
     close(filetraj)
