@@ -58,15 +58,37 @@ function run_pwdft_jl!( Ham, psis; NiterMax=100, etot_conv_thr=1e-8 )
     )
     #KS_solve_SCF_potmix!( Ham, psis, 
     #    startingrhoe=:random, etot_conv_thr=etot_conv_thr,
-    #    NiterMax=NiterMax, betamix=0.5
+    #    NiterMax=NiterMax, betamix=0.2, mix_method="linear_adaptive"
     #)
     forces = calc_forces( Ham, psis )
     return sum(Ham.energies), forces
 end
 
+
+# NOT USED !!!!
+function run_pwdft_jl!( Ham, psis, psis_SC; NiterMax=100, etot_conv_thr=1e-8 )
+    Nspin = size(psis.data)[1]
+    # orthonormalize, put the result in psis_SC
+    for i in 1:Nspin
+        ortho_sqrt_gamma!( psis.data[i] )
+        C = inv(sqrt(overlap_gamma(psis.data[i], psis.data[i])))
+        psis_SC.data[i][:,:] = psis.data[i][:,:]*C
+    end
+    KS_solve_Emin_PCG_dot!( Ham, psis_SC,
+        skip_initial_diag=true, etot_conv_thr=etot_conv_thr,
+        NiterMax=NiterMax
+    )
+    #KS_solve_SCF_potmix!( Ham, psis_SC, 
+    #    startingrhoe=:random, etot_conv_thr=etot_conv_thr,
+    #    NiterMax=NiterMax, betamix=0.2, mix_method="linear_adaptive"
+    #)
+    forces = calc_forces( Ham, psis_SC )
+    return sum(Ham.energies), forces
+end
+
 function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
-    dt_fs = 1.0
+    dt_fs = 0.5
     # Time step, in Ha atomic unit
     dt = dt_fs*10e-16/AU_SEC
     println("dt (au) = ", dt)
@@ -78,6 +100,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
     # XL-BOMD parameters
     κ = 1.82
+    ω2 = κ/dt^2
     α = 0.018
     c0 = -6.0
     c1 = 14.0
@@ -143,7 +166,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     #
     # Start MD loop here
     #
-    NiterMax = 100
+    NiterMax = 200
     iter_start_XL = 5
 
     # 0-th iteration, initial condition
@@ -198,18 +221,19 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             for i in 1:Nspin
                 #
                 psis.data[i][:,:] = 2*psis_m0.data[i] - psis_m1.data[i] +
+                       2*(psis_SC.data[i] - psis_m0.data[i]) #=+
                     κ * ( psis_SC.data[i] - psis_m0.data[i] ) +
                     α * (
                         c0*psis_m0.data[i] + c1*psis_m1.data[i] +
                         c2*psis_m2.data[i] + c3*psis_m3.data[i] +
                         c4*psis_m4.data[i] + c5*psis_m5.data[i]
-                    )
+                    )=#
                 #ortho_sqrt_gamma!( psis.data[i] )
                 C[:,:] = inv(sqrt(overlap_gamma(psis.data[i], psis.data[i])))
                 psis.data[i][:,:] = psis.data[i][:,:]*C
                 # Alignment ??
             end
-            println("XL-BOMD check ortho: ", dot(psis,psis))
+            println("XL-BOMD check ortho psis: ", dot(psis,psis))
             for i in 1:Nspin
                 psis_SC.data[i][:,:] = psis.data[i][:,:]
             end
@@ -226,6 +250,11 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             # The usual BOMD
             # For input to electronic minimization
             # reuse psis_SC from previous iteration
+
+            # save previous psis_SC
+            #for i in 1:Nspin
+            #    psis_SC0.data[i][:,:] = psis_SC.data[i][:,:]
+            #end
             energies, forces[:] = run_pwdft_jl!(Ham, psis_SC)
             # Alignment, for initial state
             for i in 1:Nspin
@@ -244,7 +273,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
         end
 
         if iter > iter_start_XL
-            # Save old wavefunction
+            # Save old wavefunction, for electron dynamics in XL-BOMD
             for i in 1:Nspin
                 psis_m0.data[i][:,:] = psis.data[i][:,:]
             end
