@@ -52,21 +52,21 @@ function init_Ham_CO2()
 end
 
 function run_pwdft_jl!( Ham, psis; NiterMax=100, etot_conv_thr=1e-8 )
-    #KS_solve_Emin_PCG_dot!( Ham, psis,
-    #    skip_initial_diag=true, etot_conv_thr=etot_conv_thr,
-    #    NiterMax=NiterMax
-    #)
-    KS_solve_SCF_potmix!( Ham, psis, 
-        startingrhoe=:random, etot_conv_thr=etot_conv_thr,
-        NiterMax=NiterMax, betamix=0.5
+    KS_solve_Emin_PCG_dot!( Ham, psis,
+        skip_initial_diag=true, etot_conv_thr=etot_conv_thr,
+        NiterMax=NiterMax
     )
+    #KS_solve_SCF_potmix!( Ham, psis, 
+    #    startingrhoe=:random, etot_conv_thr=etot_conv_thr,
+    #    NiterMax=NiterMax, betamix=0.5
+    #)
     forces = calc_forces( Ham, psis )
     return sum(Ham.energies), forces
 end
 
 function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
-    dt_fs = 0.5
+    dt_fs = 1.0
     # Time step, in Ha atomic unit
     dt = dt_fs*10e-16/AU_SEC
     println("dt (au) = ", dt)
@@ -227,6 +227,6 @@ end
 
 #main(init_Ham_H2O, fnametrj="TRAJ_H2O_v4.xyz", fnameetot="ETOT_H2O_v4.dat")
 main(init_Ham_CO2,
-    fnametrj="TRAJ_CO2_T2nd.xyz",
-    fnameetot="ETOT_CO2_T2nd.dat"
+    fnametrj="TRAJ_CO2_T2nd_.xyz",
+    fnameetot="ETOT_CO2_T2nd_.dat"
 )
