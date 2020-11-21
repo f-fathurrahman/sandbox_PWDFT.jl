@@ -34,3 +34,5 @@ include("calc_forces_Ps_loc_gamma.jl")
 include("calc_forces_Ps_nloc_gamma.jl")
 include("calc_forces_NN_gamma.jl")
 include("calc_forces_gamma.jl")
+
+include("GGA_PBE_internal_gamma.jl")
