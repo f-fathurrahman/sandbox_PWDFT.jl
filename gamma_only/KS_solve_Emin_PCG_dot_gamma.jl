@@ -37,7 +37,7 @@ function KS_solve_Emin_PCG_dot!(
 
     d = deepcopy(Kg)
     # Constrain
-    #constrain_search_dir!( d, psis )
+    constrain_search_dir!( d, psis )
 
     gPrevUsed = true
 
@@ -92,12 +92,15 @@ function KS_solve_Emin_PCG_dot!(
             d.data[i] = -Kg.data[i] + β*d.data[i]
         end
 
-        α = linmin_grad!( Ham, psis, g, d, psic, gt )
+        constrain_search_dir!( d, psis )
+        α = linmin_grad!( Ham, psis, g, d, psic, gt, αt=1e-5 )
         # Limite the value of α if it is too big.
         # At least found in the case of NH3
-        if α > 2.0
-            α = 2.0
-        end
+        println("α = ", α)
+        #if α > 2.0
+        #    println("Limiting α to 2, because α = ", α)
+        #    α = 2.0
+        #end
         Rhoe_old = copy(Ham.rhoe)
         
         # Update psis
