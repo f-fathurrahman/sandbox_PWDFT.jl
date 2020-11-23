@@ -51,8 +51,32 @@ function init_Ham_CO2()
     return Ham
 end
 
+
+function init_Ham_Si8()
+    ecutwfc = 15.0
+    atoms = Atoms(xyz_string="""
+    8
+
+    Si       0.1000000000       0.0000000000       0.0000000000
+    Si       7.6969017521       7.6969017521       2.5656339174
+    Si       5.1312678348       0.0000000000       5.1312678348
+    Si       7.6969017521       2.5656339174       7.6969017521
+    Si       0.0000000000       5.1312678348       5.1312678348
+    Si       2.5656339174       2.5656339174       2.5656339174
+    Si       2.5656339174       7.6969017521       7.6969017521
+    Si       5.1312678348       5.1312678348       0.0000000000
+    """, in_bohr=true, LatVecs=gen_lattice_sc(10.2625356695))
+    write_xsf("TEMP_Si8.xsf", atoms)
+    pspfiles = get_default_psp(atoms)
+    Ham = HamiltonianGamma( atoms, pspfiles, ecutwfc )
+    # Set masses
+    Ham.atoms.masses[:] = [28.085]*AMU_AU
+    return Ham
+end
+
+
 # Initial minimization
-function minimize_electrons!( Ham, psis; NiterMax=100, etot_conv_thr=1e-8 )
+function minimize_electrons!( Ham, psis; NiterMax=200, etot_conv_thr=1e-8 )
     KS_solve_Emin_PCG_dot!( Ham, psis,
         skip_initial_diag=true, etot_conv_thr=etot_conv_thr,
         NiterMax=NiterMax
@@ -164,13 +188,13 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     vtilde = zeros(Float64,3,Natoms)
 
     # Electronic variables (other than psis)
-    μ = 500.0 # fictitious mass of electron
+    μ = 400.0 # fictitious mass of electron
 
     filetraj = open(fnametrj, "w")
     fileetot = open(fnameetot, "w")
 
     C = randn_BlochWavefuncGamma(Ham)
-    energies, forces = minimize_electrons!(Ham, C)
+    energies, forces = minimize_electrons!(Ham, C, etot_conv_thr=1e-8)
 
     Etot = sum(energies)
     Ekin_elec = 0.0
@@ -199,7 +223,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     calc_grad!(Ham, C.data[1], F_elec)
     F_elec = -F_elec
 
-    NiterMax = 300
+    NiterMax = 5000
     for iter = 1:NiterMax
 
         # Update atomic positions
@@ -270,6 +294,16 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             dt, iter
         )
 
+
+        if Ekin_elec > 1e-3
+            println("Quenching ...")
+            energies, forces[:] = minimize_electrons!(Ham, C)
+            dC[:] .= 0.0
+            calc_grad!(Ham, C.data[1], F_elec)
+            F_elec[:] = -F_elec
+        end
+
+
         #@printf("\nMD Iter = %3d, Etot = %18.10f\n", iter, sum(energies))
         #println("Forces = ")
         #for ia in 1:Natoms
@@ -287,10 +321,17 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 end
 
 #main(init_Ham_H2O, fnametrj="TRAJ_H2O_v4.xyz", fnameetot="ETOT_H2O_v4.dat")
+
 main(init_Ham_CO2,
     fnametrj="TRAJ_CO2_cpmd.xyz",
     fnameetot="ETOT_CO2_cpmd.dat"
 )
+
+#main(init_Ham_Si8,
+#    fnametrj="TRAJ_Si8_cpmd.xyz",
+#    fnameetot="ETOT_Si8_cpmd.dat"
+#)
+
 #main(init_Ham_CO2,
 #    fnametrj="TRAJ_CO2_step10_extrap2nd.xyz",
 #    fnameetot="ETOT_CO2_step10_extrap2nd.dat"
