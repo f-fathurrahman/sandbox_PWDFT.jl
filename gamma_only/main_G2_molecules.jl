@@ -25,9 +25,9 @@ function do_calc(molname; gamma_only=true)
     psis = randn_BlochWavefuncGamma(Ham)
     
     if gamma_only
-        #@time KS_solve_Emin_PCG_dot!( Ham, psis, NiterMax=200 )
-        @time KS_solve_SCF_potmix!( Ham, psis, startingrhoe=:random,
-            NiterMax=200, mix_method="broyden" )
+        @time KS_solve_Emin_PCG_dot!( Ham, psis, NiterMax=200 )
+        #@time KS_solve_SCF_potmix!( Ham, psis, startingrhoe=:random,
+        #    NiterMax=200, mix_method="broyden" )
     else
         Ham_ = Hamiltonian(atoms, pspfiles, ecutwfc, use_symmetry=false, use_xc_internal=true)
         psiks = unfold_BlochWavefuncGamma( Ham.pw, Ham_.pw, psis )

@@ -23,58 +23,7 @@ include("op_V_Ps_nloc_gamma.jl")
 include("op_H_gamma.jl")
 
 include("unfold_BlochWavefuncGamma.jl")
-
-
-import PWDFT: calc_Vxc_PBE!
-function calc_Vxc_PBE!(
-    xc_calc::XCCalculator,
-    pw::PWGridGamma,
-    Rhoe::Array{Float64,1},
-    Vxc
-)
-
-    Npoints = size(Rhoe,1)
-
-    # calculate gRhoe2
-    gRhoex, gRhoey, gRhoez = op_nabla(pw, Rhoe)
-    gRhoe2 = zeros(Float64, Npoints)
-    for ip = 1:Npoints
-        gRhoe2[ip] = gRhoex[ip]^2 + gRhoey[ip]^2 + gRhoez[ip]^2
-    end
-
-    # h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
-    hx = zeros(ComplexF64, pw.Ns)
-    hy = zeros(ComplexF64, pw.Ns)
-    hz = zeros(ComplexF64, pw.Ns)
-
-    for ip in 1:Npoints
-        #
-        ρ = Rhoe[ip]
-        #
-        _, vx = PWDFT.XC_x_slater( ρ )
-        _, v1x, v2x = PWDFT.XC_x_pbe( ρ, gRhoe2[ip] )
-        
-        _, vc = PWDFT.XC_c_pw( ρ )
-        _, v1c, v2c = PWDFT.XC_c_pbe( ρ, gRhoe2[ip] )
-
-        Vxc[ip] = vx + vc + v1x + v1c
-        
-        v2xc = v2x + v2c
-        hx[ip] = v2xc*gRhoex[ip]
-        hy[ip] = v2xc*gRhoey[ip]
-        hz[ip] = v2xc*gRhoez[ip]
-    end
-
-    dh = op_nabla_dot(pw, hx, hy, hz)
-
-    for ip in 1:Npoints
-        Vxc[ip] = Vxc[ip] - dh[ip]
-    end
-
-    return
-end
-
-
+include("GGA_PBE_internal_gamma.jl")
 
 function test_PBE()
 
