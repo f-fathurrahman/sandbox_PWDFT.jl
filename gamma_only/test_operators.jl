@@ -106,8 +106,8 @@ function test_01()
     @time s1 = dot(psiks,psiks)
     println("Using dot (usual)           : ", s1)
     #
-    @time s2 = dot_BlochWavefuncGamma(psis,psis)
-    @time s2 = dot_BlochWavefuncGamma(psis,psis)
+    @time s2 = dot(psis,psis)
+    @time s2 = dot(psis,psis)
     println("Using dot_BlochWavefuncGamma: ", s2)
     println("diff: ", s1-s2, " (should be small)")
 
@@ -117,8 +117,8 @@ function test_01()
     @time s1 = dot(psiks,psiks2)
     println("Using dot (usual)           : ", s1)
     #
-    @time s2 = dot_BlochWavefuncGamma(psis,psis2)
-    @time s2 = dot_BlochWavefuncGamma(psis,psis2)
+    @time s2 = dot(psis,psis2)
+    @time s2 = dot(psis,psis2)
     println("Using dot_BlochWavefuncGamma: ", s2)
     println("diff: ", s1-s2, " (should be small)")
 
@@ -147,7 +147,7 @@ function test_01()
     println("Using Gamma-point trick")
     Kpsis = op_K(Ham, psis); print("time op_K: ")
     @time Kpsis = op_K(Ham, psis)
-    s1 = dot_BlochWavefuncGamma(psis, Kpsis)
+    s1 = dot(psis, Kpsis)
     #
     println("Using usual kpt")
     Kpsiks = op_K(Ham_, psiks); print("time op_K: ")
@@ -156,7 +156,7 @@ function test_01()
     #
     println("dot(psis,Kpsis)   = ", s1)
     println("dot(psiks,Hpsiks) = ", s2)
-    println("diff = ", s1 - s1, " (should be small)")
+    println("diff = ", s1 - s2, " (should be small)")
 
     println("Some Kpsi: (some symmetry should exist)")
     for ig in 1:5
@@ -173,7 +173,7 @@ function test_01()
     println("Using Gamma-point trick")
     V_loc_psis = op_V_loc(Ham, psis); print("time op_V_loc: ")
     @time V_loc_psis = op_V_loc(Ham, psis)
-    s1 = dot_BlochWavefuncGamma(psis, V_loc_psis)
+    s1 = dot(psis, V_loc_psis)
 
     println("Using usual kpt")
     V_loc_psiks = op_V_loc(Ham_, psiks); print("time op_V_loc: ")
@@ -182,7 +182,7 @@ function test_01()
     
     println("dot V_loc_psis  = ", s1)
     println("dot V_loc_psiks = ", s2)
-    println("diff = ", s1 - s1, " (should be small)")
+    println("diff = ", s1 - s2, " (should be small)")
     
     println("Some Vloc_psi: (some symmetry should exist)")
     for ig in 1:5
@@ -199,7 +199,7 @@ function test_01()
     println("Using Gamma-point trick")
     V_psis = op_V_Ps_nloc(Ham, psis); print("time op_V_Ps_nloc: ")
     @time V_psis = op_V_Ps_nloc(Ham, psis)
-    s1 = dot_BlochWavefuncGamma(psis, V_psis)
+    s1 = dot(psis, V_psis)
 
     println("Using usual kpt")
     V_psiks = op_V_Ps_nloc(Ham_, psiks); print("time op_V_Ps_nloc: ")
@@ -208,7 +208,7 @@ function test_01()
     
     println("dot V_Ps_nloc_psis  = ", s1)
     println("dot V_Ps_nloc_psiks = ", s2)
-    println("diff = ", s1 - s1, " (should be small)")
+    println("diff = ", s1 - s2, " (should be small)")
 
     println("Some V_Ps_nloc_psi: (some symmetry should exist)")
     for ig in 1:5
@@ -225,7 +225,7 @@ function test_01()
     println("Using Gamma-point trick")
     Hpsis = op_H(Ham, psis); print("time op_H: ")
     @time Hpsis = op_H(Ham, psis)
-    s1 = dot_BlochWavefuncGamma(psis, Hpsis)
+    s1 = dot(psis, Hpsis)
 
     println("Using usual kpt")
     Hpsiks = op_H(Ham_, psiks); print("time op_H: ")
@@ -234,7 +234,7 @@ function test_01()
     
     println("dot Hpsis  = ", s1)
     println("dot Hpsiks = ", s2)
-    println("diff = ", s1 - s1, " (should be small)")
+    println("diff = ", s1 - s2, " (should be small)")
 
 end
 
