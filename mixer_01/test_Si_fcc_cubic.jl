@@ -7,14 +7,14 @@ using PWDFT
 const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)), "..")
 const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
 
-include(joinpath(DIR_PWDFT, "sandbox", "KS_solve_SCF_NLsolve.jl"))
+include("../KS_solve_SCF_NLsolve.jl")
 
 function init_Hamiltonian()
     atoms = Atoms(xyz_string_frac=
         """
         8
 
-        Si   0.000000000000000   0.000000000000000   0.000000000000000 
+        Si   0.100000000000000   0.000000000000000   0.000000000000000 
         Si   0.750000000000000   0.750000000000000   0.250000000000000 
         Si   0.500000000000000   0.000000000000000   0.500000000000000 
         Si   0.750000000000000   0.250000000000000   0.750000000000000 
@@ -26,7 +26,7 @@ function init_Hamiltonian()
 
     pspfiles = [joinpath(DIR_PSP, "Si-q4.gth")]
     ecutwfc = 15.0
-    return Hamiltonian( atoms, pspfiles, ecutwfc, meshk=[6,6,6] )
+    return Hamiltonian( atoms, pspfiles, ecutwfc, meshk=[1,1,1] )
 end
 
 function precKerker( pw::PWGrid, R::Array{Float64,2} )
@@ -112,7 +112,6 @@ function my_scf!( Ham::Hamiltonian; NiterMax=150, betamix=0.2, etot_conv_thr=1e-
     Rhoe_new = similar(Rhoe)
     
     Ham.energies.NN = calc_E_NN(Ham.atoms)
-    Ham.energies.PspCore = calc_PspCore_ene(Ham.atoms, Ham.pspots)
 
     Etot_old = 0.0
     Nconv = 0
@@ -143,8 +142,8 @@ function my_scf!( Ham::Hamiltonian; NiterMax=150, betamix=0.2, etot_conv_thr=1e-
         #Rhoe = betamix*Rhoe_new + (1-betamix)*Rhoe
         
         #Rhoe = betamix*precKerker( pw, Rhoe_new - Rhoe ) + Rhoe
-        #mix_kerker_anderson!( Rhoe, Rhoe_new, pw, betamix, df, dv, iterSCF, mixdim )
-        mix_anderson!( Rhoe, Rhoe_new, betamix, df, dv, iterSCF, mixdim )
+        mix_kerker_anderson!( Rhoe, Rhoe_new, pw, betamix, df, dv, iterSCF, mixdim )
+        #mix_anderson!( Rhoe, Rhoe_new, betamix, df, dv, iterSCF, mixdim )
 
         #Rhoe[:] = betamix*( Rhoe_new - Rhoe ) + Rhoe[:]
 
@@ -179,10 +178,11 @@ end
 function main()
     Random.seed!(1234)
     Ham = init_Hamiltonian()
-    #my_scf!( Ham, NiterMax=100, betamix=0.5 )
+    my_scf!( Ham, NiterMax=100, betamix=0.5 )
     #KS_solve_SCF!( Ham, mix_method="linear_adaptive", betamix=0.1 )
-    KS_solve_SCF_potmix!( Ham, mix_method="linear_adaptive", betamix=0.1 )
+    #KS_solve_SCF!( Ham, mix_method="rpulay", betamix=0.2 )
+    #KS_solve_Emin_PCG!( Ham )
+    #KS_solve_SCF_potmix!( Ham, mix_method="linear_adaptive", betamix=0.1 )
 end
 
-main()
 @time main()

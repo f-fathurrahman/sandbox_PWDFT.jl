@@ -67,11 +67,6 @@ function KS_solve_SCF_rhomix_v2!(
         end
     end
 
-    # Workspace for Rhoe symmetrization is initialized here
-    if Ham.sym_info.Nsyms > 1
-        rhoe_symmetrizer = RhoeSymmetrizer( Ham )
-    end
-
     #
     # Calculated electron density from this wave function and update Hamiltonian
     #
@@ -84,11 +79,7 @@ function KS_solve_SCF_rhomix_v2!(
             Rhoe = guess_rhoe_atomic( Ham, starting_magnetization=starting_magnetization )
         end
     else
-        Rhoe = calc_rhoe( Nelectrons, pw, Focc, psiks, Nspin )
-    end
-    # Symmetrize Rhoe if needed
-    if Ham.sym_info.Nsyms > 1
-        symmetrize_rhoe!( Ham, rhoe_symmetrizer, Rhoe )
+        Rhoe = calc_rhoe( Ham, psiks )
     end
 
     if Nspin == 2
@@ -147,9 +138,6 @@ function KS_solve_SCF_rhomix_v2!(
 
     # calculate E_NN
     Ham.energies.NN = calc_E_NN( Ham.atoms )
-
-    # calculate PspCore energy
-    Ham.energies.PspCore = calc_PspCore_ene( Ham.atoms, Ham.pspots )
 
     Nconverges = 0
 
@@ -216,11 +204,7 @@ function KS_solve_SCF_rhomix_v2!(
             Ham.electrons.Focc = copy(Focc)
         end
 
-        Rhoe_new[:,:] = calc_rhoe( Nelectrons, pw, Focc, psiks, Nspin )
-        if Ham.sym_info.Nsyms > 1
-            symmetrize_rhoe!( Ham, rhoe_symmetrizer, Rhoe_new )
-        end
-
+        calc_rhoe!( Ham, psiks, Rhoe_new )
         for ispin = 1:Nspin
             diffRhoe[ispin] = sum(abs.(Rhoe_new[:,ispin] - Rhoe[:,ispin]))/Npoints
         end
