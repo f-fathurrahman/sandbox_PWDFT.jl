@@ -42,7 +42,7 @@ def f_pw(rs, zeta):
 
 #$ifdef gga_c_pbe_params
 params_a_beta  = 0.06672455060314922
-params_a_gamma = (1 - log(2))/pi**2
+params_a_gamma = (1.0 - log(2))/pi**2
 params_a_BB    = 1
 
 mgamma = params_a_gamma
@@ -87,6 +87,9 @@ print(code1[0][1])
 d_ε_c1 = collect(diff(ε_c, r_s), r_s)
 code1 = codegen( ("d_eps_c1", d_ε_c1), language="julia")
 print(code1[0][1])
+
+print("Nops = ", count_ops(ε_c))
+print("Nops = ", count_ops(d_ε_c1))
 
 #d_ε_c2 = diff(ε_c, xt)
 #code1 = codegen( ("d_eps_c2", d_ε_c2), language="julia")

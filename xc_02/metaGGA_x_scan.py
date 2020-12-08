@@ -1,6 +1,6 @@
 from sympy import *
-#from numeric_symbols import *
-from symbolic_symbols import *
+from numeric_symbols import *
+#from symbolic_symbols import *
 
 X2S        = 1/(2*(6*pi**2)**(1/3))
 K_FACTOR_C = 3/10*(6*pi**2)**(2/3)
@@ -66,11 +66,12 @@ def f(rs, z, xt, xs0, xs1, u0, u1, t0, t1):
 rs = symbols("rs", positive=True)
 z, xt, xs0, xs1, u0, u1, t0, t1 = symbols("z xt xs0 xs1 u0 u1 t0 t1", real=True) 
 
-my_ex = f(rs, z, xt, xs0, xs1, u0, u1, t0, t1)
-pprint(my_ex)
+#z = 0
+my_ex = collect(f(rs, z, xt, xs0, xs1, u0, u1, t0, t1), rs)
+#pprint(my_ex)
 
-my_ex_drs = diff(my_ex, rs)
-pprint(my_ex_drs)
+my_ex_drs = collect(diff(my_ex, rs), rs)
+#pprint(my_ex_drs)
 
 from sympy.utilities.codegen import codegen
 
@@ -80,4 +81,6 @@ print(code1[0][1])
 code1 = codegen( ("my_ex_drs", my_ex_drs), language="julia")
 print(code1[0][1])
 
+print("Nops = ", count_ops(my_ex))
+print("Nops = ", count_ops(my_ex_drs))
 

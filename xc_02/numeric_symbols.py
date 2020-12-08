@@ -6,4 +6,4 @@ THREE = 3
 FOUR  = 4
 EIGHT = 8
 NINE  = 9
-#pi = N(pi)
+pi = N(pi)
