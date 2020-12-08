@@ -1,6 +1,6 @@
 from sympy import *
-#from integer_numeric import *
-from integer_symbols import *
+#from numeric_symbols import *
+from symbolic_symbols import *
 
 Rhoe = symbols("ρ")
 

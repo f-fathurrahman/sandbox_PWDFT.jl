@@ -52,8 +52,9 @@ def f(rs, z):
 ζ = symbols("zeta", real=True)
 ρ = symbols("rho", real=True)
 
-#r_s = (THREE/FOUR/pi)**(ONE/THREE)*ρ**(-ONE/THREE)
 r_s = symbols("r_s", real=True)
+
+d_r_s_d_ρ = diff( (THREE/FOUR/pi)**(ONE/THREE)*ρ**(-ONE/THREE), ρ )
 
 print()
 print("Spin pol")
@@ -63,14 +64,17 @@ pprint(ec_spin)
 print()
 print("Non-spin pol")
 ζ = 0
-ec_nonspin = simplify(f(r_s, ζ))
-pprint(ec_nonspin)
+ε_c = simplify(f(r_s, ζ))
+pprint(ε_c)
+d_ε_c = simplify(diff(ε_c, r_s))
+#d_ε_c = simplify(diff(ε_c, ρ))
 
 from sympy.utilities.codegen import codegen
 
-code1 = codegen( ("ec_spin", ec_spin), language="julia")
+code1 = codegen( ("eps_c", ε_c), language="julia")
 print(code1[0][1])
 
-code1 = codegen( ("ec_nonspin", ec_nonspin), language="julia")
+code1 = codegen( ("d_eps_c", d_ε_c), language="julia")
 print(code1[0][1])
 
+pprint(d_r_s_d_ρ)

@@ -1,6 +1,6 @@
 from sympy import *
-#from integer_numeric import *
-from integer_symbols import *
+#from numeric_symbols import *
+from symbolic_symbols import *
 
 X2S        = 1/(2*(6*pi**2)**(1/3))
 K_FACTOR_C = 3/10*(6*pi**2)**(2/3)

@@ -1,6 +1,6 @@
 from sympy import *
-#from integer_numeric import *
-from integer_symbols import *
+#from numeric_symbols import *
+from symbolic_symbols import *
 
 X_FACTOR_C = THREE/EIGHT*(THREE/pi)**(ONE/THREE) * 4**(TWO/THREE)
 
@@ -21,19 +21,29 @@ def f(r_s, z):
 ζ = symbols("zeta")
 ρ = symbols("rho")
 
-r_s = (THREE/FOUR/pi)**(ONE/THREE)*ρ**(-ONE/THREE)
-#r_s = symbols("r_s")
+#r_s = (THREE/FOUR/pi)**(ONE/THREE)*ρ**(-ONE/THREE)
+r_s = symbols("r_s")
 
 print()
 print("Spin pol")
 pprint(f(r_s, ζ))
 
+# Non spinpol
+ζ = 0
 print()
 print("Non-spin pol")
-ζ = 0
 pprint(f(r_s, ζ))
 
-E_x = f(r_s, ζ)
+ε_x = f(r_s, ζ)
 
-print("Derivative w.r.t ρ:")
-pprint(diff(E_x, ρ))
+print("Derivative w.r.t r_s:")
+d_ε_x = diff(ε_x, r_s) 
+pprint(d_ε_x)
+
+from sympy.utilities.codegen import codegen
+code1 = codegen( ("eps_x", ε_x), language="julia")
+print(code1[0][1])
+code1 = codegen( ("d_eps_x", d_ε_x), language="julia")
+print(code1[0][1])
+
+
