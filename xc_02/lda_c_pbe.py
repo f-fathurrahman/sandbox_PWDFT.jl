@@ -42,7 +42,7 @@ def f_pw(rs, zeta):
 
 #$ifdef gga_c_pbe_params
 params_a_beta  = 0.06672455060314922
-params_a_gamma = (1.0 - log(2))/pi**2
+params_a_gamma = (1.0 - log(2.0))/pi**2
 params_a_BB    = 1
 
 mgamma = params_a_gamma
@@ -77,15 +77,20 @@ def f(rs, z, xt, xs0, xs1):
 
 
 r_s, z, xt, xs0, xs1 = symbols("r_s z xt xs0 xs1")
-ε_c = f(r_s, z, xt, xs0, xs1)
+z = 0 # no spin pol
 
+ε_c = f(r_s, z, xt, xs0, xs1)
 from sympy.utilities.codegen import codegen
 
 code1 = codegen( ("eps_c", ε_c), language="julia")
 print(code1[0][1])
 
-d_ε_c1 = collect(diff(ε_c, r_s), r_s)
+d_ε_c1 = diff(ε_c, r_s)
 code1 = codegen( ("d_eps_c1", d_ε_c1), language="julia")
+print(code1[0][1])
+
+d_ε_c1 = diff(ε_c, r_s)
+code1 = codegen( ("d_eps_c1", d_ε_c1), language="C")
 print(code1[0][1])
 
 print("Nops = ", count_ops(ε_c))

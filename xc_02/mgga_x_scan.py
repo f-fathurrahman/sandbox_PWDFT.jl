@@ -66,21 +66,42 @@ def f(rs, z, xt, xs0, xs1, u0, u1, t0, t1):
 rs = symbols("rs", positive=True)
 z, xt, xs0, xs1, u0, u1, t0, t1 = symbols("z xt xs0 xs1 u0 u1 t0 t1", real=True) 
 
-#z = 0
-my_ex = collect(f(rs, z, xt, xs0, xs1, u0, u1, t0, t1), rs)
-#pprint(my_ex)
+z = 0
 
-my_ex_drs = collect(diff(my_ex, rs), rs)
-#pprint(my_ex_drs)
+eps_x = f(rs, z, xt, xs0, xs1, u0, u1, t0, t1)
+d_eps_x_d_rs = diff(eps_x, rs)
+d_eps_x_d_t0 = diff(eps_x, t0)
+d_eps_x_d_t1 = diff(eps_x, t1)
+d_eps_x_d_xs0 = diff(eps_x, xs0)
+d_eps_x_d_xs1 = diff(eps_x, xs1)
 
 from sympy.utilities.codegen import codegen
 
-code1 = codegen( ("my_ex", my_ex), language="julia")
+code1 = codegen( ("eps_x", eps_x), language="julia")
 print(code1[0][1])
 
-code1 = codegen( ("my_ex_drs", my_ex_drs), language="julia")
+code1 = codegen( ("d_eps_x_d_rs", d_eps_x_d_rs), language="julia")
 print(code1[0][1])
 
-print("Nops = ", count_ops(my_ex))
-print("Nops = ", count_ops(my_ex_drs))
+code1 = codegen( ("d_eps_x_d_t0", d_eps_x_d_t0), language="julia")
+print(code1[0][1])
+
+code1 = codegen( ("d_eps_x_d_t1", d_eps_x_d_t1), language="julia")
+print(code1[0][1])
+
+code1 = codegen( ("d_eps_x_d_xs0", d_eps_x_d_xs0), language="julia")
+print(code1[0][1])
+
+code1 = codegen( ("d_eps_x_d_xs1", d_eps_x_d_xs1), language="julia")
+print(code1[0][1])
+
+print("Nops = ", count_ops(eps_x))
+print("Nops = ", count_ops(d_eps_x_d_rs))
+print("Nops = ", count_ops(d_eps_x_d_t0))
+print("Nops = ", count_ops(d_eps_x_d_t1))
+print("Nops = ", count_ops(d_eps_x_d_xs0))
+print("Nops = ", count_ops(d_eps_x_d_xs1))
+
+
+
 
