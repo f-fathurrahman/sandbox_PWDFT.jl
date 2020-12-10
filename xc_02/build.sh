@@ -1,6 +1,7 @@
 #!/bin/bash
 
-LIBXC_DIR=/home/efefer/mysoftwares/libxc-5.0.0/
+#LIBXC_DIR=/home/efefer/mysoftwares/libxc-5.0.0/
+LIBXC_DIR=/home/efefer/mysoftwares/libxc-4.3.4/
 
 LINK1="-Wl,-rpath,$LIBXC_DIR/lib: $LIBXC_DIR/lib/libxc.so"
 
