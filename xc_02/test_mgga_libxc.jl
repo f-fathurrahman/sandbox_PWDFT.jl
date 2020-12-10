@@ -7,12 +7,17 @@ function main()
     func_id = 263 # MGGA_X_SCAN
     #func_id = 267 # MGGA_C_SCAN
 
-    rho   = [1.01, 1.02, 0.03, 1.04, 1.05]
-    sigma = [1.01, 0.02, 0.03, 0.04, 0.05]
-    lapl  = [2.1, 2.2, 2.3, 2.4, 2.6]
-    tau   = [1.1, 2.1, 3.1, 4.1, 5.1]
+    #rho   = [1.01, 1.02, 0.03, 1.04, 1.05]
+    #sigma = [1.01, 0.02, 0.03, 0.04, 0.05]
+    #lapl  = [2.1, 2.2, 2.3, 2.4, 2.6]
+    #tau   = [1.1, 2.1, 3.1, 4.1, 5.1]
 
-    Npoints = 5
+    rho   = [1.1]
+    sigma = [0.0]
+    lapl  = [0.0]
+    tau   = [0.0]
+
+    Npoints = length(rho)
     Nspin = 1
     # outputs
     exc = zeros(Float64, Npoints)

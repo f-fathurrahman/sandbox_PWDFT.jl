@@ -165,3 +165,7 @@ print(code1[0][1])
 
 print("Nops = ", count_ops(eps_c))
 print("Nops = ", count_ops(d_eps_c_d_rs))
+
+ρ = 1.0
+r_s = (THREE/FOUR/pi)**(ONE/THREE)*ρ**(-ONE/THREE)
+print(eps_c.subs({xt: 0.0, ts0: 0.0, ts1: 0.0, rs: r_s}))

@@ -12,10 +12,6 @@ params_a_c2 = 0.8
 params_a_d = 1.24
 params_a_k1 = 0.065
 
-# polarization: ferr
-#def mgga_exchange(func, rs, z, xs0, xs1, u0, u1, t0, t1):
-#    return lda_x_spin(rs, 1)*func(xs0, u0, t0)
-
 X_FACTOR_C = THREE/EIGHT*(THREE/pi)**(ONE/THREE) * 4**(TWO/THREE)
 # Dimension = 3
 RS_FACTOR = (THREE/(FOUR*pi))**(ONE/THREE)
@@ -25,8 +21,12 @@ DIMENSIONS = 3
 def lda_x_spin(rs, z):
     return LDA_X_FACTOR*((1 + z)/2)**(1 + 1/DIMENSIONS)*(RS_FACTOR/rs)
 
+# polarization: ferr
 def mgga_exchange(func, rs, z, xs0, xs1, u0, u1, t0, t1):
-    return lda_x_spin(rs, z)*func(xs0, u0, t0) + lda_x_spin(rs, -z)*func(xs1, u1, t1)
+    return lda_x_spin(rs, 1)*func(xs0, u0, t0)
+
+#def mgga_exchange(func, rs, z, xs0, xs1, u0, u1, t0, t1):
+#    return lda_x_spin(rs, z)*func(xs0, u0, t0) + lda_x_spin(rs, -z)*func(xs1, u1, t1)
 
 def scan_p(x):
     return X2S**2 * x**2
@@ -56,10 +56,12 @@ def scan_gx(x):
     return 1 - exp(-scan_a1/sqrt(X2S*x))
 
 scan_h0x = 1.174
+# u is not used
 def scan_f(x, u, t):
     return (scan_h1x(scan_y(x, scan_alpha(x, t)))*(1 - scan_f_alpha(scan_alpha(x, t))) + 
         scan_h0x*scan_f_alpha(scan_alpha(x, t)))*scan_gx(x)
 
+# xt is not used
 def f(rs, z, xt, xs0, xs1, u0, u1, t0, t1):
     return mgga_exchange(scan_f, rs, z, xs0, xs1, u0, u1, t0, t1)
 
@@ -71,37 +73,51 @@ z = 0
 eps_x = f(rs, z, xt, xs0, xs1, u0, u1, t0, t1)
 d_eps_x_d_rs = diff(eps_x, rs)
 d_eps_x_d_t0 = diff(eps_x, t0)
-d_eps_x_d_t1 = diff(eps_x, t1)
 d_eps_x_d_xs0 = diff(eps_x, xs0)
-d_eps_x_d_xs1 = diff(eps_x, xs1)
 
 from sympy.utilities.codegen import codegen
 
-code1 = codegen( ("eps_x", eps_x), language="julia")
-print(code1[0][1])
-
-code1 = codegen( ("d_eps_x_d_rs", d_eps_x_d_rs), language="julia")
-print(code1[0][1])
-
-code1 = codegen( ("d_eps_x_d_t0", d_eps_x_d_t0), language="julia")
-print(code1[0][1])
-
-code1 = codegen( ("d_eps_x_d_t1", d_eps_x_d_t1), language="julia")
-print(code1[0][1])
-
-code1 = codegen( ("d_eps_x_d_xs0", d_eps_x_d_xs0), language="julia")
-print(code1[0][1])
-
-code1 = codegen( ("d_eps_x_d_xs1", d_eps_x_d_xs1), language="julia")
-print(code1[0][1])
+#code1 = codegen( ("eps_x", eps_x), language="julia")
+#print(code1[0][1])
+#
+#code1 = codegen( ("d_eps_x_d_rs", d_eps_x_d_rs), language="julia")
+#print(code1[0][1])
+#
+#code1 = codegen( ("d_eps_x_d_t0", d_eps_x_d_t0), language="julia")
+#print(code1[0][1])
+#
+#code1 = codegen( ("d_eps_x_d_xs0", d_eps_x_d_xs0), language="julia")
+#print(code1[0][1])
 
 print("Nops = ", count_ops(eps_x))
-print("Nops = ", count_ops(d_eps_x_d_rs))
-print("Nops = ", count_ops(d_eps_x_d_t0))
-print("Nops = ", count_ops(d_eps_x_d_t1))
-print("Nops = ", count_ops(d_eps_x_d_xs0))
-print("Nops = ", count_ops(d_eps_x_d_xs1))
+#print("Nops = ", count_ops(d_eps_x_d_rs))
+#print("Nops = ", count_ops(d_eps_x_d_t0))
+#print("Nops = ", count_ops(d_eps_x_d_xs0))
 
 
+# rs and ρ relationship
+ρ = symbols("rho")
+r_s = (3/(4*pi*ρ))**(1/3)
+#pprint(r_s)
+#print("\nr_s and ρ:")
+#pprint( diff(r_s, ρ) )
 
+# s and ∇ρ relationship
+delρ = symbols("∇ρ")
+#s = abs(delρ)/( 2*(3*pi**2)**(1/3) * ρ**4/3 )
+s = delρ/( 2*(3*pi**2)**(1/3) * ρ**4/3 )
+#pprint(s)
+#print("\ns and delρ:")
+#pprint( diff(s, delρ) )
 
+#rs_num = r_s.subs({ρ: 1.0})
+#print("rs_num = ", rs_num)
+#print("eps_x  = ", eps_x.subs({rs: rs_num, xs0: 0.0, t0: 0.0}))
+
+ρ = 1.1
+sigma = 0.0
+s = sqrt(sigma)/(2 * (3*pi**2)**(1/3) * ρ**(4/3) )
+
+r_s = (THREE/FOUR/pi)**(ONE/THREE)*ρ**(-ONE/THREE)
+
+print("eps_x = %18.10f" % (eps_x.subs({xs0: 0.0, xs1: 0.0, t0: 0.0, t1: 0.0, rs: r_s})) )
