@@ -141,7 +141,7 @@ print("eps_x = %18.10f" % (eps_x.subs(dict_num)) )
 
 drs_drho = -6**(1/3)/(6*pi**(1/3)*ρ**(4/3))
 dxs0_dsigma = 2**(1/3)/(2*ρ**(4/3)*sqrt(sigma))
-dxs0_dsigma = 2**(1/3)/(2*ρ**(4/3)*sqrt(sigma))
+dxs1_dsigma = 2**(1/3)/(2*ρ**(4/3)*sqrt(sigma))
 dt0_dtau = 2**(2/3)/ρ**(5/3)
 dt1_dtau = 2**(2/3)/ρ**(5/3)
 
@@ -150,6 +150,9 @@ rho_in_rs = 3/(4*pi*rs**3)
 #d_eps_x_d_rs = diff(rho_in_rs*eps_x, rs)
 d_eps_x_d_rs = diff(eps_x, rs)
 Vrho = d_eps_x_d_rs*drs_drho*ρ + eps_x
-print("Vrho = %18.10f" % (Vrho.subs(dict_num)) )
+print("Vrho   = %18.10f" % (Vrho.subs(dict_num)) )
 
-Vsigma = diff(eps_x, sigma)
+# not working
+Vsigma = ( diff(eps_x, xs0)*dxs0_dsigma + diff(eps_x, xs1)*dxs1_dsigma ) * sigma
+print("Vsigma = %18.10f" % (Vsigma.subs(dict_num)) )
+
