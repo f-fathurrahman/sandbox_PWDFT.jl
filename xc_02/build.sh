@@ -9,6 +9,7 @@ if [ "$#" -eq 1 ]; then
 
   basnam=`basename $1 .c`
   gcc $1 -I${LIBXC_DIR}/include -o $basnam.x $LINK1 -lm
+  ./$basnam.x
 
 else
 

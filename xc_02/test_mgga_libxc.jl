@@ -13,7 +13,7 @@ function main()
     #tau   = [1.1, 2.1, 3.1, 4.1, 5.1]
 
     rho   = [1.1]
-    sigma = [0.0]
+    sigma = [2.0]
     lapl  = [0.0]
     tau   = [0.0]
 

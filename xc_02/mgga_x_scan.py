@@ -22,11 +22,11 @@ def lda_x_spin(rs, z):
     return LDA_X_FACTOR*((1 + z)/2)**(1 + 1/DIMENSIONS)*(RS_FACTOR/rs)
 
 # polarization: ferr
-def mgga_exchange(func, rs, z, xs0, xs1, u0, u1, t0, t1):
-    return lda_x_spin(rs, 1)*func(xs0, u0, t0)
-
 #def mgga_exchange(func, rs, z, xs0, xs1, u0, u1, t0, t1):
-#    return lda_x_spin(rs, z)*func(xs0, u0, t0) + lda_x_spin(rs, -z)*func(xs1, u1, t1)
+#    return lda_x_spin(rs, 1)*func(xs0, u0, t0)
+
+def mgga_exchange(func, rs, z, xs0, xs1, u0, u1, t0, t1):
+    return lda_x_spin(rs, z)*func(xs0, u0, t0) + lda_x_spin(rs, -z)*func(xs1, u1, t1)
 
 def scan_p(x):
     return X2S**2 * x**2
@@ -68,7 +68,7 @@ def f(rs, z, xt, xs0, xs1, u0, u1, t0, t1):
 rs = symbols("rs", positive=True)
 z, xt, xs0, xs1, u0, u1, t0, t1 = symbols("z xt xs0 xs1 u0 u1 t0 t1", real=True) 
 
-z = 0
+z = 0.0
 
 eps_x = f(rs, z, xt, xs0, xs1, u0, u1, t0, t1)
 d_eps_x_d_rs = diff(eps_x, rs)
@@ -77,8 +77,8 @@ d_eps_x_d_xs0 = diff(eps_x, xs0)
 
 from sympy.utilities.codegen import codegen
 
-#code1 = codegen( ("eps_x", eps_x), language="julia")
-#print(code1[0][1])
+code1 = codegen( ("eps_x", eps_x), language="julia")
+print(code1[0][1])
 #
 #code1 = codegen( ("d_eps_x_d_rs", d_eps_x_d_rs), language="julia")
 #print(code1[0][1])
@@ -115,9 +115,17 @@ s = delρ/( 2*(3*pi**2)**(1/3) * ρ**4/3 )
 #print("eps_x  = ", eps_x.subs({rs: rs_num, xs0: 0.0, t0: 0.0}))
 
 ρ = 1.1
-sigma = 0.0
+sigma = 2.0
 s = sqrt(sigma)/(2 * (3*pi**2)**(1/3) * ρ**(4/3) )
 
 r_s = (THREE/FOUR/pi)**(ONE/THREE)*ρ**(-ONE/THREE)
 
-print("eps_x = %18.10f" % (eps_x.subs({xs0: 0.0, xs1: 0.0, t0: 0.0, t1: 0.0, rs: r_s})) )
+xs0_num = sqrt(sigma/4)/((ρ/2)**(1 + 1/DIMENSIONS))
+xs1_num = sqrt(sigma/4)/((ρ/2)**(1 + 1/DIMENSIONS))
+
+print("ρ     = %18.10f" % ρ)
+print("sigma = %18.10f" % sigma)
+print("xs0_num = %18.10f" % xs0_num)
+print("xs1_num = %18.10f" % xs1_num)
+
+print("eps_x = %18.10f" % (eps_x.subs({xs0: xs0_num, xs1: xs1_num, t0: 0.0, t1: 0.0, rs: r_s})) )
