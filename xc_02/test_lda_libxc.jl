@@ -7,7 +7,7 @@ function main()
     func_id = 1 # LDA_X
     #func_id = 7 # LDA_C_VWN
 
-    rho   = [1.00]
+    rho   = [1.1]
 
     Npoints = length(rho)
     Nspin = 1

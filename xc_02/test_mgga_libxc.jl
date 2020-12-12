@@ -13,9 +13,9 @@ function main()
     #tau   = [1.1, 2.1, 3.1, 4.1, 5.1]
 
     rho   = [1.1]
-    sigma = [2.0]
+    sigma = [0.1]
     lapl  = [0.0]
-    tau   = [0.0]
+    tau   = [0.1]
 
     Npoints = length(rho)
     Nspin = 1
@@ -34,8 +34,10 @@ function main()
     Libxc_xc_func_end(ptr)
 
     for i in 1:Npoints
-        @printf("%18.10f: %18.10f %18.10f %18.10f %18.10f %18.10f\n",
-            rho[i], exc[i], vrho[i], vsigma[i], vlapl[i], vtau[i])
+        @printf("Input : %18.10f %18.10f %18.10f\n",
+            rho[i], sigma[i], tau[i])
+        @printf("Output: %18.10f %18.10f %18.10f %18.10f %18.10f\n",
+            exc[i], vrho[i], vsigma[i], vlapl[i], vtau[i])
     end
 
     println("Pass here")

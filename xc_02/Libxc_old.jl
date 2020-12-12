@@ -6,6 +6,7 @@ end
 
 #const LIBXC5 = "/home/efefer/mysoftwares/libxc-5.0.0/lib/libxc.so.9"
 const LIBXC5 = "/home/efefer/mysoftwares/libxc-4.3.4/lib/libxc.so.5"
+println("Using Libxc = ", LIBXC5)
 
 function Libxc_xc_func_alloc()
     ccall(

@@ -77,8 +77,8 @@ d_eps_x_d_xs0 = diff(eps_x, xs0)
 
 from sympy.utilities.codegen import codegen
 
-code1 = codegen( ("eps_x", eps_x), language="julia")
-print(code1[0][1])
+#code1 = codegen( ("eps_x", eps_x), language="julia")
+#print(code1[0][1])
 #
 #code1 = codegen( ("d_eps_x_d_rs", d_eps_x_d_rs), language="julia")
 #print(code1[0][1])
@@ -89,7 +89,7 @@ print(code1[0][1])
 #code1 = codegen( ("d_eps_x_d_xs0", d_eps_x_d_xs0), language="julia")
 #print(code1[0][1])
 
-print("Nops = ", count_ops(eps_x))
+#print("Nops = ", count_ops(eps_x))
 #print("Nops = ", count_ops(d_eps_x_d_rs))
 #print("Nops = ", count_ops(d_eps_x_d_t0))
 #print("Nops = ", count_ops(d_eps_x_d_xs0))
@@ -115,17 +115,41 @@ s = delρ/( 2*(3*pi**2)**(1/3) * ρ**4/3 )
 #print("eps_x  = ", eps_x.subs({rs: rs_num, xs0: 0.0, t0: 0.0}))
 
 ρ = 1.1
-sigma = 2.0
-s = sqrt(sigma)/(2 * (3*pi**2)**(1/3) * ρ**(4/3) )
+sigma = 0.1
+tau = 0.1
+
+s = sqrt(sigma)/(2 * (3*pi**2)**(1/3) * ρ**(4/3) ) # not used yet?
 
 r_s = (THREE/FOUR/pi)**(ONE/THREE)*ρ**(-ONE/THREE)
 
 xs0_num = sqrt(sigma/4)/((ρ/2)**(1 + 1/DIMENSIONS))
 xs1_num = sqrt(sigma/4)/((ρ/2)**(1 + 1/DIMENSIONS))
 
+t0_num = (tau/2)/((ρ/2)**(1 + 2/DIMENSIONS))
+t1_num = (tau/2)/((ρ/2)**(1 + 2/DIMENSIONS))
+
 print("ρ     = %18.10f" % ρ)
 print("sigma = %18.10f" % sigma)
+print("tau   = %18.10f" % tau)
 print("xs0_num = %18.10f" % xs0_num)
 print("xs1_num = %18.10f" % xs1_num)
+print("t0_num  = %18.10f" % t0_num)
+print("t1_num  = %18.10f" % t1_num)
 
-print("eps_x = %18.10f" % (eps_x.subs({xs0: xs0_num, xs1: xs1_num, t0: 0.0, t1: 0.0, rs: r_s})) )
+dict_num = {xs0: xs0_num, xs1: xs1_num, t0: t0_num, t1: t1_num, rs: r_s}
+print("eps_x = %18.10f" % (eps_x.subs(dict_num)) )
+
+drs_drho = -6**(1/3)/(6*pi**(1/3)*ρ**(4/3))
+dxs0_dsigma = 2**(1/3)/(2*ρ**(4/3)*sqrt(sigma))
+dxs0_dsigma = 2**(1/3)/(2*ρ**(4/3)*sqrt(sigma))
+dt0_dtau = 2**(2/3)/ρ**(5/3)
+dt1_dtau = 2**(2/3)/ρ**(5/3)
+
+rho_in_rs = 3/(4*pi*rs**3)
+
+#d_eps_x_d_rs = diff(rho_in_rs*eps_x, rs)
+d_eps_x_d_rs = diff(eps_x, rs)
+Vrho = d_eps_x_d_rs*drs_drho*ρ + eps_x
+print("Vrho = %18.10f" % (Vrho.subs(dict_num)) )
+
+Vsigma = diff(eps_x, sigma)

@@ -21,8 +21,8 @@ def f(r_s, z):
 ζ = symbols("zeta")
 ρ = symbols("rho")
 
-r_s = (THREE/FOUR/pi)**(ONE/THREE)*ρ**(-ONE/THREE)
-#r_s = symbols("r_s")
+#r_s = (THREE/FOUR/pi)**(ONE/THREE)*ρ**(-ONE/THREE)
+rs = symbols("rs")
 
 #print()
 #print("Spin pol")
@@ -32,15 +32,18 @@ r_s = (THREE/FOUR/pi)**(ONE/THREE)*ρ**(-ONE/THREE)
 ζ = 0
 print()
 print("Non-spin pol")
-eps_x = f(r_s, ζ)
+eps_x = f(rs, ζ)
 pprint(eps_x)
 
-print("eps_x = %18.10f" % (eps_x.subs({ρ: 1.0})))
+ρ = 1.1
+r_s = (THREE/FOUR/pi)**(ONE/THREE)*ρ**(-ONE/THREE)
+print("eps_x = %18.10f" % (eps_x.subs({rs: r_s})))
 
-d_eps_x_drho = diff(eps_x, ρ)
-Vxc = eps_x + ρ*d_eps_x_drho
-print("d_eps_x_drho = %18.10f" % (d_eps_x_drho.subs({ρ: 1.0})))
-print("Vxc = %18.10f" % (Vxc.subs({ρ: 1.0})))
+drs_drho = -6**(1/3)/(6*pi**(1/3)*ρ**(4/3))
+d_eps_x_drs = diff(eps_x, rs)
+Vrho = eps_x + ρ*d_eps_x_drs*drs_drho
+print("Vrho = %18.10f" % (Vrho.subs({rs: r_s})))
+#print("Vxc = %18.10f" % (Vxc.subs({ρ: 1.0})))
 
 #print("Derivative w.r.t r_s:")
 #d_eps_x_drs = diff(eps_x, r_s) 
