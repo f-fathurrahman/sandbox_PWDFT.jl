@@ -124,6 +124,52 @@ function Libxc_xc_gga_vxc!(
 end
 
 # MetaGGA
+
+function Libxc_xc_mgga_exc!(
+    p::Ptr{XCFuncType},
+    np::Int,
+    rho::Array{Float64,1},
+    sigma::Array{Float64,1},
+    lapl::Array{Float64,1},
+    tau::Array{Float64,1},
+    exc::Array{Float64,1}
+)
+    ccall(
+        (:xc_mgga_exc_vxc, LIBXC5), Cvoid,
+        ( Ptr{XCFuncType}, Cint,
+          Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64},
+          Ptr{Float64}
+        ),
+        p, np,
+        rho, sigma, lapl, tau,
+        exc
+    )
+end
+
+function Libxc_xc_mgga_vxc!(
+    p::Ptr{XCFuncType},
+    np::Int,
+    rho::Array{Float64,1},
+    sigma::Array{Float64,1},
+    lapl::Array{Float64,1},
+    tau::Array{Float64,1},
+    vrho::Array{Float64,1},
+    vsigma::Array{Float64,1},
+    vlapl::Array{Float64,1},
+    vtau::Array{Float64,1}
+)
+    ccall(
+        (:xc_mgga_exc_vxc, LIBXC5), Cvoid,
+        ( Ptr{XCFuncType}, Cint,
+          Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64},
+          Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}
+        ),
+        p, np,
+        rho, sigma, lapl, tau,
+        vrho, vsigma, vlapl, vtau
+    )
+end
+
 function Libxc_xc_mgga_exc_vxc!(
     p::Ptr{XCFuncType},
     np::Int,
