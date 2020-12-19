@@ -8,9 +8,8 @@
 #
 
 function starting_potential!(
-  Vext,
   Nrmesh, Zval, Zed, Nwf, oc, nn, ll, r, enl,
-  v0, vxt, vpot, enne, nspin;
+  v0, vxt, vpot, enne, Nspin;
   frozen_core=false, noscf=false
 )
     #
@@ -32,7 +31,7 @@ function starting_potential!(
        oce = max(0.0, oc[n])
        enne = enne + oce
        zen= 0.0
-       for i = 1:nwf
+       for i = 1:Nwf
             oce = max(0.0, oc[i])
             if nn[i] < nn[n] 
                 zen = zen + oce
@@ -41,18 +40,19 @@ function starting_potential!(
                 zen = zen + oce
             end
         end
-        zen = max( zz - zen + 1.0, 1.0 )
-        if ABS( enl(n)) < 1.e-7 || (!frozen_core)
+        zen = max(zz - zen + 1.0, 1.0)
+        if (abs(enl[n]) < 1.e-7) || (!frozen_core)
             enl[n] = -( zen/nn[n] )^2
         end
     end
     
     for i in 1:Nrmesh
-       vxt[i] = Vext( r[i] )
+       #vxt[i] = Vext( r[i] )
+       vxt[i] = 0.0
        x = r[i]*enne^(1.0/3.0)/0.885
        t = zz/(1.0 + sqrt(x)*(0.02747 - x*(0.1486 - 0.007298*x)) + x*(1.243 + x*(0.2302 + 0.006944*x)))
        t = max(1.0,t)
-       v0[i]= -zed/r[i]
+       v0[i]= -Zed/r[i]
        if noscf
           vpot[i,1] = v0[i] + vxt[i]
        else
