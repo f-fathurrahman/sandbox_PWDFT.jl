@@ -42,7 +42,7 @@ function starting_potential!(
         end
         zen = max(zz - zen + 1.0, 1.0)
         if (abs(enl[n]) < 1.e-7) || (!frozen_core)
-            enl[n] = -( zen/nn[n] )^2
+            enl[n] = -0.5*( zen/nn[n] )^2  # Ha unit
         end
     end
     
