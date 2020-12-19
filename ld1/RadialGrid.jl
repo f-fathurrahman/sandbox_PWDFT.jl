@@ -75,3 +75,26 @@ function RadialGrid(
     
     return RadialGrid(Nrmesh, r, r2, rab, sqrtr, rm1, rm2, rm3, xmin, rmax, zmesh, dx)
 end
+
+# simple routine returning the coefficient of the polynomial 
+# describing the leading behavior of a function f at small r.
+function radial_grid_series!(f, r, r2, b)
+  dr21 = r[2] - r[1]
+  dr31 = r[3] - r[1]
+  dr32 = r[3] - r[2]
+  dr41 = r[4] - r[1]
+  dr42 = r[4] - r[2]
+  dr43 = r[4] - r[3]
+  df21 = (f[2] - f[1])/dr21
+  df32 = (f[3] - f[2])/dr32
+  df43 = (f[4] - f[3])/dr43
+  ddf42 = (df43 - df32)/dr42
+  ddf31 = (df32 - df21)/dr31
+
+  b[4] = (ddf42 - ddf31)/dr41
+  b[3] = ddf31 - b[4]*( r[1] + r[2] + r[3] )
+  b[2] = df21 - b[3]*( r[2] + r[1] ) - b[4]*( r2[1] + r2[2] + r[1]*r[2] )
+  b[1] = f[1] - r[1]*( b[2] + r[1]*(b[3] + r[1]*b[4]) )
+
+  return
+end
