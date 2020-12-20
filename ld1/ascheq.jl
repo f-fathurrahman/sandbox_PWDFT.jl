@@ -88,6 +88,11 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
     #exit()
 
     maxter = 50
+
+    # needed outside the loop
+    nstart = 0
+    f2 = 0.0
+
     # 300 continue
     #iter = iter + 1
     for iter in 1:maxter
@@ -181,7 +186,7 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
             # increase abs(e)
             eup = e
             rap = ( Float64(ncross+l1)/nn )^2
-            e = (e - vpot[Nrmesh] )*rap + vpot[mesh]
+            e = (e - vpot[Nrmesh] )*rap + vpot[Nrmesh]
             if e < elw
                 e = 0.9*elw + 0.1*eup
             end
@@ -379,13 +384,11 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
 
     println("e = ", e)
 
-    println("exit ffr 340")
-    exit()
+    #println("exit ffr 340")
+    #exit()
 
     #600 continue
     # LOOP
-  
-
 
 
     #  normalize the eigenfunction and exit
@@ -406,13 +409,13 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
             #go to 601
         end
         
-        y[n+1] = abs(exp(expn))*sign(y(n))
+        y[n+1] = abs(exp(expn))*sign(y[n])
         # 601 continue
     end
 
 
     sum1 = 0.0
-    for n in range(nstart, stop=mesh-2, step=2)
+    for n in range(nstart, stop=Nrmesh-2, step=2)
        f0 = f2
        f1 = grid.r2[n+1]*y[n+1]*y[n+1]
        f2 = grid.r2[n+2]*y[n+2]*y[n+2]
@@ -426,13 +429,13 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
     
     if nstop < 100
         println("Should go to 900")
-        return nstop
+        return e, nstop
         #go to 900
     end
     
     nstop = 0
     
-    return nstop
+    return e, nstop
 
     #
     #  error exit

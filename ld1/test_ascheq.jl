@@ -1,5 +1,8 @@
 using Printf
 
+import PyPlot
+const plt = PyPlot
+
 include("RadialGrid.jl")
 include("starting_potential.jl")
 include("start_scheq.jl")
@@ -40,16 +43,22 @@ function main()
     println("vpot2 = ", vpot[1:2,2])
     println("enl = ", enl[1:Nwf])
 
-    nn = 1
-    lam = 0
-    e = enl[1]
+    iwf = 4
     ze2 = -Zval # should be 2*Zval in Ry unit
     thresh0 = 1.0e-10
     psi = zeros(Float64,Nrmesh)
     nstop = 0
-    ascheq!(nn, lam, e, grid, vpot, ze2, thresh0, psi, nstop)
+    enl[iwf], nstop = ascheq!(nn[iwf], ll[iwf], enl[iwf], grid, vpot, ze2, thresh0, psi, nstop)
 
+    println("outsize ascheq: enl = ", enl[iwf])
+    println("psi[1] = ", psi[1])
     println("Pass here")
+
+    plt.clf()
+    plt.plot(grid.r, psi, label="psi")
+    plt.xlim([0.0, 3.0])
+    plt.grid(true)
+    plt.savefig("IMG_psi1.pdf")
 
 end
 
