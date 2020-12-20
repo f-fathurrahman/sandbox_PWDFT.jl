@@ -43,22 +43,29 @@ function main()
     println("vpot2 = ", vpot[1:2,2])
     println("enl = ", enl[1:Nwf])
 
-    iwf = 4
+    #iwf = 4
     ze2 = -Zval # should be 2*Zval in Ry unit
     thresh0 = 1.0e-10
-    psi = zeros(Float64,Nrmesh)
+    psi = zeros(Float64,Nrmesh,Nwf)
     nstop = 0
-    enl[iwf], nstop = ascheq!(nn[iwf], ll[iwf], enl[iwf], grid, vpot, ze2, thresh0, psi, nstop)
+    for iwf in 1:Nwf
+        @views psi1 = psi[:,iwf]
+        enl[iwf], nstop = ascheq!(nn[iwf], ll[iwf], enl[iwf], grid, vpot, ze2, thresh0, psi1, nstop)
+    end
 
-    println("outsize ascheq: enl = ", enl[iwf])
-    println("psi[1] = ", psi[1])
+    for iwf in 1:Nwf
+        println("outside ascheq: enl = ", enl[iwf])
+        println("psi[1] = ", psi[1,iwf])
+    end
     println("Pass here")
 
-    plt.clf()
-    plt.plot(grid.r, psi, label="psi")
-    plt.xlim([0.0, 3.0])
-    plt.grid(true)
-    plt.savefig("IMG_psi1.pdf")
+
+
+    #plt.clf()
+    #plt.plot(grid.r, psi, label="psi")
+    #plt.xlim([0.0, 3.0])
+    #plt.grid(true)
+    #plt.savefig("IMG_psi1.pdf")
 
 end
 
