@@ -106,9 +106,9 @@ function CuHamiltonian( atoms::Atoms, pspfiles::Array{String,1},
     end
 
     # other potential terms are set to zero
-    V_Hartree = CuArrays.zeros( Float64, Npoints )
-    V_xc = CuArrays.zeros( Float64, Npoints, Nspin )
-    V_loc_tot = CuArrays.zeros( Float64, Npoints, Nspin )
+    V_Hartree = CUDA.zeros( Float64, Npoints )
+    V_xc = CUDA.zeros( Float64, Npoints, Nspin )
+    V_loc_tot = CUDA.zeros( Float64, Npoints, Nspin )
     potentials = CuPotentials( CuArray(V_Ps_loc), V_Hartree, V_xc, V_loc_tot )
     #
     energies = Energies()

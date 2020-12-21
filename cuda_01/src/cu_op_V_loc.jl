@@ -58,7 +58,7 @@ function op_V_loc( ik::Int64, pw::CuPWGrid, V_loc, psi::CuArray{ComplexF64,2} )
     Npoints = prod(Ns)
     Nstates = size(psi,2)
 
-    ctmp = CuArrays.zeros(ComplexF64, Npoints, Nstates)
+    ctmp = CUDA.zeros(ComplexF64, Npoints, Nstates)
     idx = pw.gvecw.idx_gw2r[ik]
     Ngw_k = length(idx)
 
@@ -78,7 +78,7 @@ function op_V_loc( ik::Int64, pw::CuPWGrid, V_loc, psi::CuArray{ComplexF64,2} )
 
     R_to_G!( pw, ctmp )
 
-    cVpsi = CuArrays.zeros(ComplexF64, Ngw_k, Nstates)
+    cVpsi = CUDA.zeros(ComplexF64, Ngw_k, Nstates)
 
     for ist in 1:Nstates
         @cuda threads=Nthreads blocks=Nblocks kernel_copy_from_fft_grid_gw2r!( ist, idx, ctmp, cVpsi )        
@@ -110,7 +110,7 @@ function op_V_loc( ik::Int64, pw::CuPWGrid, V_loc, psi::CuArray{ComplexF64,1} )
     CellVolume = pw.CellVolume
     Npoints = prod(Ns)
 
-    ctmp = CuArrays.zeros(ComplexF64, Npoints)
+    ctmp = CUDA.zeros(ComplexF64, Npoints)
     idx = pw.gvecw.idx_gw2r[ik]
     Ngw_k = length(idx)
 
@@ -124,7 +124,7 @@ function op_V_loc( ik::Int64, pw::CuPWGrid, V_loc, psi::CuArray{ComplexF64,1} )
     ctmp[:] = V_loc[:].*ctmp[:]
 
     R_to_G!( pw, ctmp )
-    cVpsi = CuArrays.zeros(ComplexF64, Ngw_k)
+    cVpsi = CUDA.zeros(ComplexF64, Ngw_k)
     
     @cuda threads=Nthreads blocks=Nblocks kernel_copy_from_fft_grid_gw2r_1state!( idx, ctmp, cVpsi )    
 

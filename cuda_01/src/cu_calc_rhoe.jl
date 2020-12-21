@@ -15,7 +15,7 @@ function calc_rhoe!( Ham::CuHamiltonian, psiks::CuBlochWavefunc, Rhoe::CuArray{F
     Npoints = prod(Ns)
     Nstates = size(psiks[1])[2]
 
-    psiR = CuArrays.zeros(ComplexF64, Npoints, Nstates)
+    psiR = CUDA.zeros(ComplexF64, Npoints, Nstates)
 
     # dont forget to zero out the Rhoe first
     Rhoe[:,:] .= 0.0
@@ -72,7 +72,7 @@ end
 function calc_rhoe( Ham::CuHamiltonian, psiks::CuBlochWavefunc )
     Npoints = prod(Ham.pw.Ns)
     Nspin = Ham.electrons.Nspin
-    Rhoe = CuArrays.zeros(Float64, Npoints, Nspin)
+    Rhoe = CUDA.zeros(Float64, Npoints, Nspin)
     calc_rhoe!( Ham, psiks, Rhoe )
     return Rhoe
 end

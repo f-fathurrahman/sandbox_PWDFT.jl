@@ -71,9 +71,9 @@ function calc_E_Ps_nloc( Ham::CuHamiltonian, psiks::CuBlochWavefunc )
 
     E_Ps_nloc = 0.0
 
-    betaNL_psi = CuArrays.zeros(ComplexF64,Nstates,NbetaNL)
+    betaNL_psi = CUDA.zeros(ComplexF64,Nstates,NbetaNL)
 
-    e_ps_nloc_k = CuArrays.zeros(Float64, Nstates)
+    e_ps_nloc_k = CUDA.zeros(Float64, Nstates)
 
     Nthreads = min( 256, Nstates )
     Nblocks = ceil(Int64, Nstates/Nthreads)
@@ -107,7 +107,7 @@ function calc_E_local( Ham::CuHamiltonian )
     Nspin = Ham.electrons.Nspin
     potentials = Ham.potentials
 
-    Rhoe_tot = CuArrays.zeros(Float64, Npoints)
+    Rhoe_tot = CUDA.zeros(Float64, Npoints)
     for ispin = 1:Nspin
         Rhoe_tot[:] = Rhoe_tot[:] + Ham.rhoe[:,ispin]
     end
@@ -140,7 +140,7 @@ function kernel_calc_E_kin!( ist, idx_gw2g_ik, G, k1, k2, k3, psi, psiKpsi )
         
         Gw2 = ( G[1,ig] + k1 )^2 + ( G[2,ig] + k2 )^2 + ( G[3,ig] + k3 )^2
         
-        psiKpsi[igk] = CUDAnative.abs( psi[igk,ist] )^2*Gw2
+        psiKpsi[igk] = CUDA.abs( psi[igk,ist] )^2*Gw2
     
     end
     
@@ -162,7 +162,7 @@ function calc_E_kin( Ham::CuHamiltonian, psiks::CuBlochWavefunc )
     k = Ham.pw.gvecw.kpoints.k
 
     Ngwx = Ham.pw.gvecw.Ngwx
-    psiKpsi = CuArrays.zeros(Float64, Ngwx)
+    psiKpsi = CUDA.zeros(Float64, Ngwx)
 
     Nthreads = 256
 

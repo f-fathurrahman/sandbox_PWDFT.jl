@@ -7,7 +7,7 @@ import PWDFT: calc_epsxc_PBE, calc_Vxc_PBE
 # Rhoe can be spinpol or not
 function calc_epsxc_PBE( xc_calc::XCCalculator, pw::CuPWGrid, Rhoe::CuArray{Float64,2} )
     Npoints = size(Rhoe,1)
-    epsxc = CuArrays.zeros(Float64,Npoints)
+    epsxc = CUDA.zeros(Float64,Npoints)
     calc_epsxc_PBE!( xc_calc, pw, Rhoe, epsxc )
     return epsxc
 end
@@ -15,7 +15,7 @@ end
 function calc_Vxc_PBE( xc_calc::XCCalculator, pw::CuPWGrid, Rhoe::CuArray{Float64,2} )
     Npoints = size(Rhoe,1)
     Nspin = size(Rhoe,2)
-    Vxc = CuArrays.zeros(Float64, Npoints, Nspin)
+    Vxc = CUDA.zeros(Float64, Npoints, Nspin)
     if Nspin == 1
         calc_Vxc_PBE!( xc_calc, pw, Rhoe[:,1], Vxc )
         return Vxc        
@@ -73,7 +73,7 @@ function calc_epsxc_PBE!( xc_calc::XCCalculator, pw::CuPWGrid, Rhoe::CuArray{Flo
 
     # calculate gRhoe2
     gRhoe = op_nabla( pw, Rhoe )
-    gRhoe2 = CuArrays.zeros( Float64, Npoints )
+    gRhoe2 = CUDA.zeros( Float64, Npoints )
     
     Nthreads = 256
     Nblocks = ceil( Int64, Npoints/Nthreads )
@@ -133,9 +133,9 @@ function calc_epsxc_PBE!( xc_calc::XCCalculator, pw::CuPWGrid, Rhoe::CuArray{Flo
     gRhoe_dn = op_nabla( pw, Rhoe[:,2] )
     gRhoe = op_nabla( pw, Rhoe_total )
     #
-    gRhoe2_up = CuArrays.zeros( Float64, Npoints )
-    gRhoe2_dn = CuArrays.zeros( Float64, Npoints )
-    gRhoe2 = CuArrays.zeros( Float64, Npoints )
+    gRhoe2_up = CUDA.zeros( Float64, Npoints )
+    gRhoe2_dn = CUDA.zeros( Float64, Npoints )
+    gRhoe2 = CUDA.zeros( Float64, Npoints )
 
     Nthreads = 256
     Nblocks = ceil( Int64, Npoints/Nthreads )
@@ -186,14 +186,14 @@ function calc_Vxc_PBE!( xc_calc::XCCalculator, pw::CuPWGrid, Rhoe::CuArray{Float
 
     # calculate gRhoe2
     gRhoe = op_nabla( pw, Rhoe )
-    gRhoe2 = CuArrays.zeros( Float64, Npoints )
+    gRhoe2 = CUDA.zeros( Float64, Npoints )
     
     Nthreads = 256
     Nblocks = ceil( Int64, Npoints/Nthreads )
     
     @cuda threads=Nthreads blocks=Nblocks kernel_calc_v_3_squared!( gRhoe, gRhoe2 )
 
-    h = CuArrays.zeros(Float64,3,Npoints)
+    h = CUDA.zeros(Float64,3,Npoints)
 
     @cuda threads=Nthreads blocks=Nblocks kernel_Vxc_PBE!( Rhoe, gRhoe, gRhoe2, h, Vxc )
 
@@ -262,9 +262,9 @@ function calc_Vxc_PBE!( xc_calc::XCCalculator, pw::CuPWGrid, Rhoe::CuArray{Float
     gRhoe_dn = op_nabla( pw, Rhoe[:,2] )
     gRhoe = op_nabla( pw, Rhoe_total )
 
-    gRhoe2_up = CuArrays.zeros( Float64, Npoints )
-    gRhoe2_dn = CuArrays.zeros( Float64, Npoints )
-    gRhoe2 = CuArrays.zeros( Float64, Npoints )
+    gRhoe2_up = CUDA.zeros( Float64, Npoints )
+    gRhoe2_dn = CUDA.zeros( Float64, Npoints )
+    gRhoe2 = CUDA.zeros( Float64, Npoints )
 
     Nthreads = 256
     Nblocks = ceil( Int64, Npoints/Nthreads )
@@ -273,11 +273,11 @@ function calc_Vxc_PBE!( xc_calc::XCCalculator, pw::CuPWGrid, Rhoe::CuArray{Float
     @cuda threads=Nthreads blocks=Nblocks kernel_calc_v_3_squared!( gRhoe_up, gRhoe2_up )
     @cuda threads=Nthreads blocks=Nblocks kernel_calc_v_3_squared!( gRhoe_dn, gRhoe2_dn )
 
-    h_up = CuArrays.zeros(Float64,3,Npoints)
-    h_dn = CuArrays.zeros(Float64,3,Npoints)
+    h_up = CUDA.zeros(Float64,3,Npoints)
+    h_dn = CUDA.zeros(Float64,3,Npoints)
 
-    dh_up = CuArrays.zeros(Float64,Npoints)
-    dh_dn = CuArrays.zeros(Float64,Npoints)
+    dh_up = CUDA.zeros(Float64,Npoints)
+    dh_dn = CUDA.zeros(Float64,Npoints)
 
     @cuda threads=Nthreads blocks=Nblocks kernel_Vxc_PBE_spin!( Rhoe, gRhoe_up, gRhoe_dn, gRhoe2, gRhoe2_up, gRhoe2_dn, h_up, h_dn, Vxc )
 

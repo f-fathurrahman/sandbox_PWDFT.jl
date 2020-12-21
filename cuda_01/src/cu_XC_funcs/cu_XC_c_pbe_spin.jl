@@ -11,21 +11,21 @@ function cu_XC_c_pbe_spin( rho, zeta, grho )
     xkf = 1.919158292677513
     xks = 1.128379167095513
 
-    rs = pi34/CUDAnative.pow(rho, third)
+    rs = pi34/CUDA.pow(rho, third)
     
     ec, vcup, vcdw = cu_XC_c_pw_spin( rho, zeta )
 
     kf = xkf / rs
-    ks = xks * CUDAnative.sqrt(kf)
-    fz = 0.5 * ( CUDAnative.pow( 1.0 + zeta, 2.0/3.0 ) + CUDAnative.pow( 1.0 - zeta, 2.0/3.0) )
+    ks = xks * CUDA.sqrt(kf)
+    fz = 0.5 * ( CUDA.pow( 1.0 + zeta, 2.0/3.0 ) + CUDA.pow( 1.0 - zeta, 2.0/3.0) )
     
     fz2 = fz * fz
     fz3 = fz2 * fz
     fz4 = fz3 * fz
-    dfz = ( CUDAnative.pow( 1.0 + zeta, -1.0/3.0 ) - CUDAnative.pow( 1.0 - zeta, -1.0/3.0) ) / 3.0
+    dfz = ( CUDA.pow( 1.0 + zeta, -1.0/3.0 ) - CUDA.pow( 1.0 - zeta, -1.0/3.0) ) / 3.0
     
-    t = CUDAnative.sqrt(grho) / (2.0 * fz * ks * rho)
-    expe = CUDAnative.exp( -ec / (fz3 * ga) )
+    t = CUDA.sqrt(grho) / (2.0 * fz * ks * rho)
+    expe = CUDA.exp( -ec / (fz3 * ga) )
     af = be / ga * (1.0 / (expe-1.0) )
     
     bfup = expe * (vcup - ec) / fz3
@@ -37,7 +37,7 @@ function cu_XC_c_pbe_spin( rho, zeta, grho )
     qy = y * y * (2.0 + y) / (1.0 + y + y * y)^2
     
     s1 = 1.0 + be / ga * t * t * xy
-    h0 = fz3 * ga * CUDAnative.log(s1)
+    h0 = fz3 * ga * CUDA.log(s1)
     
     dh0up = be * t * t * fz3 / s1 * ( -7.0 / 3.0 * xy - qy * (af * bfup / be - 7.0 / 3.0) )
     

@@ -55,6 +55,9 @@ function CuGVectorsW( gvecw::GVectorsW )
 
 end
 
+const CUPLANFW_TYPE = typeof(plan_fft(CuArray(zeros(ComplexF64,(1,1,1)))))
+const CUPLANBW_TYPE = typeof(plan_ifft(CuArray(zeros(ComplexF64,(1,1,1)))))
+
 # CuArray version of PWGrid
 struct CuPWGrid
     ecutwfc::Float64
@@ -65,8 +68,8 @@ struct CuPWGrid
     CellVolume::Float64
     gvec::CuGVectors
     gvecw::CuGVectorsW
-    planfw::CuArrays.CUFFT.cCuFFTPlan{Complex{Float64},-1,false,3}
-    planbw::AbstractFFTs.ScaledPlan{Complex{Float64},CuArrays.CUFFT.cCuFFTPlan{Complex{Float64},1,false,3},Float64}
+    planfw::CUPLANFW_TYPE
+    planbw::CUPLANBW_TYPE
 end
 
 
@@ -108,8 +111,8 @@ function CuPWGrid( ecutwfc::Float64, LatVecs::Array{Float64,2}; kpoints=nothing,
     gvecw_ = PWDFT.init_gvecw( ecutwfc, gvec_, kpoints )
     gvecw = CuGVectorsW( gvecw_ )
 
-    planfw = plan_fft( CuArrays.zeros(ComplexF64, Ns) )
-    planbw = plan_ifft( CuArrays.zeros(ComplexF64, Ns) )
+    planfw = plan_fft( CUDA.zeros(ComplexF64, Ns) )
+    planbw = plan_ifft( CUDA.zeros(ComplexF64, Ns) )
 
     return CuPWGrid( ecutwfc, ecutrho, Ns, LatVecs, RecVecs, CellVolume, gvec, gvecw,
                      planfw, planbw )
@@ -137,8 +140,8 @@ function op_nabla( pw::CuPWGrid, Rhoe::CuArray{Float64,1} )
 
     RhoeG = R_to_G(pw,Rhoe)  # We are not taking indexing here
 
-    ∇RhoeG_full = CuArrays.zeros(ComplexF64,3,Npoints)
-    ∇Rhoe = CuArrays.zeros(Float64,3,Npoints)
+    ∇RhoeG_full = CUDA.zeros(ComplexF64,3,Npoints)
+    ∇Rhoe = CUDA.zeros(Float64,3,Npoints)
 
     Nthreads = 256
     Nblocks = ceil(Int64, Ng/Nthreads)
@@ -169,12 +172,12 @@ function op_nabla_dot( pw::CuPWGrid, h::CuArray{Float64,2} )
     Npoints = prod(pw.Ns)
 
     # hG is using Npoints instead of Ng
-    hG = CuArrays.zeros(ComplexF64,3,Npoints)
+    hG = CUDA.zeros(ComplexF64,3,Npoints)
     hG[1,:] = R_to_G( pw, h[1,:] )
     hG[2,:] = R_to_G( pw, h[2,:] )
     hG[3,:] = R_to_G( pw, h[3,:] )
 
-    divhG_full = CuArrays.zeros(ComplexF64,Npoints)
+    divhG_full = CUDA.zeros(ComplexF64,Npoints)
 
     Nthreads = 256
     Nblocks = ceil(Int64, Ng/Nthreads)

@@ -62,7 +62,7 @@ function op_V_Ps_nloc( Ham::CuHamiltonian, psi::CuArray{ComplexF64,2} )
     betaNL_psi = calc_betaNL_psi( ik, Ham.pspotNL.betaNL, psi )
     
     Ngw = Ham.pw.gvecw.Ngw
-    Vpsi = CuArrays.zeros( ComplexF64, Ngw[ik], Nstates )
+    Vpsi = CUDA.zeros( ComplexF64, Ngw[ik], Nstates )
 
     Nthreads = 256
     Nblocks = ceil(Int64, Ngw[ik]/Nthreads)
@@ -106,7 +106,7 @@ function op_V_Ps_nloc( Ham::CuHamiltonian, psi::CuArray{ComplexF64,1} )
     betaNL_psi = calc_betaNL_psi( ik, Ham.pspotNL.betaNL, psi )
     
     Ngw = Ham.pw.gvecw.Ngw
-    Vpsi = CuArrays.zeros( ComplexF64, Ngw[ik] )
+    Vpsi = CUDA.zeros( ComplexF64, Ngw[ik] )
 
     Nthreads = 256
     Nblocks = ceil(Int64, Ngw[ik]/Nthreads)

@@ -6,7 +6,7 @@ function calc_strfact( atpos::Array{Float64,2}, Nspecies::Int64,
     #
     Ng = size(G)[2]
     Na = size(atpos)[2]
-    Sf = CuArrays.zeros(ComplexF64,Ng,Nspecies)
+    Sf = CUDA.zeros(ComplexF64,Ng,Nspecies)
 
     Nthreads = 256
     Nblocks = ceil(Int64, Ng/Nthreads)

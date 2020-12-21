@@ -31,7 +31,7 @@ function Kprec( ik::Int64, pw::CuPWGrid, psi )
     k2 = pw.gvecw.kpoints.k[2,ik]
     k3 = pw.gvecw.kpoints.k[3,ik]
 
-    Kpsi = CuArrays.zeros( ComplexF64, Ngw_ik, Nstates )
+    Kpsi = CUDA.zeros( ComplexF64, Ngw_ik, Nstates )
 
     Nthreads = 256
     Nblocks = ceil(Int64, Ngw_ik/Nthreads)

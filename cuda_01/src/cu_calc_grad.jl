@@ -12,7 +12,7 @@ function calc_grad( Ham::CuHamiltonian, psi::CuArray{ComplexF64,2} )
     Ngw     = size(psi)[1]
     Nstates = size(psi)[2]
     #
-    grad = CuArrays.zeros( ComplexF64, Ngw, Nstates )
+    grad = CUDA.zeros( ComplexF64, Ngw, Nstates )
 
     H_psi = op_H( Ham, psi )
     for ist = 1:Nstates

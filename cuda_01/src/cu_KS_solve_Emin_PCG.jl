@@ -40,7 +40,7 @@ function KS_solve_Emin_PCG!( Ham::CuHamiltonian;
     # Calculated electron density from this wave function and
     # update Hamiltonian (calculate Hartree and XC potential).
     #
-    Rhoe = CuArrays.zeros(Float64,Npoints,Nspin)
+    Rhoe = CUDA.zeros(Float64,Npoints,Nspin)
 
     if startingrhoe == :gaussian
         error("startingrhoe == :gaussian is not yet implemented")
@@ -53,15 +53,15 @@ function KS_solve_Emin_PCG!( Ham::CuHamiltonian;
 
     update!(Ham, Rhoe)
 
-    evals = CuArrays.zeros(Nstates,Nkspin)
+    evals = CUDA.zeros(Nstates,Nkspin)
     if !skip_initial_diag
         error("skip_initial_diag == false is not yet implemented")
         evals =
         diag_LOBPCG!( Ham, psiks, verbose=false, verbose_last=false, NiterMax=10 )
     end
 
-    # warm-up CuArrays.CUSOLVER
-    vv = CuArrays.rand(ComplexF64,1,1)
+    # warm-up CUDA.CUSOLVER
+    vv = CUDA.rand(ComplexF64,1,1)
     _, _ = eigen_heevd_gpu( vv )
 
     #
@@ -108,7 +108,7 @@ function KS_solve_Emin_PCG!( Ham::CuHamiltonian;
         @printf("\n")
     end
 
-    CuArrays.memory_status()
+    CUDA.memory_status()
     println()
 
     for iter = 1:NiterMax
@@ -216,10 +216,10 @@ function KS_solve_Emin_PCG!( Ham::CuHamiltonian;
 
     #GC.gc(true)
     println()
-    CuArrays.memory_status()
+    CUDA.memory_status()
 
     # Calculate eigenvalues
-    Hr = CuArrays.zeros(ComplexF64, Nstates, Nstates)
+    Hr = CUDA.zeros(ComplexF64, Nstates, Nstates)
     for ispin = 1:Nspin, ik = 1:Nkpt
         Ham.ik = ik
         Ham.ispin = ispin

@@ -22,7 +22,7 @@ function zeros_CuBlochWavefunc( pw::CuPWGrid, Nstates::Int64, Nspin::Int64 )
 
     for ispin in 1:Nspin, ik in 1:Nkpt
         ikspin = ik + (ispin-1)*Nkpt
-        psiks[ikspin] = CuArrays.zeros( ComplexF64, Ngw[ik], Nstates )
+        psiks[ikspin] = CUDA.zeros( ComplexF64, Ngw[ik], Nstates )
     end
     return psiks
 end
@@ -61,7 +61,7 @@ function rand_CuBlochWavefunc( pw::CuPWGrid, Nstates::Int64, Nspin::Int64 )
 end
 
 function rand_CuWavefunc( Nbasis, Nstates )
-    return ortho_gram_schmidt( CuArrays.rand(ComplexF64,Nbasis,Nstates) )
+    return ortho_gram_schmidt( CUDA.rand(ComplexF64,Nbasis,Nstates) )
 end
 
 #

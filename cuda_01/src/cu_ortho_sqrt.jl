@@ -1,6 +1,6 @@
 # not fully implemented yet
 
-function ortho_sqrt( X::CuArrays{ComplexF64,2} )
+function ortho_sqrt( X::CUDA{ComplexF64,2} )
     # sqrtm operation
     F = eigen( psiks[i]' * psiks[i] )
     retmat = (F.vectors * Diagonal(F.values)) * F.vectors'

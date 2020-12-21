@@ -28,7 +28,7 @@ function op_K( Ham::CuHamiltonian, psi::CuArray{ComplexF64,2} )
     k2 = Ham.pw.gvecw.kpoints.k[2,ik]
     k3 = Ham.pw.gvecw.kpoints.k[3,ik]
 
-    Kpsi = CuArrays.zeros( ComplexF64, size(psi) )
+    Kpsi = CUDA.zeros( ComplexF64, size(psi) )
 
     Nthreads = 256
     Nblocks = ceil( Int64, Ngw[ik]/Nthreads )

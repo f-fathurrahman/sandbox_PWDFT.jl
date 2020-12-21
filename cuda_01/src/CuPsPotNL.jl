@@ -81,7 +81,7 @@ function calc_betaNL_psi(
     Nstates = size(psi)[2]
     NbetaNL = size(betaNL[1],2)
 
-    betaNL_psi = CuArrays.zeros( ComplexF64, Nstates, NbetaNL )
+    betaNL_psi = CUDA.zeros( ComplexF64, Nstates, NbetaNL )
     betaNL_psi[:,:] = conj( psi' * betaNL[ik] )
     return betaNL_psi
 end
@@ -93,7 +93,7 @@ function calc_betaNL_psi(
 )
     NbetaNL = size(betaNL[1],2)
 
-    betaNL_psi = CuArrays.zeros( ComplexF64, NbetaNL )
+    betaNL_psi = CUDA.zeros( ComplexF64, NbetaNL )
     betaNL_psi[:] = conj( psi' * betaNL[ik] )
     return betaNL_psi
 end

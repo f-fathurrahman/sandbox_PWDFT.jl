@@ -4,12 +4,11 @@ using Printf
 using FFTW
 using LinearAlgebra
 
-using CUDAnative
-using CuArrays
+using CUDA
 
 using PWDFT
 
-import CuArrays: allowscalar, @allowscalar
+import CUDA: allowscalar, @allowscalar
 allowscalar(false)
 
 include("utils_CuArrays.jl")

@@ -14,10 +14,10 @@ function CuElectrons()
     Nstates = 1
     Nstates_occ = 1
     
-    Focc_gpu = CuArrays.zeros(Float64,Nstates,1) # Nkpt=1
+    Focc_gpu = CUDA.zeros(Float64,Nstates,1) # Nkpt=1
     Focc = zeros(Nstates,1)
 
-    ebands_gpu = CuArrays.zeros(Float64,Nstates,1) # use Nkpt=1
+    ebands_gpu = CUDA.zeros(Float64,Nstates,1) # use Nkpt=1
     ebands = zeros(Nstates,1)
 
     Nspin = 1

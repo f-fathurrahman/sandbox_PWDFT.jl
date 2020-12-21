@@ -7,7 +7,7 @@ import PWDFT: calc_epsxc_VWN, calc_Vxc_VWN
 function calc_epsxc_VWN( xc_calc::XCCalculator, Rhoe::CuArray{Float64,2} )
     
     Npoints = size(Rhoe,1)
-    epsxc = CuArrays.zeros(Float64,Npoints)
+    epsxc = CUDA.zeros(Float64,Npoints)
     
     calc_epsxc_VWN!( xc_calc, Rhoe, epsxc )
     
@@ -20,7 +20,7 @@ function calc_Vxc_VWN( xc_calc::XCCalculator, Rhoe::CuArray{Float64,2} )
     Npoints = size(Rhoe,1)
     Nspin = size(Rhoe,2)
     
-    Vxc = CuArrays.zeros(Float64, Npoints, Nspin)
+    Vxc = CUDA.zeros(Float64, Npoints, Nspin)
 
     if Nspin == 1
         calc_Vxc_VWN!( xc_calc, Rhoe[:,1], Vxc )

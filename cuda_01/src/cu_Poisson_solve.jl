@@ -22,7 +22,7 @@ function Poisson_solve( pw::CuPWGrid, RhoeR::CuArray{Float64,1} )
     idx_g2r = pw.gvec.idx_g2r
     Npoints = prod(pw.Ns)
     
-    ctmp = CuArrays.zeros( ComplexF64, Npoints )
+    ctmp = CUDA.zeros( ComplexF64, Npoints )
     ctmp[2:Npoints] = R_to_G( pw, RhoeR )[2:Npoints]
     
     #ctmp = R_to_G( pw, RhoeR )
