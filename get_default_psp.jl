@@ -1,4 +1,4 @@
-function get_default_psp( atoms::Atoms; xcfunc="PADE" )
+function get_default_psp( atoms::Atoms; xcfunc="VWN" )
 
     DIR_PWDFT = joinpath( dirname(pathof(PWDFT)), "..")
     if xcfunc == "VWN"
