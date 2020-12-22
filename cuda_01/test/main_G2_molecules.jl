@@ -1,3 +1,4 @@
+using Printf
 using Random
 
 using CUDA
@@ -8,13 +9,15 @@ const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)),"..")
 const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
 const DIR_STRUCTURES = joinpath(DIR_PWDFT, "structures")
 
-function main_CPU()
+include("../../get_default_psp.jl")
+
+function main_CPU(molname)
 
     Random.seed!(1234)
 
-    atoms = Atoms( xyz_file=joinpath(DIR_STRUCTURES, "H2.xyz"),
-                   LatVecs=gen_lattice_sc(16.0) )
-    pspfiles = [joinpath(DIR_PSP, "H-q1.gth")]
+    filename = joinpath(DIR_STRUCTURES, "DATA_G2_mols", molname*".xyz")
+    atoms = Atoms(ext_xyz_file=filename)
+    pspfiles = get_default_psp(atoms)
     ecutwfc = 15.0
 
     Nspin = 1
@@ -28,13 +31,14 @@ function main_CPU()
 
 end
 
-function main_GPU()
+function main_GPU(molname)
 
     Random.seed!(1234)
 
-    atoms = Atoms( xyz_file=joinpath(DIR_STRUCTURES, "H2.xyz"),
-                   LatVecs=gen_lattice_sc(16.0) )
-    pspfiles = [joinpath(DIR_PSP, "H-q1.gth")]
+    filename = joinpath(DIR_STRUCTURES, "DATA_G2_mols", molname*".xyz")
+    atoms = Atoms(ext_xyz_file=filename)
+    pspfiles = get_default_psp(atoms)
+
     ecutwfc = 15.0
 
     Nspin = 1
@@ -47,5 +51,16 @@ function main_GPU()
 end
 
 
-main_CPU()
-main_GPU()
+function main()
+    Nargs = length(ARGS)
+    if Nargs >= 1
+        molname = ARGS[1]
+    else
+        molname = "H2O"
+    end
+    main_CPU(molname)
+    main_GPU(molname)
+end
+
+main()
+

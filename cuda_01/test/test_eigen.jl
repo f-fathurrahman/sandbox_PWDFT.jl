@@ -1,9 +1,8 @@
-using CuArrays
-using CuArrays.CUSOLVER
+using CUDA
 using LinearAlgebra
 using Printf
 
-CuArrays.allowscalar(false)
+CUDA.allowscalar(false)
 
 function test_01()
 
