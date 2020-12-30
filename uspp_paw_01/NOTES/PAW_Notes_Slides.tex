@@ -1,0 +1,170 @@
+\documentclass[english,10pt,aspectratio=169,fleqn]{beamer}
+
+\usepackage{amsmath} % load this before unicode-math
+\usepackage{amssymb}
+\usepackage{mathabx}
+%\usepackage{unicode-math}
+
+\usepackage{fontspec}
+\setmonofont{DejaVu Sans Mono}
+%\setmathfont{STIXMath}
+%\setmathfont{TeX Gyre Termes Math}
+
+\usefonttheme[onlymath]{serif}
+
+\setlength{\parskip}{\smallskipamount}
+\setlength{\parindent}{0pt}
+
+%\setbeamersize{text margin left=5pt, text margin right=5pt}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{braket}
+
+\usepackage{minted}
+\newminted{julia}{breaklines,fontsize=\scriptsize,texcomments=true}
+\newminted{python}{breaklines,fontsize=\scriptsize,texcomments=true}
+\newminted{bash}{breaklines,fontsize=\scriptsize,texcomments=true}
+\newminted{text}{breaklines,fontsize=\scriptsize,texcomments=true}
+
+\newcommand{\txtinline}[1]{\mintinline[fontsize=\scriptsize]{text}{#1}}
+\newcommand{\jlinline}[1]{\mintinline[fontsize=\scriptsize]{julia}{#1}}
+
+\definecolor{mintedbg}{rgb}{0.95,0.95,0.95}
+\usepackage{mdframed}
+
+%\BeforeBeginEnvironment{minted}{\begin{mdframed}[backgroundcolor=mintedbg]}
+%\AfterEndEnvironment{minted}{\end{mdframed}}
+
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+\makeatletter
+
+ \newcommand\makebeamertitle{\frame{\maketitle}}%
+ % (ERT) argument for the TOC
+ \AtBeginDocument{%
+   \let\origtableofcontents=\tableofcontents
+   \def\tableofcontents{\@ifnextchar[{\origtableofcontents}{\gobbletableofcontents}}
+   \def\gobbletableofcontents#1{\origtableofcontents}
+ }
+
+\makeatother
+
+\usepackage{babel}
+\usepackage{braket}
+
+\begin{document}
+
+
+\title{PAW Notes}
+\author{ffr}
+\institute{}
+\date{}
+
+\frame{\titlepage}
+
+\begin{frame}
+
+\begin{equation*}
+E = \sum_{n} f_{n} \Braket{\psi_{n} | -\frac{1}{2}\nabla^2 | \psi_{n}} +
+E_{\mathrm{H}}\left[ n + n_{Z} \right] + E_{\mathrm{xc}}\left[ n \right]
+\end{equation*}
+
+\begin{equation*}
+\ket{\psi_{n}} = \ket{\tilde{\psi}_{n}} + \sum_{i} \left(
+\ket{\phi_{i}} - \ket{\tilde{\phi}_{i}} \right)
+\braket{ \tilde{p}_{i} | \tilde{\psi}_{n} }
+\end{equation*}
+
+Index $i$: atomic site $\mathbf{R}$, angular momentum  $L = (l,m)$, and additional
+index $k$ for reference energy $\epsilon_{kl}$.
+
+AE partial waves $\phi_{i}$ are obtained for a reference atom
+
+PS partial waves $\tilde{\phi}_{i}$ are equivalent to the AE partial waves outside
+a core radius $r^{l}_{c}$ and match continuously onto $\tilde{\phi}_{i}$ inside the
+core radius.
+
+Projector functions $\tilde{p}_{i}$ are dual to the partial waves:
+\begin{equation*}
+\braket{\tilde{p}_{i} | \tilde{\phi}_{j}} = \delta_{ij}
+\end{equation*}
+
+\end{frame}
+
+
+\begin{frame} % ----------------------
+
+\begin{equation*}
+n(\mathbf{r}) = \tilde{n}(\mathbf{r}) + n^{1}(\mathbf{r}) - \tilde{n}^{1}(\mathbf{r})
+\end{equation*}
+
+\begin{equation*}
+\tilde{n}(\mathbf{r}) = \sum_{n} f_{n} \braket{\tilde{\psi}_{n} | \mathbf{r}}
+\braket{\mathbf{r} | \tilde{\psi}_{n}}
+\end{equation*}
+
+Onsite electron densities $n^{1}$ and $\tilde{n}^{1}$ are treated on a radial
+support grid, that extends up to $r_{\mathrm{rad}}$ around each ion.
+
+\begin{equation*}
+n^{1}(\mathbf{r}) = \sum_{i,j} \rho_{ij} \braket{\phi_{i} | \mathbf{r}}
+\braket{\mathbf{r} | \phi_{j}}
+\end{equation*}
+
+\begin{equation*}
+\tilde{n}^{1}(\mathbf{r}) = \sum_{i,j} \rho_{ij} \braket{\tilde{\phi}_{i} | \mathbf{r}}
+  \braket{\mathbf{r} | \tilde{\phi}_{j}}
+\end{equation*}
+
+
+\end{frame}
+
+
+\begin{frame} % -----------------------------
+
+$\rho_{ij}$ are the  occupancies of each augmentation channel $(i,j)$:
+\begin{equation*}
+\rho_{ij} = \sum_{n} f_{n} \braket{\tilde{\psi}_{n} | \tilde{p}_{i} }
+\braket{\tilde{p}_{i} | \tilde{\psi}_{n} }
+\end{equation*}
+
+\end{frame}
+
+
+
+\begin{frame}
+
+Assuming frozen core approximation.
+
+Introduce four quantities that will be used for the description of the core
+charge density:
+
+$n_{c}$: charge density of frozen core all-electron wave functions
+in the reference atom.
+
+$\tilde{n}_{c}$: partial electronic core density $\tilde{n}_{c}$ is equivalent
+to the frozen core AE charge density outside a certain radius $r_{pc}$, which lies
+inside the argumentation radius. Used in order to calculate nonlinear core
+corrections
+
+$n_{Zc}$: point charge density of the nuclei $n_{Z}$ plus the frozen core AE charge
+density $n_{c}$:
+\begin{equation*}
+n_{Zc} = n_{Z} + n_{c}
+\end{equation*}
+
+$\tilde{n}_{Zc}$: pseudized core density, equivalent to $n_{Zc}$ outside the core radius
+and shall have the same moment as $n_{Zc}$ inside the core region:
+\begin{equation*}
+\int_{\Omega_{r}} n_{Zc}(\mathbf{r}) \, \mathrm{d}\mathbf{r} =
+\int_{\Omega_{r}} \tilde{n}_{Zc}(\mathbf{r}) \, \mathrm{d}\mathbf{r}
+\end{equation*}
+
+\end{frame}
+  
+\end{frame}
+
+\end{document}
+
