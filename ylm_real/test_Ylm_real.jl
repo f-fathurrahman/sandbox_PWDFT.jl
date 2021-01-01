@@ -8,7 +8,7 @@ function test_main()
 
     g = [0.0, 1.0, 2.0]
     Ng = 1
-    lmax = 3
+    lmax = 4
 
     calc_ylm_angles(g)
 

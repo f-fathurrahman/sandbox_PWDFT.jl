@@ -1,0 +1,61 @@
+\begin{frame}
+
+\begin{equation*}
+V_{\mathrm{NL}} = \sum_{nm,I} D^{(0)}_{nm} \ket{\beta^{I}_{n}}\bra{\beta^{I}_{m}}
+\end{equation*}
+
+$n,m$: beta func indices
+
+$\beta^{I}_{n}(\mathbf{r}) = \beta_{n}(\mathbf{r} - \mathbf{R}_{I})$
+
+Electron density:
+\begin{equation*}
+n(\mathbf{r}) = \sum_{i} \left[
+| \psi_{i}(\mathbf{r}) |^{2} +
+\sum_{nm,I} Q^{I}_{nm}(\mathbf{r}) \braket{ \psi_{i} | \beta_{n} }
+\braket{ \beta_{m} | \psi_{i} }
+\right]
+\end{equation*}
+
+\end{frame}
+
+
+\begin{frame}
+
+Orthonormality conditions:
+\begin{equation*}
+\braket{\psi_{i} | S | \psi_{j} } = \delta_{ij}
+\end{equation*}
+overlap operator:
+\begin{equation*}
+S = 1 + \sum_{nm,I} q_{nm} \ket{\beta^{I}_{n}} \bra{\beta^{I}_{m}}
+\end{equation*}
+
+\begin{equation*}
+q_{nm} = \int Q_{nm}(\mathbf{r})\,\mathrm{d}\mathbf{r}
+\end{equation*}
+
+\end{frame}
+
+
+
+\begin{frame} % --------------------------
+
+KS equation:
+\begin{equation*}
+H\ket{\psi_{i}} = \epsilon_{i} S \ket{\psi_{i}}
+\end{equation*}
+
+Hamiltonian operator:
+\begin{equation*}
+H = -\frac{\hbar^2}{2m} \nabla^2 + V_{\mathrm{eff}} +
+\sum_{nm,I} D^{I}_{nm} \ket{\beta^{I}_{n}} \bra{\beta^{I}_{m}}
+\end{equation*}
+
+Screened coefficients:
+\begin{equation*}
+D^{I}_{nm} = D^{(0)}_{nm} + \int V_{\mathrm{eff}}(\mathbf{r})
+Q^{I}_{nm}(\mathbf{r})\,\mathrm{d}\mathbf{r}
+\end{equation*}
+
+\end{frame}

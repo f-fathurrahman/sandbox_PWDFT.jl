@@ -1,6 +1,8 @@
 using Printf
 import LightXML
 
+include("all_gbrv_files.jl")
+
 function do_read( upf_file::String )
     
     xdoc = LightXML.parse_file(upf_file)
@@ -29,7 +31,9 @@ function do_read( upf_file::String )
     spl_str = split(pp_r_str, keepempty=false)
 
     @assert(length(spl_str) == Nr)
-    
+
+    println("Nr = ", Nr)
+
     r = zeros(Float64, Nr)
     for i = 1:Nr
         r[i] = parse(Float64, spl_str[i])
@@ -98,6 +102,111 @@ function do_read( upf_file::String )
         Dij_temp[i] = parse(Float64,spl_str[i])
     end
     Dij = reshape(Dij_temp,(Nproj,Nproj))*2  # convert to Hartree
+
+    #
+    # augmentation stuffs:
+    #
+    pp_aug = LightXML.get_elements_by_tagname(pp_nonlocal[1], "PP_AUGMENTATION")
+    nqlc = parse(Int64,LightXML.attributes_dict(pp_aug[1])["nqlc"])
+    nqf = parse(Int64,LightXML.attributes_dict(pp_aug[1])["nqf"])
+
+    pp_q = LightXML.get_elements_by_tagname(pp_aug[1], "PP_Q")
+    pp_q_str = LightXML.content(pp_q[1])
+    pp_q_str = replace(pp_q_str, "\n" => " ")
+    spl_str = split(pp_q_str, keepempty=false)
+
+    qqq = zeros(Nproj,Nproj)
+    qqq_temp = zeros(Nproj*Nproj)
+    for i in 1:Nproj*Nproj
+        qqq_temp[i] = parse(Float64, spl_str[i])
+    end
+    qqq = reshape(qqq_temp, (Nproj,Nproj)) # XXX convert to Ha?
+    display(qqq); println()
+
+    qfcoef_tmp = zeros(Float64, nqf*nqlc*Nproj*Nproj)
+    pp_qfcoef = LightXML.get_elements_by_tagname(pp_aug[1], "PP_QFCOEF")
+    pp_qfcoef_str = LightXML.content(pp_qfcoef[1])
+    pp_qfcoef_str = replace(pp_qfcoef_str, "\n" => " ")
+    spl_str = split(pp_qfcoef_str, keepempty=false)
+    for i in 1:length(qfcoef_tmp)
+        qfcoef_tmp[i] = parse(Float64, spl_str[i])
+    end
+    qfcoef = reshape(qfcoef_tmp, nqf, nqlc, Nproj, Nproj)
+
+    pp_rinner = LightXML.get_elements_by_tagname(pp_aug[1], "PP_RINNER")
+    pp_rinner_str = LightXML.content(pp_rinner[1])
+    pp_rinner_str = replace(pp_rinner_str, "\n" => " ")
+    spl_str = split(pp_rinner_str, keepempty=false)
+    rinner = zeros(Float64, nqlc)
+    for i in 1:nqlc
+        rinner[i] = parse(Float64, spl_str[i])
+    end
+
+    Nq = Int64( Nproj*(Nproj+1)/2 )
+    Qij = zeros(Float64, Nr, Nq)
+    for iprj in 1:Nproj, jprj in iprj:Nproj
+        tagname = "PP_QIJ."*string(iprj)*"."*string(jprj)
+        pp_qij = LightXML.get_elements_by_tagname(pp_aug[1], tagname)
+        #
+        first_idx = parse( Int64, LightXML.attributes_dict(pp_qij[1])["first_index"] )
+        second_idx = parse( Int64, LightXML.attributes_dict(pp_qij[1])["second_index"] )
+        comp_idx = parse( Int64, LightXML.attributes_dict(pp_qij[1])["composite_index"] )
+        #
+        pp_qij_str = LightXML.content(pp_qij[1])
+        pp_qij_str = replace(pp_qij_str, "\n" => " ")
+        spl_str = split(pp_qij_str, keepempty=false)
+        # FIXME" using comp_idx?
+        for i in 1:Nr
+            Qij[i,comp_idx] = parse(Float64,spl_str[i])
+        end
+    end
+
+    #
+    # Pseudo wave function
+    #
+    pp_pswfc = LightXML.get_elements_by_tagname(xroot, "PP_PSWFC")
+    Nwfc = parse(Int64, LightXML.attributes_dict(pp_header[1])["number_of_wfc"] )
+    chi = zeros(Float64,Nr,Nwfc)
+    for iwf in 1:Nwfc
+        tagname = "PP_CHI."*string(iwf)
+        pp_chi = LightXML.get_elements_by_tagname(pp_pswfc[1], tagname)
+        #
+        pp_chi_str = LightXML.content(pp_chi[1])
+        pp_chi_str = replace(pp_chi_str, "\n" => " ")
+        spl_str = split(pp_chi_str, keepempty=false)
+        for i in 1:Nr
+            chi[i,iwf] = parse(Float64, spl_str[i])
+        end
+    end
+
+    # rho atom
+    rhoatom = zeros(Float64,Nr)
+    pp_rhoatom = LightXML.get_elements_by_tagname(xroot, "PP_RHOATOM")
+    pp_rhoatom_str = LightXML.content(pp_rhoatom[1])
+    pp_rhoatom_str = replace(pp_rhoatom_str, "\n" => " ")
+    spl_str = split(pp_rhoatom_str, keepempty=false)
+    for i in 1:Nr
+        rhoatom[i] = parse(Float64, spl_str[i])
+    end
+
 end
 
-do_read("/home/efefer/pseudo/GBRV_LDA/pt_lda_v1.4.uspp.F.UPF")
+do_read("GBRV_LDA/pt_lda_v1.4.uspp.F.UPF2")
+
+#function main()
+#    #list_file = split(FILELIST_LDA, keepempty=false)
+#    #for f in list_file
+#    #    println("f = ", f)
+#    #    do_read(joinpath("./GBRV_LDA", f))
+#    #    println("Done reading")
+#    #end
+#
+#    list_file = split(FILELIST_PBE, keepempty=false)
+#    for f in list_file
+#        println("f = ", f)
+#        do_read(joinpath("./GBRV_PBE", f))
+#        println("Done reading")
+#    end
+#end
+
+#main()
