@@ -48,6 +48,8 @@ function PsPot_UPF( upf_file::String )
     str1 = LightXML.attributes_dict(pp_header[1])["core_correction"]
     if str1 == "F"  # XXX F is not parsed as False
         is_nlcc = false
+    elseif str1 == "T"
+        is_nlcc = true
     else
         is_nlcc = parse(Bool, str1)
     end
@@ -55,6 +57,8 @@ function PsPot_UPF( upf_file::String )
     str1 = LightXML.attributes_dict(pp_header[1])["is_ultrasoft"]
     if str1 == "F"  # XXX F is not parsed as False
         is_ultrasoft = false
+    elseif str1 == "T"
+        is_ultrasoft = true
     else
         is_ultrasoft = parse(Bool, str1)
     end
@@ -62,6 +66,8 @@ function PsPot_UPF( upf_file::String )
     str1 = LightXML.attributes_dict(pp_header[1])["is_paw"]
     if str1 == "F"  # XXX F is not parsed as False
         is_paw = false
+    elseif str1 == "T"
+        is_paw = true
     else
         is_paw = parse(Bool, str1)
     end
@@ -211,8 +217,18 @@ end
 
 function _read_us_aug(pp_nonlocal, Nr, Nproj)
     pp_aug = LightXML.get_elements_by_tagname(pp_nonlocal[1], "PP_AUGMENTATION")
-    nqlc = parse(Int64,LightXML.attributes_dict(pp_aug[1])["nqlc"])
-    nqf = parse(Int64,LightXML.attributes_dict(pp_aug[1])["nqf"])
+    nqlc = parse(Int64, LightXML.attributes_dict(pp_aug[1])["nqlc"])
+    nqf = parse(Int64, LightXML.attributes_dict(pp_aug[1])["nqf"])
+    # XXX Also need to read q_with_l
+    # For GBRV this is false
+    str1 = LightXML.attributes_dict(pp_aug[1])["q_with_l"]
+    if str1 == "F"
+        q_with_l = false
+    elseif str1 == "T"
+        q_with_l = true
+    else
+        q_with_l = parse(Bool, str1)
+    end
 
     pp_q = LightXML.get_elements_by_tagname(pp_aug[1], "PP_Q")
     pp_q_str = LightXML.content(pp_q[1])
@@ -225,44 +241,50 @@ function _read_us_aug(pp_nonlocal, Nr, Nproj)
         qqq_temp[i] = parse(Float64, spl_str[i])
     end
     qqq = reshape(qqq_temp, (Nproj,Nproj)) # XXX convert to Ha?
-    #display(qqq); println()
 
-    qfcoef_tmp = zeros(Float64, nqf*nqlc*Nproj*Nproj)
-    pp_qfcoef = LightXML.get_elements_by_tagname(pp_aug[1], "PP_QFCOEF")
-    pp_qfcoef_str = LightXML.content(pp_qfcoef[1])
-    pp_qfcoef_str = replace(pp_qfcoef_str, "\n" => " ")
-    spl_str = split(pp_qfcoef_str, keepempty=false)
-    for i in 1:length(qfcoef_tmp)
-        qfcoef_tmp[i] = parse(Float64, spl_str[i])
+    if nqf > 0
+        qfcoef_tmp = zeros(Float64, nqf*nqlc*Nproj*Nproj)
+        pp_qfcoef = LightXML.get_elements_by_tagname(pp_aug[1], "PP_QFCOEF")
+        pp_qfcoef_str = LightXML.content(pp_qfcoef[1])
+        pp_qfcoef_str = replace(pp_qfcoef_str, "\n" => " ")
+        spl_str = split(pp_qfcoef_str, keepempty=false)
+        for i in 1:length(qfcoef_tmp)
+            qfcoef_tmp[i] = parse(Float64, spl_str[i])
+        end
+        qfcoef = reshape(qfcoef_tmp, nqf, nqlc, Nproj, Nproj)
+        #
+        pp_rinner = LightXML.get_elements_by_tagname(pp_aug[1], "PP_RINNER")
+        pp_rinner_str = LightXML.content(pp_rinner[1])
+        pp_rinner_str = replace(pp_rinner_str, "\n" => " ")
+        spl_str = split(pp_rinner_str, keepempty=false)
+        rinner = zeros(Float64, nqlc)
+        for i in 1:nqlc
+            rinner[i] = parse(Float64, spl_str[i])
+        end
     end
-    qfcoef = reshape(qfcoef_tmp, nqf, nqlc, Nproj, Nproj)
 
-    pp_rinner = LightXML.get_elements_by_tagname(pp_aug[1], "PP_RINNER")
-    pp_rinner_str = LightXML.content(pp_rinner[1])
-    pp_rinner_str = replace(pp_rinner_str, "\n" => " ")
-    spl_str = split(pp_rinner_str, keepempty=false)
-    rinner = zeros(Float64, nqlc)
-    for i in 1:nqlc
-        rinner[i] = parse(Float64, spl_str[i])
-    end
 
     Nq = Int64( Nproj*(Nproj+1)/2 )
     Qij = zeros(Float64, Nr, Nq)
-    for iprj in 1:Nproj, jprj in iprj:Nproj
-        tagname = "PP_QIJ."*string(iprj)*"."*string(jprj)
-        pp_qij = LightXML.get_elements_by_tagname(pp_aug[1], tagname)
-        #
-        first_idx = parse( Int64, LightXML.attributes_dict(pp_qij[1])["first_index"] )
-        second_idx = parse( Int64, LightXML.attributes_dict(pp_qij[1])["second_index"] )
-        comp_idx = parse( Int64, LightXML.attributes_dict(pp_qij[1])["composite_index"] )
-        #
-        pp_qij_str = LightXML.content(pp_qij[1])
-        pp_qij_str = replace(pp_qij_str, "\n" => " ")
-        spl_str = split(pp_qij_str, keepempty=false)
-        # FIXME" using comp_idx?
-        for i in 1:Nr
-            Qij[i,comp_idx] = parse(Float64,spl_str[i])
+    if !q_with_l
+        for iprj in 1:Nproj, jprj in iprj:Nproj
+            tagname = "PP_QIJ."*string(iprj)*"."*string(jprj)
+            pp_qij = LightXML.get_elements_by_tagname(pp_aug[1], tagname)
+            #
+            first_idx = parse( Int64, LightXML.attributes_dict(pp_qij[1])["first_index"] )
+            second_idx = parse( Int64, LightXML.attributes_dict(pp_qij[1])["second_index"] )
+            comp_idx = parse( Int64, LightXML.attributes_dict(pp_qij[1])["composite_index"] )
+            #
+            pp_qij_str = LightXML.content(pp_qij[1])
+            pp_qij_str = replace(pp_qij_str, "\n" => " ")
+            spl_str = split(pp_qij_str, keepempty=false)
+            # FIXME" using comp_idx?
+            for i in 1:Nr
+                Qij[i,comp_idx] = parse(Float64,spl_str[i])
+            end
         end
+    else
+        println("WARNING: Q with l with not yet supported!")
     end
     return
 end
