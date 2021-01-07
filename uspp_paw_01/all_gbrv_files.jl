@@ -1,4 +1,4 @@
-const FILELIST_LDA = """
+const FILELIST_GBRV_LDA = """
 ag_lda_v1.4.uspp.F.UPF2
 al_lda_v1.uspp.F.UPF2
 as_lda_v1.uspp.F.UPF2
@@ -66,7 +66,7 @@ zr_lda_v1.uspp.F.UPF2
 """
 
 
-const FILELIST_PBE = """
+const FILELIST_GBRV_PBE = """
 ag_pbe_v1.4.uspp.F.UPF2
 al_pbe_v1.uspp.F.UPF2
 as_pbe_v1.uspp.F.UPF2
