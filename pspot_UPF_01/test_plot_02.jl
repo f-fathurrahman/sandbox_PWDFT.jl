@@ -9,9 +9,12 @@ const plt = PyPlot
 
 include("PsPot_UPF.jl")
 
+const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)),"..")
+const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
+
 function test_main()
 
-    psp = PsPot_GTH("../../pseudopotentials/pade_gth/Si-q4.gth")
+    psp = PsPot_GTH(joinpath(DIR_PSP, "Si-q4.gth"))
     println(psp)
 
     psp_upf = PsPot_UPF("Si.pz-hgh.UPF")
