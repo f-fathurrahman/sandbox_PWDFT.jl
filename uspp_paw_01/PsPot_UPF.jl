@@ -1,6 +1,3 @@
-using Printf
-import LightXML
-
 struct PsPot_UPF
     pspfile::String
     atsymb::String
