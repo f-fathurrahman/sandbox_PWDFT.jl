@@ -1,3 +1,6 @@
+using Printf
+import LightXML
+
 include("PsPot_UPF.jl")
 include("all_oncv.jl")
 
