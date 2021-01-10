@@ -136,12 +136,13 @@ function PsPot_UPF( upf_file::String )
     proj_func = zeros(Float64,Nr,Nproj)
     proj_l = zeros(Int64,Nproj)
     rcut_l = zeros(Float64,Nproj)
+    kbeta = zeros(Int64,Nproj)
     for iprj in 1:Nproj
         pp_beta = LightXML.get_elements_by_tagname(pp_nonlocal[1], "PP_BETA."*string(iprj))
         #
         proj_l[iprj] = parse( Int64, LightXML.attributes_dict(pp_beta[1])["angular_momentum"] )
-        idx_cutoff = parse( Int64, LightXML.attributes_dict(pp_beta[1])["cutoff_radius_index"] )
-        rcut_l[iprj] = r[idx_cutoff]
+        kbeta[iprj] = parse( Int64, LightXML.attributes_dict(pp_beta[1])["cutoff_radius_index"] )
+        rcut_l[iprj] = r[kbeta[iprj]]
         #
         pp_beta_str = LightXML.content(pp_beta[1])
         pp_beta_str = replace(pp_beta_str, "\n" => " ")
@@ -150,6 +151,7 @@ function PsPot_UPF( upf_file::String )
             proj_func[i,iprj] = parse(Float64,spl_str[i])*0.5 # Convert to Hartree
         end
     end
+    kkbeta = maximum(kbeta)
 
     #
     # Dij matrix elements
@@ -169,7 +171,7 @@ function PsPot_UPF( upf_file::String )
     # augmentation stuffs:
     #
     if is_ultrasoft
-        _read_us_aug(pp_nonlocal, Nr, Nproj)
+        _read_us_aug(pp_nonlocal, r, Nproj, proj_l, kkbeta)
     end
 
     #
@@ -212,10 +214,22 @@ function PsPot_UPF( upf_file::String )
 end
 
 
-function _read_us_aug(pp_nonlocal, Nr, Nproj)
+function _read_us_aug(
+    pp_nonlocal,
+    r::Array{Float64,1},
+    Nproj::Int64,
+    proj_l,
+    kkbeta::Int64
+)
+    Nr = size(r,1)
     pp_aug = LightXML.get_elements_by_tagname(pp_nonlocal[1], "PP_AUGMENTATION")
+    
+    # number of angular momenta in Q
     nqlc = parse(Int64, LightXML.attributes_dict(pp_aug[1])["nqlc"])
+    
+    # number of Q coefficients
     nqf = parse(Int64, LightXML.attributes_dict(pp_aug[1])["nqf"])
+    
     # XXX Also need to read q_with_l
     # For GBRV this is false
     str1 = LightXML.attributes_dict(pp_aug[1])["q_with_l"]
@@ -262,7 +276,7 @@ function _read_us_aug(pp_nonlocal, Nr, Nproj)
 
 
     Nq = Int64( Nproj*(Nproj+1)/2 )
-    Qij = zeros(Float64, Nr, Nq)
+    qfunc = zeros(Float64, Nr, Nq)
     if !q_with_l
         for iprj in 1:Nproj, jprj in iprj:Nproj
             tagname = "PP_QIJ."*string(iprj)*"."*string(jprj)
@@ -277,11 +291,77 @@ function _read_us_aug(pp_nonlocal, Nr, Nproj)
             spl_str = split(pp_qij_str, keepempty=false)
             # FIXME" using comp_idx?
             for i in 1:Nr
-                Qij[i,comp_idx] = parse(Float64,spl_str[i])
+                qfunc[i,comp_idx] = parse(Float64,spl_str[i])
             end
         end
     else
         println("WARNING: Q with l with not yet supported!")
+    end
+
+    qfuncl = zeros(Float64,Nr,Nq,nqlc) # last index is l
+    for nb in 1:Nproj
+        for mb in nb:Nproj
+            # ijv is the combined (nb,mb) index
+            ijv = round(Int64, mb*(mb-1)/2) + nb
+            l1 = proj_l[nb]
+            l2 = proj_l[mb]
+            # copy q(r) to the l-dependent grid 
+            for l in range( abs(l1-l2), stop=(l1+l2), step=2)
+                @printf("nb, mb, l = %d %d %d\n", nb, mb, l)
+                @views qfuncl[1:Nr,ijv,l+1] = qfunc[1:Nr,ijv] # index l starts from 1
+            end
+            #
+            if nqf > 0
+                for l in range(abs(l1-l2), stop=l1+l2, step=2)
+                    if rinner[l+1] > 0.0
+                        ilast = 0
+                        for ir in 1:kkbeta
+                            if r[ir] < rinner[l+1]
+                                ilast = ir
+                            end
+                        end
+                        @views _setqfnew!( nqf, qfcoef[:,l+1,nb,mb], ilast, r, l, 2, qfuncl[:,ijv,l+1] )
+                    end # if
+                end # for
+            end # if
+        end
+    end
+
+    println("qfunc = ", qfunc[1:5,1])
+    println("qfuncl = ", qfuncl[1:5,1,:])
+
+    return
+end
+
+
+#
+# Adapted from QE:
+# subroutine setqfnew in upflib/upf_to_internal
+#
+function _setqfnew!(nqf, qfcoef, Nr, r, l, n, rho)
+    #
+    # FIXME: n is always equal to 2 ?
+    #
+    # Computes the Q function from its polynomial expansion (r < rinner)
+    # On input: nqf = number of polynomial coefficients
+    #    qfcoef(1:nqf) = the coefficients defining Q
+    #          Nr = number of mesh point
+    #        r(1:Nr)= the radial mesh
+    #             l = angular momentum
+    #             n = additional exponent, result is multiplied by r^n
+    # On output:
+    #      rho(1:Nr)= r^n * Q(r)
+    #
+    # INTEGER,  INTENT(in):: nqf, l, mesh, n
+    # REAL(dp), INTENT(in) :: r(mesh), qfcoef(nqf)
+    # REAL(dp), INTENT(out) :: rho(mesh)
+    for ir in 1:Nr
+        rr = r[ir]^2
+        rho[ir] = qfcoef[1]
+        for i in 2:nqf
+           rho[ir] = rho[ir] + qfcoef[i] * rr^(i-1)
+        end
+        rho[ir] = rho[ir]*r[ir]^(l + n)
     end
     return
 end
