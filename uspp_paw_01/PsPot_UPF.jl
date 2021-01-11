@@ -18,6 +18,12 @@ struct PsPot_UPF
     rcut_l::Array{Float64,1}
     proj_func::Array{Float64,2}
     Dij::Array{Float64,2}
+    # Augmentation stuffs
+    nqf::Int64
+    nqlc::Int64
+    qqq::Array{Float64,2}
+    q_with_l::Bool
+    qfuncl::Array{Float64,3}
     #
     Nwfc::Int64
     chi::Array{Float64,2}
@@ -170,9 +176,8 @@ function PsPot_UPF( upf_file::String )
     #
     # augmentation stuffs:
     #
-    if is_ultrasoft
-        _read_us_aug(pp_nonlocal, r, Nproj, proj_l, kkbeta)
-    end
+    nqf, nqlc, qqq, q_with_l, qfuncl = 
+    _read_us_aug(is_ultrasoft, pp_nonlocal, r, Nproj, proj_l, kkbeta)
 
     #
     # Pseudo wave function
@@ -207,6 +212,7 @@ function PsPot_UPF( upf_file::String )
     return PsPot_UPF(upf_file, atsymb, zval,
         is_nlcc, is_ultrasoft, is_paw,
         Nr, r, rab, V_local, Nproj, proj_l, rcut_l, proj_func, Dij,
+        nqf, nqlc, qqq, q_with_l, qfuncl,
         Nwfc, chi,
         rhoatom
     )
@@ -215,12 +221,24 @@ end
 
 
 function _read_us_aug(
+    is_ultrasoft::Bool,
     pp_nonlocal,
     r::Array{Float64,1},
     Nproj::Int64,
     proj_l,
     kkbeta::Int64
 )
+
+    if !is_ultrasoft
+        # Dummy data
+        nqf = -1
+        nqlc = -1
+        qqq = zeros(1,1)
+        q_with_l = false
+        qfuncl = zeros(1,1,1)
+        return nqf, nqlc, qqq, q_with_l, qfuncl
+    end
+
     Nr = size(r,1)
     pp_aug = LightXML.get_elements_by_tagname(pp_nonlocal[1], "PP_AUGMENTATION")
     
@@ -277,6 +295,8 @@ function _read_us_aug(
 
     Nq = Int64( Nproj*(Nproj+1)/2 )
     qfunc = zeros(Float64, Nr, Nq)
+    qfuncl = zeros(Float64,Nr,Nq,nqlc) # last index is l
+
     if !q_with_l
         for iprj in 1:Nproj, jprj in iprj:Nproj
             tagname = "PP_QIJ."*string(iprj)*"."*string(jprj)
@@ -294,20 +314,16 @@ function _read_us_aug(
                 qfunc[i,comp_idx] = parse(Float64,spl_str[i])
             end
         end
-    else
-        println("WARNING: Q with l with not yet supported!")
-    end
 
-    qfuncl = zeros(Float64,Nr,Nq,nqlc) # last index is l
-    for nb in 1:Nproj
-        for mb in nb:Nproj
+        # Prepare qfuncl
+        for nb in 1:Nproj, mb in nb:Nproj
             # ijv is the combined (nb,mb) index
             ijv = round(Int64, mb*(mb-1)/2) + nb
             l1 = proj_l[nb]
             l2 = proj_l[mb]
             # copy q(r) to the l-dependent grid 
             for l in range( abs(l1-l2), stop=(l1+l2), step=2)
-                @printf("nb, mb, l = %d %d %d\n", nb, mb, l)
+                #@printf("nb, mb, l = %d %d %d\n", nb, mb, l)
                 @views qfuncl[1:Nr,ijv,l+1] = qfunc[1:Nr,ijv] # index l starts from 1
             end
             #
@@ -325,12 +341,36 @@ function _read_us_aug(
                 end # for
             end # if
         end
+    else
+        # Read QIJL
+        for nb in 1:Nproj, mb in nb:Nproj
+            ijv = round(Int64, mb*(mb-1)/2) + nb
+            l1 = proj_l[nb]
+            l2 = proj_l[mb]
+            for l in range( abs(l1-l2), stop=(l1+l2), step=2)
+                tagname = "PP_QIJL."*string(nb)*"."*string(mb)*"."*string(l)
+                pp_qijl = LightXML.get_elements_by_tagname(pp_aug[1], tagname)
+                #
+                first_idx = parse( Int64, LightXML.attributes_dict(pp_qijl[1])["first_index"] )
+                second_idx = parse( Int64, LightXML.attributes_dict(pp_qijl[1])["second_index"] )
+                comp_idx = parse( Int64, LightXML.attributes_dict(pp_qijl[1])["composite_index"] )
+                am_idx = parse( Int64, LightXML.attributes_dict(pp_qijl[1])["angular_momentum"] )
+                if am_idx != l
+                    println("WARNING: am_idx != l")
+                end
+                #
+                str1 = LightXML.content(pp_qijl[1])
+                str1 = replace(str1, "\n" => " ")
+                spl_str = split(str1, keepempty=false)
+                # FIXME" using comp_idx?
+                for i in 1:Nr
+                    qfuncl[i,comp_idx,l+1] = parse(Float64,spl_str[i])
+                end
+            end
+        end
     end
 
-    println("qfunc = ", qfunc[1:5,1])
-    println("qfuncl = ", qfuncl[1:5,1,:])
-
-    return
+    return nqf, nqlc, qqq, q_with_l, qfuncl
 end
 
 
