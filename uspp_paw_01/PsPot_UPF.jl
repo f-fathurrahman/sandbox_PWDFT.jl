@@ -355,6 +355,10 @@ function _read_us_aug(
                 second_idx = parse( Int64, LightXML.attributes_dict(pp_qijl[1])["second_index"] )
                 comp_idx = parse( Int64, LightXML.attributes_dict(pp_qijl[1])["composite_index"] )
                 am_idx = parse( Int64, LightXML.attributes_dict(pp_qijl[1])["angular_momentum"] )
+                #println("l, comp_idx = ", l, " ", comp_idx)
+                if ijv != comp_idx
+                    println("WARNING: ijv != comp_idx")
+                end
                 if am_idx != l
                     println("WARNING: am_idx != l")
                 end
