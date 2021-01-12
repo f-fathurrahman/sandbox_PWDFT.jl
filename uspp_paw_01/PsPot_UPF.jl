@@ -17,7 +17,7 @@ struct PsPot_UPF
     proj_l::Array{Int64,1}
     rcut_l::Array{Float64,1}
     proj_func::Array{Float64,2}
-    Dij::Array{Float64,2}
+    Dion::Array{Float64,2}
     # Augmentation stuffs
     nqf::Int64
     nqlc::Int64
@@ -157,21 +157,24 @@ function PsPot_UPF( upf_file::String )
             proj_func[i,iprj] = parse(Float64,spl_str[i])*0.5 # Convert to Hartree
         end
     end
-    kkbeta = maximum(kbeta)
+    if length(kbeta) > 0
+        kkbeta = maximum(kbeta)
+    else
+        kkbeta = 0
+    end
 
     #
-    # Dij matrix elements
+    # Dion matrix elements
     #
-    Dij = zeros(Nproj,Nproj)
-    Dij_temp = zeros(Nproj*Nproj)
-    pp_dij = LightXML.get_elements_by_tagname(pp_nonlocal[1], "PP_DIJ")
-    pp_dij_str = LightXML.content(pp_dij[1])
-    pp_dij_str = replace(pp_dij_str, "\n" => " ")
-    spl_str = split(pp_dij_str, keepempty=false)
+    Dion_temp = zeros(Nproj*Nproj)
+    pp_dion = LightXML.get_elements_by_tagname(pp_nonlocal[1], "PP_DIJ")
+    pp_dion_str = LightXML.content(pp_dion[1])
+    pp_dion_str = replace(pp_dion_str, "\n" => " ")
+    spl_str = split(pp_dion_str, keepempty=false)
     for i in 1:Nproj*Nproj
-        Dij_temp[i] = parse(Float64,spl_str[i])
+        Dion_temp[i] = parse(Float64,spl_str[i])
     end
-    Dij = reshape(Dij_temp,(Nproj,Nproj))*2  # convert to Hartree
+    Dion = reshape(Dion_temp,(Nproj,Nproj))*2  # convert to Hartree
 
     #
     # augmentation stuffs:
@@ -211,7 +214,7 @@ function PsPot_UPF( upf_file::String )
 
     return PsPot_UPF(upf_file, atsymb, zval,
         is_nlcc, is_ultrasoft, is_paw,
-        Nr, r, rab, V_local, Nproj, proj_l, rcut_l, proj_func, Dij,
+        Nr, r, rab, V_local, Nproj, proj_l, rcut_l, proj_func, Dion,
         nqf, nqlc, qqq, q_with_l, qfuncl,
         Nwfc, chi,
         rhoatom
@@ -231,8 +234,8 @@ function _read_us_aug(
 
     if !is_ultrasoft
         # Dummy data
-        nqf = -1
-        nqlc = -1
+        nqf = 0
+        nqlc = 0
         qqq = zeros(1,1)
         q_with_l = false
         qfuncl = zeros(1,1,1)
@@ -408,4 +411,9 @@ function _setqfnew!(nqf, qfcoef, Nr, r, l, n, rho)
         rho[ir] = rho[ir]*r[ir]^(l + n)
     end
     return
+end
+
+import Base: show
+function show( io::IO, psp::PsPot_UPF; header=true )
+    @printf(io, "File = %s\n", psp.pspfile)
 end
