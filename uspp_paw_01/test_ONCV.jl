@@ -10,6 +10,8 @@ function test_ONCV_PBE()
         psp = PsPot_UPF(joinpath("/home/efefer/pseudo/ONCV_PBE", f))
         println("\nf = ", f)
         println("Nproj = ", psp.Nproj)
+        println("Dion = ")
+        display(psp.Dion); println()
         if psp.is_nlcc
             println("Using NLCC")
         end
