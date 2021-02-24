@@ -1,3 +1,9 @@
+struct PsPotNL_v2
+    NbetaNL::Int64
+    prj2beta::Array{Int64,4}
+    betaNL::Array{ComplexF64,3}   # using Array{ComplexF64,3}, first dim is Ngwx
+end
+
 function PsPotNL_v2(
     atoms::Atoms,
     pw::PWGrid,
@@ -16,13 +22,11 @@ function PsPotNL_v2(
     for ia = 1:Natoms
         isp = atm2species[ia]
         psp = pspots[isp]
-        for l = 0:psp.lmax
+        for l = 0:psp.lmax, m = -l:l
             for iprj = 1:psp.Nproj_l[l+1]
-                for m = -l:l
-                    NbetaNL = NbetaNL + 1
-                    prj2beta[iprj,ia,l+1,m+psp.lmax+1] = NbetaNL
-                    @printf("ibeta=%3d iprj=%3d l=%2d m=%2d\n", NbetaNL, iprj, l, m)
-                end
+                NbetaNL = NbetaNL + 1
+                prj2beta[iprj,ia,l+1,m+psp.lmax+1] = NbetaNL
+                @printf("ibeta=%3d ia=%3d iprj=%3d l=%2d m=%2d\n", NbetaNL, ia, iprj, l, m)
             end
         end
     end
@@ -30,7 +34,7 @@ function PsPotNL_v2(
     # No nonlocal components
     if NbetaNL == 0
         # return dummy PsPotNL
-        return PsPotNL(0, zeros(Int64,1,1,1,1), zeros(ComplexF64,1,1,1) )
+        return PsPotNL_v2(0, zeros(Int64,1,1,1,1), zeros(ComplexF64,1,1,1) )
     end
 
     Nkpt = kpoints.Nkpt
@@ -69,15 +73,15 @@ function PsPotNL_v2(
     end  # kpoints
 
     if check_norm
-        @time check_betaNL_norm( pw, kpoints, betaNL )
-        @time check_betaNL_norm( pw, kpoints, betaNL )
+        @time check_betaNL_norm_v2( pw, kpoints, betaNL )
+        @time check_betaNL_norm_v2( pw, kpoints, betaNL )
     end
 
-    return PsPotNL( NbetaNL, prj2beta, betaNL )
+    return PsPotNL_v2( NbetaNL, prj2beta, betaNL )
 
 end
 
-function check_betaNL_norm(
+function check_betaNL_norm_v2(
     pw::PWGrid,
     kpoints::KPoints,
     betaNL::Array{ComplexF64,3}
@@ -105,11 +109,21 @@ function check_betaNL_norm(
             f = @view betaNL[:,ibeta,ik]
             norm_G = dot(f,f)
             
-            ctmp[:] .= 0.0 + im*0.0
-            ctmp[idx_gw2r] = betaNL[:,ibeta,ik]
+            #ctmp[:] .= 0.0 + im*0.0
+            fill!(ctmp, 0.0 + im*0.0)
+            #ctmp[idx_gw2r] .= betaNL[:,ibeta,ik]
+            for igw in 1:size(betaNL,1)
+                ctmp[idx_gw2r[igw]] = betaNL[igw,ibeta,ik]
+            end
             
             # This is required for normalization for wavefunction-like quantity
-            ctmp[:] = G_to_R(pw, ctmp)*Npoints/sqrt(pw.CellVolume)
+            #ctmp[:] = G_to_R(pw, ctmp)*Npoints/sqrt(pw.CellVolume)
+            G_to_R!(pw, ctmp)
+            #@views ctmp[:] = ctmp[:]*Npoints/sqrt(pw.CellVolume)
+            cc = Npoints/sqrt(pw.CellVolume)
+            for i in 1:length(ctmp)
+                ctmp[i] = ctmp[i]*cc
+            end
                         
             integ_prj = 0.0
             integ_prj_im = 0.0
