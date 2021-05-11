@@ -1,8 +1,6 @@
-include("LatticeVars.jl")
-include("AtomicVars.jl")
+push!(LOAD_PATH, pwd())
 
-include("r3frac.jl")
-include("r3mv.jl")
+using LAPWDFT
 
 function create_lattice_vars()
     LatVecs = zeros(3,3)

@@ -1,4 +1,6 @@
-include("LatticeVars.jl")
+push!(LOAD_PATH, pwd())
+
+using LAPWDFT
 
 function main()
     LatVecs = zeros(3,3)

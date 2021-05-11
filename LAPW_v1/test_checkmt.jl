@@ -1,6 +1,7 @@
-using Printf
+push!(LOAD_PATH, pwd())
 
-include("INC.jl")
+using Printf
+using LAPWDFT
 
 function create_lattice_vars()
     LatVecs = zeros(3,3)
