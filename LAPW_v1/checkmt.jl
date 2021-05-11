@@ -1,10 +1,10 @@
 function checkmt!(
     latt_vars::LatticeVars, atm_vars::AtomicVars, spsymb,
-    mtr_vars::MuffinTinRadialVars
+    mt_vars::MuffinTins
 )
 
-    rmt = mtr_vars.rmt
-    rmtdelta = mtr_vars.rmtdelta
+    rmt = mt_vars.rmt
+    rmtdelta = mt_vars.rmtdelta
     epslat = latt_vars.epslat
     nspecies = atm_vars.nspecies
 

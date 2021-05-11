@@ -1,7 +1,7 @@
 # Generates the coarse and fine radial meshes for each atomic species in the
 # crystal. Also determines which points are in the inner part of the
 # muffin-tin using the value of {\tt fracinr}.
-function genrmesh!(atm_vars, atsp_vars, mtr_vars)
+function genrmesh!(atm_vars, atsp_vars, mt_vars)
 
     nspecies = atm_vars.nspecies
 
@@ -9,8 +9,8 @@ function genrmesh!(atm_vars, atsp_vars, mtr_vars)
     rminsp = atsp_vars.rminsp
     rmaxsp = atsp_vars.rmaxsp
     
-    rmt = mtr_vars.rmt
-    nrmt = mtr_vars.nrmt
+    rmt = mt_vars.rmt
+    nrmt = mt_vars.nrmt
 
     # estimate the number of radial mesh points to infinity
     atsp_vars.nrspmax = 1
@@ -28,22 +28,22 @@ function genrmesh!(atm_vars, atsp_vars, mtr_vars)
     end
 
     nrspmax = atsp_vars.nrspmax
-    lmaxo = mtr_vars.lmaxo
-    nrmtmax = mtr_vars.nrmtmax
+    lmaxo = mt_vars.lmaxo
+    nrmtmax = mt_vars.nrmtmax
     #println("lmaxo = ", lmaxo)
     #println("nrmtmax = ", nrmtmax)
 
     # The following actually allocate memory
 
     atsp_vars.rsp = zeros(Float64, nrspmax, nspecies)
-    mtr_vars.rlmt = zeros(Float64, nrmtmax, 2*(lmaxo+2), nspecies)
-    mtr_vars.wrmt = zeros(Float64, nrmtmax, nspecies)
-    mtr_vars.wprmt = zeros(Float64, 4, nrmtmax, nspecies)
+    mt_vars.rlmt = zeros(Float64, nrmtmax, 2*(lmaxo+2), nspecies)
+    mt_vars.wrmt = zeros(Float64, nrmtmax, nspecies)
+    mt_vars.wprmt = zeros(Float64, 4, nrmtmax, nspecies)
 
     rsp = atsp_vars.rsp
-    rlmt = mtr_vars.rlmt
-    wrmt = mtr_vars.wrmt
-    wprmt = mtr_vars.wprmt
+    rlmt = mt_vars.rlmt
+    wrmt = mt_vars.wrmt
+    wprmt = mt_vars.wprmt
 
     #println("2*(lmaxo+2) = ", 2*(lmaxo+2))
     #println("size(rlmt) = ", size(rlmt))
@@ -95,31 +95,31 @@ function genrmesh!(atm_vars, atsp_vars, mtr_vars)
 
 
     # determine the fraction of the muffin-tin radius which defines the inner part
-    if mtr_vars.fracinr < 0.0
+    if mt_vars.fracinr < 0.0
         # be explicit about conversion to Float64 (not really needed actually for Julia)
-        mtr_vars.fracinr = sqrt( Float64(lmmaxi) / Float64(lmmaxo) )
+        mt_vars.fracinr = sqrt( Float64(lmmaxi) / Float64(lmmaxo) )
     end
 
-    fracinr = mtr_vars.fracinr
-    nrcmtmax = mtr_vars.nrcmtmax
-    nrcmt = mtr_vars.nrcmt
-    nrmti = mtr_vars.nrmti
-    nrcmti = mtr_vars.nrcmti
-    lradstp = mtr_vars.lradstp
+    fracinr = mt_vars.fracinr
+    nrcmtmax = mt_vars.nrcmtmax
+    nrcmt = mt_vars.nrcmt
+    nrmti = mt_vars.nrmti
+    nrcmti = mt_vars.nrcmti
+    lradstp = mt_vars.lradstp
     println("nrcmtmax = ", nrcmtmax)
     println("nrcmt    = ", nrcmt[1:nspecies])
 
     # set up the coarse radial meshes and find the inner part of the muffin-tin
     # where rho is calculated with lmaxi
-    mtr_vars.rcmt = zeros(Float64, nrcmtmax, nspecies)
-    mtr_vars.rlcmt = zeros(Float64, nrcmtmax, 2*(lmaxo+2), nspecies)
-    mtr_vars.wrcmt = zeros(Float64, nrcmtmax, nspecies)
-    mtr_vars.wprcmt = zeros(Float64, 4, nrcmtmax, nspecies)
+    mt_vars.rcmt = zeros(Float64, nrcmtmax, nspecies)
+    mt_vars.rlcmt = zeros(Float64, nrcmtmax, 2*(lmaxo+2), nspecies)
+    mt_vars.wrcmt = zeros(Float64, nrcmtmax, nspecies)
+    mt_vars.wprcmt = zeros(Float64, 4, nrcmtmax, nspecies)
 
-    rcmt = mtr_vars.rcmt
-    rlcmt = mtr_vars.rlcmt
-    wrcmt = mtr_vars.wrcmt
-    wprcmt = mtr_vars.wprcmt
+    rcmt = mt_vars.rcmt
+    rlcmt = mt_vars.rlcmt
+    wrcmt = mt_vars.wrcmt
+    wprcmt = mt_vars.wprcmt
 
     for is in 1:nspecies
         t1 = fracinr*rmt[is]

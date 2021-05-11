@@ -1,4 +1,4 @@
-mutable struct MuffinTinRadialVars
+mutable struct MuffinTins
     # scale factor for number of muffin-tin points
     nrmtscf::Float64
     # number of muffin-tin radial points for each species
@@ -67,7 +67,7 @@ mutable struct MuffinTinRadialVars
     npcmtmax::Int64
 end
 
-function MuffinTinRadialVars(Nspecies)
+function MuffinTins(Nspecies)
 
     nrmtscf = 0
     nrmt = zeros(Int64,Nspecies)
@@ -110,7 +110,7 @@ function MuffinTinRadialVars(Nspecies)
     npmtmax = 0
     npcmtmax = 0
 
-    return MuffinTinRadialVars(
+    return MuffinTins(
         nrmtscf, nrmt, nrmtmax, rmtall, rmtdelta, rmt, omegamt, lradstp,
         nrcmt, nrcmtmax, rcmt, rlmt, rlcmt, wrmt, wprmt, wrcmt, wprcmt,
         maxlapw, lmaxapw, lmmaxapw, lmaxo, lmmaxo, lmaxi, lmmaxi, fracinr,
@@ -121,54 +121,54 @@ function MuffinTinRadialVars(Nspecies)
 end
 
 
-function init_zero!( mtr_vars::MuffinTinRadialVars )
+function init_zero!( mt_vars::MuffinTins )
     
-    nrmt = mtr_vars.nrmt
+    nrmt = mt_vars.nrmt
     nspecies = size(nrmt)[1]
 
-    nrcmt = mtr_vars.nrcmt
-    lradstp = mtr_vars.lradstp
+    nrcmt = mt_vars.nrcmt
+    lradstp = mt_vars.lradstp
     
     # make the muffin-tin mesh commensurate with lradstp
     for is in 1:nspecies
         nrmt[is] = nrmt[is] - (nrmt[is]-1)%lradstp
         nrcmt[is] =( nrmt[is] - 1)/lradstp + 1
     end
-    mtr_vars.nrmtmax = maximum(nrmt)
-    mtr_vars.nrcmtmax = maximum(nrcmt)
+    mt_vars.nrmtmax = maximum(nrmt)
+    mt_vars.nrcmtmax = maximum(nrcmt)
 
-    @assert mtr_vars.lmaxo <= mtr_vars.lmaxapw
+    @assert mt_vars.lmaxo <= mt_vars.lmaxapw
 
     return
 end
 
 
 # Should be called after genrmesh
-function init_packed_mtr!( mtr_vars::MuffinTinRadialVars )
+function init_packed_mtr!( mt_vars::MuffinTins )
     #
-    nrmti = mtr_vars.nrmti
+    nrmti = mt_vars.nrmti
     nspecies = size(nrmti,1)
-    nrmt = mtr_vars.nrmt
+    nrmt = mt_vars.nrmt
     #
-    nrcmt = mtr_vars.nrcmt
-    nrcmti = mtr_vars.nrcmti
+    nrcmt = mt_vars.nrcmt
+    nrcmti = mt_vars.nrcmti
     #
-    lmmaxo = mtr_vars.lmmaxo
-    lmmaxi = mtr_vars.lmmaxi
+    lmmaxo = mt_vars.lmmaxo
+    lmmaxi = mt_vars.lmmaxi
     #
-    mtr_vars.npmtmax  = 1
-    mtr_vars.npcmtmax = 1
+    mt_vars.npmtmax  = 1
+    mt_vars.npcmtmax = 1
     #
 
     for is in 1:nspecies
         #
-        mtr_vars.npmti[is] = lmmaxi*nrmti[is]
-        mtr_vars.npmt[is] = mtr_vars.npmti[is] + lmmaxo*(nrmt[is] - nrmti[is])
-        mtr_vars.npmtmax = max(mtr_vars.npmtmax, mtr_vars.npmt[is])
+        mt_vars.npmti[is] = lmmaxi*nrmti[is]
+        mt_vars.npmt[is] = mt_vars.npmti[is] + lmmaxo*(nrmt[is] - nrmti[is])
+        mt_vars.npmtmax = max(mt_vars.npmtmax, mt_vars.npmt[is])
         #
-        mtr_vars.npcmti[is] = lmmaxi*nrcmti[is]
-        mtr_vars.npcmt[is] = mtr_vars.npcmti[is] + lmmaxo*(nrcmt[is] - nrcmti[is])
-        mtr_vars.npcmtmax = max(mtr_vars.npcmtmax, mtr_vars.npcmt[is])
+        mt_vars.npcmti[is] = lmmaxi*nrcmti[is]
+        mt_vars.npcmt[is] = mt_vars.npcmti[is] + lmmaxo*(nrcmt[is] - nrcmti[is])
+        mt_vars.npcmtmax = max(mt_vars.npcmtmax, mt_vars.npcmt[is])
     end
     return
 end

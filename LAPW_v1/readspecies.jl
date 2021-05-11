@@ -1,6 +1,6 @@
 function readspecies!( isp::Int64, filename,
     atsp_vars::AtomicSpeciesVars,
-    mtr_vars::MuffinTinRadialVars,
+    mt_vars::MuffinTins,
     apwlo_vars::APWLOVars;
     verbose=false
 )
@@ -32,16 +32,16 @@ function readspecies!( isp::Int64, filename,
     
     atsp_vars.rminsp[isp] = parse(Float64, ll[1])
     
-    mtr_vars.rmt[isp] = parse(Float64, ll[2])  # muffin tin
+    mt_vars.rmt[isp] = parse(Float64, ll[2])  # muffin tin
     
     atsp_vars.rmaxsp[isp] = parse(Float64, ll[3])
     
-    mtr_vars.nrmt[isp] = parse(Int64, ll[4])
+    mt_vars.nrmt[isp] = parse(Int64, ll[4])
     
     verbose && println("rminsp = ", atsp_vars.rminsp[isp])
-    verbose && println("rmt    = ", mtr_vars.rmt[isp])
+    verbose && println("rmt    = ", mt_vars.rmt[isp])
     verbose && println("rmaxsp = ", atsp_vars.rmaxsp[isp])
-    verbose && println("nrmt   = ", mtr_vars.nrmt[isp])
+    verbose && println("nrmt   = ", mt_vars.nrmt[isp])
 
     # Atomic states
     line = readline(f)
@@ -69,7 +69,7 @@ function readspecies!( isp::Int64, filename,
     line = readline(f)
     apwlo_vars.apword[1,isp] = parse(Int64, split(line)[1])
     # set the APW orders for > 0
-    lmaxapw = mtr_vars.lmaxapw
+    lmaxapw = mt_vars.lmaxapw
     apwlo_vars.apword[2:lmaxapw+1,isp] .= apwlo_vars.apword[1,isp]
 
     # apwe0, apwdm, apwve

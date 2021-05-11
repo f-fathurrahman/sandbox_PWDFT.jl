@@ -36,13 +36,13 @@ function main()
 
     Nspecies = 2
     atsp_vars = AtomicSpeciesVars(Nspecies)
-    mtr_vars = MuffinTinRadialVars(Nspecies)
-    apwlo_vars = APWLOVars(Nspecies, mtr_vars.lmaxapw)
+    mt_vars = MuffinTins(Nspecies)
+    apwlo_vars = APWLOVars(Nspecies, mt_vars.lmaxapw)
 
-    readspecies!(1, "DATA_species/Si.in", atsp_vars, mtr_vars, apwlo_vars)
-    readspecies!(2, "DATA_species/Pt.in", atsp_vars, mtr_vars, apwlo_vars)
+    readspecies!(1, "DATA_species/Si.in", atsp_vars, mt_vars, apwlo_vars)
+    readspecies!(2, "DATA_species/Pt.in", atsp_vars, mt_vars, apwlo_vars)
 
-    checkmt!( latt_vars, atm_vars, atsp_vars.spsymb, mtr_vars )
+    checkmt!( latt_vars, atm_vars, atsp_vars.spsymb, mt_vars )
 
     println("Pass here")
 

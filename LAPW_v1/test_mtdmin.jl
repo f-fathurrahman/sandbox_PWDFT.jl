@@ -3,7 +3,7 @@ include("r3mv.jl")
 include("LatticeVars.jl")
 include("AtomicVars.jl")
 include("AtomicSpeciesVars.jl")
-include("MuffinTinRadialVars.jl")
+include("MuffinTins.jl")
 include("APWLOVars.jl")
 include("readspecies.jl")
 include("mtdmin.jl")
@@ -41,14 +41,14 @@ function main()
 
     Nspecies = 2
     atsp_vars = AtomicSpeciesVars(Nspecies)
-    mtr_vars = MuffinTinRadialVars(Nspecies)
-    #apwlo_vars = APWLOVars(Nspecies, mtr_vars.maxlapw) # XXX use lmaxapw instead of maxlapw?
-    apwlo_vars = APWLOVars(Nspecies, mtr_vars.lmaxapw)
+    mt_vars = MuffinTins(Nspecies)
+    #apwlo_vars = APWLOVars(Nspecies, mt_vars.maxlapw) # XXX use lmaxapw instead of maxlapw?
+    apwlo_vars = APWLOVars(Nspecies, mt_vars.lmaxapw)
 
-    readspecies!(1, "DATA_species/Si.in", atsp_vars, mtr_vars, apwlo_vars)
-    readspecies!(2, "DATA_species/Pt.in", atsp_vars, mtr_vars, apwlo_vars)
+    readspecies!(1, "DATA_species/Si.in", atsp_vars, mt_vars, apwlo_vars)
+    readspecies!(2, "DATA_species/Pt.in", atsp_vars, mt_vars, apwlo_vars)
 
-    dmin, is, js = mtdmin( latt_vars, atm_vars, mtr_vars.rmt )
+    dmin, is, js = mtdmin( latt_vars, atm_vars, mt_vars.rmt )
     
     println("is = ", is)
     println("js = ", js)

@@ -36,20 +36,20 @@ function main()
 
     Nspecies = 2
     atsp_vars = AtomicSpeciesVars(Nspecies)
-    mtr_vars = MuffinTinRadialVars(Nspecies)
-    apwlo_vars = APWLOVars(Nspecies, mtr_vars.lmaxapw)
+    mt_vars = MuffinTins(Nspecies)
+    apwlo_vars = APWLOVars(Nspecies, mt_vars.lmaxapw)
 
-    readspecies!(1, "DATA_species/Si.in", atsp_vars, mtr_vars, apwlo_vars)
-    readspecies!(2, "DATA_species/Pt.in", atsp_vars, mtr_vars, apwlo_vars)
+    readspecies!(1, "DATA_species/Si.in", atsp_vars, mt_vars, apwlo_vars)
+    readspecies!(2, "DATA_species/Pt.in", atsp_vars, mt_vars, apwlo_vars)
 
-    init_zero!( mtr_vars )
+    init_zero!( mt_vars )
 
     println("before nrsp = ", atsp_vars.nrsp)
     println("atsp_vars.rsp = ", size(atsp_vars.rsp))
 
-    checkmt!( latt_vars, atm_vars, atsp_vars.spsymb, mtr_vars )
-    genrmesh!( atm_vars, atsp_vars, mtr_vars )
-    init_packed_mtr!(mtr_vars)
+    checkmt!( latt_vars, atm_vars, atsp_vars.spsymb, mt_vars )
+    genrmesh!( atm_vars, atsp_vars, mt_vars )
+    init_packed_mtr!(mt_vars)
 
     println("after nrsp = ", atsp_vars.nrsp)
     println("atsp_vars.rsp = ", size(atsp_vars.rsp))
@@ -64,38 +64,38 @@ function main()
         println(atsp_vars.rsp[1:5,is])
 
         println("wmrt = ")
-        println(mtr_vars.wrmt[1:5,is])
+        println(mt_vars.wrmt[1:5,is])
    
         println("wcmrt = ")
-        println(mtr_vars.wrcmt[1:5,is])
+        println(mt_vars.wrcmt[1:5,is])
 
         #println("wprmt 1 = ")
-        #println(mtr_vars.wprmt[1,1:5,is])
+        #println(mt_vars.wprmt[1,1:5,is])
 
         println("wprcmt 1 = ")
-        println(mtr_vars.wprcmt[1,1:5,is])
+        println(mt_vars.wprcmt[1,1:5,is])
         println("wprcmt 2 = ")
-        println(mtr_vars.wprcmt[2,1:5,is])
+        println(mt_vars.wprcmt[2,1:5,is])
         println("wprcmt 3 = ")
-        println(mtr_vars.wprcmt[3,1:5,is])
+        println(mt_vars.wprcmt[3,1:5,is])
         println("wprcmt 4 = ")
-        println(mtr_vars.wprcmt[4,1:5,is])
+        println(mt_vars.wprcmt[4,1:5,is])
 
         #println("wprmt 2 = ")
-        #println(mtr_vars.wprmt[2,1:5,1])
+        #println(mt_vars.wprmt[2,1:5,1])
 
         #println("wprmt 3 = ")
-        #println(mtr_vars.wprmt[3,1:5,1])
+        #println(mt_vars.wprmt[3,1:5,1])
 
         #println("wprmt 4 = ")
-        #println(mtr_vars.wprmt[4,1:5,1])
+        #println(mt_vars.wprmt[4,1:5,1])
     end
 
-    println("lmmaxi   = ", mtr_vars.lmmaxi)
-    println("npmtmax  = ", mtr_vars.npmtmax)
-    println("npmt     = ", mtr_vars.npmt)
-    println("npcmtmax = ", mtr_vars.npcmtmax)
-    println("npcmt    = ", mtr_vars.npcmt)
+    println("lmmaxi   = ", mt_vars.lmmaxi)
+    println("npmtmax  = ", mt_vars.npmtmax)
+    println("npmt     = ", mt_vars.npmt)
+    println("npcmtmax = ", mt_vars.npcmtmax)
+    println("npcmt    = ", mt_vars.npcmt)
 
 end
 
