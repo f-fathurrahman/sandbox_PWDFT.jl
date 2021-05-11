@@ -22,9 +22,9 @@ mutable struct MuffinTins
     # coarse muffin-tin radial mesh
     rcmt::Array{Float64,2}
     # r^l on fine radial mesh
-    rlmt::Array{Float64,3}
+    rlmt::OffsetArray{Float64, 3, Array{Float64, 3}}
     # r^l on coarse radial mesh
-    rlcmt::Array{Float64,3}
+    rlcmt::OffsetArray{Float64, 3, Array{Float64, 3}}
     # weights for spline integration on fine radial mesh
     wrmt::Array{Float64,2}
     # weights for spline partial integration on fine radial mesh
@@ -53,7 +53,7 @@ mutable struct MuffinTins
     nrmti::Vector{Int64}
     nrcmti::Vector{Int64} 
     # index to (l,m) pairs
-    idxlm::Array{Int64,2}
+    idxlm::OffsetMatrix{Int64, Matrix{Int64}}
     # inverse index to (l,m) pairs
     idxil::Vector{Int64}
     idxim::Vector{Int64}
@@ -67,7 +67,7 @@ mutable struct MuffinTins
     npcmtmax::Int64
 end
 
-function MuffinTins(Nspecies)
+function MuffinTins(Nspecies; lmaxi=1)
 
     nrmtscf = 0
     nrmt = zeros(Int64,Nspecies)
@@ -79,28 +79,43 @@ function MuffinTins(Nspecies)
     lradstp = 4
     nrcmt = zeros(Int64,Nspecies)
     nrcmtmax = 0
+
+    # XXX SHould be done in genrmesh
     rcmt = zeros(Float64,1,1)
-    rlmt = zeros(Float64,1,1,1)
-    rlcmt = zeros(Float64,1,1,1) 
+    rlmt = OffsetArray( zeros(Float64,1,1,1), 1:1,1:1,1:1 )
+    rlcmt = OffsetArray( zeros(Float64,1,1,1), 1:1,1:1,1:1 )
+    
     wrmt = zeros(Float64,1,1)
     wprmt = zeros(Float64,1,1,1)
     wrcmt = zeros(Float64,1,1) 
     wprcmt = zeros(Float64,1,1,1)
+    
     maxlapw = 50
     lmaxapw = 8 # default
     lmmaxapw = (lmaxapw+1)^2
     lmaxo  = 6
     lmmaxo = (lmaxo+1)^2
-    lmaxi  = 1 # min(lmaxi,lmaxo)
+    lmaxi  = min(lmaxi,lmaxo)
     lmmaxi = (lmaxi+1)^2
     fracinr = 0.01
     
     nrmti = zeros(Int64,Nspecies)
     nrcmti = zeros(Int64,Nspecies)
-    
-    idxlm = zeros(Int64,1,1)
-    idxil = zeros(Int64,1)
-    idxim = zeros(Int64,1)
+
+    # index to (l,m) pairs
+    idxlm = OffsetArray( zeros(Int64,lmaxapw+1,2*lmaxapw+1),
+        0:lmaxapw,-lmaxapw:lmaxapw)
+    idxil = zeros(Int64, lmmaxapw)
+    idxim = zeros(Int64, lmmaxapw)
+    lm = 0
+    for l in 0:lmaxapw
+        for m in -l:l
+            lm = lm + 1
+            idxlm[l,m] = lm
+            idxil[lm] = l
+            idxim[lm] = m
+        end
+    end
 
     npmti = zeros(Int64,Nspecies)
     npmt = zeros(Int64,Nspecies)
