@@ -1,0 +1,350 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+\usepackage{babel}
+\end_preamble
+\use_default_options false
+\maintain_unincluded_children false
+\language american
+\language_package default
+\inputencoding iso8859-15
+\fontencoding T1
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 0
+\use_package esint 1
+\use_package mathdots 0
+\use_package mathtools 0
+\use_package mhchem 0
+\use_package stackrel 0
+\use_package stmaryrd 0
+\use_package undertilde 0
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 3cm
+\topmargin 3cm
+\rightmargin 3cm
+\bottommargin 3cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip smallskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Subsection*
+Elk Species file
+\end_layout
+
+\begin_layout Standard
+This file is needed for initialization of atomic species, MuffinTins and
+ APLWO.
+\end_layout
+
+\begin_layout Standard
+Probably it is better to use separate files for reading, for example: Cu.species,
+ Cu.radial_mt, Cu.apwlo
+\end_layout
+
+\begin_layout Standard
+For now, it might be better to use readspecies as is.
+ Need to read genspecies to tweak the configuration.
+\end_layout
+
+\begin_layout Standard
+Example of species file:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ 'Cu'                                       : spsymb
+\end_layout
+
+\begin_layout Plain Layout
+
+ 'copper'                                   : spname
+\end_layout
+
+\begin_layout Plain Layout
+
+  -29.0000                                  : spzn
+\end_layout
+
+\begin_layout Plain Layout
+
+   115837.2717                              : spmass
+\end_layout
+
+\begin_layout Plain Layout
+
+  0.371391E-06    2.4000   42.9740   500    : rminsp, rmt, rmaxsp, nrmt
+\end_layout
+
+\begin_layout Plain Layout
+
+  10                                        : nstsp
+\end_layout
+
+\begin_layout Plain Layout
+
+   1   0   1   2.00000    T                 : nsp, lsp, ksp, occsp, spcore
+\end_layout
+
+\begin_layout Plain Layout
+
+   2   0   1   2.00000    T
+\end_layout
+
+\begin_layout Plain Layout
+
+   2   1   1   2.00000    T
+\end_layout
+
+\begin_layout Plain Layout
+
+   2   1   2   4.00000    T
+\end_layout
+
+\begin_layout Plain Layout
+
+   3   0   1   2.00000    T
+\end_layout
+
+\begin_layout Plain Layout
+
+   3   1   1   2.00000    F
+\end_layout
+
+\begin_layout Plain Layout
+
+   3   1   2   4.00000    F
+\end_layout
+
+\begin_layout Plain Layout
+
+   3   2   2   4.00000    F
+\end_layout
+
+\begin_layout Plain Layout
+
+   3   2   3   6.00000    F
+\end_layout
+
+\begin_layout Plain Layout
+
+   4   0   1   1.00000    F
+\end_layout
+
+\begin_layout Plain Layout
+
+   1                                        : apword
+\end_layout
+
+\begin_layout Plain Layout
+
+    0.1500   0  F                           : apwe0, apwdm, apwve
+\end_layout
+
+\begin_layout Plain Layout
+
+   0                                        : nlx
+\end_layout
+
+\begin_layout Plain Layout
+
+   5                                        : nlorb
+\end_layout
+
+\begin_layout Plain Layout
+
+   0   2                                    : lorbl, lorbord
+\end_layout
+
+\begin_layout Plain Layout
+
+    0.1500   0  F                           : lorbe0, lorbdm, lorbve
+\end_layout
+
+\begin_layout Plain Layout
+
+    0.1500   1  F
+\end_layout
+
+\begin_layout Plain Layout
+
+   1   2                                    : lorbl, lorbord
+\end_layout
+
+\begin_layout Plain Layout
+
+    0.1500   0  F                           : lorbe0, lorbdm, lorbve
+\end_layout
+
+\begin_layout Plain Layout
+
+    0.1500   1  F
+\end_layout
+
+\begin_layout Plain Layout
+
+   2   2                                    : lorbl, lorbord
+\end_layout
+
+\begin_layout Plain Layout
+
+    0.1500   0  F                           : lorbe0, lorbdm, lorbve
+\end_layout
+
+\begin_layout Plain Layout
+
+    0.1500   1  F
+\end_layout
+
+\begin_layout Plain Layout
+
+   1   2                                    : lorbl, lorbord
+\end_layout
+
+\begin_layout Plain Layout
+
+    0.1500   0  F                           : lorbe0, lorbdm, lorbve
+\end_layout
+
+\begin_layout Plain Layout
+
+   -2.6152   0  T
+\end_layout
+
+\begin_layout Plain Layout
+
+   2   2                                    : lorbl, lorbord
+\end_layout
+
+\begin_layout Plain Layout
+
+    0.1500   0  F                           : lorbe0, lorbdm, lorbve
+\end_layout
+
+\begin_layout Plain Layout
+
+   -0.1918   0  T
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Variable nlx seems to be always 0
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\end_body
+\end_document

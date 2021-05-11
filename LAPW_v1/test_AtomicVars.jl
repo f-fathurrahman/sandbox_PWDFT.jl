@@ -21,15 +21,15 @@ function test_AtomicVars()
     maxspecies = 8
     atposl = zeros(3,maxatoms,maxspecies)
     
-    nspecies = 2
-    natoms = [1,1]
+    Nspecies = 2
+    Natoms = [1,1]
 
     # species 1, atom 1
     atposl[:,1,1] = [0.1, 0.1, 0.1]
     # species 2, atom 1
     atposl[:,1,2] = [0.25, 0.25, 0.25]
 
-    atomic_vars = AtomicVars(nspecies, natoms, atposl, lattice_vars)
+    atomic_vars = AtomicVars(Nspecies, Natoms, atposl, lattice_vars)
 end
 
 test_AtomicVars()

@@ -19,15 +19,15 @@ function create_atomic_vars(lattice_vars)
     maxspecies = 8
     atposl = zeros(3,maxatoms,maxspecies)
     
-    nspecies = 2
-    natoms = [1,1]
+    Nspecies = 2
+    Natoms = [1,1]
 
     # species 1, atom 1
     atposl[:,1,1] = [0.0, 0.0, 0.0]
     # species 2, atom 1
     atposl[:,1,2] = [0.25, 0.25, 0.25]
 
-    atomic_vars = AtomicVars(nspecies, natoms, atposl, lattice_vars)
+    atomic_vars = AtomicVars(Nspecies, Natoms, atposl, lattice_vars)
 end
 
 function main()
@@ -58,12 +58,12 @@ function main()
     println("atsp_vars.rsp = ", size(atsp_vars.rsp))
 
     nrspmax = atsp_vars.nrspmax
-    nspecies = atm_vars.nspecies
+    Nspecies = atm_vars.Nspecies
     nstspmax = atsp_vars.nstspmax
 
     # allocate global species charge density and potential arrays
-    rhosp = zeros(Float64,nrspmax,nspecies)
-    vrsp = zeros(Float64,nrspmax,nspecies)
+    rhosp = zeros(Float64,nrspmax,Nspecies)
+    vrsp = zeros(Float64,nrspmax,Nspecies)
     
     xctsp = atsp_vars.xctsp
     xcgrad = false
@@ -86,7 +86,7 @@ function main()
     # scaled speed of light
     solsc = sol
 
-    for is in 1:nspecies
+    for is in 1:Nspecies
         @views solve_atom!(
             solsc, ptnucl, spzn[is], nstsp[is], nsp[:,is], lsp[:,is], ksp[:,is],
             occsp[:,is], xctsp, xcgrad, nrsp[is], rsp[:,is], evalsp[:,is], rhosp[:,is],

@@ -6,10 +6,10 @@ function checkmt!(
     rmt = mt_vars.rmt
     rmtdelta = mt_vars.rmtdelta
     epslat = latt_vars.epslat
-    nspecies = atm_vars.nspecies
+    Nspecies = atm_vars.Nspecies
 
-    rmt0 = zeros(Float64,nspecies)
-    rmt0[1:nspecies] = rmt[1:nspecies]
+    rmt0 = zeros(Float64,Nspecies)
+    rmt0[1:Nspecies] = rmt[1:Nspecies]
 
     println("rmtdelta = ", rmtdelta)
 
@@ -30,7 +30,7 @@ function checkmt!(
         end
     end
 
-    for is in 1:nspecies
+    for is in 1:Nspecies
         if rmt[is] < 0.25
             @printf("Error(checkmt): muffin-tin radius too small for species %d %s\n", is, spsymb[is])
             @printf("Radius : %18.10f\n", rmt[is])

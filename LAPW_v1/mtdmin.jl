@@ -10,22 +10,22 @@ function mtdmin(
     avec = latt_vars.avec
     epslat = latt_vars.epslat
     atposc = atm_vars.atposc
-    nspecies = atm_vars.nspecies
-    natoms = atm_vars.natoms
+    Nspecies = atm_vars.Nspecies
+    Natoms = atm_vars.Natoms
     
     for i1 in -1:1, i2 in -1:1, i3 in -1:1
         #
         @views v1[:] = i1*avec[:,1] + i2*avec[:,2] + i3*avec[:,3]
         #
-        for ks in 1:nspecies, ka in 1:natoms[ks]
+        for ks in 1:Nspecies, ka in 1:Natoms[ks]
             #
             @views v2[:] = v1[:] + atposc[:,ka,ks]
             #
-            for ls in 1:nspecies
+            for ls in 1:Nspecies
                 #
                 t1 = rmt[ks] + rmt[ls]
                 #
-                for la in 1:natoms[ls]
+                for la in 1:Natoms[ls]
                     if ( (i1 != 0) || (i2 != 0) || (i3 != 0) || (ks != ls) ||  (ka != la) )
                         t2 = sqrt( (v2[1] - atposc[1,la,ls])^2 +
                                    (v2[2] - atposc[2,la,ls])^2 +

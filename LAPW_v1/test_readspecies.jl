@@ -1,11 +1,6 @@
-include("r3frac.jl")
-include("r3mv.jl")
-include("LatticeVars.jl")
-include("AtomicVars.jl")
-include("AtomicSpeciesVars.jl")
-include("MuffinTins.jl")
-include("APWLOVars.jl")
-include("readspecies.jl")
+push!(LOAD_PATH, pwd())
+
+using LAPWDFT
 
 function main()
     Nspecies = 2

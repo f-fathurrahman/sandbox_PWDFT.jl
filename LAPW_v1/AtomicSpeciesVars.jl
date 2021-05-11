@@ -138,16 +138,16 @@ function init_nuclear_pot!( atsp_vars::AtomicSpeciesVars )
 
     rsp = atsp_vars.rsp
     nrsp = atsp_vars.nrsp
-    nspecies = size(nrsp,1)
+    Nspecies = size(nrsp,1)
     ptnucl = atsp_vars.ptnucl
     nrspmax = atsp_vars.nrspmax
     spzn = atsp_vars.spzn
 
     # determine the nuclear Coulomb potential
-    atsp_vars.vcln = zeros(Float64,nrspmax,nspecies)
+    atsp_vars.vcln = zeros(Float64,nrspmax,Nspecies)
     vcln = atsp_vars.vcln
     t1 = 1.0/y00
-    for is in 1:nspecies
+    for is in 1:Nspecies
         nr = nrsp[is]
         @views potnucl!(ptnucl, nr, rsp[:,is], spzn[is], vcln[:,is])
         vcln[1:nr,is] = t1*vcln[1:nr,is]

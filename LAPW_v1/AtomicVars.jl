@@ -1,8 +1,8 @@
 struct AtomicVars
     # number of species
-    nspecies::Int64
+    Nspecies::Int64
     # number of atoms for each species
-    natoms::Vector{Int64} # of length (maxspecies)
+    Natoms::Vector{Int64} # of length (maxspecies)
     # maximum number of atoms over all the species
     natmmax::Int64
     # total number of atoms
@@ -25,8 +25,8 @@ struct AtomicVars
 end
 
 function AtomicVars(
-    nspecies::Int64,
-    natoms_::Vector{Int64},
+    Nspecies::Int64,
+    Natoms_::Vector{Int64},
     atposl_::Array{Float64,3},
     lattice_vars::LatticeVars
 )
@@ -34,7 +34,7 @@ function AtomicVars(
     epslat = lattice_vars.epslat
     avec = lattice_vars.avec
 
-    natoms = copy(natoms_)
+    Natoms = copy(Natoms_)
 
     # FIXME: Should not have this limitation
     maxspecies = 8 # maximum allowed species
@@ -43,8 +43,8 @@ function AtomicVars(
     atposl = copy(atposl_)
     atposc = zeros(3,maxatoms,maxspecies)
 
-    for is in 1:nspecies
-        for ia in 1:natoms[is]
+    for is in 1:Nspecies
+        for ia in 1:Natoms[is]
             # map atomic lattice coordinates to [0,1)
             @views r3frac!( epslat, atposl[:,ia,is] )
             # determine atomic Cartesian coordinates
@@ -62,21 +62,21 @@ function AtomicVars(
     idxia = zeros(Int64, maxatoms*maxspecies)
     natmmax = 0
     ias = 0
-    for is in 1:nspecies
-        for ia in 1:natoms[is]
+    for is in 1:Nspecies
+        for ia in 1:Natoms[is]
             ias = ias + 1
             idxas[ia,is] = ias
             idxis[ias] = is
             idxia[ias] = ia
         end
         # maximum number of atoms over all species
-        natmmax = max(natmmax, natoms[is])
+        natmmax = max(natmmax, Natoms[is])
     end
     # total number of atoms
     natmtot = ias
 
     return AtomicVars(
-        nspecies, natoms, natmmax, natmtot,
+        Nspecies, Natoms, natmmax, natmtot,
         idxas, idxis, idxia,
         molecule, primcell, atposl, atposc, rndatposc
     )

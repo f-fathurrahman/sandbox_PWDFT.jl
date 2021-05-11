@@ -3,7 +3,7 @@
 # muffin-tin using the value of {\tt fracinr}.
 function genrmesh!(atm_vars, atsp_vars, mt_vars)
 
-    nspecies = atm_vars.nspecies
+    Nspecies = atm_vars.Nspecies
 
     nrsp = atsp_vars.nrsp
     rminsp = atsp_vars.rminsp
@@ -14,7 +14,7 @@ function genrmesh!(atm_vars, atsp_vars, mt_vars)
 
     # estimate the number of radial mesh points to infinity
     atsp_vars.nrspmax = 1
-    for is in 1:nspecies
+    for is in 1:Nspecies
         #println("rminsp = ", rminsp[is])
         #println("rmaxsp = ", rmaxsp[is])
         #println("nrmt   = ", nrmt[is])
@@ -35,15 +35,15 @@ function genrmesh!(atm_vars, atsp_vars, mt_vars)
 
     # The following actually allocate memory
 
-    atsp_vars.rsp = zeros(Float64, nrspmax, nspecies)
+    atsp_vars.rsp = zeros(Float64, nrspmax, Nspecies)
     
     mt_vars.rlmt = OffsetArray(
-        zeros(Float64, nrmtmax, 2*(lmaxo+2), nspecies),
-        1:nrmtmax, -lmaxo-1:lmaxo+2, 1:nspecies
+        zeros(Float64, nrmtmax, 2*(lmaxo+2), Nspecies),
+        1:nrmtmax, -lmaxo-1:lmaxo+2, 1:Nspecies
     )
 
-    mt_vars.wrmt = zeros(Float64, nrmtmax, nspecies)
-    mt_vars.wprmt = zeros(Float64, 4, nrmtmax, nspecies)
+    mt_vars.wrmt = zeros(Float64, nrmtmax, Nspecies)
+    mt_vars.wprmt = zeros(Float64, 4, nrmtmax, Nspecies)
 
     rsp = atsp_vars.rsp
     rlmt = mt_vars.rlmt
@@ -53,7 +53,7 @@ function genrmesh!(atm_vars, atsp_vars, mt_vars)
     #println("2*(lmaxo+2) = ", 2*(lmaxo+2))
     #println("size(rlmt) = ", size(rlmt))
 
-    for is in 1:nspecies
+    for is in 1:Nspecies
         t1 = 1.0/(nrmt[is] - 1)
         # logarithmic mesh
         t2 = log(rmt[is]/rminsp[is])
@@ -112,25 +112,25 @@ function genrmesh!(atm_vars, atsp_vars, mt_vars)
     nrcmti = mt_vars.nrcmti
     lradstp = mt_vars.lradstp
     println("nrcmtmax = ", nrcmtmax)
-    println("nrcmt    = ", nrcmt[1:nspecies])
+    println("nrcmt    = ", nrcmt[1:Nspecies])
 
     # set up the coarse radial meshes and find the inner part of the muffin-tin
     # where rho is calculated with lmaxi
-    mt_vars.rcmt = zeros(Float64, nrcmtmax, nspecies)
+    mt_vars.rcmt = zeros(Float64, nrcmtmax, Nspecies)
     mt_vars.rlcmt = OffsetArray(
-        zeros(Float64, nrcmtmax, 2*(lmaxo+2), nspecies),
-        1:nrcmtmax, -lmaxo-1:lmaxo+2, 1:nspecies
+        zeros(Float64, nrcmtmax, 2*(lmaxo+2), Nspecies),
+        1:nrcmtmax, -lmaxo-1:lmaxo+2, 1:Nspecies
     )
 
-    mt_vars.wrcmt = zeros(Float64, nrcmtmax, nspecies)
-    mt_vars.wprcmt = zeros(Float64, 4, nrcmtmax, nspecies)
+    mt_vars.wrcmt = zeros(Float64, nrcmtmax, Nspecies)
+    mt_vars.wprcmt = zeros(Float64, 4, nrcmtmax, Nspecies)
 
     rcmt = mt_vars.rcmt
     rlcmt = mt_vars.rlcmt
     wrcmt = mt_vars.wrcmt
     wprcmt = mt_vars.wprcmt
 
-    for is in 1:nspecies
+    for is in 1:Nspecies
         t1 = fracinr*rmt[is]
         nrmti[is] = 1
         nrcmti[is] = 1

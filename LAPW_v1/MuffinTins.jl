@@ -139,13 +139,13 @@ end
 function init_zero!( mt_vars::MuffinTins )
     
     nrmt = mt_vars.nrmt
-    nspecies = size(nrmt)[1]
+    Nspecies = size(nrmt)[1]
 
     nrcmt = mt_vars.nrcmt
     lradstp = mt_vars.lradstp
     
     # make the muffin-tin mesh commensurate with lradstp
-    for is in 1:nspecies
+    for is in 1:Nspecies
         nrmt[is] = nrmt[is] - (nrmt[is]-1)%lradstp
         nrcmt[is] =( nrmt[is] - 1)/lradstp + 1
     end
@@ -162,7 +162,7 @@ end
 function init_packed_mtr!( mt_vars::MuffinTins )
     #
     nrmti = mt_vars.nrmti
-    nspecies = size(nrmti,1)
+    Nspecies = size(nrmti,1)
     nrmt = mt_vars.nrmt
     #
     nrcmt = mt_vars.nrcmt
@@ -175,7 +175,7 @@ function init_packed_mtr!( mt_vars::MuffinTins )
     mt_vars.npcmtmax = 1
     #
 
-    for is in 1:nspecies
+    for is in 1:Nspecies
         #
         mt_vars.npmti[is] = lmmaxi*nrmti[is]
         mt_vars.npmt[is] = mt_vars.npmti[is] + lmmaxo*(nrmt[is] - nrmti[is])
