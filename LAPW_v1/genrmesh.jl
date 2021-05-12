@@ -34,8 +34,10 @@ function genrmesh!(atm_vars, atsp_vars, mt_vars)
     #println("nrmtmax = ", nrmtmax)
 
     # The following actually allocate memory
-
-    atsp_vars.rsp = zeros(Float64, nrspmax, Nspecies)
+    atsp_vars.rsp = Vector{Vector{Float64}}(undef,Nspecies)
+    for isp in 1:Nspecies
+        atsp_vars.rsp[isp] = zeros(Float64,nrsp[isp])
+    end
     
     mt_vars.rlmt = OffsetArray(
         zeros(Float64, nrmtmax, 2*(lmaxo+2), Nspecies),
@@ -53,30 +55,26 @@ function genrmesh!(atm_vars, atsp_vars, mt_vars)
     #println("2*(lmaxo+2) = ", 2*(lmaxo+2))
     #println("size(rlmt) = ", size(rlmt))
 
-    for is in 1:Nspecies
-        t1 = 1.0/(nrmt[is] - 1)
+    for isp in 1:Nspecies
+        t1 = 1.0/(nrmt[isp] - 1)
         # logarithmic mesh
-        t2 = log(rmt[is]/rminsp[is])
-        for ir in 1:nrsp[is]
-            rsp[ir,is] = rminsp[is]*exp( (ir-1) * t1 * t2)
+        t2 = log(rmt[isp]/rminsp[isp])
+        for ir in 1:nrsp[isp]
+            rsp[isp][ir] = rminsp[isp]*exp( (ir-1) * t1 * t2)
         end
         # calculate r^l on the fine radial mesh
-        nr = nrmt[is]
-        # XXX We are using lmaxo2idx
-        #il1 = lmaxo2idx(-1,lmaxo)
-        #il2 = lmaxo2idx( 0,lmaxo)
-        #il3 = lmaxo2idx( 1,lmaxo)
+        nr = nrmt[isp]
         for ir in 1:nr
-            rlmt[ir,-1,is] = 1.0/rsp[ir,is]
-            rlmt[ir,0,is] = 1.0
-            rlmt[ir,1,is] = rsp[ir,is]
+            rlmt[ir,-1,isp] = 1.0/rsp[isp][ir]
+            rlmt[ir,0,isp] = 1.0
+            rlmt[ir,1,isp] = rsp[isp][ir]
         end
         #
         for l in range(-2,stop=-lmaxo-1,step=-1)
             #il1 = lmaxo2idx(l,lmaxo)
             #il2 = lmaxo2idx(l+1,lmaxo)
             for ir in 1:nr
-                rlmt[ir,l,is] = rlmt[ir,l+1,is]/rsp[ir,is]
+                rlmt[ir,l,isp] = rlmt[ir,l+1,isp]/rsp[isp][ir]
             end
         end
         #
@@ -84,18 +82,18 @@ function genrmesh!(atm_vars, atsp_vars, mt_vars)
             #il1 = lmaxo2idx(l,lmaxo)
             #il2 = lmaxo2idx(l-1,lmaxo)
             for ir in 1:nr
-                rlmt[ir,l,is] = rlmt[ir,l-1,is] * rsp[ir,is]
+                rlmt[ir,l,isp] = rlmt[ir,l-1,isp] * rsp[isp][ir]
             end
         end
         # determine the weights for spline integration on the fine radial mesh
-        @views wsplint!(nr, rsp[:,is], wrmt[:,is])
+        @views wsplint!(nr, rsp[isp], wrmt[:,isp])
         # multiply by r^2
         #il2 = lmaxo2idx(2,lmaxo)
         for ir in 1:nr
-            wrmt[ir,is] = wrmt[ir,is]*rlmt[ir,2,is]
+            wrmt[ir,isp] = wrmt[ir,isp]*rlmt[ir,2,isp]
         end
         # determine the weights for partial integration on fine radial mesh
-        @views wsplintp!(nr, rsp[:,is], wprmt[:,:,is])
+        @views wsplintp!(nr, rsp[isp], wprmt[:,:,isp])
     end
 
 
@@ -130,37 +128,37 @@ function genrmesh!(atm_vars, atsp_vars, mt_vars)
     wrcmt = mt_vars.wrcmt
     wprcmt = mt_vars.wprcmt
 
-    for is in 1:Nspecies
-        t1 = fracinr*rmt[is]
-        nrmti[is] = 1
-        nrcmti[is] = 1
+    for isp in 1:Nspecies
+        t1 = fracinr*rmt[isp]
+        nrmti[isp] = 1
+        nrcmti[isp] = 1
         irc = 0
-        for ir in range(1,stop=nrmt[is],step=lradstp)
+        for ir in range(1,stop=nrmt[isp],step=lradstp)
             irc = irc + 1
-            rcmt[irc,is] = rsp[ir,is]
-            if rsp[ir,is] < t1
-                nrmti[is] = ir
-                nrcmti[is] = irc
+            rcmt[irc,isp] = rsp[isp][ir]
+            if rsp[isp][ir] < t1
+                nrmti[isp] = ir
+                nrcmti[isp] = irc
             end
         end
         # store r^l on the coarse radial mesh
         for l in range(-lmaxo-1, stop=lmaxo+2)
             irc = 0
-            for ir in range(1,stop=nrmt[is],step=lradstp)
+            for ir in range(1,stop=nrmt[isp],step=lradstp)
                 irc = irc + 1
-                rlcmt[irc,l,is] = rlmt[ir,l,is]
+                rlcmt[irc,l,isp] = rlmt[ir,l,isp]
             end
         end
         # determine the weights for spline integration on the coarse radial mesh
-        nrc = nrcmt[is]
-        @views wsplint!(nrc, rcmt[:,is], wrcmt[:,is])
+        nrc = nrcmt[isp]
+        @views wsplint!(nrc, rcmt[:,isp], wrcmt[:,isp])
         # multiply by r^2
         #il1 = lmaxo2idx(2,lmaxo)
         for ir in 1:nrc
-            wrcmt[ir,is] = wrcmt[ir,is] * rlcmt[ir,2,is]
+            wrcmt[ir,isp] = wrcmt[ir,isp] * rlcmt[ir,2,isp]
         end
         # determine the weights for partial integration on coarse radial mesh
-        @views wsplintp!(nrc, rcmt[:,is], wprcmt[:,:,is])
+        @views wsplintp!(nrc, rcmt[:,isp], wprcmt[:,:,isp])
     end
 
     return

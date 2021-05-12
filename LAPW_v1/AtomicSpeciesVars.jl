@@ -21,7 +21,7 @@ mutable struct AtomicSpeciesVars
     # number of coarse radial mesh points to nuclear radius
     nrcnucl::Vector{Int64}
     # nuclear Coulomb potential
-    vcln::Array{Float64,2}
+    vcln::Vector{Vector{Float64}}
     # species electronic charge
     spze::Vector{Float64}
     # species mass
@@ -59,7 +59,7 @@ mutable struct AtomicSpeciesVars
     # state occupancy for each species
     occsp::Array{Float64,2} # (maxstsp,maxspecies)
     # species radial mesh to effective infinity
-    rsp::Array{Float64,2}
+    rsp::Vector{Vector{Float64}}
     # r^l on radial mesh to muffin-tin radius
     rlsp::Array{Float64,3}
     # species charge density
@@ -90,7 +90,8 @@ function AtomicSpeciesVars( Nspecies::Int64 )
     nrnucl = zeros(Int64, Nspecies)
     nrcnucl = zeros(Int64, Nspecies)
     
-    vcln = zeros(Float64,1,1) # XXX will be properly setup later
+    #vcln = zeros(Float64,1,1) # XXX will be properly setup later
+    vcln = Vector{Vector{Float64}}(undef,2)
     
     spze = zeros(Float64, Nspecies)
     spmass = zeros(Float64, Nspecies)
@@ -115,7 +116,7 @@ function AtomicSpeciesVars( Nspecies::Int64 )
     occsp  = zeros(Float64,maxstsp,Nspecies)
 
     # XXX Will be setup properly later
-    rsp = zeros(Float64,1,1)
+    rsp = Vector{Vector{Float64}}(undef,2)
     rlsp  = zeros(Float64,1,1,1) 
     rhosp = zeros(Float64,1,1)
     vrsp  = zeros(Float64,1,1)
@@ -144,13 +145,17 @@ function init_nuclear_pot!( atsp_vars::AtomicSpeciesVars )
     spzn = atsp_vars.spzn
 
     # determine the nuclear Coulomb potential
-    atsp_vars.vcln = zeros(Float64,nrspmax,Nspecies)
-    vcln = atsp_vars.vcln
+    #atsp_vars.vcln = zeros(Float64,nrspmax,Nspecies)
     t1 = 1.0/y00
-    for is in 1:Nspecies
-        nr = nrsp[is]
-        @views potnucl!(ptnucl, nr, rsp[:,is], spzn[is], vcln[:,is])
-        vcln[1:nr,is] = t1*vcln[1:nr,is]
+    for isp in 1:Nspecies
+        nr = nrsp[isp]
+        atsp_vars.vcln[isp] = zeros(Float64,nr)
+        @views potnucl!( 
+            ptnucl, nr, rsp[:,isp], spzn[isp], atsp_vars.vcln[isp]
+        )
+        for ir in 1:nr
+            atsp.vcln[ir,isp] = t1*atsp.vcln[ir,isp]
+        end
     end
     return
 end

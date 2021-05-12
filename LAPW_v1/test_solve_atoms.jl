@@ -89,7 +89,7 @@ function main()
     for is in 1:Nspecies
         @views solve_atom!(
             solsc, ptnucl, spzn[is], nstsp[is], nsp[:,is], lsp[:,is], ksp[:,is],
-            occsp[:,is], xctsp, xcgrad, nrsp[is], rsp[:,is], evalsp[:,is], rhosp[:,is],
+            occsp[:,is], xctsp, xcgrad, nrsp[is], rsp[is], evalsp[:,is], rhosp[:,is],
             vrsp[:,is], rwf
         )
         for ist in 1:nstsp[is]
@@ -99,4 +99,5 @@ function main()
 
 end
 
+@time main()
 @time main()
