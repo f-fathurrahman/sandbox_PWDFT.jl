@@ -48,7 +48,7 @@ function do_plot(sys_name::String, plot_title)
         plt_inc[4], leg_inc[4],
         plt_inc[5], leg_inc[5] )
 
-    pgfsave("CONV_"*sys_name*".pdf", fig)
+    pgfsave("IMG_CONV_"*sys_name*".pdf", fig)
 end
 
 do_plot("H2", L"Convergence of $\mathrm{H}_{2}$")

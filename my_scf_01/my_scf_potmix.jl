@@ -19,7 +19,6 @@ function my_scf_potmix!( Ham::Hamiltonian; NiterMax=150, betamix=0.2, etot_conv_
     update!(Ham, Rhoe)
 
     Ham.energies.NN = calc_E_NN(atoms)
-    Ham.energies.PspCore = calc_PspCore_ene(atoms, pspots)
 
     evals = zeros(Nstates,Nkspin)
 
