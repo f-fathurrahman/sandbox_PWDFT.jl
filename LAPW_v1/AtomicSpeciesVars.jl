@@ -45,32 +45,31 @@ mutable struct AtomicSpeciesVars
     # semi-core-valence cut-off energy for species file generation
     esccut::Float64
     # state principle quantum number for each species
-    nsp::Array{Int64,2} # (maxstsp,maxspecies)
+    nsp::Vector{Vector{Int64}} # (maxstsp,maxspecies)
     # state l value for each species
-    lsp::Array{Int64,2} # (maxstsp,maxspecies)
+    lsp::Vector{Vector{Int64}} # (maxstsp,maxspecies)
     # state k value for each species
-    ksp::Array{Int64,2} #(maxstsp,maxspecies)
+    ksp::Vector{Vector{Int64}} #(maxstsp,maxspecies)
     # spcore is .true. if species state is core
-    spcore::Array{Bool,2} #(maxstsp,maxspecies)
+    spcore::Vector{Vector{Bool}} #(maxstsp,maxspecies)
     # total number of core states
     nstcr::Int64
     # state eigenvalue for each species
-    evalsp::Array{Float64,2} # (maxstsp,maxspecies)
+    evalsp::Vector{Vector{Float64}} # (maxstsp,maxspecies)
     # state occupancy for each species
-    occsp::Array{Float64,2} # (maxstsp,maxspecies)
+    occsp::Vector{Vector{Float64}} # (maxstsp,maxspecies)
     # species radial mesh to effective infinity
     rsp::Vector{Vector{Float64}}
-    # r^l on radial mesh to muffin-tin radius
-    rlsp::Array{Float64,3}
     # species charge density
-    rhosp::Array{Float64,2}
+    rhosp::Vector{Vector{Float64}}
     # species self-consistent potential
-    vrsp::Array{Float64,2}
+    vrsp::Vector{Vector{Float64}}
     # exchange-correlation type for atomic species (the converged ground-state of
     # the crystal does not depend on this choice)
     xctsp::Tuple{Int64,Int64,Int64}
 end
 
+# rlsp is not used. It is also removed in the future version of Elk
 
 function AtomicSpeciesVars( Nspecies::Int64 )
     
@@ -106,20 +105,21 @@ function AtomicSpeciesVars( Nspecies::Int64 )
     
     ecvcut = 0.0
     esccut = 0.0
-    
-    nsp = zeros(Int64,maxstsp,Nspecies)
-    lsp = zeros(Int64,maxstsp,Nspecies)
-    ksp = zeros(Int64,maxstsp,Nspecies)
-    spcore = zeros(Bool,maxstsp,Nspecies)
+
+    nsp = Vector{Vector{Int64}}(undef,Nspecies)
+    lsp = Vector{Vector{Int64}}(undef,Nspecies)
+    ksp = Vector{Vector{Int64}}(undef,Nspecies)
+    spcore = Vector{Vector{Bool}}(undef,Nspecies)
+
     nstcr = 0
-    evalsp = zeros(Float64,maxstsp,Nspecies)
-    occsp  = zeros(Float64,maxstsp,Nspecies)
+    evalsp = Vector{Vector{Float64}}(undef,Nspecies)
+    occsp  = Vector{Vector{Float64}}(undef,Nspecies)
 
     # XXX Will be setup properly later
-    rsp = Vector{Vector{Float64}}(undef,2)
-    rlsp  = zeros(Float64,1,1,1) 
-    rhosp = zeros(Float64,1,1)
-    vrsp  = zeros(Float64,1,1)
+    rsp = Vector{Vector{Float64}}(undef,Nspecies)
+    rhosp = Vector{Vector{Float64}}(undef,Nspecies)
+    vrsp = Vector{Vector{Float64}}(undef,Nspecies)
+
     xctsp  = (3,0,0)
 
     return AtomicSpeciesVars(
@@ -127,7 +127,7 @@ function AtomicSpeciesVars( Nspecies::Int64 )
         ptnucl, rnucl, volnucl, nrnucl, nrcnucl,
         vcln, spze, spmass, rminsp, rmaxsp, nrsp,
         nrspmax, maxstsp, nstsp, nstspmax, ecvcut, esccut,
-        nsp, lsp, ksp, spcore, nstcr, evalsp, occsp, rsp, rlsp, rhosp, vrsp, xctsp
+        nsp, lsp, ksp, spcore, nstcr, evalsp, occsp, rsp, rhosp, vrsp, xctsp
     )
 end
 

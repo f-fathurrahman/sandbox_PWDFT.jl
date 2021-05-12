@@ -65,22 +65,22 @@ function main()
         println(atsp_vars.rsp[isp][1:5])
 
         println("wmrt = ")
-        println(mt_vars.wrmt[1:5,isp])
+        println(mt_vars.wrmt[isp][1:5])
    
         println("wcmrt = ")
-        println(mt_vars.wrcmt[1:5,isp])
+        println(mt_vars.wrcmt[isp][1:5])
 
         #println("wprmt 1 = ")
         #println(mt_vars.wprmt[1,1:5,is])
 
         println("wprcmt 1 = ")
-        println(mt_vars.wprcmt[1,1:5,isp])
+        println(mt_vars.wprcmt[isp][1,1:5])
         println("wprcmt 2 = ")
-        println(mt_vars.wprcmt[2,1:5,isp])
+        println(mt_vars.wprcmt[isp][2,1:5])
         println("wprcmt 3 = ")
-        println(mt_vars.wprcmt[3,1:5,isp])
+        println(mt_vars.wprcmt[isp][3,1:5])
         println("wprcmt 4 = ")
-        println(mt_vars.wprcmt[4,1:5,isp])
+        println(mt_vars.wprcmt[isp][4,1:5])
 
         #println("wprmt 2 = ")
         #println(mt_vars.wprmt[2,1:5,1])

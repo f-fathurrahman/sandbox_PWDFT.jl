@@ -139,7 +139,9 @@ function rdirac!(sol, n, l, k, nr, r, vr, evals, g0, f0)
     else
       error("Error(rdirac): zero wavefunction")
     end
-    g0[:] = t1*g0[:]
-    f0[:] = t1*f0[:]
+    for ir in 1:nr
+        g0[ir] = t1*g0[ir]
+        f0[ir] = t1*f0[ir]
+    end
     return evals
 end

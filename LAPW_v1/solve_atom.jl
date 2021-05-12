@@ -123,8 +123,10 @@ function solve_atom!(
     
         # normalise charge density and potential
         t1 = ze/gr1[nr]
-        rho[:] .= t1*rho[:]
-        vh[:] .= t1*vh[:]
+        for ir in 1:nr
+            rho[ir] = t1*rho[ir]
+            vh[ir] = t1*vh[ir]
+        end
     
         # compute the exchange-correlation energy and potential
         if xcgrad == 1
@@ -161,7 +163,9 @@ function solve_atom!(
         #exit()
     
         # self-consistent potential
-        @views vr[1:nr] = vh[1:nr] + vx[1:nr] + vc[1:nr]
+        for ir in 1:nr
+            vr[ir] = vh[ir] + vx[ir] + vc[ir]
+        end
     
         # determine change in potential
         ss = 0.0

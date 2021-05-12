@@ -36,8 +36,8 @@ function rdiracint!(sol, kpa, e, nr, r, vr, g0, g1, f0, f1)
     g1[1] = t3*f0[1] - t2*g0[1]
 
     # extrapolate to the first four points
-    g1[2:4] .= g1[1]
-    f1[2:4] .= f1[1]
+    @views g1[2:4] .= g1[1]
+    @views f1[2:4] .= f1[1]
     
     nn = 0 # number of nodes
     for ir in 2:nr
@@ -66,10 +66,10 @@ function rdiracint!(sol, kpa, e, nr, r, vr, g0, g1, f0, f1)
         if ( (abs(g0[ir]) > rsc) || (abs(g1[ir]) > rsc) ||
              (abs(f0[ir]) > rsc) || (abs(f1[ir]) > rsc) )
             # set the remaining points and return
-            g0[ir:nr] .= g0[ir]
-            g1[ir:nr] .= g1[ir]
-            f0[ir:nr] .= f0[ir]
-            f1[ir:nr] .= f1[ir]
+            @views g0[ir:nr] .= g0[ir]
+            @views g1[ir:nr] .= g1[ir]
+            @views f0[ir:nr] .= f0[ir]
+            @views f1[ir:nr] .= f1[ir]
             return nn, e
         end
         # check for node

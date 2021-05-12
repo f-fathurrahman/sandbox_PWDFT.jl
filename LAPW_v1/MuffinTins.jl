@@ -20,19 +20,19 @@ mutable struct MuffinTins
     # maximum nrcmt over all the species
     nrcmtmax::Int64
     # coarse muffin-tin radial mesh
-    rcmt::Array{Float64,2}
+    rcmt::Vector{Vector{Float64}}
     # r^l on fine radial mesh
-    rlmt::OffsetArray{Float64, 3, Array{Float64, 3}}
+    rlmt::Vector{OffsetArray{Float64,2,Array{Float64,2}}}
     # r^l on coarse radial mesh
-    rlcmt::OffsetArray{Float64, 3, Array{Float64, 3}}
+    rlcmt::Vector{OffsetArray{Float64,2,Array{Float64,2}}}
     # weights for spline integration on fine radial mesh
-    wrmt::Array{Float64,2}
+    wrmt::Vector{Vector{Float64}}
     # weights for spline partial integration on fine radial mesh
-    wprmt::Array{Float64,3}
+    wprmt::Vector{Matrix{Float64}}
     # weights for spline integration on coarse radial mesh
-    wrcmt::Array{Float64,2}
+    wrcmt::Vector{Vector{Float64}}
     # weights for spline partial integration on coarse radial mesh
-    wprcmt::Array{Float64,3}
+    wprcmt::Vector{Matrix{Float64}}
     # maximum allowable angular momentum for augmented plane waves
     maxlapw::Int64 # parameter =50
     # maximum angular momentum for augmented plane waves
@@ -81,14 +81,14 @@ function MuffinTins(Nspecies; lmaxi=1)
     nrcmtmax = 0
 
     # XXX SHould be done in genrmesh
-    rcmt = zeros(Float64,1,1)
-    rlmt = OffsetArray( zeros(Float64,1,1,1), 1:1,1:1,1:1 )
-    rlcmt = OffsetArray( zeros(Float64,1,1,1), 1:1,1:1,1:1 )
+    rcmt = Vector{Vector{Float64}}(undef,Nspecies)
+    rlmt = Vector{OffsetArray{Float64,2,Array{Float64,2}}}(undef,Nspecies)
+    rlcmt = Vector{OffsetArray{Float64,2,Array{Float64,2}}}(undef,Nspecies)
     
-    wrmt = zeros(Float64,1,1)
-    wprmt = zeros(Float64,1,1,1)
-    wrcmt = zeros(Float64,1,1) 
-    wprcmt = zeros(Float64,1,1,1)
+    wrmt = Vector{Vector{Float64}}(undef,Nspecies)
+    wprmt = Vector{Matrix{Float64}}(undef,Nspecies)
+    wrcmt = Vector{Vector{Float64}}(undef,Nspecies)
+    wprcmt = Vector{Matrix{Float64}}(undef,Nspecies)
     
     maxlapw = 50
     lmaxapw = 8 # default
@@ -175,15 +175,15 @@ function init_packed_mtr!( mt_vars::MuffinTins )
     mt_vars.npcmtmax = 1
     #
 
-    for is in 1:Nspecies
+    for isp in 1:Nspecies
         #
-        mt_vars.npmti[is] = lmmaxi*nrmti[is]
-        mt_vars.npmt[is] = mt_vars.npmti[is] + lmmaxo*(nrmt[is] - nrmti[is])
-        mt_vars.npmtmax = max(mt_vars.npmtmax, mt_vars.npmt[is])
+        mt_vars.npmti[isp] = lmmaxi*nrmti[isp]
+        mt_vars.npmt[isp] = mt_vars.npmti[isp] + lmmaxo*(nrmt[isp] - nrmti[isp])
+        mt_vars.npmtmax = max(mt_vars.npmtmax, mt_vars.npmt[isp])
         #
-        mt_vars.npcmti[is] = lmmaxi*nrcmti[is]
-        mt_vars.npcmt[is] = mt_vars.npcmti[is] + lmmaxo*(nrcmt[is] - nrcmti[is])
-        mt_vars.npcmtmax = max(mt_vars.npcmtmax, mt_vars.npcmt[is])
+        mt_vars.npcmti[isp] = lmmaxi*nrcmti[isp]
+        mt_vars.npcmt[isp] = mt_vars.npcmti[isp] + lmmaxo*(nrcmt[isp] - nrcmti[isp])
+        mt_vars.npcmtmax = max(mt_vars.npcmtmax, mt_vars.npcmt[isp])
     end
     return
 end

@@ -46,20 +46,30 @@ function readspecies!( isp::Int64, filename,
     # Atomic states
     line = readline(f)
     atsp_vars.nstsp[isp] = parse(Int64, split(line)[1])
+    nstsp = atsp_vars.nstsp
+    
+    atsp_vars.nsp[isp] = zeros(Int64,nstsp[isp])
+    atsp_vars.lsp[isp] = zeros(Int64,nstsp[isp])
+    atsp_vars.ksp[isp] = zeros(Int64,nstsp[isp])
+    atsp_vars.spcore[isp] = zeros(Bool,nstsp[isp])
+    atsp_vars.occsp[isp] = zeros(Float64,nstsp[isp])
+    atsp_vars.evalsp[isp] = zeros(Float64,nstsp[isp])
+
     #
     for ist in 1:atsp_vars.nstsp[isp]
         #
         line = readline(f)
         ll = split(line)
         #
-        atsp_vars.nsp[ist,isp] = parse(Int64, ll[1])
-        atsp_vars.lsp[ist,isp] = parse(Int64, ll[2])
-        atsp_vars.ksp[ist,isp] = parse(Int64, ll[3]) # whats this?
-        atsp_vars.occsp[ist,isp] = parse(Float64, ll[4])
+        atsp_vars.nsp[isp][ist] = parse(Int64, ll[1])
+        atsp_vars.lsp[isp][ist] = parse(Int64, ll[2])
+        atsp_vars.ksp[isp][ist] = parse(Int64, ll[3]) # whats this?
+        #
+        atsp_vars.occsp[isp][ist] = parse(Float64, ll[4])
         if ll[5] == "T"
-            atsp_vars.spcore[ist,isp] = true
+            atsp_vars.spcore[isp][ist] = true
         elseif ll[5] == "F"
-            atsp_vars.spcore[ist,isp] = false
+            atsp_vars.spcore[isp][ist] = false
         else
             error("Unable to parse spcore")
         end
