@@ -77,4 +77,7 @@ export poly4i
 include("poly3.jl")
 export poly3
 
+include("allatoms.jl")
+export allatoms!
+
 end
