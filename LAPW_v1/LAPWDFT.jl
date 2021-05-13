@@ -4,6 +4,8 @@ using Printf
 using LinearAlgebra
 using OffsetArrays
 
+using PWDFT
+
 include("r3frac.jl")
 include("r3mv.jl")
 

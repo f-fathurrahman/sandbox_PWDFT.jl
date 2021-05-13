@@ -1,39 +1,22 @@
 push!(LOAD_PATH, pwd())
 
-using Printf
+using PWDFT
 using LAPWDFT
 
-function create_lattice_vars()
+function main()
+
     LatVecs = zeros(3,3)
     A = 5.13
     LatVecs[1,:] = [A, A, 0.0]
     LatVecs[2,:] = [A, 0.0, A]
     LatVecs[3,:] = [0.0, A, A]
-    lattice_vars = LatticeVars( LatVecs )
-    return lattice_vars
-end
 
-function create_atomic_vars(lattice_vars)
+    atoms = Atoms(xyz_string_frac="""
+    2
 
-    maxatoms = 200
-    maxspecies = 8
-    atposl = zeros(3,maxatoms,maxspecies)
-    
-    Nspecies = 2
-    Natoms = [1,1]
-
-    # species 1, atom 1
-    atposl[:,1,1] = [0.0, 0.0, 0.0]
-    # species 2, atom 1
-    atposl[:,1,2] = [0.25, 0.25, 0.25]
-
-    atomic_vars = AtomicVars(Nspecies, Natoms, atposl, lattice_vars)
-end
-
-function main()
-
-    latt_vars = create_lattice_vars()
-    atm_vars = create_atomic_vars(latt_vars)
+    Si  0.0   0.0   0.0
+    Si  0.25  0.25  0.25
+    """, in_bohr=true, LatVecs=LatVecs)
 
     Nspecies = 2
     atsp_vars = AtomicSpeciesVars(Nspecies)
@@ -43,10 +26,7 @@ function main()
     readspecies!(1, "DATA_species/Si.in", atsp_vars, mt_vars, apwlo_vars)
     readspecies!(2, "DATA_species/Pt.in", atsp_vars, mt_vars, apwlo_vars)
 
-    checkmt!( latt_vars, atm_vars, atsp_vars.spsymb, mt_vars )
-
-    println("Pass here")
-
+    checkmt!( atoms, mt_vars )
 end
 
 main()

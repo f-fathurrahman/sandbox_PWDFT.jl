@@ -1,12 +1,11 @@
-function checkmt!(
-    latt_vars::LatticeVars, atm_vars::AtomicVars, spsymb,
-    mt_vars::MuffinTins
-)
+function checkmt!( atoms::Atoms, mt_vars::MuffinTins )
 
     rmt = mt_vars.rmt
     rmtdelta = mt_vars.rmtdelta
-    epslat = latt_vars.epslat
-    Nspecies = atm_vars.Nspecies
+
+    epslat = 1e-6
+    Nspecies = atoms.Nspecies
+    spsymb = atoms.SpeciesSymbols
 
     rmt0 = zeros(Float64,Nspecies)
     rmt0[1:Nspecies] = rmt[1:Nspecies]
@@ -15,7 +14,7 @@ function checkmt!(
 
     while true
         # find the minimum distance between muffin-tin surfaces
-        dmin, is, js = mtdmin(latt_vars, atm_vars, rmt)
+        dmin, is, js = mtdmin(atoms, rmt)
         # adjust muffin-tin radii if required1
         if dmin < (rmtdelta - epslat)
             println("Adjusting rmt")
