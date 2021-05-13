@@ -3,8 +3,6 @@ mutable struct MuffinTins
     nrmtscf::Float64
     # number of muffin-tin radial points for each species
     nrmt::Vector{Int64}
-    # maximum nrmt over all the species
-    nrmtmax::Int64
     # optional default muffin-tin radius for all atoms
     rmtall::Float64
     # minimum allowed distance between muffin-tin surfaces
@@ -17,8 +15,6 @@ mutable struct MuffinTins
     lradstp::Int64
     # number of coarse radial mesh points
     nrcmt::Vector{Int64}
-    # maximum nrcmt over all the species
-    nrcmtmax::Int64
     # coarse muffin-tin radial mesh
     rcmt::Vector{Vector{Float64}}
     # r^l on fine radial mesh
@@ -62,23 +58,18 @@ mutable struct MuffinTins
     npmt::Vector{Int64}
     npcmti::Vector{Int64}
     npcmt::Vector{Int64}
-    # maximum number of points over all packed muffin-tins
-    npmtmax::Int64
-    npcmtmax::Int64
 end
 
 function MuffinTins(Nspecies; lmaxi=1)
 
     nrmtscf = 0
     nrmt = zeros(Int64,Nspecies)
-    nrmtmax = 0
     rmtall = 0
     rmtdelta = 0.05 # default
     rmt = zeros(Nspecies)
     omegamt = 0.0
     lradstp = 4
     nrcmt = zeros(Int64,Nspecies)
-    nrcmtmax = 0
 
     # XXX SHould be done in genrmesh
     rcmt = Vector{Vector{Float64}}(undef,Nspecies)
@@ -121,16 +112,12 @@ function MuffinTins(Nspecies; lmaxi=1)
     npmt = zeros(Int64,Nspecies)
     npcmti = zeros(Int64,Nspecies)
     npcmt = zeros(Int64,Nspecies)
-    
-    npmtmax = 0
-    npcmtmax = 0
 
     return MuffinTins(
-        nrmtscf, nrmt, nrmtmax, rmtall, rmtdelta, rmt, omegamt, lradstp,
-        nrcmt, nrcmtmax, rcmt, rlmt, rlcmt, wrmt, wprmt, wrcmt, wprcmt,
+        nrmtscf, nrmt, rmtall, rmtdelta, rmt, omegamt, lradstp,
+        nrcmt, rcmt, rlmt, rlcmt, wrmt, wprmt, wrcmt, wprcmt,
         maxlapw, lmaxapw, lmmaxapw, lmaxo, lmmaxo, lmaxi, lmmaxi, fracinr,
-        nrmti, nrcmti, idxlm, idxil, idxim, npmti, npmt, npcmti, npcmt,
-        npmtmax, npcmtmax,
+        nrmti, nrcmti, idxlm, idxil, idxim, npmti, npmt, npcmti, npcmt
     )
 
 end
@@ -149,8 +136,6 @@ function init_zero!( mt_vars::MuffinTins )
         nrmt[is] = nrmt[is] - (nrmt[is]-1)%lradstp
         nrcmt[is] =( nrmt[is] - 1)/lradstp + 1
     end
-    mt_vars.nrmtmax = maximum(nrmt)
-    mt_vars.nrcmtmax = maximum(nrcmt)
 
     @assert mt_vars.lmaxo <= mt_vars.lmaxapw
 
@@ -171,19 +156,14 @@ function init_packed_mtr!( mt_vars::MuffinTins )
     lmmaxo = mt_vars.lmmaxo
     lmmaxi = mt_vars.lmmaxi
     #
-    mt_vars.npmtmax  = 1
-    mt_vars.npcmtmax = 1
-    #
 
     for isp in 1:Nspecies
         #
         mt_vars.npmti[isp] = lmmaxi*nrmti[isp]
         mt_vars.npmt[isp] = mt_vars.npmti[isp] + lmmaxo*(nrmt[isp] - nrmti[isp])
-        mt_vars.npmtmax = max(mt_vars.npmtmax, mt_vars.npmt[isp])
         #
         mt_vars.npcmti[isp] = lmmaxi*nrcmti[isp]
         mt_vars.npcmt[isp] = mt_vars.npcmti[isp] + lmmaxo*(nrcmt[isp] - nrcmti[isp])
-        mt_vars.npcmtmax = max(mt_vars.npcmtmax, mt_vars.npcmt[isp])
     end
     return
 end

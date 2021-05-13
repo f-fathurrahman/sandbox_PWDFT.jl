@@ -43,8 +43,6 @@ function main()
 
     readspecies!(1, "DATA_species/H.in", atsp_vars, mt_vars, apwlo_vars)
 
-    atsp_vars.nstspmax = maximum(atsp_vars.nstsp)
-
     init_zero!( mt_vars )
 
     println("before nrsp = ", atsp_vars.nrsp)
@@ -57,9 +55,7 @@ function main()
     println("after nrsp = ", atsp_vars.nrsp)
     println("atsp_vars.rsp = ", size(atsp_vars.rsp))
 
-    nrspmax = atsp_vars.nrspmax
     Nspecies = atm_vars.Nspecies
-    nstspmax = atsp_vars.nstspmax
 
     xctsp = atsp_vars.xctsp
     xcgrad = false

@@ -93,9 +93,7 @@ function main()
     end
 
     println("lmmaxi   = ", mt_vars.lmmaxi)
-    println("npmtmax  = ", mt_vars.npmtmax)
     println("npmt     = ", mt_vars.npmt)
-    println("npcmtmax = ", mt_vars.npcmtmax)
     println("npcmt    = ", mt_vars.npcmt)
 
 end

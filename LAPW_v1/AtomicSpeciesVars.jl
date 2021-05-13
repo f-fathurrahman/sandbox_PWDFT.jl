@@ -32,14 +32,10 @@ mutable struct AtomicSpeciesVars
     rmaxsp::Vector{Float64}
     # number of radial points to effective infinity for each species
     nrsp::Vector{Int64}
-    # maximum nrsp over all the species
-    nrspmax::Int64
     # maximum allowed states for each species
     maxstsp::Int64 # parameter: 40
     # number of states for each species
     nstsp::Vector{Int64}
-    # maximum nstsp over all the species
-    nstspmax::Int64
     # core-valence cut-off energy for species file generation
     ecvcut::Float64
     # semi-core-valence cut-off energy for species file generation
@@ -89,7 +85,6 @@ function AtomicSpeciesVars( Nspecies::Int64 )
     nrnucl = zeros(Int64, Nspecies)
     nrcnucl = zeros(Int64, Nspecies)
     
-    #vcln = zeros(Float64,1,1) # XXX will be properly setup later
     vcln = Vector{Vector{Float64}}(undef,2)
     
     spze = zeros(Float64, Nspecies)
@@ -98,10 +93,8 @@ function AtomicSpeciesVars( Nspecies::Int64 )
     rminsp = zeros(Float64, Nspecies)
     rmaxsp = zeros(Float64, Nspecies)
     nrsp = zeros(Int64, Nspecies)
-    nrspmax = 0
     maxstsp = 40
     nstsp = zeros(Int64, Nspecies)
-    nstspmax = 0
     
     ecvcut = 0.0
     esccut = 0.0
@@ -126,7 +119,7 @@ function AtomicSpeciesVars( Nspecies::Int64 )
         sppath, spfname, spname, spsymb, spzn,
         ptnucl, rnucl, volnucl, nrnucl, nrcnucl,
         vcln, spze, spmass, rminsp, rmaxsp, nrsp,
-        nrspmax, maxstsp, nstsp, nstspmax, ecvcut, esccut,
+        maxstsp, nstsp, ecvcut, esccut,
         nsp, lsp, ksp, spcore, nstcr, evalsp, occsp, rsp, rhosp, vrsp, xctsp
     )
 end
@@ -141,11 +134,9 @@ function init_nuclear_pot!( atsp_vars::AtomicSpeciesVars )
     nrsp = atsp_vars.nrsp
     Nspecies = size(nrsp,1)
     ptnucl = atsp_vars.ptnucl
-    nrspmax = atsp_vars.nrspmax
     spzn = atsp_vars.spzn
 
     # determine the nuclear Coulomb potential
-    #atsp_vars.vcln = zeros(Float64,nrspmax,Nspecies)
     t1 = 1.0/y00
     for isp in 1:Nspecies
         nr = nrsp[isp]

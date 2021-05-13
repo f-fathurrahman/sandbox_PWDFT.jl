@@ -13,25 +13,14 @@ function genrmesh!(atm_vars, atsp_vars, mt_vars)
     nrmt = mt_vars.nrmt
 
     # estimate the number of radial mesh points to infinity
-    atsp_vars.nrspmax = 1
     for is in 1:Nspecies
-        #println("rminsp = ", rminsp[is])
-        #println("rmaxsp = ", rmaxsp[is])
-        #println("nrmt   = ", nrmt[is])
         # logarithmic mesh
         t1 = log(rmaxsp[is]/rminsp[is])/log(rmt[is]/rminsp[is])
         t2 = (nrmt[is] - 1)*t1
-        #println("t1 = ", t1)
-        #println("t2 = ", t2)
         nrsp[is] = round(Int64,t2) + 1 # XXX compare with nint
-        atsp_vars.nrspmax = max(atsp_vars.nrspmax, nrsp[is])
     end
 
-    nrspmax = atsp_vars.nrspmax
     lmaxo = mt_vars.lmaxo
-    nrmtmax = mt_vars.nrmtmax
-    #println("lmaxo = ", lmaxo)
-    #println("nrmtmax = ", nrmtmax)
 
     # The following actually allocate memory
     for isp in 1:Nspecies
@@ -53,9 +42,6 @@ function genrmesh!(atm_vars, atsp_vars, mt_vars)
     rlmt = mt_vars.rlmt
     wrmt = mt_vars.wrmt
     wprmt = mt_vars.wprmt
-
-    #println("2*(lmaxo+2) = ", 2*(lmaxo+2))
-    #println("size(rlmt) = ", size(rlmt))
 
     for isp in 1:Nspecies
         t1 = 1.0/(nrmt[isp] - 1)
@@ -101,12 +87,10 @@ function genrmesh!(atm_vars, atsp_vars, mt_vars)
     end
 
     fracinr = mt_vars.fracinr
-    nrcmtmax = mt_vars.nrcmtmax
     nrcmt = mt_vars.nrcmt
     nrmti = mt_vars.nrmti
     nrcmti = mt_vars.nrcmti
     lradstp = mt_vars.lradstp
-    println("nrcmtmax = ", nrcmtmax)
     println("nrcmt    = ", nrcmt[1:Nspecies])
 
     # set up the coarse radial meshes and find the inner part of the muffin-tin

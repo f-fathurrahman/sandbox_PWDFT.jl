@@ -59,8 +59,6 @@ function main()
     for isp in 1:Nspecies
         readspecies!(isp, "DATA_species/"*spsymb[isp]*".in", atsp_vars, mt_vars, apwlo_vars)
     end
-    # This should be removed
-    atsp_vars.nstspmax = maximum(atsp_vars.nstsp)
 
     init_zero!( mt_vars )
 
