@@ -32,15 +32,9 @@ function main()
 
     init_zero!( mt_vars )
 
-    println("before nrsp = ", atsp_vars.nrsp)
-    println("atsp_vars.rsp = ", size(atsp_vars.rsp))
-
     checkmt!( atoms, mt_vars )
     genrmesh!( atoms, atsp_vars, mt_vars )
     init_packed_mtr!( mt_vars )
-
-    println("after nrsp    = ", atsp_vars.nrsp)
-    println("atsp_vars.rsp = ", size(atsp_vars.rsp))
 
     allatoms!(atsp_vars)
 
