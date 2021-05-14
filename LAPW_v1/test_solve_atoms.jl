@@ -4,37 +4,7 @@ using Printf
 using PWDFT
 using LAPWDFT
 
-function create_lattice_vars()
-    LatVecs = zeros(3,3)
-    A = 5.13
-    LatVecs[1,:] = [A, A, 0.0]
-    LatVecs[2,:] = [A, 0.0, A]
-    LatVecs[3,:] = [0.0, A, A]
-    lattice_vars = LatticeVars( LatVecs )
-    return lattice_vars
-end
-
-function create_atomic_vars(lattice_vars)
-
-    maxatoms = 200
-    maxspecies = 8
-    atposl = zeros(3,maxatoms,maxspecies)
-    
-    Nspecies = 2
-    Natoms = [1,1]
-
-    # species 1, atom 1
-    atposl[:,1,1] = [0.0, 0.0, 0.0]
-    # species 2, atom 1
-    atposl[:,1,2] = [0.25, 0.25, 0.25]
-
-    atomic_vars = AtomicVars(Nspecies, Natoms, atposl, lattice_vars)
-end
-
 function main()
-
-    #latt_vars = create_lattice_vars()
-    #atm_vars = create_atomic_vars(latt_vars)
 
     LatVecs = zeros(3,3)
     A = 5.13
