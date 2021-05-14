@@ -80,4 +80,7 @@ export poly3
 include("allatoms.jl")
 export allatoms!
 
+include("rhoinit.jl")
+export rhoinit!
+
 end
