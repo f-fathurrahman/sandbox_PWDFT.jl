@@ -86,9 +86,14 @@ function rhoinit!(
         end
     end
 
+    println("sum sfacg = ", sum(sfacg))
+    s = 0.0
+    for isp in 1:Nspecies
+        s = s + sum(rhosp[isp])
+    end
+    println("sum rhosp = ", s)
+    println("sum ffg = ", sum(ffg))
     println("sum zfft = ", sum(zfft))
-    #DEALLOCATE(ffg, wr, fr)
-
 
     return
 end

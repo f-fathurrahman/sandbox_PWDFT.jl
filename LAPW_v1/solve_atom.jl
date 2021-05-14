@@ -153,7 +153,8 @@ function solve_atom!(
                     ec[ir] = vc[ir] = 0.0
                 else
                     ex[ir], vx[ir] = XC_x_slater( rho[ir] )
-                    ec[ir], vc[ir] = XC_c_vwn( rho[ir] )
+                    #ec[ir], vc[ir] = XC_c_vwn( rho[ir] )
+                    ec[ir], vc[ir] = XC_c_pw( rho[ir] )
                 end
             end
         end

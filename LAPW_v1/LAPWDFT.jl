@@ -46,6 +46,7 @@ export potnucl!
 
 include("XC_funcs/XC_x_slater.jl")
 include("XC_funcs/XC_c_vwn.jl")
+include("XC_funcs/XC_c_pw.jl")
 
 include("polynm.jl")
 export polynm

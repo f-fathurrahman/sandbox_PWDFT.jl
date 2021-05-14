@@ -16,7 +16,7 @@ function main()
     2
 
     Si  0.0  0.0  0.0
-    Pt  0.25 0.25 0.25
+    Si  0.25 0.25 0.25
     """, in_bohr=true, LatVecs=LatVecs)
 
     Nspecies = atoms.Nspecies
