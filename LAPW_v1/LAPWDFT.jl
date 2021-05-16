@@ -3,6 +3,7 @@ module LAPWDFT
 using Printf
 using LinearAlgebra
 using OffsetArrays
+using SpecialFunctions: sphericalbesselj
 
 using PWDFT
 
@@ -84,4 +85,20 @@ export allatoms!
 include("rhoinit.jl")
 export rhoinit!
 
+include("sbessel.jl")
+export sbessel!
+
+include("z_to_rf_mt.jl")
+export z_to_rf_mt!
+
+include("z_to_rf_lm.jl")
+export z_to_rf_lm!
+
+include("rf_mt_c_to_f.jl")
+export rf_mt_c_to_f!
+
+include("rf_interp.jl")
+export rf_interp!
+
 end
+

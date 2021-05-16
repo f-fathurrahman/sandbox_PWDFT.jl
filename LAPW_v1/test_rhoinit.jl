@@ -1,6 +1,7 @@
 push!(LOAD_PATH, pwd())
 
 using Printf
+using LinearAlgebra
 using PWDFT
 using LAPWDFT
 
