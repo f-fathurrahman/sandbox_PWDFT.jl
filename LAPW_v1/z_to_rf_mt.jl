@@ -1,8 +1,7 @@
 function z_to_rf_mt!(
     mt_vars::MuffinTins,
     nr::Int64, nri::Int64,
-    zfmt::Array{ComplexF64},
-    rfmt::Array{Float64}
+    zfmt, rfmt
 )
     #
     lmmaxi = mt_vars.lmmaxi

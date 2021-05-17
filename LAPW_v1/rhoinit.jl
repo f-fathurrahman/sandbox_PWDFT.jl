@@ -20,7 +20,8 @@ function rhoinit!(
     rsp = atsp_vars.rsp
     rhosp = atsp_vars.rhosp 
 
-    lmaxi = mt_vars.lmaxi
+    lmmaxi = mt_vars.lmmaxi
+    lmmaxo = mt_vars.lmmaxo
     #
     nrmt = mt_vars.nrmt
     nrmti = mt_vars.nrmti
@@ -33,8 +34,10 @@ function rhoinit!(
     npcmt = mt_vars.npcmt
 
     sfacg = calc_strfact(atoms, pw)
+    ylmg = zeros(ComplexF64, lmmaxo, Ng)
+    genylmg!(mt_vars.lmaxo, pw.gvec.G, ylmg)
 
-    lmax = min(lmaxi,1)
+    lmax = min(mt_vars.lmaxi,1)
 
     epslat = 1e-6
   
@@ -83,7 +86,7 @@ function rhoinit!(
                     fr[ir] = rhosp[isp][ir] * rsp[isp][ir]^2
                 end
             end
-            @views t1 = dot( wr[nr:nrs], fr[nr:nrs] )
+            @views t1 = dot( wr[nr:nrs-1], fr[nr:nrs-1] )
             # apply low-pass filter
             t1 = t1*exp(-4.0*G2[ig]/gmaxvr^2)
             ffg[ig,isp] = (4*pi/CellVolume)*t1
@@ -112,7 +115,7 @@ function rhoinit!(
     jl = OffsetArray(
         zeros(Float64,lmax+1,nrcmtmax), 0:lmax, 1:nrcmtmax
     )
-    zfmt = zeros(Float64, npcmtmax)
+    zfmt = zeros(ComplexF64, npcmtmax)
     
     for ia in 1:Natoms
         isp = atm2species[ia]
@@ -132,7 +135,7 @@ function rhoinit!(
                 z2 = im^l * z1
                 for m in -l:l
                     lm = lm + 1
-                    z3 = z2*conjg(ylmg[lm,ig])
+                    z3 = z2*conj(ylmg[lm,ig])
                     i = lm
                     for irc in 1:nrci
                         zfmt[i] = zfmt[i] + jl[l,irc]*z3
@@ -145,7 +148,7 @@ function rhoinit!(
                 end
             end
         end
-        z_to_rf_mt!( nrc, nrci, zfmt, rhomt[isp] )
+        z_to_rf_mt!( mt_vars, nrc, nrci, zfmt, rhomt[isp] )
         # write(*,*)
         # write(*,*) 'size(zfmt)  = ', size(zfmt)
         # write(*,*) 'size(rhomt) = ', size(rhomt)
@@ -153,9 +156,12 @@ function rhoinit!(
     #DEALLOCATE(jl,zfmt)
 
     # convert the density from a coarse to a fine radial mesh
-    rf_mt_c_to_f!( rhomt )
+    rf_mt_c_to_f!( atoms, atsp_vars, mt_vars, rhomt )
 
     # add the atomic charge density and the excess charge in each muffin-tin
+    chgexs = 0.0  # FIXME
+    y00 = 0.28209479177387814347
+
     t1 = chgexs/CellVolume
     for ia in 1:Natoms
         isp = atm2species[ia]
@@ -175,14 +181,27 @@ function rhoinit!(
     end
 
     # interstitial density determined from the atomic tails and excess charge
+    println("zfft before = ", sum(zfft))
     G_to_R!(pw, zfft)
+    zfft[:] = zfft[:]*Npoints
     for ip in 1:Npoints
-        rhoir[ir] = real(zfft[ip]) + t1
+        rhoir[ip] = real(zfft[ip]) + t1
         # make sure that the density is always positive
-        if rhoir[ir] < 1.e-10
-            rhoir[ir] = 1.e-10
+        if rhoir[ip] < 1.e-10
+            rhoir[ip] = 1.e-10
         end
     end
+
+    println("Npoints = ", Npoints)
+
+    @printf("sum rhoir = %18.10e\n", sum(rhoir))
+    @printf("sum rhoir / 2 = %18.10e\n", sum(rhoir)/2)
+    ss = 0.0
+    for isp in 1:Nspecies
+        ss = ss + sum(rhomt[isp])
+    end
+    @printf("sum rhomt = %18.10e\n", ss)
+    @printf("Total = %18.10e\n", ss + sum(rhoir))
 
     return
 end

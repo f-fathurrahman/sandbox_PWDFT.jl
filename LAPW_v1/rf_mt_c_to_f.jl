@@ -1,5 +1,5 @@
 function rf_mt_c_to_f!(
-    atoms, mt_vars, rfmt
+    atoms, atsp_vars, mt_vars, rfmt
 )
     # USE m_atoms, ONLY: natmtot, rsp, idxis
     # USE m_muffin_tins, ONLY: npmtmax, nrcmtmax, nrmtmax, npmt, rcmt, npcmti, nrcmt, nrcmti, &
@@ -20,27 +20,33 @@ function rf_mt_c_to_f!(
         return
     end
 
-    idx2species = atoms.idx2species
+    atm2species = atoms.atm2species
     Natoms = atoms.Natoms
 
     nrcmt = mt_vars.nrcmt
     nrmt = mt_vars.nrmt
+    nrmti = mt_vars.nrmti
     nrcmti = mt_vars.nrcmti
     npmt = mt_vars.npmt
+    npmti = mt_vars.npmti
     npcmti = mt_vars.npcmti
     lmmaxo = mt_vars.lmmaxo
     lmmaxi = mt_vars.lmmaxi
+    rcmt = mt_vars.rcmt
+    rlmt = mt_vars.rlmt
+
+    rsp = atsp_vars.rsp
 
     nrcmtmax = maximum(nrcmt)
     nrmtmax = maximum(nrmt)
-    npmtmax = maximum(npmtmax) 
+    npmtmax = maximum(npmt) 
 
     fi = zeros(Float64, nrcmtmax)
     fo = zeros(Float64, nrmtmax)
     rfmt1 = zeros(Float64, npmtmax)
     
     for ia in 1:Natoms
-        isp = idx2species[ia]
+        isp = atm2species[ia]
         nr = nrmt[isp]
         nri = nrmti[isp]
         nro = nr - nri
@@ -50,7 +56,7 @@ function rf_mt_c_to_f!(
         nrci = nrcmti[isp]
         nrco = nrc - nrci
         irco = nrci + 1
-        npci = npcmti[is]
+        npci = npcmti[isp]
         # interpolate up to lmaxi over entire muffin-tin
         for lm in 1:lmmaxi
             i = lm
@@ -83,9 +89,14 @@ function rf_mt_c_to_f!(
                 fi[irc] = rfmt[isp][i]
                 i = i + lmmaxo
             end
-            idxc = irco:nrco-1
-            idx = iro:nro-1
-            @views rf_interp(
+            idxc = irco:irco+nrco-1
+            idx = iro:iro+nro-1
+            #println("idxc = ", idxc)
+            #println("idx  = ", idx)
+            #@printf("irco = %d, nrco = %d\n", irco, nrco)
+            #@printf("iro  = %d, nro = %d\n", iro, nro)
+            #exit()
+            @views rf_interp!(
                 nrco, rcmt[isp][idxc], fi[idxc],
                 nro, rsp[isp][idx], fo[idx]
             )
@@ -96,9 +107,9 @@ function rf_mt_c_to_f!(
             end
         end 
         # CALL dcopy(npmt(is), rfmt1,1, rfmt(:,ias), 1)
-
+        for ip in 1:npmt[isp]
+            rfmt[isp][ip] = rfmt1[ip]
+        end
     end 
-    #DEALLOCATE(fi,fo,rfmt1)
-
     return
 end

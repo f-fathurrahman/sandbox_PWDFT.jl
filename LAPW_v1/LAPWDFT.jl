@@ -52,6 +52,9 @@ include("XC_funcs/XC_c_pw.jl")
 include("polynm.jl")
 export polynm
 
+include("spline.jl")
+export spline!
+
 include("splint.jl")
 export splint
 
@@ -99,6 +102,10 @@ export rf_mt_c_to_f!
 
 include("rf_interp.jl")
 export rf_interp!
+
+include("genylmv.jl")
+include("genylmg.jl")
+export genylmg!, genylmv!
 
 end
 

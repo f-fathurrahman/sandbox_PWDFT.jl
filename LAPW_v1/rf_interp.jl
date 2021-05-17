@@ -25,17 +25,11 @@ function rf_interp!(ni, xi, fi, no, xo, fo)
         x = xo[l]
         i = 1
         # XXX: Need a better algoritm
-        while true
+        for i in 1:ni-1
             is_in_interval = (x >= xi[i]) & (x <= xi[i+1])
             if is_in_interval
                 dx = x - xi[i]
                 fo[l] = fi[i] + dx*( cf[1,i] + dx*( cf[2,i] + dx*cf[3,i] ) )
-                break
-            else
-                i = i + 1
-            end
-            if i == ni
-                error("Outside the interval")
                 break
             end
         end
