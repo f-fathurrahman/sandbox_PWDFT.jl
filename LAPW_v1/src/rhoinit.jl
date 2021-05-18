@@ -53,12 +53,7 @@ function rhoinit!(
     # compute the superposition of all the atomic density tails
     #   
     zfft = zeros(ComplexF64,Npoints)
-    ffg = zeros(Float64,Ng,Nspecies)
 
-    println("gmaxvr = ", gmaxvr)
-    println("CellVolume = ", CellVolume)
-
-    # ALLOCATE(ffg(ngvec), wr(nrspmax), fr(nrspmax))
     for isp in 1:Nspecies
 
         # local arrays inside the loop
@@ -74,33 +69,33 @@ function rhoinit!(
         println("nro = ", nro)
 
         # determine the weights for the radial integral
-        @views wsplint!( nro, rsp[isp][nr:nr+nro-1] ,wr[nr:nr+nro-1] )
+        # integrate for radial points outside the muffin-tin
+        idx = nr:nr+nro-1 # or better: idx = nr:nrs
+        println("idx = ", idx)
+        @views wsplint!( nro, rsp[isp][idx] ,wr[idx] )
         for ig in 1:Ng
             t1 = sqrt(G2[ig])
             # spherical bessel function j_0(x) times the atomic density tail
             if t1 > epslat
+                # G != 0 term
                 t2 = 1.0/t1
                 for ir in nr:nrs
                   x = t1*rsp[isp][ir]
                   fr[ir] = t2*sin(x)*rhosp[isp][ir]*rsp[isp][ir]
                 end
             else
+                # G=0 term
                 for ir in nr:nrs
                     fr[ir] = rhosp[isp][ir] * rsp[isp][ir]^2
                 end
             end
-            @views t1 = dot( wr[nr:nrs-1], fr[nr:nrs-1] )
+            @views t1 = dot( wr[nr:nrs], fr[nr:nrs] )
             # apply low-pass filter
             t1 = t1*exp(-4.0*G2[ig]/gmaxvr^2)
-            ffg[ig,isp] = (4*pi/CellVolume)*t1
-        end
-    end
-    
-    # XXX No need for sum over atoms here
-    for isp in 1:Nspecies
-        for ig in 1:Ng
+            ffg = (4*pi/CellVolume)*t1
+            #
             ip = pw.gvec.idx_g2r[ig]
-            zfft[ip] = zfft[ip] + ffg[ig,isp]*sfacg[ig,isp]  # do not use conj
+            zfft[ip] = zfft[ip] + ffg*sfacg[ig,isp]  # do not use conj
         end
     end
 
@@ -110,7 +105,6 @@ function rhoinit!(
         s = s + sum(rhosp[isp])
     end
     println("sum rhosp = ", s)
-    println("sum ffg = ", sum(ffg))
     println("sum zfft = ", sum(zfft))
 
     nrcmtmax = maximum(nrcmt)
@@ -125,6 +119,8 @@ function rhoinit!(
         nrc = nrcmt[isp]
         nrci = nrcmti[isp]
         irco = nrci + 1
+        println("nrci = ", nrci)
+        println("nrc  = ", nrc)
         zfmt[1:npcmt[isp]] .= 0.0
         for ig in 1:Ng
             ip = idx_g2r[ig]

@@ -54,16 +54,9 @@ function main()
     end
 
     init_zero!( mt_vars )
-
-    println("before nrsp = ", atsp_vars.nrsp)
-    println("atsp_vars.rsp = ", size(atsp_vars.rsp))
-
     checkmt!( atoms, mt_vars )
     genrmesh!( atoms, atsp_vars, mt_vars )
     init_packed_mtr!( mt_vars )
-
-    println("after nrsp    = ", atsp_vars.nrsp)
-    println("atsp_vars.rsp = ", size(atsp_vars.rsp))
 
     allatoms!(atsp_vars)
 
@@ -95,7 +88,6 @@ function main()
     sym_info = SymmetryInfo(atoms)
     println("sym_info.Nsyms = ", sym_info.Nsyms)
     println("sym_info.Nrots = ", sym_info.Nrots)
-    println("sym_info.irt   = ", sym_info.irt)
 
     pw = PWGrid( ecutwfc, atoms.LatVecs, dual=dual,
         kpoints=KPoints(atoms, [2,2,2], [0,0,0], sym_info.s)
