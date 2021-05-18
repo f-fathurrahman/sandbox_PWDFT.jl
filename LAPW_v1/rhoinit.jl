@@ -55,6 +55,9 @@ function rhoinit!(
     zfft = zeros(ComplexF64,Npoints)
     ffg = zeros(Float64,Ng,Nspecies)
 
+    println("gmaxvr = ", gmaxvr)
+    println("CellVolume = ", CellVolume)
+
     # ALLOCATE(ffg(ngvec), wr(nrspmax), fr(nrspmax))
     for isp in 1:Nspecies
 
@@ -92,9 +95,9 @@ function rhoinit!(
             ffg[ig,isp] = (4*pi/CellVolume)*t1
         end
     end
-        
-    for ia in 1:Natoms
-        isp = atm2species[ia]
+    
+    # XXX No need for sum over atoms here
+    for isp in 1:Nspecies
         for ig in 1:Ng
             ip = pw.gvec.idx_g2r[ig]
             zfft[ip] = zfft[ip] + ffg[ig,isp]*sfacg[ig,isp]  # do not use conj
@@ -149,11 +152,7 @@ function rhoinit!(
             end
         end
         z_to_rf_mt!( mt_vars, nrc, nrci, zfmt, rhomt[isp] )
-        # write(*,*)
-        # write(*,*) 'size(zfmt)  = ', size(zfmt)
-        # write(*,*) 'size(rhomt) = ', size(rhomt)
     end
-    #DEALLOCATE(jl,zfmt)
 
     # convert the density from a coarse to a fine radial mesh
     rf_mt_c_to_f!( atoms, atsp_vars, mt_vars, rhomt )
@@ -184,6 +183,7 @@ function rhoinit!(
     println("zfft before = ", sum(zfft))
     G_to_R!(pw, zfft)
     zfft[:] = zfft[:]*Npoints
+    println("zfft after = ", sum(zfft))
     for ip in 1:Npoints
         rhoir[ip] = real(zfft[ip]) + t1
         # make sure that the density is always positive
@@ -195,7 +195,6 @@ function rhoinit!(
     println("Npoints = ", Npoints)
 
     @printf("sum rhoir = %18.10e\n", sum(rhoir))
-    @printf("sum rhoir / 2 = %18.10e\n", sum(rhoir)/2)
     ss = 0.0
     for isp in 1:Nspecies
         ss = ss + sum(rhomt[isp])
