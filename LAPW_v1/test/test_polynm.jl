@@ -1,6 +1,6 @@
 using Printf
 
-include("polynm.jl")
+include("../src/polynm.jl")
 
 function my_sin(x)
     return sin(10*x)

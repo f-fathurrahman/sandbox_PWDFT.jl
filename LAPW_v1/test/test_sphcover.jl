@@ -1,6 +1,6 @@
 using Printf
 
-include("sphcover.jl")
+include("../src/sphcover.jl")
 
 function main()
     n = 100

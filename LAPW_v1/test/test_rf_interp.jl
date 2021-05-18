@@ -1,7 +1,7 @@
 using Printf
 
-include("rf_interp.jl")
-include("spline.jl")
+include("../src/rf_interp.jl")
+include("../src/spline.jl")
 
 function my_func(x)
     return exp(-0.1*x)*sin(x)
