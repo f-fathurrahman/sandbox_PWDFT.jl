@@ -92,10 +92,12 @@ include("sbessel.jl")
 export sbessel!
 
 include("z_to_rf_mt.jl")
-export z_to_rf_mt!
-
 include("z_to_rf_lm.jl")
-export z_to_rf_lm!
+export z_to_rf_lm!, z_to_rf_mt!
+
+include("r_to_zf_mt.jl")
+include("r_to_zf_lm.jl")
+export r_to_zf_lm!, r_to_zf_mt!
 
 include("rf_mt_c_to_f.jl")
 export rf_mt_c_to_f!
@@ -106,6 +108,12 @@ export rf_interp!
 include("genylmv.jl")
 include("genylmg.jl")
 export genylmg!, genylmv!
+
+include("zpotclmt.jl")
+export zpotclmt!
+
+include("potcoul.jl")
+export potcoul!
 
 end
 

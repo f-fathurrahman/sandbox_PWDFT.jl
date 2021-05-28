@@ -16,7 +16,7 @@ function r_to_zf_mt!(
         i = i + lmmaxi
     end
     for ir in nri+1:nr
-        @views r_to_zf_lm( lmaxo, rfmt[i:end], zfmt[i:end] )
+        @views r_to_zf_lm!( lmaxo, rfmt[i:end], zfmt[i:end] )
         i = i + lmmaxo
     end
     return

@@ -19,7 +19,7 @@ function r_to_zf_lm!(lmax, rflm, zflm)
             lm1 = lm1 + 1
             lm2 = lm2 - 1
             if mod(m,2) != 0
-                zflm[lm1] = c1*( rflmp[lm1] - im*rflm[lm2] )
+                zflm[lm1] = c1*( rflm[lm1] - im*rflm[lm2] )
             else
                 zflm[lm1] = c1*( rflm[lm1] + im*rflm[lm2] )
             end

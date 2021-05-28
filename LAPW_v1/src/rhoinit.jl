@@ -121,14 +121,16 @@ function rhoinit!(
         nrc = nrcmt[isp]
         nrci = nrcmti[isp]
         irco = nrci + 1
+        zfmt[1:npcmt[isp]] .= 0.0
         println("nrci = ", nrci)
         println("nrc  = ", nrc)
-        zfmt[1:npcmt[isp]] .= 0.0
         for ig in 1:Ng
             ip = idx_g2r[ig]
             for irc in 1:nrc
                 x = sqrt(G2[ig])*rcmt[isp][irc]
-                @views sbessel!(lmax, x, jl[:,irc])
+                for l in 0:lmax
+                    jl[l,irc] = sphericalbesselj(l, x)
+                end
             end
             z1 = 4*pi*zfft[ip] * conj(sfacg[ig,isp]) # XXX using conj
             lm = 0
@@ -149,6 +151,7 @@ function rhoinit!(
                 end
             end
         end
+        println("Finish loop over G")
         z_to_rf_mt!( mt_vars, nrc, nrci, zfmt, rhomt[ia] )
     end
 
