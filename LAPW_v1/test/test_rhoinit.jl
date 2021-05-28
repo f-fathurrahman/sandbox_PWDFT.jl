@@ -21,6 +21,23 @@ function create_Si_fcc()
 end
 
 
+function create_SiPt_fcc()
+    LatVecs = zeros(3,3)
+    A = 5.13
+    LatVecs[1,:] = [A, A, 0.0]
+    LatVecs[2,:] = [A, 0.0, A]
+    LatVecs[3,:] = [0.0, A, A]
+
+    atoms = Atoms(xyz_string_frac="""
+    2
+
+    Si  0.0  0.0  0.0
+    Pt  0.25 0.25 0.25
+    """, in_bohr=true, LatVecs=LatVecs)
+
+    return atoms
+end
+
 function create_Si_atom()
     LatVecs = zeros(3,3)
     A = 6.0
@@ -40,6 +57,7 @@ end
 function main()
 
     atoms = create_Si_fcc()
+    #atoms = create_SiPt_fcc()
     #atoms = create_Si_atom()
 
     Nspecies = atoms.Nspecies
@@ -94,7 +112,18 @@ function main()
     )
     println(pw)
 
-    rhoinit!( atoms, atsp_vars, mt_vars, pw )
+
+    # Initialize rhomt and rhoir
+    npmt = mt_vars.npmt
+    Npoints = prod(pw.Ns)
+    rhomt = Vector{Vector{Float64}}(undef,Natoms)
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        rhomt[ia] = zeros(Float64, npmt[isp])
+    end
+    rhoir = zeros(Float64,Npoints)
+    #
+    rhoinit!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
 end
 
 main()

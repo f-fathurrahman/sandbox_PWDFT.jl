@@ -1,8 +1,9 @@
 function rhoinit!(
     atoms, atsp_vars,
-    mt_vars,
-    pw
+    mt_vars, pw,
+    rhomt, rhoir
 )
+    # OUTPUT: rhomt and rhoir
 
     Natoms = atoms.Natoms
     Nspecies = atoms.Nspecies
@@ -33,21 +34,22 @@ function rhoinit!(
     npmt = mt_vars.npmt
     npcmt = mt_vars.npcmt
 
+    # FIXME: need to precompute this?
     sfacg = calc_strfact(atoms, pw)
+
+    # FIXME: need to precompute this?
     ylmg = zeros(ComplexF64, lmmaxo, Ng)
     genylmg!(mt_vars.lmaxo, pw.gvec.G, ylmg)
 
-    lmax = min(mt_vars.lmaxi,1)
+    lmax = min(mt_vars.lmaxi,1) # FIXME: Why using 1 instead of lmaxi
 
     epslat = 1e-6
   
     # zero the charge density arrays
-    rhomt = Vector{Vector{Float64}}(undef,Natoms)
     for ia in 1:Natoms
-        isp = atm2species[ia]
-        rhomt[ia] = zeros(Float64, npmt[isp])
+        fill!(rhomt[ia], 0.0)
     end
-    rhoir = zeros(Float64,Npoints)
+    fill!(rhoir, 0.0)
   
     #
     # compute the superposition of all the atomic density tails
@@ -105,7 +107,7 @@ function rhoinit!(
         s = s + sum(rhosp[isp])
     end
     println("sum rhosp = ", s)
-    println("sum zfft = ", sum(zfft))
+    println("sum zfft  = ", sum(zfft))
 
     nrcmtmax = maximum(nrcmt)
     npcmtmax = maximum(npcmt)
@@ -147,7 +149,7 @@ function rhoinit!(
                 end
             end
         end
-        z_to_rf_mt!( mt_vars, nrc, nrci, zfmt, rhomt[isp] )
+        z_to_rf_mt!( mt_vars, nrc, nrci, zfmt, rhomt[ia] )
     end
 
     # convert the density from a coarse to a fine radial mesh
@@ -165,12 +167,12 @@ function rhoinit!(
         i = 1
         for ir in 1:nri
             t2 = (t1 + rhosp[isp][ir])/y00
-            rhomt[isp][i] = rhomt[isp][i] + t2
+            rhomt[ia][i] = rhomt[ia][i] + t2
             i = i + lmmaxi
         end
         for ir in nri+1:nr
             t2 = (t1 + rhosp[isp][ir])/y00
-            rhomt[isp][i] = rhomt[isp][i] + t2
+            rhomt[ia][i] = rhomt[ia][i] + t2
             i = i + lmmaxo
         end
     end
@@ -192,8 +194,8 @@ function rhoinit!(
 
     @printf("sum rhoir = %18.10e\n", sum(rhoir))
     ss = 0.0
-    for isp in 1:Nspecies
-        ss = ss + sum(rhomt[isp])
+    for ia in 1:Natoms
+        ss = ss + sum(rhomt[ia])
     end
     @printf("sum rhomt = %18.10e\n", ss)
     @printf("Total = %18.10e\n", ss + sum(rhoir))
