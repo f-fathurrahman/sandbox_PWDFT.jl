@@ -7,8 +7,7 @@ include("create_atoms.jl")
 
 function main()
 
-    atoms = create_H2O()
-    #atoms = create_Si_fcc()
+    atoms = create_Si_fcc()
     #atoms = create_SiPt_fcc()
     #atoms = create_Si_atom()
 
@@ -42,17 +41,10 @@ function main()
     for ia in 1:Natoms
         isp = atm2species[ia]
         rsum = rsum + mt_vars.rmt[isp]
-        println("rmt[isp] = ", mt_vars.rmt[isp])
     end
     rsum = rsum/Natoms
     gkmax = rgkmax/rsum
 
-    println("rsum = ", rsum)
-
-    if gmaxvr <= 2*gkmax
-        println("Using gmaxvr = 2*gkmax")
-        gmaxvr = 2*gkmax
-    end
     println("gmaxvr = ", gmaxvr)
     println("gkmax = ", gkmax)
 
@@ -66,11 +58,10 @@ function main()
     println("sym_info.Nsyms = ", sym_info.Nsyms)
     println("sym_info.Nrots = ", sym_info.Nrots)
 
-    pw = PWGrid( ecutwfc, atoms.LatVecs, dual=dual, Ns_=(32,32,32),
+    pw = PWGrid( ecutwfc, atoms.LatVecs, dual=dual,
         kpoints=KPoints(atoms, [2,2,2], [0,0,0], sym_info.s)
     )
     println(pw)
-
 
     # Initialize rhomt and rhoir
     npmt = mt_vars.npmt
@@ -83,6 +74,8 @@ function main()
     rhoir = zeros(Float64,Npoints)
     #
     rhoinit!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
+
+    potcoul!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
 end
 
 main()
