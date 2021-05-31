@@ -65,3 +65,19 @@ function create_Si_atom()
 
     return atoms
 end
+
+function create_Pt_atom()
+    LatVecs = zeros(3,3)
+    A = 6.0
+    LatVecs[1,:] = [A, 0.0, 0.0]
+    LatVecs[2,:] = [0.0, A, 0.0]
+    LatVecs[3,:] = [0.0, 0.0, A]
+
+    atoms = Atoms(xyz_string_frac="""
+    1
+
+    Pt  0.0  0.0  0.0
+    """, in_bohr=true, LatVecs=LatVecs)
+
+    return atoms
+end
