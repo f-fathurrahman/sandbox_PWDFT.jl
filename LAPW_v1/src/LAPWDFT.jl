@@ -45,6 +45,10 @@ export radnucl
 include("potnucl.jl")
 export potnucl!
 
+include("Libxc_old.jl")
+include("XCCalculator.jl")
+include("LDA_PW92.jl")
+
 include("XC_funcs/XC_x_slater.jl")
 include("XC_funcs/XC_c_vwn.jl")
 include("XC_funcs/XC_c_pw.jl")

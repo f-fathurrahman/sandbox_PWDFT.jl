@@ -3,14 +3,18 @@ using LinearAlgebra
 using PWDFT
 using LAPWDFT
 
+import PyPlot
+const plt = PyPlot
+
 include("create_atoms.jl")
 
 function main()
 
-    atoms = create_H2O()
+    #atoms = create_H2O()
     #atoms = create_Si_fcc()
-    #atoms = create_SiPt_fcc()
+    atoms = create_SiPt_fcc()
     #atoms = create_Si_atom()
+    #atoms = create_Pt_atom()
 
     Nspecies = atoms.Nspecies
     spsymb = atoms.SpeciesSymbols
@@ -66,7 +70,7 @@ function main()
     println("sym_info.Nsyms = ", sym_info.Nsyms)
     println("sym_info.Nrots = ", sym_info.Nrots)
 
-    pw = PWGrid( ecutwfc, atoms.LatVecs, dual=dual, Ns_=(32,32,32),
+    pw = PWGrid( ecutwfc, atoms.LatVecs, dual=dual,
         kpoints=KPoints(atoms, [2,2,2], [0,0,0], sym_info.s)
     )
     println(pw)
@@ -83,6 +87,16 @@ function main()
     rhoir = zeros(Float64,Npoints)
     #
     rhoinit!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
+
+    lmmaxo = mt_vars.lmmaxo
+    lmmaxi = mt_vars.lmmaxi
+    println("lmmaxo = ", lmmaxo)
+    rho = rhomt[1][1:4:end]
+    plt.clf()
+    plt.plot(rho)
+    plt.savefig("IMG_rhomt_1.pdf")
+
+    #return rhomt, rhoir
 end
 
 main()

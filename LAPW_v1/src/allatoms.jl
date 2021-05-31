@@ -1,7 +1,8 @@
 function allatoms!( atsp_vars::AtomicSpeciesVars )
 
-    xctsp = atsp_vars.xctsp
+    #xctsp = atsp_vars.xctsp
     xcgrad = false  # hardcoded for now
+    xc_calc = LibxcXCCalculator()
 
     spzn = atsp_vars.spzn
     nstsp = atsp_vars.nstsp
@@ -34,12 +35,13 @@ function allatoms!( atsp_vars::AtomicSpeciesVars )
     for isp in 1:Nspecies
         solve_atom!(
             solsc, ptnucl, spzn[isp], nstsp[isp], nsp[isp], lsp[isp], ksp[isp],
-            occsp[isp], xctsp, xcgrad, nrsp[isp], rsp[isp], evalsp[isp], rhosp[isp],
+            occsp[isp], xc_calc, xcgrad, nrsp[isp], rsp[isp], evalsp[isp], rhosp[isp],
             vrsp[isp], rwf[isp]
         )
         for ist in 1:nstsp[isp]
             @printf("%3d %18.10f\n", ist, evalsp[isp][ist])
         end
+        @printf("sum(rhosp) = %18.10e\n", sum(rhosp[isp]))
     end
     return
 end

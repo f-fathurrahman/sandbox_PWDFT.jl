@@ -18,21 +18,9 @@
 #            (out,real(nr,2,nst))
 function solve_atom!(
     sol, ptnucl, zn, nst, n, l, k, occ,
-    xctype, xcgrad, nr, r, evals, rho, vr, rwf
+    xc_calc, xcgrad, nr, r, evals, rho, vr, rwf
 )
 
-# real(8), intent(in) :: sol
-# logical, intent(in) :: ptnucl
-# real(8), intent(in) :: zn
-# integer, intent(in) :: nst
-# integer, intent(in) :: n(nst),l(nst),k(nst)
-# real(8), intent(inout) :: occ(nst)
-# integer, intent(in) :: xctype(3),xcgrad
-# integer, intent(in) :: nr
-# real(8), intent(in) :: r(nr)
-# real(8), intent(out) :: eval(nst)
-# real(8), intent(out) :: rho(nr),vr(nr)
-# real(8), intent(out) :: rwf(nr,2,nst)
   
     #local variables
     maxscl = 200
@@ -146,17 +134,20 @@ function solve_atom!(
         else
             # LDA functional
             #call xcifc(xctype,n=nr,rho=rho,ex=ex,ec=ec,vx=vx,vc=vc)
-            for ir in 1:nr
-                if rho[ir] <= 10e-12
-                    #println("small rho = ", rho[ir])
-                    ex[ir] = vx[ir] = 0.0
-                    ec[ir] = vc[ir] = 0.0
-                else
-                    ex[ir], vx[ir] = XC_x_slater( rho[ir] )
-                    #ec[ir], vc[ir] = XC_c_vwn( rho[ir] )
-                    ec[ir], vc[ir] = XC_c_pw( rho[ir] )
-                end
-            end
+            #for ir in 1:nr
+            #    if rho[ir] <= 10e-12
+            #        #@printf("small rho = %18.10e\n", rho[ir])
+            #        ex[ir] = 0.0
+            #        vx[ir] = 0.0
+            #        ec[ir] = 0.0
+            #        vc[ir] = 0.0
+            #    else
+            #        ex[ir], vx[ir] = XC_x_slater( rho[ir] )
+            #        #ec[ir], vc[ir] = XC_c_vwn( rho[ir] )
+            #        ec[ir], vc[ir] = XC_c_pw( rho[ir] )
+            #    end
+            #end
+            calc_Vxc_PW92!( xc_calc, rho, vx, vc )
         end
         
         #println("sum(vx) = ", sum(vx))
