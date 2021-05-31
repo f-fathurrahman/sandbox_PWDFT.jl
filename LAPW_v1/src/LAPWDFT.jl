@@ -111,7 +111,8 @@ export rf_interp!
 
 include("genylmv.jl")
 include("genylmg.jl")
-export genylmg!, genylmv!
+include("genrlmv.jl")
+export genylmg!, genylmv!, genrlmv!
 
 include("zpotclmt.jl")
 export zpotclmt!
