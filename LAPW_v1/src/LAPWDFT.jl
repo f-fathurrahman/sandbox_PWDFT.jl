@@ -114,6 +114,13 @@ include("genylmg.jl")
 include("genrlmv.jl")
 export genylmg!, genylmv!, genrlmv!
 
+include("sphcover.jl")
+include("sctovec.jl")
+export sphcover!, sctovec!
+
+include("SphericalHarmonicTransform.jl")
+export SphericalHarmonicTransform
+
 include("zpotclmt.jl")
 export zpotclmt!
 
