@@ -1,21 +1,8 @@
 function rf_mt_c_to_f!(
     atoms, atsp_vars, mt_vars, rfmt
 )
-    # USE m_atoms, ONLY: natmtot, rsp, idxis
-    # USE m_muffin_tins, ONLY: npmtmax, nrcmtmax, nrmtmax, npmt, rcmt, npcmti, nrcmt, nrcmti, &
-    #                  npmti, lmmaxo, lmmaxi, nrmti, nrmt, lradstp, rlmt
-    # IMPLICIT NONE 
-    # ! arguments
-    # REAL(8), intent(inout) :: rfmt(npmtmax,natmtot)
-    # ! local variables
-    # INTEGER :: is,ias,lm
-    # INTEGER :: nr,nri,nro
-    # INTEGER :: iro,ir,npi,i
-    # INTEGER :: nrc,nrci,nrco
-    # INTEGER :: irco,irc,npci
-    # ! ALLOCATABLE arrays
-    # REAL(8), ALLOCATABLE :: fi(:),fo(:),rfmt1(:)
-
+    
+    # No need to interpolate if not using coarse/fine radial grid
     if mt_vars.lradstp == 1
         return
     end
@@ -61,11 +48,11 @@ function rf_mt_c_to_f!(
         for lm in 1:lmmaxi
             i = lm
             for irc in 1:nrci
-                fi[irc] = rfmt[isp][i]
+                fi[irc] = rfmt[ia][i]
                 i = i + lmmaxi
             end
             for irc in irco:nrc
-              fi[irc] = rfmt[isp][i]
+              fi[irc] = rfmt[ia][i]
               i = i + lmmaxo
             end
             @views rf_interp!(
@@ -86,16 +73,11 @@ function rf_mt_c_to_f!(
         for lm in lmmaxi+1:lmmaxo
             i = npci + lm
             for irc in irco:nrc
-                fi[irc] = rfmt[isp][i]
+                fi[irc] = rfmt[ia][i]
                 i = i + lmmaxo
             end
             idxc = irco:irco+nrco-1
             idx = iro:iro+nro-1
-            #println("idxc = ", idxc)
-            #println("idx  = ", idx)
-            #@printf("irco = %d, nrco = %d\n", irco, nrco)
-            #@printf("iro  = %d, nro = %d\n", iro, nro)
-            #exit()
             @views rf_interp!(
                 nrco, rcmt[isp][idxc], fi[idxc],
                 nro, rsp[isp][idx], fo[idx]
@@ -108,7 +90,7 @@ function rf_mt_c_to_f!(
         end 
         # CALL dcopy(npmt(is), rfmt1,1, rfmt(:,ias), 1)
         for ip in 1:npmt[isp]
-            rfmt[isp][ip] = rfmt1[ip]
+            rfmt[ia][ip] = rfmt1[ip]
         end
     end 
     return

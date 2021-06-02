@@ -6,10 +6,6 @@
 #          (out,real((lmax+1)**2)))
 function z_to_rf_lm!(lmax::Int64, zflm, rflm)
 
-    # INTEGER, INTENT(in) :: lmax
-    # COMPLEX(8), INTENT(in) :: zflm(*)
-    # REAL(8), INTENT(out) :: rflm(*)
-
     c1 = 0.7071067811865475244  # 1/sqrt(2)
     lm1 = 0
     for l in 0:lmax
