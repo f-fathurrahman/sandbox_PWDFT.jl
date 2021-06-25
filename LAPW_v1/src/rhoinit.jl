@@ -21,6 +21,16 @@ function rhoinit!(
     rsp = atsp_vars.rsp
     rhosp = atsp_vars.rhosp 
 
+    # For debugging
+    # println("Some rhosp: ")
+    #for isp in 1:Nspecies
+    #    println("rhosp for isp = ", isp)
+    #    for ir in 1:10
+    #        @printf("%4d %18.10e\n", ir, rhosp[isp][ir])
+    #    end
+    #end
+    #exit()
+
     lmmaxi = mt_vars.lmmaxi
     lmmaxo = mt_vars.lmmaxo
     #
@@ -66,15 +76,11 @@ function rhoinit!(
         nrs = nrsp[isp]
         nro = nrs - nr + 1
 
-        println("nr  = ", nr)
-        println("nrs = ", nrs)
-        println("nro = ", nro)
-
         # determine the weights for the radial integral
         # integrate for radial points outside the muffin-tin
         idx = nr:nr+nro-1 # or better: idx = nr:nrs
-        println("idx = ", idx)
         @views wsplint!( nro, rsp[isp][idx] ,wr[idx] )
+        #
         for ig in 1:Ng
             t1 = sqrt(G2[ig])
             # spherical bessel function j_0(x) times the atomic density tail
@@ -100,6 +106,13 @@ function rhoinit!(
             zfft[ip] = zfft[ip] + ffg*sfacg[ig,isp]  # do not use conj
         end
     end
+
+    #println("Some zfft")
+    #for ig in 1:10
+    #    ip = pw.gvec.idx_g2r[ig]
+    #    @printf("%8d %18.10e %18.10e\n", ip, real(zfft[ip]), imag(zfft[ip]))
+    #end
+    #exit()
 
     println("sum sfacg = ", sum(sfacg))
     s = 0.0
@@ -152,11 +165,40 @@ function rhoinit!(
             end
         end
         println("Finish loop over G")
+
+        println("Some zfmt")
+        for i in 1:10
+            @printf("%8d %18.10e %18.10e\n", i, real(zfmt[i]), imag(zfmt[i]))
+        end
+
         z_to_rf_mt!( mt_vars, nrc, nrci, zfmt, rhomt[ia] )
+
+        println("Some rhomt after z_to_rf_mt")
+        println("inner")
+        for i in 1:10
+            @printf("%8d %18.10e\n", i, rhomt[ia][i])
+        end
+        println("outer")
+        for i in nrmti[isp]+1:nrmti[isp]+lmmaxo
+            @printf("%8d %18.10e\n", i, rhomt[ia][i])
+        end
+
     end
 
     # convert the density from a coarse to a fine radial mesh
     rf_mt_c_to_f!( atoms, atsp_vars, mt_vars, rhomt )
+
+    isp = 1
+    ia = 1
+    println("Some rhomt after rf_mt_c_to_f")
+    println("inner")
+    for i in 1:10
+        @printf("%8d %18.10e\n", i, rhomt[ia][i])
+    end
+    println("outer")
+    for i in nrmti[isp]+1:nrmti[isp]+lmmaxo
+        @printf("%8d %18.10e\n", i, rhomt[ia][i])
+    end
 
     # add the atomic charge density and the excess charge in each muffin-tin
     chgexs = 0.0  # FIXME
@@ -179,6 +221,20 @@ function rhoinit!(
             i = i + lmmaxo
         end
     end
+
+    isp = 1
+    ia = 1
+    println("Some rhomt after adding rhosp")
+    println("inner")
+    for i in 1:10
+        @printf("%8d %18.10e\n", i, rhomt[ia][i])
+    end
+    println("outer")
+    for i in nrmti[isp]+1:nrmti[isp]+lmmaxo
+        @printf("%8d %18.10e\n", i, rhomt[ia][i])
+    end
+
+    exit()
 
     # interstitial density determined from the atomic tails and excess charge
     println("zfft before = ", sum(zfft))

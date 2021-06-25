@@ -95,10 +95,11 @@ function main()
     npmti = mt_vars.npmti
     rlmt = mt_vars.rlmt
 
-    isp = 1
-    rho_inner = reshape( rhomt[isp][1:npmti[isp]], (lmmaxi,nrmti[isp]) )
+    ia = 1
+    isp = atm2species[ia]
+    rho_inner = reshape( rhomt[ia][1:npmti[isp]], (lmmaxi,nrmti[isp]) )
     idx_outer = npmti[isp]+1:npmt[isp]
-    rho_outer = reshape( rhomt[isp][idx_outer], (lmmaxo,nrmt[isp]-nrmti[isp]) )
+    rho_outer = reshape( rhomt[ia][idx_outer], (lmmaxo,nrmt[isp]-nrmti[isp]) )
 
     il = 1 # power of 1
     for lm in 1:lmmaxi

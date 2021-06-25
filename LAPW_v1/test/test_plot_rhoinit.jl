@@ -75,7 +75,7 @@ end
 
 
 
-#function main()
+function main()
 
     atoms = create_Si_atom()
 
@@ -218,11 +218,44 @@ end
         end
         #println("Before z_to_rf_mt")
         #println(rhomt[ia][1:4])
-        #z_to_rf_mt!( mt_vars, nrc, nrci, zfmt, rhomt[ia] )
+        z_to_rf_mt!( mt_vars, nrc, nrci, zfmt, rhomt[ia] )
     end
 
-    println("Pass here")
+    ia = 1
+    isp = atm2species[ia]
 
-#end
+    npmti = mt_vars.npmti
+    nrmti = mt_vars.nrmti
+    idx_outer = npmti[isp]+1:npmt[isp]
+
+    rho_inner = reshape( rhomt[ia][1:npmti[isp]], (lmmaxi,nrmti[isp]) )
+    rho_outer = reshape( rhomt[ia][idx_outer], (lmmaxo,nrmt[isp]-nrmti[isp]) )
+
+    plt.clf()
+    plt.plot(rho_inner[1,:], marker="o")
+    plt.grid(true)
+    plt.savefig("IMG_rho_inner_before.pdf")
+
+    plt.clf()
+    plt.plot(rho_outer[1,:], marker="o")
+    plt.grid(true)
+    plt.savefig("IMG_rho_outer_before.pdf")
+
+    # convert the density from a coarse to a fine radial mesh
+    rf_mt_c_to_f!( atoms, atsp_vars, mt_vars, rhomt )
+    rho_inner = reshape( rhomt[ia][1:npmti[isp]], (lmmaxi,nrmti[isp]) )
+    rho_outer = reshape( rhomt[ia][idx_outer], (lmmaxo,nrmt[isp]-nrmti[isp]) )
+
+    plt.clf()
+    plt.plot(rho_inner[1,:], marker="o")
+    plt.grid(true)
+    plt.savefig("IMG_rho_inner_after.pdf")
+
+    plt.clf()
+    plt.plot(rho_outer[1,:], marker="o")
+    plt.grid(true)
+    plt.savefig("IMG_rho_outer_after.pdf")
+
+end
 
 main()

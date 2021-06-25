@@ -12,8 +12,8 @@ function main()
 
     #atoms = create_H2O()
     #atoms = create_Si_fcc()
-    atoms = create_SiPt_fcc()
-    #atoms = create_Si_atom()
+    #atoms = create_SiPt_fcc()
+    atoms = create_Si_atom()
     #atoms = create_Pt_atom()
 
     Nspecies = atoms.Nspecies
@@ -87,16 +87,6 @@ function main()
     rhoir = zeros(Float64,Npoints)
     #
     rhoinit!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
-
-    lmmaxo = mt_vars.lmmaxo
-    lmmaxi = mt_vars.lmmaxi
-    println("lmmaxo = ", lmmaxo)
-    rho = rhomt[1][1:4:end]
-    plt.clf()
-    plt.plot(rho)
-    plt.savefig("IMG_rhomt_1.pdf")
-
-    #return rhomt, rhoir
 end
 
 main()
