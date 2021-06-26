@@ -87,7 +87,7 @@ function PsPot_UPF( upf_file::String )
     @assert(length(spl_str) == Nr)
 
     r = zeros(Float64, Nr)
-    for i = 1:Nr
+    for i in 1:Nr
         r[i] = parse(Float64, spl_str[i])
     end
 
@@ -137,17 +137,18 @@ function PsPot_UPF( upf_file::String )
     #
     # Nonlocal projector
     #
-    Nproj = parse(Int64,LightXML.attributes_dict(pp_header[1])["number_of_proj"])
     pp_nonlocal = LightXML.get_elements_by_tagname(xroot, "PP_NONLOCAL")
+    Nproj = parse(Int64,LightXML.attributes_dict(pp_header[1])["number_of_proj"])
     proj_func = zeros(Float64,Nr,Nproj)
     proj_l = zeros(Int64,Nproj)
     rcut_l = zeros(Float64,Nproj)
-    kbeta = zeros(Int64,Nproj)
+    kbeta = zeros(Int64,Nproj) # cutoff radius index (of radial mesh array)
     for iprj in 1:Nproj
         pp_beta = LightXML.get_elements_by_tagname(pp_nonlocal[1], "PP_BETA."*string(iprj))
         #
         proj_l[iprj] = parse( Int64, LightXML.attributes_dict(pp_beta[1])["angular_momentum"] )
         kbeta[iprj] = parse( Int64, LightXML.attributes_dict(pp_beta[1])["cutoff_radius_index"] )
+        # we get rcut by accessing the kbeta[iprj]-th element of radial mesh
         rcut_l[iprj] = r[kbeta[iprj]]
         #
         pp_beta_str = LightXML.content(pp_beta[1])
@@ -157,6 +158,7 @@ function PsPot_UPF( upf_file::String )
             proj_func[i,iprj] = parse(Float64,spl_str[i])*0.5 # Convert to Hartree
         end
     end
+    # Used in USPP, kkbeta: for obtaining maximum rcut
     if length(kbeta) > 0
         kkbeta = maximum(kbeta)
     else

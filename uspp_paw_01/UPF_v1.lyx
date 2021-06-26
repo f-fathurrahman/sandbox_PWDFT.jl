@@ -1,0 +1,592 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+\usepackage{babel}
+\end_preamble
+\use_default_options false
+\maintain_unincluded_children false
+\language american
+\language_package default
+\inputencoding iso8859-15
+\fontencoding T1
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family sfdefault
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 0
+\use_package esint 1
+\use_package mathdots 0
+\use_package mathtools 0
+\use_package mhchem 0
+\use_package stackrel 0
+\use_package stmaryrd 0
+\use_package undertilde 0
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 3cm
+\topmargin 3cm
+\rightmargin 3cm
+\bottommargin 3cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip smallskip
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+UPF notes
+\end_layout
+
+\begin_layout Standard
+Use UPF-v2.
+ Older formats need to be converted to UPF-v2.
+\end_layout
+
+\begin_layout Standard
+LightXML package can be used to parse the data.
+\end_layout
+
+\begin_layout Standard
+In the following code we parse the file and get the root element.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+import LightXML
+\end_layout
+
+\begin_layout Plain Layout
+
+xdoc = LightXML.parse_file(upf_file)
+\end_layout
+
+\begin_layout Plain Layout
+
+xroot = LightXML.root(xdoc)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Header element can be obtained from xroot:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+pp_header = LightXML.get_elements_by_tagname(xroot, 
+\begin_inset Quotes eld
+\end_inset
+
+PP_HEADER
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The header contains several attributes that can be used later.
+ `pp_header` is returned as an array, probably to handle the possibility
+ that we have two tags named `PP_HEADER`.
+ We usually only need the first element.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+atsymb = LightXML.attributes_dict(pp_header[1])[
+\begin_inset Quotes eld
+\end_inset
+
+element
+\begin_inset Quotes erd
+\end_inset
+
+]
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The attributes are of type String.
+ They should be parsed or converted to integer or float accordingly, for
+ example:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+zval = Int64(parse(Float64,LightXML.attributes_dict(pp_header[1])
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The following information can be read from `pp_header`: atomic symbol, atomic
+ valence, maximum angular momentum, number of radial points, core correction
+ flag, ultrasoft flag and PAW flag.
+\end_layout
+
+\begin_layout Standard
+Next information that we can get is radial mesh information.
+ We can get this by accessing `PP_MESH` tag from `xroot`:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+pp_mesh = LightXML.get_elements_by_tagname(xroot, "PP_MESH")
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+`PP_MESH` has two important subelements that we need to access: `PP_R` and
+ `PP_RAB`:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+pp_r = LightXML.get_elements_by_tagname(pp_mesh[1], "PP_R")
+\end_layout
+
+\begin_layout Plain Layout
+
+pp_rab = LightXML.get_elements_by_tagname(pp_mesh[1], "PP_RAB")
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The contents of `pp_r` and `pp_rab` are strings that should be parsed and
+ converted to radial mesh array and radial mesh integration factor, respectively.
+ The following snippet can be used:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+pp_r_str = LightXML.content(pp_r[1]) # extract the content (as string)
+\end_layout
+
+\begin_layout Plain Layout
+
+pp_r_str = replace(pp_r_str, "
+\backslash
+n" => " ")
+\end_layout
+
+\begin_layout Plain Layout
+
+spl_str = split(pp_r_str, keepempty=false)
+\end_layout
+
+\begin_layout Plain Layout
+
+@assert(length(spl_str) == Nr)
+\end_layout
+
+\begin_layout Plain Layout
+
+r = zeros(Float64, Nr) # radial mesh
+\end_layout
+
+\begin_layout Plain Layout
+
+for i in 1:Nr
+\end_layout
+
+\begin_layout Plain Layout
+
+    r[i] = parse(Float64, spl_str[i])
+\end_layout
+
+\begin_layout Plain Layout
+
+end
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Local pseudopotential and atomic density (for NLCC, if applies) also can
+ be handled in the same way as radial mesh.
+ They can be accessed via tagname PP_LOCAL and PP_NLCC from `xroot`.
+\end_layout
+
+\begin_layout Standard
+
+\emph on
+Note that because QE uses rydberg unit, we need to multiply the potential
+ by 0.5 to get the potential in hartree unit.
+\end_layout
+
+\begin_layout Standard
+Next information that we need to access is nonlocal pseudopotential info.
+ We can access this by using `PP_NONLOCAL` tag:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+pp_nonlocal = LightXML.get_elements_by_tagname(xroot, "PP_NONLOCAL")
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The projectors can be accessed by subelement `PP_BETA.xxx` where `xxx` is
+ index of projector.
+ Number of projectors can be obtained in the attribute of `pp_header`:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+Nproj = parse(Int64,LightXML.attributes_dict(pp_header[1])["number_of_proj"])
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We need to parse the projectors, PP_BETA.xxx by looping over Nproj.
+ Other than the projector functions themselves, we also need information
+ about angular momentum (quantum number 
+\begin_inset Formula $l$
+\end_inset
+
+) and cutoff radius of the projector.
+ Beyond the cutoff radius, the projectors are essentially zero.
+ We also need to convert the projectors to hartree by multiplying them with
+ 0.5.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+pp_nonlocal = LightXML.get_elements_by_tagname(xroot, "PP_NONLOCAL")
+\end_layout
+
+\begin_layout Plain Layout
+
+Nproj = parse(Int64,LightXML.attributes_dict(pp_header[1])["number_of_proj"])
+\end_layout
+
+\begin_layout Plain Layout
+
+proj_func = zeros(Float64,Nr,Nproj)
+\end_layout
+
+\begin_layout Plain Layout
+
+proj_l = zeros(Int64,Nproj)
+\end_layout
+
+\begin_layout Plain Layout
+
+rcut_l = zeros(Float64,Nproj)
+\end_layout
+
+\begin_layout Plain Layout
+
+kbeta = zeros(Int64,Nproj) # cutoff radius index (of radial mesh array)
+\end_layout
+
+\begin_layout Plain Layout
+
+for iprj in 1:Nproj
+\end_layout
+
+\begin_layout Plain Layout
+
+    pp_beta = LightXML.get_elements_by_tagname(pp_nonlocal[1], "PP_BETA."*string(i
+prj))
+\end_layout
+
+\begin_layout Plain Layout
+
+    #
+\end_layout
+
+\begin_layout Plain Layout
+
+    proj_l[iprj] = parse( Int64, LightXML.attributes_dict(pp_beta[1])["angular_mo
+mentum"] )
+\end_layout
+
+\begin_layout Plain Layout
+
+    kbeta[iprj] = parse( Int64, LightXML.attributes_dict(pp_beta[1])["cutoff_radi
+us_index"] )
+\end_layout
+
+\begin_layout Plain Layout
+
+    # we get rcut by accessing the kbeta[iprj]-th element of radial mesh
+\end_layout
+
+\begin_layout Plain Layout
+
+    rcut_l[iprj] = r[kbeta[iprj]]
+\end_layout
+
+\begin_layout Plain Layout
+
+    #
+\end_layout
+
+\begin_layout Plain Layout
+
+    pp_beta_str = LightXML.content(pp_beta[1])
+\end_layout
+
+\begin_layout Plain Layout
+
+    pp_beta_str = replace(pp_beta_str, "
+\backslash
+n" => " ")
+\end_layout
+
+\begin_layout Plain Layout
+
+    spl_str = split(pp_beta_str, keepempty=false)
+\end_layout
+
+\begin_layout Plain Layout
+
+    for i in 1:Nr
+\end_layout
+
+\begin_layout Plain Layout
+
+        proj_func[i,iprj] = parse(Float64,spl_str[i])*0.5 # Convert to Hartree
+\end_layout
+
+\begin_layout Plain Layout
+
+    end
+\end_layout
+
+\begin_layout Plain Layout
+
+end
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Besides the projectors, we also need to know coefficients that describe
+ coupling between different projectors.
+ In QE, this is also named `dion` matrix.
+ We can access them by using tag `PP_DIJ` under `PP_NONLOCAL`.
+ The documentation of UPF did not specify its unit.
+ I found out that we need to convert them by 2 to match the coefficients
+ given in the analytic form of GTH pseudopotentials.
+ TODO: found out how these coefficients are generated or calculated.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+Dion_temp = zeros(Nproj*Nproj)
+\end_layout
+
+\begin_layout Plain Layout
+
+pp_dion = LightXML.get_elements_by_tagname(pp_nonlocal[1], "PP_DIJ")
+\end_layout
+
+\begin_layout Plain Layout
+
+pp_dion_str = LightXML.content(pp_dion[1])
+\end_layout
+
+\begin_layout Plain Layout
+
+pp_dion_str = replace(pp_dion_str, "
+\backslash
+n" => " ")
+\end_layout
+
+\begin_layout Plain Layout
+
+spl_str = split(pp_dion_str, keepempty=false)
+\end_layout
+
+\begin_layout Plain Layout
+
+for i in 1:Nproj*Nproj
+\end_layout
+
+\begin_layout Plain Layout
+
+    Dion_temp[i] = parse(Float64,spl_str[i])
+\end_layout
+
+\begin_layout Plain Layout
+
+end
+\end_layout
+
+\begin_layout Plain Layout
+
+Dion = reshape(Dion_temp,(Nproj,Nproj))*2  # convert to Hartree
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\end_body
+\end_document
