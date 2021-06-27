@@ -569,6 +569,65 @@ Dion = reshape(Dion_temp,(Nproj,Nproj))*2  # convert to Hartree
 \end_layout
 
 \begin_layout Standard
+For GTH pseudopotential, Dion has blocked structure (multiple projectors
+ per angular momentum channel).
+ It also has blocked structure for USPP and PAW.
+ For ONCV pseudopotential, it is diagonal.
+\end_layout
+
+\begin_layout Standard
+ONCV pseudopotential is described in
+\end_layout
+
+\begin_layout Standard
+PhysRevB.88.085117: Optimized norm-conserving Vanderbilt pseudopotentials
+\end_layout
+
+\begin_layout Standard
+Projector:
+\begin_inset Formula 
+\[
+\left|\chi_{i}\right\rangle =\left(\varepsilon_{i}-T-V_{\mathrm{loc}}\right)\left|\varphi_{i}\right\rangle 
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For single projector 
+\begin_inset Formula $\left|\chi_{1}\right\rangle $
+\end_inset
+
+ the nonlocal potential operator is
+\begin_inset Formula 
+\[
+V_{\mathrm{NL}}=\frac{\left|\chi_{1}\right\rangle \left\langle \chi_{1}\right|}{\left\langle \varphi_{1}\left|\right.\chi_{1}\right\rangle }
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Nonlocal operator:
+\begin_inset Formula 
+\[
+V_{\mathrm{NL}}=\sum_{i}\left|\tilde{\chi}_{i}\right\rangle \frac{1}{\tilde{b}_{i}}\left\langle \tilde{\chi}_{i}\right|
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+s
+\end_layout
+
+\begin_layout Standard
 s
 \end_layout
 
