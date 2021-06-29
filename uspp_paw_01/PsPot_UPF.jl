@@ -18,6 +18,10 @@ struct PsPot_UPF
     rcut_l::Array{Float64,1}
     proj_func::Array{Float64,2}
     Dion::Array{Float64,2}
+    # From PsPot_GTH
+    h::Array{Float64,3}   # l,1:3,1:3
+    lmax::Int64           # l = 0, 1, 2, 3 (s, p, d, f)
+    Nproj_l::Array{Int64,1}  # originally 0:3
     # Augmentation stuffs
     nqf::Int64
     nqlc::Int64
@@ -178,6 +182,22 @@ function PsPot_UPF( upf_file::String )
     end
     Dion = reshape(Dion_temp,(Nproj,Nproj))*2  # convert to Hartree
 
+    # For compatibility with PsPot_GTH
+    Nproj_l = zeros(Int64,4)
+    for l in 0:lmax
+        Nproj_l[l+1] = count(proj_l .== l)
+    end
+
+    h = zeros(Float64,4,3,3)
+    istart = 0
+    for l in 0:lmax
+        idx = (istart+1):(istart+Nproj_l[l+1])
+        istart = istart+Nproj_l[l+1]
+        display(Dion[idx,idx]); println()
+        idx2 = 1:Nproj_l[l+1] 
+        h[l+1,idx2,idx2] = Dion[idx,idx]
+    end
+
     #
     # augmentation stuffs:
     #
@@ -217,6 +237,7 @@ function PsPot_UPF( upf_file::String )
     return PsPot_UPF(upf_file, atsymb, zval,
         is_nlcc, is_ultrasoft, is_paw,
         Nr, r, rab, V_local, Nproj, proj_l, rcut_l, proj_func, Dion,
+        h, lmax, Nproj_l,
         nqf, nqlc, qqq, q_with_l, qfuncl,
         Nwfc, chi,
         rhoatom
