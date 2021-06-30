@@ -17,6 +17,7 @@ function test_GBRV_LDA()
         if !psp.is_nlcc
             @printf("%s does not have NLCC\n", f)
         end
+        println("proj_l = ", psp.proj_l)
         println("Dion = ")
         display(psp.Dion); println()
     end
@@ -36,6 +37,7 @@ function test_GBRV_PBE()
         if !psp.is_nlcc
             @printf("%s does not have NLCC\n", f)
         end
+        println("proj_l = ", psp.proj_l)
         println("Dion = ")
         display(psp.Dion); println()
     end
