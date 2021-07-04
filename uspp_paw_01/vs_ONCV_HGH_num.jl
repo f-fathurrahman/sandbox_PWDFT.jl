@@ -15,9 +15,16 @@ function main()
     #    "/home/efefer/pseudo/HGH/Pt.pbe-hgh.UPF"
     #]
 
+    #fnames = [
+    #    "/home/efefer/pseudo/ONCV_PBE/Ni_ONCV_PBE-1.0.upf",
+    #    "/home/efefer/pseudo/HGH/Ni.pbe-sp-hgh.UPF"
+    #]
+
     fnames = [
-        "/home/efefer/pseudo/ONCV_PBE/Ni_ONCV_PBE-1.0.upf",
-        "/home/efefer/pseudo/HGH/Ni.pbe-sp-hgh.UPF"
+        "/home/efefer/pseudo/ONCV_PBE/O_ONCV_PBE-1.0.upf",
+        "/home/efefer/pseudo/HGH/O.pbe-hgh.UPF",
+        "/home/efefer/pseudo/ONCV_PBE/C_ONCV_PBE-1.0.upf",
+        "/home/efefer/pseudo/HGH/C.pbe-hgh.UPF"
     ]
 
     for f in fnames
@@ -25,6 +32,7 @@ function main()
         println()
         println(psp.pspfile)
         println("Zval = ", psp.zval)
+        println("Nr = ", psp.Nr)
         println("Nproj = ", psp.Nproj)
         println("proj_l = ", psp.proj_l)
         println("Dion = ")

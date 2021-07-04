@@ -624,7 +624,15 @@ V_{\mathrm{NL}}=\sum_{i}\left|\tilde{\chi}_{i}\right\rangle \frac{1}{\tilde{b}_{
 \end_layout
 
 \begin_layout Standard
-s
+GTH pseudopotential, nonlocal operator:
+\begin_inset Formula 
+\[
+V_{l}^{\mathrm{PS}}(\mathbf{r}-\mathbf{R}_{I},\mathbf{r}'-\mathbf{R}_{I})=\sum_{\mu=1}^{N_{l}}\sum_{\nu=1}^{N_{l}}\sum_{m=-l}^{l}\beta_{\mu lm}(\mathbf{r}-\mathbf{R}_{I})\,h_{\mu\nu}^{l}\,\beta_{\nu lm}^{*}(\mathbf{r}'-\mathbf{R}_{I})
+\]
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
