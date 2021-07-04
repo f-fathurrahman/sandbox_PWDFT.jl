@@ -16,6 +16,7 @@ struct PsPot_UPF
     Nproj::Int64
     proj_l::Array{Int64,1}
     rcut_l::Array{Float64,1}
+    kkbeta::Int64
     proj_func::Array{Float64,2}
     Dion::Array{Float64,2}
     # From PsPot_GTH
@@ -236,7 +237,7 @@ function PsPot_UPF( upf_file::String )
 
     return PsPot_UPF(upf_file, atsymb, zval,
         is_nlcc, is_ultrasoft, is_paw,
-        Nr, r, rab, V_local, Nproj, proj_l, rcut_l, proj_func, Dion,
+        Nr, r, rab, V_local, Nproj, proj_l, rcut_l, kkbeta, proj_func, Dion,
         h, lmax, Nproj_l,
         nqf, nqlc, qqq, q_with_l, qfuncl,
         Nwfc, chi,
