@@ -12,7 +12,7 @@ function main()
     ecutwfc = 15.0 # Ha
     CellVolume = 16.0^3
 
-    nqx = round( Int64, (sqrt(2*ecutwfc)/dq + 4)*cell_factor )
+    nqx = floor( Int64, (sqrt(2*ecutwfc)/dq + 4)*cell_factor )
     println("nqx = ", nqx)
 
     pspots = Array{PsPot_UPF,1}(undef,2)
@@ -51,13 +51,19 @@ function main()
                 qi = (iq - 1) * dq
                 for ir in 1:psp.kkbeta
                     jlqr = sphericalbesselj(l, qi*psp.r[ir])
+                    @printf("%8d %18.10f %18.10f %18.10f %18.10f\n", ir, qi, psp.r[ir],
+                        jlqr, 2*psp.proj_func[ir,ibeta])
                     aux[ir] = psp.proj_func[ir,ibeta] * psp.r[ir] * jlqr
                 end
+                println("sum(aux) = ", 2*sum(aux[1:psp.kkbeta]))
+                exit()
                 vqint = integ_simpson( psp.kkbeta, aux, psp.rab )
                 interp_table[iq, ibeta, isp] = vqint * pref
             end
         end
     end
+
+    println(pspots[1].r[1:4])
 
     ibeta = 1
     isp = 2
