@@ -194,7 +194,7 @@ function PsPot_UPF( upf_file::String )
     for l in 0:lmax
         idx = (istart+1):(istart+Nproj_l[l+1])
         istart = istart+Nproj_l[l+1]
-        display(Dion[idx,idx]); println()
+        #display(Dion[idx,idx]); println()
         idx2 = 1:Nproj_l[l+1] 
         h[l+1,idx2,idx2] = Dion[idx,idx]
     end
