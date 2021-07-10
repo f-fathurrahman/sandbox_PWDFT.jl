@@ -71,14 +71,14 @@ function main()
         @printf("%18.10f %18.10f\n", qi, interp_table[iq,ibeta,isp]*2)
     end
 
-    Gk2 = 2.0 # already multiplied by tpiba in QE
+    Gm = 2.0 # already multiplied by tpiba in QE
     # Interpolation procedure
-    px = Gk2/dq - floor(Int64, Gk2/dq)
+    px = Gm/dq - floor(Int64, Gm/dq)
     println("px = ", px)
     ux = 1.0 - px
     vx = 2.0 - px
     wx = 3.0 - px
-    i0 = floor(Int64, Gk2/dq) + 1
+    i0 = floor(Int64, Gm/dq) + 1
     println("i0 = ", i0)
     i1 = i0 + 1
     i2 = i0 + 2
