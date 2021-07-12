@@ -20,7 +20,7 @@ function main()
         1
 
         H  0.0  0.0  0.0
-        """, in_bohr=true, LatVecs = gen_lattice_sc(10.0)
+        """, in_bohr=true, LatVecs = gen_lattice_sc(2.0)
     )
 
     psp = PsPot_GTH(joinpath(DIR_PSP,"H-q1.gth"))
@@ -36,6 +36,15 @@ function main()
 
     #Ngl = 101
     #G2_shells = collect(range(0.0, stop=10.0, length=Ngl))
+
+    #println("Radial function comparison")
+    #Nr = length(psp_upf.r)
+    #for idx_r in 1:Nr
+    #    r = psp_upf.r[idx_r]
+    #    f1 = psp_upf.V_local[idx_r] # from UPF
+    #    f2 = PWDFT.eval_Vloc_R(psp, r) # from analytic expression
+    #    @printf("%18.10f %18.10f %18.10f\n", r, f1, f2)
+    #end
 
     Vgl = zeros(Float64, Ngl)
     for igl in 1:Ngl
@@ -79,20 +88,23 @@ function main()
     #
     V_Ps_loc_upf[:] = V_Ps_loc_upf[:] + real( G_to_R(pw, Vg_upf) ) * Npoints / CellVolume
 
-    println("avg V_Ps_loc     = ", sum(V_Ps_loc)/Npoints)
-    println("avg V_Ps_loc_upf = ", sum(V_Ps_loc_upf)/Npoints)
-
+    println("Some real space V_Ps_loc:")
     for ip in 1:50
         @printf("%3d %18.10f %18.10f %18.10e\n", ip,
             V_Ps_loc[ip], V_Ps_loc_upf[ip], abs(V_Ps_loc[ip]-V_Ps_loc_upf[ip]))
     end
+
+    println("avg V_Ps_loc     = ", sum(V_Ps_loc)/Npoints)
+    println("avg V_Ps_loc_upf = ", sum(V_Ps_loc_upf)/Npoints)
+
+    println("V_Ps_loc     = ", sum(V_Ps_loc))
+    println("V_Ps_loc_upf = ", sum(V_Ps_loc_upf))
 
     plt.clf()
     plt.plot(sqrt.(G2_shells), Vgl, marker="o", label="Vgl")
     plt.plot(sqrt.(G2_shells), Vgl_upf, marker="o", label="Vgl_upf")
     plt.legend()
     plt.grid(true)
-    plt.xlim(0.0,sqrt(10.0))
     plt.savefig("IMG_Vgl.pdf")
 end
 

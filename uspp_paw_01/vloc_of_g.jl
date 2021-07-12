@@ -19,6 +19,7 @@ function init_Vloc_G(
 	CellVolume::Float64
 )
 	Nr = length(r)
+	println("Nr = ", Nr)
 
   	Vloc_G = zeros(Float64, Ngl)
   	aux = zeros(Float64, Nr)
