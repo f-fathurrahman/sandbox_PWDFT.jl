@@ -636,7 +636,41 @@ V_{l}^{\mathrm{PS}}(\mathbf{r}-\mathbf{R}_{I},\mathbf{r}'-\mathbf{R}_{I})=\sum_{
 \end_layout
 
 \begin_layout Standard
-s
+Nonlocal pseudopotential energy:
+\end_layout
+
+\begin_layout Standard
+Test brackets:
+\end_layout
+
+\begin_layout Standard
+Go to Tools->Preferences->Editing->Shortcuts.
+\begin_inset Formula 
+\begin{align*}
+\left|\Psi\right\rangle \left\langle \phi\right| & \left|\frac{1}{2+\frac{1}{x}}\Gamma\right\rangle \left\langle A\left|B\right.\frac{1}{2+\frac{1}{2}}\right\rangle \left\langle A\left.B\right|\frac{1}{2+\frac{1}{2}}\right\rangle =\left\langle \alpha\left|\frac{2}{5}\right.\Gamma\frac{3}{4}\right\rangle \\
+\left\langle d\right\rangle  & =\left\langle d\right|\mathcal{H}\left|d\right\rangle \left\langle \beta\left|\frac{1}{2}\hat{H}\right|\gamma\frac{1}{2}\right\rangle \\
+ & =\Xi^{2}\Sigma^{2}\left\langle \alpha\left|\beta\frac{2}{2}\right|1\frac{1}{x+\dfrac{1}{x+\dfrac{1}{x+\dfrac{1}{x+\cdots}}}}\right\rangle 
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Creation and destruction operators: 
+\begin_inset Formula $\hat{a},\hat{a}^{\dagger}$
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\left|\beta\right\rangle \left\langle \alpha\right|+\left|G_{m}\right\rangle \left\langle G_{q}\right|
+\]
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
