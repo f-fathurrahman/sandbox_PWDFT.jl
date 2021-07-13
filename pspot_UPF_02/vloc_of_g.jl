@@ -41,7 +41,7 @@ function init_Vloc_G(
   	# here the G != 0 terms, we first compute the part of the integrand 
   	# function independent of |G| in real space
   	for ir in 1:Nr
-  	   aux1[ir] = r[ir] * Vloc_at[ir] + Zval * erf( r[ir] )
+  	   aux1[ir] = r[ir] * Vloc_at[ir] + Zval * erf(r[ir])
   	end
  
   	for igl in igl0:Ngl
@@ -50,6 +50,7 @@ function init_Vloc_G(
      	  	aux[ir] = aux1[ir] * sin(Gx*r[ir])/Gx
      	end
      	Vloc_G[igl] = integ_simpson( Nr, aux, rab )
+     	Vloc_G[igl] = Vloc_G[igl] - Zval * exp(-0.25*gl[igl]) / gl[igl]
 	end
 
   	Vloc_G[:] = Vloc_G[:] * 4*pi #/ CellVolume

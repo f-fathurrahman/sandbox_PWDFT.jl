@@ -9,9 +9,6 @@ using PWDFT
 const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)),"..")
 const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
 
-include("integ_simpson.jl")
-include("vloc_of_g.jl")
-
 function main()
 
     atoms = Atoms( xyz_string=
@@ -33,34 +30,15 @@ function main()
     G2_shells = pw.gvec.G2_shells
     Ngl = length(G2_shells)
 
-    #Ngl = 101
-    #G2_shells = collect(range(0.0, stop=10.0, length=Ngl))
-
-    #println("Radial function comparison")
-    #Nr = length(psp_upf.r)
-    #for idx_r in 1:Nr
-    #    r = psp_upf.r[idx_r]
-    #    f1 = psp_upf.V_local[idx_r] # from UPF
-    #    f2 = PWDFT.eval_Vloc_R(psp, r) # from analytic expression
-    #    @printf("%18.10f %18.10f %18.10f\n", r, f1, f2)
-    #end
-
     Vgl = zeros(Float64, Ngl)
-    for igl in 1:Ngl
-        Vgl[igl] = eval_Vloc_G( psp, G2_shells[igl] )
-    end
+    eval_Vloc_G!(psp, G2_shells, Vgl)
 
-    Vgl_upf = init_Vloc_G(
-        psp_upf.r, psp_upf.rab,
-        psp_upf.V_local, psp_upf.zval,
-        Ngl, G2_shells,
-        pw.CellVolume
-    )
+    Vgl_upf = zeros(Float64, Ngl)
+    eval_Vloc_G!(psp_upf, G2_shells, Vgl_upf)
 
     for igl in 1:Ngl
         @printf("%3d %18.10f %18.10f\n", igl, Vgl[igl], Vgl_upf[igl])
     end
-
 
     strf = calc_strfact( atoms, pw )
     Npoints = prod(pw.Ns)
