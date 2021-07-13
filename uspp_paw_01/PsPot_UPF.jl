@@ -1,4 +1,7 @@
-struct PsPot_UPF
+# interp table need to be initialized later, so we declare it as mutable
+# Probably using spline is better?
+
+mutable struct PsPot_UPF
     pspfile::String
     atsymb::String
     zval::Float64
@@ -19,6 +22,7 @@ struct PsPot_UPF
     kkbeta::Int64
     proj_func::Array{Float64,2}
     Dion::Array{Float64,2}
+    prj_interp_table::Array{Float64,2}
     # From PsPot_GTH
     h::Array{Float64,3}   # l,1:3,1:3
     lmax::Int64           # l = 0, 1, 2, 3 (s, p, d, f)
@@ -235,9 +239,11 @@ function PsPot_UPF( upf_file::String )
 
     LightXML.free(xdoc)
 
+    prj_interp_table = Array{Float64,2}(undef,1,1) # XXX to be initialized later
+
     return PsPot_UPF(upf_file, atsymb, zval,
         is_nlcc, is_ultrasoft, is_paw,
-        Nr, r, rab, V_local, Nproj, proj_l, rcut_l, kkbeta, proj_func, Dion,
+        Nr, r, rab, V_local, Nproj, proj_l, rcut_l, kkbeta, proj_func, Dion, prj_interp_table,
         h, lmax, Nproj_l,
         nqf, nqlc, qqq, q_with_l, qfuncl,
         Nwfc, chi,
