@@ -39,8 +39,13 @@ mutable struct PsPot_UPF
     rhoatom::Array{Float64,1}
 end
 
+#
+# The constructor
+#
 function PsPot_UPF( upf_file::String )
-    
+ 
+    # Probably we should check that the extension of the file is UPF
+
     xdoc = LightXML.parse_file(upf_file)
 
     # get the root element
@@ -253,6 +258,9 @@ function PsPot_UPF( upf_file::String )
 end
 
 
+#
+# Read data related to augmentation functions for USPP
+#
 function _read_us_aug(
     is_ultrasoft::Bool,
     pp_nonlocal,
@@ -428,10 +436,6 @@ function _setqfnew!(nqf, qfcoef, Nr, r, l, n, rho)
     #             n = additional exponent, result is multiplied by r^n
     # On output:
     #      rho(1:Nr)= r^n * Q(r)
-    #
-    # INTEGER,  INTENT(in):: nqf, l, mesh, n
-    # REAL(dp), INTENT(in) :: r(mesh), qfcoef(nqf)
-    # REAL(dp), INTENT(out) :: rho(mesh)
     for ir in 1:Nr
         rr = r[ir]^2
         rho[ir] = qfcoef[1]
@@ -442,6 +446,123 @@ function _setqfnew!(nqf, qfcoef, Nr, r, l, n, rho)
     end
     return
 end
+
+
+
+# This routine computes the Fourier transform of the local
+# part of an atomic pseudopotential, given in numerical form.
+# A term erf(r)/r is subtracted in real space (thus making the
+# function short-ranged) and added again in G space (for G != 0)
+# The G=0 term contains \int (V_loc(r)+ Ze^2/r) 4pi r^2 dr.
+# This is the "alpha" in the so-called "alpha Z" term of the energy.
+#
+# Adapted from the file vloc_of_g.f90
+#
+# Copyright (C) 2001-2007 Quantum ESPRESSO group
+# 
+function eval_Vloc_G!(
+    psp::PsPot_UPF,
+    G2_shells::Array{Float64,1},
+    Vloc_G::Array{Float64,1}
+)
+
+    r = psp.r
+    rab = psp.rab
+    Nr = psp.Nr
+    V_local = psp.V_local
+    zval = psp.zval
+
+    Ngl = length(G2_shells)
+
+    Vloc_G = zeros(Float64, Ngl)
+    aux = zeros(Float64, Nr)
+    aux1 = zeros(Float64, Nr)
+
+    if gl[1] < 1e-8
+        # first the G=0 term
+        for ir in 1:Nr
+            aux[ir] = r[ir] * ( r[ir] * Vloc_at[ir] + Zval )
+        end
+        Vloc_G[1] = integ_simpson(Nr, aux, rab)
+        igl0 = 2
+    else
+        igl0 = 1
+    end
+
+    # here the G != 0 terms, we first compute the part of the integrand 
+    # function independent of |G| in real space
+    for ir in 1:Nr
+       aux1[ir] = r[ir] * Vloc_at[ir] + Zval * erf( r[ir] )
+    end
+ 
+    for igl in igl0:Ngl
+        Gx = sqrt( gl[igl] )
+        for ir in 1:Nr
+            aux[ir] = aux1[ir] * sin(Gx*r[ir])/Gx
+        end
+        Vloc_G[igl] = 4*pi*integ_simpson( Nr, aux, rab )
+    end
+
+    return
+end
+
+
+function _build_prj_interp_table!( psp::PsPot_UPF, pw::PWGrid )
+
+    ecutwfc = pw.ecutwfc
+    CellVolume = pw.CellVolume
+
+    cell_factor = 1.0 # XXX HARDCODED
+    dq = 0.01 # XXX HARDCODED
+
+    ndm = psp.kkbeta
+    Nproj = psp.Nproj
+
+    nqx = floor( Int64, (sqrt(2*ecutwfc)/dq + 4)*cell_factor )
+
+    psp.prj_interp_table = zeros(Float64,nqx,Nproj)
+
+    aux = zeros(Float64, ndm)
+    pref = 4*pi/sqrt(CellVolume)
+
+    for ibeta in 1:Nproj
+        l = psp.proj_l[ibeta]
+        for iq in 1:nqx
+            qi = (iq - 1) * dq
+            for ir in 1:psp.kkbeta
+                jlqr = sphericalbesselj(l, qi*psp.r[ir])
+                aux[ir] = psp.proj_func[ir,ibeta] * psp.r[ir] * jlqr
+            end
+            vqint = integ_simpson( psp.kkbeta, aux, psp.rab )
+            psp.prj_interp_table[iq, ibeta] = vqint * pref
+        end
+    end
+
+    return
+end
+
+import PWDFT: eval_proj_G
+function eval_proj_G(psp::PsPot_UPF, iprjl::Int64, Gm::Float64)
+    #
+    dq = 0.01 # HARDCODED
+    tab = psp.prj_interp_table
+    #
+    # Interpolation procedure
+    px = Gm/dq - floor(Int64, Gm/dq)
+    ux = 1.0 - px
+    vx = 2.0 - px
+    wx = 3.0 - px
+    i0 = floor(Int64, Gm/dq) + 1
+    i1 = i0 + 1
+    i2 = i0 + 2
+    i3 = i0 + 3
+    Vq = tab[i0,iprjl] * ux * vx * wx / 6.0 +
+         tab[i1,iprjl] * px * vx * wx / 2.0 -
+         tab[i2,iprjl] * px * ux * wx / 2.0 +
+         tab[i3,iprjl] * px * ux * vx / 6.0
+    return Vq
+end
+
 
 import Base: show
 function show( io::IO, psp::PsPot_UPF; header=true )
