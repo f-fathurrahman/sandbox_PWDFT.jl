@@ -1,6 +1,8 @@
 using Printf
 import LightXML
 
+using PWDFT
+
 include("PsPot_UPF.jl")
 
 function main()
@@ -20,11 +22,16 @@ function main()
     #    "/home/efefer/pseudo/HGH/Ni.pbe-sp-hgh.UPF"
     #]
 
+    #fnames = [
+    #    "/home/efefer/pseudo/ONCV_PBE/O_ONCV_PBE-1.0.upf",
+    #    "/home/efefer/pseudo/HGH/O.pbe-hgh.UPF",
+    #    "/home/efefer/pseudo/ONCV_PBE/C_ONCV_PBE-1.0.upf",
+    #    "/home/efefer/pseudo/HGH/C.pbe-hgh.UPF"
+    #]
+
     fnames = [
-        "/home/efefer/pseudo/ONCV_PBE/O_ONCV_PBE-1.0.upf",
-        "/home/efefer/pseudo/HGH/O.pbe-hgh.UPF",
-        "/home/efefer/pseudo/ONCV_PBE/C_ONCV_PBE-1.0.upf",
-        "/home/efefer/pseudo/HGH/C.pbe-hgh.UPF"
+        "Al.upf",
+        "/home/efefer/pseudo/HGH/Al.pz-hgh.UPF",
     ]
 
     for f in fnames
