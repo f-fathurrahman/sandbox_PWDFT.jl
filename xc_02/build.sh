@@ -1,9 +1,10 @@
 #!/bin/bash
 
-#LIBXC_DIR=/home/efefer/mysoftwares/libxc-5.0.0/
-LIBXC_DIR=/home/efefer/mysoftwares/libxc-4.3.4/
+LIBXC_DIR=/home/efefer/mysoftwares/libxc-5.1.5/
+#LIBXC_DIR=/home/efefer/mysoftwares/libxc-4.3.4/
 
-LINK1="-Wl,-rpath,$LIBXC_DIR/lib: $LIBXC_DIR/lib/libxc.so"
+#LINK1="-Wl,-rpath,$LIBXC_DIR/lib: $LIBXC_DIR/lib/libxc.so"
+LINK1="$LIBXC_DIR/lib/libxc.a"
 
 if [ "$#" -eq 1 ]; then
 
