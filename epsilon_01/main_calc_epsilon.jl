@@ -60,7 +60,7 @@ function main()
     print("Read data ...")
     Ham = Serialization.deserialize("Ham_nscf.data");
     psiks = Serialization.deserialize("psiks.data");
-    evals = Serialization.deserialize("evals.dat");
+    evals = Serialization.deserialize("evals.data");
     println(" done")
 
     Nstates = Ham.electrons.Nstates

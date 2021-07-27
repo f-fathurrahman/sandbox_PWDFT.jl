@@ -21,7 +21,7 @@ function init_Hamiltonian()
     pspfiles = [joinpath(DIR_PSP, "Ga-q3.gth"), joinpath(DIR_PSP, "As-q5.gth")]
     ecutwfc = 20.0
     return Hamiltonian( atoms, pspfiles, ecutwfc,
-        xcfunc="VWN", meshk=[6,6,6] ) # for FFT grid to have the same size as pwscf
+        xcfunc="VWN", meshk=[6,6,6], shiftk=[1,1,1] ) # for FFT grid to have the same size as pwscf
 end
 
 
@@ -44,7 +44,7 @@ function main_nscf()
     Nspin = Ham.electrons.Nspin
 
     # more dense k-point grid, no symmetry
-    kpoints = KPoints( atoms, [10,10,10], [0,0,0], SymmetryInfo().s, time_reversal=false )
+    kpoints = KPoints( atoms, [10,10,10], [1,1,1], SymmetryInfo().s, time_reversal=false )
 
     # New pw
     pw = PWGrid(ecutwfc, atoms.LatVecs, kpoints=kpoints)
@@ -84,9 +84,9 @@ function main_nscf()
 
     Serialization.serialize("Ham_nscf.data", Ham)
     Serialization.serialize("psiks.data", psiks)
-    Serialization.serialize("evals.dat", evals)
+    Serialization.serialize("evals.data", evals)
 
 end
 
-#main_scf()
+main_scf()
 main_nscf()
