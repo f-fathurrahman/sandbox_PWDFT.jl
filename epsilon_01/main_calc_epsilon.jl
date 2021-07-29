@@ -56,13 +56,19 @@ function calc_dipole_matrix!( Ham, psiks, ik, M; metal_like=false )
 end
 
 
-function main()
+function load_data()
     
     print("Read data ...")
     Ham = Serialization.deserialize("Ham_nscf.data");
     psiks = Serialization.deserialize("psiks.data");
     evals = Serialization.deserialize("evals.data");
     println(" done")
+    return Ham, psiks, evals
+
+end
+
+
+function calc_epsilon(Ham, psiks, evals)
 
     Nstates = Ham.electrons.Nstates
     M_aux = zeros(ComplexF64,3,Nstates,Nstates)
@@ -92,7 +98,7 @@ function main()
     CellVolume = Ham.pw.CellVolume
 
     for ik in 1:Nkpt
-        println("ik = ", ik)
+        #println("ik = ", ik)
         calc_dipole_matrix!( Ham, psiks, ik, M_aux; metal_like=false )
         for i in 1:length(M)
             M[i] = real( M_aux[i] * conj(M_aux[i]) )
@@ -134,19 +140,21 @@ function main()
         end
     end
 
-    #C =  64.0*pi/(CellVolume*Nkpt)
-    #C =  32.0*pi/(CellVolume*Nkpt)
     C = 8*pi/(CellVolume*Nkpt)
-    for i in 1:length(εr)
-        εr[i] = 1.0 + εr[i]*C
-        εi[i] =       εi[i]*C
-    end
+
+    εr[:,:] = 1.0 .+ εr[:,:]*C
+    εi[:,:] =        εi[:,:]*C
 
     Serialization.serialize("wgrid.data", wgrid)
     Serialization.serialize("epsr.data", εr)
     Serialization.serialize("epsi.data", εi)
 
     return
+end
+
+function main()
+    Ham, psiks, evals = load_data()
+    calc_epsilon(Ham, psiks, evals)
 end
 
 main()
