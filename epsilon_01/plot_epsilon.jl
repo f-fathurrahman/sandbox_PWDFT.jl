@@ -15,7 +15,10 @@ function main()
     plt.plot(wgrid, εr[1,:], label="x-real")
     plt.plot(wgrid, εi[1,:], label="x-imag")
     plt.grid(true)
-    plt.xlim(0,15)
+    plt.xlim(0,6)
+    plt.xlabel("ħω (eV)")
+    plt.xlabel("ε")
+    plt.legend()
     plt.savefig("IMG_epsilon.pdf")
 end
 

@@ -36,8 +36,9 @@ function calc_dipole_matrix!( Ham, psiks, ik, M; metal_like=false )
         end # if
     end
   
-    # The diagonal terms are taken into account only if the system is treated like a metal, not
-    # in the intraband therm. Because of this we can recalculate the diagonal component of the dipole
+    # The diagonal terms are taken into account only if the system is treated like a metal,
+    # not in the intraband term. Because of this we can recalculate the diagonal
+    # component of the dipole
     # tensor directly as we need it for the intraband term, without interference with interband one.
     if metal_like
         for ist in 1:Nstates
@@ -86,7 +87,8 @@ function main()
     εr = zeros(Float64,3,Nw)
 
     intersmear = 0.2
-    shift = 0.0
+    #shift = 0.0
+    shift = 0.55 # in eV for Si
     CellVolume = Ham.pw.CellVolume
 
     for ik in 1:Nkpt
@@ -135,8 +137,10 @@ function main()
     #C =  64.0*pi/(CellVolume*Nkpt)
     #C =  32.0*pi/(CellVolume*Nkpt)
     C = 8*pi/(CellVolume*Nkpt)
-    εr[:,:] = 1.0 .+ εr[:,:]*C
-    εi[:,:] =        εi[:,:]*C
+    for i in 1:length(εr)
+        εr[i] = 1.0 + εr[i]*C
+        εi[i] =       εi[i]*C
+    end
 
     Serialization.serialize("wgrid.data", wgrid)
     Serialization.serialize("epsr.data", εr)
