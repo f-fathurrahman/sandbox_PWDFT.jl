@@ -68,7 +68,7 @@ function load_data()
 end
 
 
-function calc_epsilon(Ham, psiks, evals)
+function calc_epsilon(Ham, psiks, evals; metal_like=false)
 
     Nstates = Ham.electrons.Nstates
     M_aux = zeros(ComplexF64,3,Nstates,Nstates)
@@ -99,7 +99,7 @@ function calc_epsilon(Ham, psiks, evals)
 
     for ik in 1:Nkpt
         #println("ik = ", ik)
-        calc_dipole_matrix!( Ham, psiks, ik, M_aux; metal_like=false )
+        calc_dipole_matrix!( Ham, psiks, ik, M_aux; metal_like=metal_like )
         for i in 1:length(M)
             M[i] = real( M_aux[i] * conj(M_aux[i]) )
         end
@@ -138,7 +138,26 @@ function calc_epsilon(Ham, psiks, evals)
                 end
             end # if
         end
-    end
+
+        if metal_like
+            for ist in 1:Nstates
+                for iw in 1:Nw
+                    w = wgrid[iw]
+                    #
+                    #df = w0gauss( (evals[ist,ik] - E_fermi)/degauss, ngauss)
+                    #denum = (( w^4 + intrasmear^2 * w^2 )*degauss )
+                    #mmf = M[i,ist,ist] * 0.5 * FULL_OCC * Ha2eV^2
+                    denum = 1
+                    intersmear = 1
+                    for i in 1:3
+                        εi[i,iw] = εi[i,iw] + mmf * df * intrasmear * w / denum
+                        εr[i,iw] = εr[i,iw] - mmf * df * w^2 / denum
+                    end
+                end # iw
+            end
+        end
+
+    end # over k-points
 
     C = 8*pi/(CellVolume*Nkpt)
 
@@ -154,7 +173,8 @@ end
 
 function main()
     Ham, psiks, evals = load_data()
-    calc_epsilon(Ham, psiks, evals)
+    @time calc_epsilon(Ham, psiks, evals)
+    @time calc_epsilon(Ham, psiks, evals)
 end
 
 main()
