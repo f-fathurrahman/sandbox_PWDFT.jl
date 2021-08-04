@@ -1,20 +1,24 @@
 using Printf
 using PWDFT
 import Serialization
+using LinearAlgebra: det
 
-function calc_dipole_matrix!( Ham, psiks, ik, M; metal_like=false )
+function calc_dipole_matrix!( Nspin, Focc, ik, M; metal_like=false )
 
-    @assert Ham.electrons.Nspin == 1
+    @assert Nspin == 1
 
     fill!( M, 0.0 + im*0.0 )
     
-    psi = psiks[ik]
-    Npw = Ham.pw.gvecw.Ngw[ik]
-    Nstates = Ham.electrons.Nstates
-    idx_gw2g = Ham.pw.gvecw.idx_gw2g[ik]
-    Focc = Ham.electrons.Focc
-    G = Ham.pw.gvec.G
-    k = Ham.pw.gvecw.kpoints.k[:,ik]
+    psi = Serialization.deserialize("TEMP_psiks/"*string(ik)*".data")
+    pw = Serialization.deserialize("TEMP_psiks/pw_"*string(ik)*".data")
+
+    Nstates = size(psi,2)
+    Npw = size(psi,1)
+
+    # XXX Access at ik=1 (memory-saving version)
+    idx_gw2g = pw.gvecw.idx_gw2g[1]
+    G = pw.gvec.G
+    k = pw.gvecw.kpoints.k[:,1]
 
     FULL_OCC = 2.0 # for non-spinpol case
     for jst in 1:Nstates
@@ -60,20 +64,20 @@ end
 
 
 function load_data()
-    
     print("Read data ...")
-    Ham = Serialization.deserialize("Ham_nscf.data");
-    psiks = Serialization.deserialize("psiks.data");
-    evals = Serialization.deserialize("evals.data");
+    atoms = Serialization.deserialize("atoms.data")
+    evals = Serialization.deserialize("evals_nscf.data")
+    kpoints = Serialization.deserialize("kpoints_nscf.data")
+    electrons = Serialization.deserialize("electrons_nscf.data")
     println(" done")
-    return Ham, psiks, evals
-
+    return atoms, electrons, kpoints, evals
 end
 
 
-function calc_epsilon(Ham, psiks, evals; metal_like=false)
+function calc_epsilon(atoms, electrons, kpoints, evals; metal_like=false)
 
-    Nstates = Ham.electrons.Nstates
+    Nstates = electrons.Nstates
+    Nspin = electrons.Nspin
     M_aux = zeros(ComplexF64,3,Nstates,Nstates)
     M = zeros(Float64,3,Nstates,Nstates)
 
@@ -88,8 +92,8 @@ function calc_epsilon(Ham, psiks, evals; metal_like=false)
         wgrid[iw] = wmin + (iw-1)*dw
     end
 
-    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
-    Focc = Ham.electrons.Focc
+    Nkpt = kpoints.Nkpt
+    Focc = repeat(electrons.Focc,1,Nkpt)
     FULL_OCC = 2.0 # for non-spinpol case
 
     εi = zeros(Float64,3,Nw)
@@ -98,11 +102,11 @@ function calc_epsilon(Ham, psiks, evals; metal_like=false)
     intersmear = 0.2
     #shift = 0.0
     shift = 0.55 # in eV for Si
-    CellVolume = Ham.pw.CellVolume
+    CellVolume = det(atoms.LatVecs)
 
     for ik in 1:Nkpt
         #println("ik = ", ik)
-        calc_dipole_matrix!( Ham, psiks, ik, M_aux; metal_like=metal_like )
+        calc_dipole_matrix!( Nspin, Focc, ik, M_aux; metal_like=metal_like )
         for i in 1:length(M)
             M[i] = real( M_aux[i] * conj(M_aux[i]) )
         end
@@ -180,9 +184,9 @@ function calc_epsilon(Ham, psiks, evals; metal_like=false)
 end
 
 function main()
-    Ham, psiks, evals = load_data()
-    @time calc_epsilon(Ham, psiks, evals)
-    @time calc_epsilon(Ham, psiks, evals)
+    atoms, electrons, kpoints, evals = load_data()
+    @time calc_epsilon(atoms, electrons, kpoints, evals)
+    @time calc_epsilon(atoms, electrons, kpoints, evals)
 end
 
 main()

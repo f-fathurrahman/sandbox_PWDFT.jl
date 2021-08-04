@@ -60,55 +60,47 @@ function main_nscf()
 
     Ham = load_Hamiltonian()
 
-    kpoints_dense = create_kpt_grid( Ham.atoms, kgrid=[10,10,10] )
+    kpoints_dense = create_kpt_grid( Ham.atoms, kgrid=[15,15,15] )
+
+    Serialization.serialize("atoms.data", Ham.atoms) # for CellVolume
+    Serialization.serialize("kpoints_nscf.data", kpoints_dense)
 
     Nstates_empty = 16 # XXX
     Nkpt_dense = kpoints_dense.Nkpt
+
+    # We calculate new total states here
     Nstates = Ham.electrons.Nstates_occ + Nstates_empty
 
     evals = zeros(Float64,Nstates,Nkpt_dense)
 
-    Ngwx = round(Int64,Ham.pw.gvec.Ng/4)
+    Ngwx = round(Int64,Ham.pw.gvec.Ng/6) # FIXME: properly calculate Ngwx
     psi_buffer = rand(ComplexF64,Ngwx,Nstates)
 
     for ik in 1:Nkpt_dense
-        
-        println("ik = ", ik)
-        
-        update_Ham_k!(Ham, ik, kpoints_dense, Nstates_empty)
-
+        println()
+        #
+        print("Update Ham k: ")
+        @time update_Ham_k!(Ham, ik, kpoints_dense, Nstates_empty)
+        #
+        Npw = Ham.pw.gvecw.Ngw[1]
+        @views psi = psi_buffer[1:Npw,:]
+        #
         Ham.ik = 1
         Ham.ispin = 1
-
-        Npw = Ham.pw.gvecw.Ngw[1]
-        #psi = rand(ComplexF64, Npw, Nstates) # FIXME: avoid memory reallocation?
-        @views psi = psi_buffer[1:Npw,:]
-        evals[:,ik] = diag_LOBPCG!( Ham, psi, verbose_last=true )
-        Serialization.serialize("TEMP_psiks/"*string(ik)*".data", psi)  
-        Serialization.serialize("TEMP_psiks/pw_"*string(ik)*".data", Ham.pw)
-    end
-
-
-
-#=
-    psiks = rand_BlochWavefunc( Ham )
-
-    # Verbose
-    k = Ham.pw.gvecw.kpoints.k
-    for ispin = 1:Nspin, ik in 1:Nkpt
-        Ham.ik = ik
-        Ham.ispin = ispin
-        i = ik + (ispin - 1)*Nkpt
+        print("Diagonalization: ")
+        @time evals[:,ik] = diag_LOBPCG!( Ham, psi, verbose_last=false )
         #
-        @printf("\nispin = %d, ik = %d, ikspin=%d, Ngw = %d\n", ispin, ik, i, Ngw[ik])
-        @printf("kpts = [%f,%f,%f]\n", k[1,ik], k[2,ik], k[3,ik])
-        evals[:,i] = diag_LOBPCG!( Ham, psiks[i], verbose_last=true )
+        @printf("Done: ik = %8d, Npw = %8d Ngwx = %8d\n", ik, Npw, Ngwx)
+        #
+        print("Saving data: ")
+        @time begin
+            Serialization.serialize("TEMP_psiks/"*string(ik)*".data", psi)  
+            Serialization.serialize("TEMP_psiks/pw_"*string(ik)*".data", Ham.pw)
+        end
     end
 
-    Serialization.serialize("Ham_nscf.data", Ham)
-    Serialization.serialize("psiks.data", psiks)
-    Serialization.serialize("evals.data", evals)
-=#
+    Serialization.serialize("evals_nscf.data", evals)
+    Serialization.serialize("electrons_nscf.data", Ham.electrons)
 
 end
 
