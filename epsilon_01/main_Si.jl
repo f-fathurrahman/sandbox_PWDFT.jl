@@ -22,7 +22,7 @@ function init_Hamiltonian()
     pspfiles = [joinpath(DIR_PSP, "Si-q4.gth")]
     ecutwfc = 20.0
     return Hamiltonian( atoms, pspfiles, ecutwfc,
-        xcfunc="VWN", meshk=[6,6,6], shiftk=[1,1,1] ) # for FFT grid to have the same size as pwscf
+        xcfunc="VWN", meshk=[6,6,6], shiftk=[1,1,1] )
 end
 
 
