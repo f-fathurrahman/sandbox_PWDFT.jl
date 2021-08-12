@@ -85,10 +85,22 @@
 \begin_body
 
 \begin_layout Standard
-Dielectric tensor:
+Band index: 
+\begin_inset Formula $n\in occ$
+\end_inset
+
+, 
+\begin_inset Formula $n'\in unocc$
+\end_inset
+
+.
+ Define:
+\end_layout
+
+\begin_layout Standard
 \begin_inset Formula 
 \[
-\epsilon_{\alpha\beta}=1+\frac{4\pi e^{2}}{\Omega N_{\mathbf{k}}m^{2}}\sum_{n,n'}\sum_{\mathbf{k}}\frac{\hat{\mathbf{M}_{\alpha\beta}}}{\left(E_{\mathbf{k}n'}-E_{\mathbf{k}n}\right)^{2}}\left(\frac{f(E_{\mathbf{k}n})}{E_{\mathbf{k}n'}-E_{\mathbf{k}n}+\hbar\omega+\imath\hbar\Gamma}+\frac{f(E_{\mathbf{k}n})}{E_{\mathbf{k}n'}-E_{\mathbf{k}n}-\hbar\omega+\imath\hbar\Gamma}\right)
+\Delta E_{\mathbf{k}nn'}=E_{\mathbf{k}n'}-E_{\mathbf{k}n}
 \]
 
 \end_inset
@@ -97,7 +109,426 @@ Dielectric tensor:
 \end_layout
 
 \begin_layout Standard
-Dipole matrix elements:
+Dielectric tensor:
+\begin_inset Formula 
+\[
+\epsilon_{\alpha\beta}=1+\frac{4\pi e^{2}}{\Omega N_{\mathbf{k}}m^{2}}\sum_{n,n'}\sum_{\mathbf{k}}\frac{\hat{\mathbf{M}}_{\alpha\beta}}{\left(\Delta E_{\mathbf{k}nn'}\right)^{2}}\left(\frac{f(E_{\mathbf{k}n})}{\Delta E_{\mathbf{k}nn'}+\hbar\omega+\imath\hbar\Gamma}+\frac{f(E_{\mathbf{k}n})}{\Delta E_{\mathbf{k}nn'}-\hbar\omega+\imath\hbar\Gamma}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Imaginary part:
+\begin_inset Formula 
+\[
+\epsilon_{2,\alpha\beta}(\omega)=\frac{4\pi e^{2}}{\Omega N_{\mathbf{k}}m^{2}}\sum_{n,n'}\sum_{\mathbf{k}}\frac{\hat{\mathbf{M}}_{\alpha\beta}f(E_{\mathbf{k}n})}{\left(\Delta E_{\mathbf{k}nn'}\right)^{2}}\left[\delta(\Delta E_{\mathbf{k}nn'}+\hbar\omega)+\delta(\Delta E_{\mathbf{k}nn'}-\hbar\omega)\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the limit of smal but finite lifetime 
+\begin_inset Formula $\Gamma$
+\end_inset
+
+, we obtain the Drude-Lorentz form of dielectric tensor::
+\begin_inset Formula 
+\[
+\epsilon_{2\alpha\beta}^{\mathrm{intra}}(\omega)=\frac{4\pi e^{2}}{\Omega N_{\mathbf{k}}m^{2}}\sum_{n,\mathbf{k}}\frac{\mathrm{d}f(E_{\mathbf{k}n})}{\mathrm{d}E_{\mathbf{k}n}}\frac{\eta\omega\hat{\mathbf{M}}_{\alpha\beta}}{\omega^{4}+\eta^{2}\omega^{2}}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\epsilon_{2\alpha\beta}^{\mathrm{inter}}(\omega)=\frac{8\pi e^{2}}{\Omega N_{\mathbf{k}}m^{2}}\sum_{n\neq n'}\sum_{\mathbf{k}}\frac{\hat{\mathbf{M}}_{\alpha\beta}}{\Delta E_{\mathbf{k}nn'}}\frac{\Gamma\omega f(E_{\mathbf{k}n})}{\left[\left(\Delta E_{\mathbf{k}nn'}\right)^{2}-\omega^{2}\right]^{2}+\Gamma^{2}\omega^{2}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Real part:
+\begin_inset Formula 
+\[
+\epsilon_{1\alpha\beta}(\omega)=1-\frac{4\pi e^{2}}{\Omega N_{\mathbf{k}}m^{2}}\sum_{n,\mathbf{k}}\frac{\mathrm{d}f(E_{\mathbf{k}n})}{\mathrm{d}E_{\mathbf{k}n}}\frac{\omega^{2}\hat{\mathbf{M}}_{\alpha\beta}}{\omega^{4}+\eta^{2}\omega^{2}}+\frac{8\pi e^{2}}{\Omega N_{\mathbf{k}}m^{2}}\sum_{n\neq n'}\sum_{\mathbf{k}}\frac{\hat{\mathbf{M}}_{\alpha\beta}}{\Delta E_{\mathbf{k}nn'}}\frac{\left[\left(\Delta E_{\mathbf{k}nn'}\right)^{2}-\omega^{2}\right]f(E_{\mathbf{k}n})}{\left[\left(\Delta E_{\mathbf{k}nn'}\right)^{2}-\omega^{2}\right]^{2}+\Gamma^{2}\omega^{2}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Code:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+ΔE = (E[jst,ik] - E[ist,ik])*Ha2eV + shift # transition energy
+\end_layout
+
+\begin_layout Plain Layout
+
+# loop over frequencies
+\end_layout
+
+\begin_layout Plain Layout
+
+for iw in 1:Nw
+\end_layout
+
+\begin_layout Plain Layout
+
+    w = wgrid[iw]
+\end_layout
+
+\begin_layout Plain Layout
+
+    ddw = (ΔE^2 - w^2)
+\end_layout
+
+\begin_layout Plain Layout
+
+    ddw2 = ddw^2
+\end_layout
+
+\begin_layout Plain Layout
+
+    denum = ( ddw2 + Γ^2 * w^2 )*ΔE
+\end_layout
+
+\begin_layout Plain Layout
+
+    ff = Ha2eV^3*Focc[ist,ik]
+\end_layout
+
+\begin_layout Plain Layout
+
+    for i in 1:3
+\end_layout
+
+\begin_layout Plain Layout
+
+        ε2[i,iw] = ε2[i,iw] + M[i,ist,jst] * ff * Γ * w/denum   
+\end_layout
+
+\begin_layout Plain Layout
+
+        ε1[i,iw] = ε1[i,iw] + M[i,ist,jst] * ff * ddw/denum
+\end_layout
+
+\begin_layout Plain Layout
+
+    end
+\end_layout
+
+\begin_layout Plain Layout
+
+end
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+# Do the following for all k-points
+\end_layout
+
+\begin_layout Plain Layout
+
+calc_dipole_matrix!( Ham, psiks, ik, M_aux; metal_like=metal_like )
+\end_layout
+
+\begin_layout Plain Layout
+
+for i in 1:length(M)
+\end_layout
+
+\begin_layout Plain Layout
+
+    M[i] = real( M_aux[i] * conj(M_aux[i]) )
+\end_layout
+
+\begin_layout Plain Layout
+
+end
+\end_layout
+
+\begin_layout Plain Layout
+
+        
+\end_layout
+
+\begin_layout Plain Layout
+
+for jst in 1:Nstates
+\end_layout
+
+\begin_layout Plain Layout
+
+    if Focc[jst,ik] >= FULL_OCC
+\end_layout
+
+\begin_layout Plain Layout
+
+        continue
+\end_layout
+
+\begin_layout Plain Layout
+
+    end
+\end_layout
+
+\begin_layout Plain Layout
+
+    for ist in 1:Nstates
+\end_layout
+
+\begin_layout Plain Layout
+
+        if ist == jst
+\end_layout
+
+\begin_layout Plain Layout
+
+            continue
+\end_layout
+
+\begin_layout Plain Layout
+
+        end
+\end_layout
+
+\begin_layout Plain Layout
+
+        if Focc[ist,ik] < 0.5e-4*FULL_OCC
+\end_layout
+
+\begin_layout Plain Layout
+
+            continue # skip the ist
+\end_layout
+
+\begin_layout Plain Layout
+
+        end
+\end_layout
+
+\begin_layout Plain Layout
+
+        if abs(Focc[jst,ik]-Focc[ist,ik]) < 1.0e-3*FULL_OCC
+\end_layout
+
+\begin_layout Plain Layout
+
+            continue
+\end_layout
+
+\begin_layout Plain Layout
+
+        end
+\end_layout
+
+\begin_layout Plain Layout
+
+        # transition energy
+\end_layout
+
+\begin_layout Plain Layout
+
+        ΔE = ( E[jst,ik] - E[ist,ik] ) * Ha2eV + shift
+\end_layout
+
+\begin_layout Plain Layout
+
+        # loop over frequencies
+\end_layout
+
+\begin_layout Plain Layout
+
+        for iw in 1:Nw
+\end_layout
+
+\begin_layout Plain Layout
+
+            w = wgrid[iw]
+\end_layout
+
+\begin_layout Plain Layout
+
+            ddw = (ΔE^2 - w^2)
+\end_layout
+
+\begin_layout Plain Layout
+
+            ddw2 = ddw^2
+\end_layout
+
+\begin_layout Plain Layout
+
+            denum = ( ddw2 + intersmear^2 * w^2 )* ΔE
+\end_layout
+
+\begin_layout Plain Layout
+
+            ff = Ha2eV^3*Focc[ist,ik]
+\end_layout
+
+\begin_layout Plain Layout
+
+            for i in 1:3
+\end_layout
+
+\begin_layout Plain Layout
+
+                εi[i,iw] = εi[i,iw] + M[i,ist,jst]*ff*intersmear*w/denum
+   
+\end_layout
+
+\begin_layout Plain Layout
+
+                εr[i,iw] = εr[i,iw] + M[i,ist,jst]*ff*ddw/denum
+\end_layout
+
+\begin_layout Plain Layout
+
+            end
+\end_layout
+
+\begin_layout Plain Layout
+
+        end
+\end_layout
+
+\begin_layout Plain Layout
+
+    end
+\end_layout
+
+\begin_layout Plain Layout
+
+end # states
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+if metal_like
+\end_layout
+
+\begin_layout Plain Layout
+
+    for ist in 1:Nstates
+\end_layout
+
+\begin_layout Plain Layout
+
+        for iw in 1:Nw
+\end_layout
+
+\begin_layout Plain Layout
+
+            w = wgrid[iw]
+\end_layout
+
+\begin_layout Plain Layout
+
+            #
+\end_layout
+
+\begin_layout Plain Layout
+
+            #df = w0gauss( (evals[ist,ik] - E_fermi)/degauss, ngauss)
+\end_layout
+
+\begin_layout Plain Layout
+
+            #denum = (( w^4 + intrasmear^2 * w^2 )*degauss )
+\end_layout
+
+\begin_layout Plain Layout
+
+            #mmf = M[i,ist,ist] * 0.5 * FULL_OCC * Ha2eV^2
+\end_layout
+
+\begin_layout Plain Layout
+
+            denum = 1
+\end_layout
+
+\begin_layout Plain Layout
+
+            intersmear = 1
+\end_layout
+
+\begin_layout Plain Layout
+
+            for i in 1:3
+\end_layout
+
+\begin_layout Plain Layout
+
+                εi[i,iw] = εi[i,iw] + mmf * df * intrasmear * w / denum
+\end_layout
+
+\begin_layout Plain Layout
+
+                εr[i,iw] = εr[i,iw] - mmf * df * w^2 / denum
+\end_layout
+
+\begin_layout Plain Layout
+
+            end
+\end_layout
+
+\begin_layout Plain Layout
+
+        end
+\end_layout
+
+\begin_layout Plain Layout
+
+    end
+\end_layout
+
+\begin_layout Plain Layout
+
+end
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Dipole matrix elements in plane wave basis
 \begin_inset Formula 
 \begin{align*}
 \hat{\mathbf{M}}_{\alpha\beta} & =\left\langle u_{\mathbf{k}n'}\left|\hat{\mathbf{p}}_{\alpha}\right|u_{\mathbf{k}n}\right\rangle \left\langle u_{\mathbf{k}n}\left|\hat{\mathbf{p}}_{\beta}^{\dagger}\right|u_{\mathbf{k}n'}\right\rangle \\
@@ -110,11 +541,135 @@ Dipole matrix elements:
 \end_layout
 
 \begin_layout Standard
-s
+Calculation of:
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+# ...
+ snipped
 \end_layout
 
-\begin_layout Standard
-s
+\begin_layout Plain Layout
+
+fill!( M, 0.0 + im*0.0 )
+\end_layout
+
+\begin_layout Plain Layout
+
+FULL_OCC = 2.0 # for non-spinpol case
+\end_layout
+
+\begin_layout Plain Layout
+
+for jst in 1:Nstates
+\end_layout
+
+\begin_layout Plain Layout
+
+    if Focc[jst,ik] >= FULL_OCC # skip if states are occupied
+\end_layout
+
+\begin_layout Plain Layout
+
+        continue
+\end_layout
+
+\begin_layout Plain Layout
+
+    end
+\end_layout
+
+\begin_layout Plain Layout
+
+    for ist in 1:Nstates
+\end_layout
+
+\begin_layout Plain Layout
+
+        #
+\end_layout
+
+\begin_layout Plain Layout
+
+        if ist == jst
+\end_layout
+
+\begin_layout Plain Layout
+
+            continue
+\end_layout
+
+\begin_layout Plain Layout
+
+        end
+\end_layout
+
+\begin_layout Plain Layout
+
+        #
+\end_layout
+
+\begin_layout Plain Layout
+
+        if Focc[ist,ik] >= 0.5e-4*FULL_OCC # occupied states
+\end_layout
+
+\begin_layout Plain Layout
+
+            for igw in 1:Npw
+\end_layout
+
+\begin_layout Plain Layout
+
+                ig = idx_gw2g[igw]
+\end_layout
+
+\begin_layout Plain Layout
+
+                caux = conj(psi[igw,ist])*psi[igw,jst]
+\end_layout
+
+\begin_layout Plain Layout
+
+                for i in 1:3
+\end_layout
+
+\begin_layout Plain Layout
+
+                    M[i,ist,jst] = M[i,ist,jst] + ( G[i,ig] + k[i] ) * caux
+\end_layout
+
+\begin_layout Plain Layout
+
+                end
+\end_layout
+
+\begin_layout Plain Layout
+
+            end
+\end_layout
+
+\begin_layout Plain Layout
+
+        end
+\end_layout
+
+\begin_layout Plain Layout
+
+    end
+\end_layout
+
+\begin_layout Plain Layout
+
+end
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
