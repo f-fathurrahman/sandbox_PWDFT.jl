@@ -92,7 +92,7 @@ function calc_epsilon(Ham, psiks, evals; metal_like=false)
     εi = zeros(Float64,3,Nw)
     εr = zeros(Float64,3,Nw)
 
-    intersmear = 0.2
+    Γ = 0.2
     #shift = 0.0
     shift = 0.55 # in eV for Si
     CellVolume = Ham.pw.CellVolume
@@ -128,9 +128,9 @@ function calc_epsilon(Ham, psiks, evals; metal_like=false)
                             #
                             ddw = (ΔE^2 - w^2)
                             ddw2 = ddw^2
-                            denum = ( ddw2 + intersmear^2 * w^2 )* ΔE
+                            denum = ( ddw2 + Γ^2 * w^2 )* ΔE
                 for i in 1:3
-                    εi[i,iw] = εi[i,iw] + M[i,ist,jst]*Ha2eV^3*Focc[ist,ik]*intersmear*w/denum   
+                    εi[i,iw] = εi[i,iw] + M[i,ist,jst]*Ha2eV^3*Focc[ist,ik]*Γ*w/denum   
                     εr[i,iw] = εr[i,iw] + M[i,ist,jst]*Ha2eV^3*Focc[ist,ik]*ddw/denum
                 end
                         end
@@ -145,12 +145,12 @@ function calc_epsilon(Ham, psiks, evals; metal_like=false)
                     w = wgrid[iw]
                     #
                     #df = w0gauss( (evals[ist,ik] - E_fermi)/degauss, ngauss)
-                    #denum = (( w^4 + intrasmear^2 * w^2 )*degauss )
+                    #denum = (( w^4 + Γ^2 * w^2 )*degauss )
                     #mmf = M[i,ist,ist] * 0.5 * FULL_OCC * Ha2eV^2
                     denum = 1
-                    intersmear = 1
+                    Γ = 1
                     for i in 1:3
-                        εi[i,iw] = εi[i,iw] + mmf * df * intrasmear * w / denum
+                        εi[i,iw] = εi[i,iw] + mmf * df * Γ * w / denum
                         εr[i,iw] = εr[i,iw] - mmf * df * w^2 / denum
                     end
                 end # iw
