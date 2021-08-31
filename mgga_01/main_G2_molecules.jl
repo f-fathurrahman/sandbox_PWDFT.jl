@@ -24,7 +24,6 @@ function do_calc(molname)
     
     Ham = Hamiltonian(atoms, pspfiles, ecutwfc, xcfunc="SCAN", use_symmetry=false)
     println(Ham.pw)
-    exit()
     psiks = rand_BlochWavefunc(Ham)
 
     KS_solve_Emin_PCG!(Ham, psiks, print_final_ebands=true)
