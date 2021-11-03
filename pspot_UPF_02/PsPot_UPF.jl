@@ -1,3 +1,5 @@
+using PWDFT: PWGrid
+
 # interp table need to be initialized later, so we declare it as mutable
 # Probably using spline is better?
 
