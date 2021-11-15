@@ -8,27 +8,29 @@ PROGRAM test_ylmr2
   INTEGER :: ig
   INTEGER :: lmaxkb, lm, l, m
 
-  CHARACTER(8) :: arg1, arg2, arg3
-
+  CHARACTER(8) :: arg1, arg2, arg3, arg4
   REAL(8) :: in_g1, in_g2, in_g3
 
-  IF( iargc() /= 3 ) THEN 
-    STOP 'Need exactly three arguments'
+  IF( iargc() /= 4 ) THEN 
+    STOP 'Need exactly four arguments Gx,Gy,Gz,lmax'
   ENDIF 
 
+  ! Read arguments as strings
   CALL getarg(1, arg1)
   CALL getarg(2, arg2)
   CALL getarg(3, arg3)
+  CALL getarg(4, arg4)
 
+  ! Convert to appropriate variables
   READ(arg1,*) in_g1
   READ(arg2,*) in_g2
   READ(arg3,*) in_g3
+  READ(arg4,*) lmaxkb
 
-
-  Ng = 1
-  lmaxkb = 3
+  Ng = 1 ! Harcoded
   lmax2 = (lmaxkb+1)**2
 
+  WRITE(*,*) 'lmax  = ', lmaxkb
   WRITE(*,*) 'lmax2 = ', lmax2
 
   ALLOCATE( G(3,Ng) )
