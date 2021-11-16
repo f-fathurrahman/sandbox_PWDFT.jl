@@ -146,6 +146,10 @@ In the limit of smal but finite lifetime
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+Working formula, imaginary part
 \begin_inset Formula 
 \[
 \epsilon_{2\alpha\beta}^{\mathrm{inter}}(\omega)=\frac{8\pi e^{2}}{\Omega N_{\mathbf{k}}m^{2}}\sum_{n\neq n'}\sum_{\mathbf{k}}\frac{\hat{\mathbf{M}}_{\alpha\beta}}{\Delta E_{\mathbf{k}nn'}}\frac{\Gamma\omega f(E_{\mathbf{k}n})}{\left[\left(\Delta E_{\mathbf{k}nn'}\right)^{2}-\omega^{2}\right]^{2}+\Gamma^{2}\omega^{2}}
@@ -157,7 +161,7 @@ In the limit of smal but finite lifetime
 \end_layout
 
 \begin_layout Standard
-Real part:
+Working formulat, real part:
 \begin_inset Formula 
 \[
 \epsilon_{1\alpha\beta}(\omega)=1-\frac{4\pi e^{2}}{\Omega N_{\mathbf{k}}m^{2}}\sum_{n,\mathbf{k}}\frac{\mathrm{d}f(E_{\mathbf{k}n})}{\mathrm{d}E_{\mathbf{k}n}}\frac{\omega^{2}\hat{\mathbf{M}}_{\alpha\beta}}{\omega^{4}+\eta^{2}\omega^{2}}+\frac{8\pi e^{2}}{\Omega N_{\mathbf{k}}m^{2}}\sum_{n\neq n'}\sum_{\mathbf{k}}\frac{\hat{\mathbf{M}}_{\alpha\beta}}{\Delta E_{\mathbf{k}nn'}}\frac{\left[\left(\Delta E_{\mathbf{k}nn'}\right)^{2}-\omega^{2}\right]f(E_{\mathbf{k}n})}{\left[\left(\Delta E_{\mathbf{k}nn'}\right)^{2}-\omega^{2}\right]^{2}+\Gamma^{2}\omega^{2}}
