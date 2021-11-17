@@ -1,11 +1,12 @@
 import LightXML
 using Printf
 
-using PWDFT
+import PWDFT
+using PWDFT: PsPot_GTH
 const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)),"..")
 const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
 
-include("PsPot_UPF.jl")
+include("PsPot_UPF_OLD1.jl")
 
 function main()
     #pspfile1 = "Si-q4.gth"
