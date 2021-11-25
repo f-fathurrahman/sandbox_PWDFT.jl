@@ -5,9 +5,9 @@ using BenchmarkTools
 
 using PWDFT
 
-function test_multicolumn( ecutwfc_Ry::Float64, Nstates::Int64 )
+function test_multicolumn( ecutwfc::Float64, Nstates::Int64 )
 
-    pw = PWGrid( 0.5*ecutwfc_Ry, gen_lattice_sc(16.0) )
+    pw = PWGrid( ecutwfc, gen_lattice_sc(16.0) )
     Ns = pw.Ns
     Npoints = prod(Ns)
 
@@ -31,8 +31,8 @@ function test_multicolumn( ecutwfc_Ry::Float64, Nstates::Int64 )
     println("diff in  = ", sum(abs.(in3 - in1))/Npoints)
 end
 
-function test_multicolumn_btime( ecutwfc_Ry::Float64, Nstates::Int64 )
-    pw = PWGrid( 0.5*ecutwfc_Ry, gen_lattice_sc(16.0) )
+function test_multicolumn_btime( ecutwfc::Float64, Nstates::Int64 )
+    pw = PWGrid( ecutwfc, gen_lattice_sc(16.0) )
     Ns = pw.Ns
     Npoints = prod(Ns)
 
@@ -52,8 +52,8 @@ function test_multicolumn_btime( ecutwfc_Ry::Float64, Nstates::Int64 )
 end
 
 
-function test_singlecolumn_btime( ecutwfc_Ry::Float64 )
-    pw = PWGrid( 0.5*ecutwfc_Ry, gen_lattice_sc(16.0) )
+function test_singlecolumn_btime( ecutwfc::Float64 )
+    pw = PWGrid( ecutwfc, gen_lattice_sc(16.0) )
     Ns = pw.Ns
     Npoints = prod(Ns)
 
@@ -67,6 +67,10 @@ function test_singlecolumn_btime( ecutwfc_Ry::Float64 )
     @btime R_to_G( $pw, $in1r )
     @btime G_to_R( $pw, $in1r )
 
+    println("\nUsing plan with reshape previously (in-place)")
+    @btime R_to_G!( $pw, $in1r )
+    @btime G_to_R!( $pw, $in1r )
+
     println("\nNaive version")
     @btime R_to_G( $Ns, $in1 )
     @btime G_to_R( $Ns, $in1 )
@@ -75,11 +79,15 @@ function test_singlecolumn_btime( ecutwfc_Ry::Float64 )
     @btime R_to_G( $pw, $in1 )
     @btime G_to_R( $pw, $in1 )
 
+    println("\nUsing plan (in place)")
+    @btime R_to_G!( $pw, $in1 )
+    @btime G_to_R!( $pw, $in1 )
+
 end
 
-function test_singlecolumn( ecutwfc_Ry::Float64 )
+function test_singlecolumn( ecutwfc::Float64 )
 
-    pw = PWGrid( 0.5*ecutwfc_Ry, gen_lattice_sc(16.0) )
+    pw = PWGrid( ecutwfc, gen_lattice_sc(16.0) )
     Ns = pw.Ns
     Npoints = prod(Ns)
 
@@ -103,14 +111,14 @@ function test_singlecolumn( ecutwfc_Ry::Float64 )
 
 end
 
-#test_singlecolumn( 30.0 )
-#test_singlecolumn( 40.0 )
-#test_singlecolumn( 50.0 )
+#test_singlecolumn( 15.0 )
+#test_singlecolumn( 20.0 )
+#test_singlecolumn( 25.0 )
 
-#test_multicolumn( 30.0, 10 )
-#test_multicolumn( 40.0, 10 )
-#test_multicolumn( 50.0, 10 )
+#test_multicolumn( 15.0, 10 )
+#test_multicolumn( 20.0, 10 )
+#test_multicolumn( 25.0, 10 )
 
-#test_multicolumn_btime(50.0, 10)
+#test_multicolumn_btime(25.0, 10)
 
-test_singlecolumn_btime(50.0)
+test_singlecolumn_btime(25.0)
