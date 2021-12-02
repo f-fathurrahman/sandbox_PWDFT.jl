@@ -62,10 +62,6 @@ function KS_solve_SCF_02!(
         end
     end
 
-    if Ham.sym_info.Nsyms > 1
-        rhoe_symmetrizer = RhoeSymmetrizer( Ham )
-    end
-
     #
     # Calculated electron density from this wave function and update Hamiltonian
     #
@@ -83,12 +79,7 @@ function KS_solve_SCF_02!(
         #Rhoe[:,1] = guess_rhoe( Ham )
         Rhoe = guess_rhoe_atomic( Ham )
     else
-        Rhoe[:,:] = calc_rhoe( Nelectrons, pw, Focc, psiks, Nspin )
-    end
-    
-    # Symmetrize Rhoe is needed
-    if Ham.sym_info.Nsyms > 1
-        symmetrize_rhoe!( Ham, rhoe_symmetrizer, Rhoe )
+        calc_rhoe!(Ham, psiks, Rhoe)
     end
 
     if Nspin == 2
@@ -140,9 +131,6 @@ function KS_solve_SCF_02!(
     # calculate E_NN
     Ham.energies.NN = calc_E_NN( Ham.atoms )
 
-    # calculate PspCore energy
-    Ham.energies.PspCore = calc_PspCore_ene( Ham.atoms, Ham.pspots )
-
     CONVERGED = 0
 
     E_fermiSpin = zeros(Nspin)
@@ -170,13 +158,7 @@ function KS_solve_SCF_02!(
             Ham.electrons.Focc = copy(Focc)
         end
 
-        Rhoe_new[:,:] = calc_rhoe( Nelectrons, pw, Focc, psiks, Nspin )
-        # Symmetrize Rhoe is needed
-        if Ham.sym_info.Nsyms > 1
-            symmetrize_rhoe!( Ham, rhoe_symmetrizer, Rhoe_new )
-        end
-
-
+        calc_rhoe!(Ham, psiks, Rhoe_new)
         for ispin = 1:Nspin
             diffRhoe[ispin] = norm(Rhoe_new[:,ispin] - Rhoe[:,ispin])
         end
@@ -193,84 +175,46 @@ function KS_solve_SCF_02!(
         end
 
         # 
-        Vin[2:end] = Ham.potentials.Hartree[2:end] + Ham.potentials.XC[2:end,1]
-        Vin[1] = Ham.potentials.XC[1,1]
+        Vin[:] = Ham.potentials.Hartree[:] + Ham.potentials.XC[:]
+        #Vin[1] = Ham.potentials.XC[1,1]
         deband = -sum(Vin.*Rhoe_new[:,1])*dVol
         #deband = -sum(Vin.*Rhoe[:,1])*dVol
 
         if mix_method == "simple"
-            for ispin = 1:Nspin
-                Rhoe[:,ispin] = betamix*Rhoe_new[:,ispin] + (1-betamix)*Rhoe[:,ispin]
-            end
+            @views Rhoe[:] = betamix*Rhoe_new[:] + (1-betamix)*Rhoe[:]
 
-        elseif mix_method == "simple_kerker"
-            for ispin = 1:Nspin
-                Rhoe[:,ispin] = Rhoe[:,ispin] + betamix*precKerker(pw, Rhoe_new[:,ispin] - Rhoe[:,ispin])
-            end
+        elseif mix_method == "linear_adaptive"
+            mix_adaptive!( Rhoe, Rhoe_new, betamix, betav, df )
+
+        elseif mix_method == "broyden"
+            mix_broyden!( Rhoe, Rhoe_new, betamix, iter, mixdim, df, dv )
 
         elseif mix_method == "pulay"
-        
-            Rhoe = reshape( mix_pulay!(
-                reshape(Rhoe,(Npoints*Nspin)),
-                reshape(Rhoe_new,(Npoints*Nspin)), betamix, XX, FF, iter, MIXDIM, x_old, f_old
-                ), (Npoints,Nspin) )
-            
-            if Nspin == 2
-                magn_den = Rhoe[:,1] - Rhoe[:,2]
-            end
+            mix_pulay!( Rhoe, Rhoe_new, betamix, XX, FF, iter, mixdim, x_old, f_old )
 
         elseif mix_method == "rpulay"
-        
-            Rhoe = reshape( mix_rpulay!(
-                reshape(Rhoe,(Npoints*Nspin)),
-                reshape(Rhoe_new,(Npoints*Nspin)), betamix, XX, FF, iter, MIXDIM, x_old, f_old
-                ), (Npoints,Nspin) )
-            
-            if Nspin == 2
-                magn_den = Rhoe[:,1] - Rhoe[:,2]
-            end
+            mix_rpulay!( Rhoe, Rhoe_new, betamix, XX, FF, iter, mixdim, x_old, f_old )
+            # result is in Rhoe
 
         elseif mix_method == "ppulay"
-        
-            Rhoe = reshape( mix_ppulay!(
-                reshape(Rhoe,(Npoints*Nspin)),
-                reshape(Rhoe_new,(Npoints*Nspin)), betamix, XX, FF, iter, MIXDIM, 3, x_old, f_old
-                ), (Npoints,Nspin) )
-            
-            if Nspin == 2
-                magn_den = Rhoe[:,1] - Rhoe[:,2]
-            end
-
-        elseif mix_method == "rpulay_kerker"
-        
-            Rhoe = reshape( mix_rpulay_kerker!( pw,
-                reshape(Rhoe,(Npoints*Nspin)),
-                reshape(Rhoe_new,(Npoints*Nspin)), betamix, XX, FF, iter, MIXDIM, x_old, f_old
-                ), (Npoints,Nspin) )
-            
-            if Nspin == 2
-                magn_den = Rhoe[:,1] - Rhoe[:,2]
-            end
-        
+            #XXX We fix the period to be 3 here
+            mix_ppulay!( Rhoe, Rhoe_new, betamix, XX, FF, iter, mixdim, 3, x_old, f_old )
         elseif mix_method == "anderson"
-            Rhoe[:,:] = mix_anderson!( Nspin, Rhoe, Rhoe_new, betamix, df, dv, iter, MIXDIM )
-        
+            mix_anderson!( Rhoe, Rhoe_new, betamix, df, dv, iter, mixdim )
         else
             error(@sprintf("Unknown mix_method = %s\n", mix_method))
-
         end
 
-
-        update!( Ham, Rhoe )
+        update!( Ham, psiks, Rhoe )
 
         descf = sum( (Rhoe[:,1] .- Rhoe_new[:,1]).*(Ham.potentials.Hartree .+ Ham.potentials.XC[:,1]) )*dVol
 
         EHartree = 0.5*sum(Ham.potentials.Hartree.*Rhoe[:,1])*dVol
 
         if Ham.xcfunc == "PBE"
-            epsxc = calc_epsxc_PBE( Ham.pw, Ham.rhoe )
+            epsxc = calc_epsxc_PBE( Ham.xc_calc, Ham.pw, Ham.rhoe )
         else
-            epsxc = calc_epsxc_VWN( Ham.rhoe )
+            epsxc = calc_epsxc_VWN( Ham.xc_calc, Ham.rhoe )
         end
         Exc = sum(epsxc[:,1].*Rhoe[:,1])*dVol
 
@@ -279,7 +223,7 @@ function KS_solve_SCF_02!(
         end
         
         #Etot = sum(Ham.energies)
-        Etot = Eband + deband + EHartree + Exc + Ham.energies.NN + descf + Ham.energies.PspCore # entropy missed
+        Etot = Eband + deband + EHartree + Exc + Ham.energies.NN + descf # entropy missed
 
         @printf("Eband    = %18.10f\n", Eband)
         @printf("deband   = %18.10f\n", deband)
@@ -288,7 +232,6 @@ function KS_solve_SCF_02!(
         @printf("EHartree = %18.10f\n", EHartree)
         @printf("Exc      = %18.10f\n", Exc)
         @printf("NN       = %18.10f\n", Ham.energies.NN)
-        @printf("PspCore  = %18.10f\n", Ham.energies.PspCore)
 
         diffE = abs( Etot - Etot_old )
 
