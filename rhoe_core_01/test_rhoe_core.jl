@@ -1,3 +1,5 @@
+using Printf
+using SpecialFunctions: sphericalbesselj
 using PWDFT
 
 include("calc_rhoe_core.jl")
@@ -12,7 +14,7 @@ function main()
         """, in_bohr=true, LatVecs=gen_lattice_fcc(10.2631))
     pspfiles = ["/home/efefer/pseudo/ONCV_v0.4.1/nc-sr-04_pw_standard/Si.upf"]
     ecutwfc = 15.0
-    Ham = Hamiltonian( atoms, pspfiles, ecutwfc, meshk=[3,3,3] )
+    Ham = Hamiltonian( atoms, pspfiles, ecutwfc, meshk=[3,3,3], Ns_=(32,32,32) )
 
     # This should be checked outside this function
     need_rhoe_core = false

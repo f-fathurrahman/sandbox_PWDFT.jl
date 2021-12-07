@@ -35,8 +35,14 @@ function calc_rhoe_core(atoms, pw, pspots)
             end
         end
     end
-    println("integ rhoec = ", sum(rhoe_core)*CellVolume/Npoints)
+    println("integ rhoe_core = ", sum(rhoe_core)*CellVolume/Npoints)
+    println("sum rhoe_core = ", sum(rhoe_core))
     println("neg_rhoec = ", neg_rhoec*CellVolume/Npoints)
+
+    for ip in 1:Npoints
+        @printf("%8d %18.10f\n", ip, rhoe_core[ip,1])
+    end
+
     return rhoe_core
 end
 
@@ -68,8 +74,8 @@ function _calc_rhoecgl!(
     for igl in 2:Ngl
         Gx = sqrt(G2_shells[igl])
         for ir in 1:Nr
-            #aux[ir] = sphericalbesselj(0, Gx*r[ir] )
-            aux[ir] = r[ir]^2 * rho_atc[ir] * sin(Gx*r[ir])/Gx
+            aux[ir] = r[ir]^2 * rho_atc[ir] * sphericalbesselj(0, Gx*r[ir])
+            #aux[ir] = r[ir]^2 * rho_atc[ir] * sin(Gx*r[ir])/Gx
         end
         rhoecgl[igl] = pref*PWDFT.integ_simpson(Nr, aux, rab)
     end
