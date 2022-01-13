@@ -7,7 +7,8 @@ function main(prefix::String)
     Ha2eV = 27.211386018
     data = readdlm(prefix)
     Ndata = size(data,1)
-    @views Etot = data[2:Ndata,2]
+    @views Etot = data[2:Ndata,2] # skip first data?
+    #Etot0 = sum(data[:,2])/Ndata
     Etot0 = Etot[1]
     plt.clf()
     #plt.plot(data[2:Ndata,1], Etot .- Etot0, marker="o")

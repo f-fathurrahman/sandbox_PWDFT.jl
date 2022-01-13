@@ -73,31 +73,6 @@ function display_orthonormality(s::String, psi::Matrix{ComplexF64})
 end
 
 
-function calc_X_matrix(Ctilde::Array{ComplexF64,2}, C::Array{ComplexF64,2})
-    A = Ctilde' * Ctilde
-    B = C' * Ctilde
-    X = 0.5*(I - A)
-    Xnew = similar(X)
-    for iter in 1:100
-        Xnew[:,:] = 0.5*( I - A + X*(I - B) + (I-B)*X - X*X )
-        #println("real X - Xnew")
-        #display(real(X - Xnew)); println()
-        #println("imag X-Xnew")
-        #display(imag(X - Xnew)); println()
-        ΔX = norm(X-Xnew)
-        println("norm X-Xnew = ", ΔX)
-        if ΔX < 1e-10
-            println("Find X: converged in iter: ", iter)
-            return Xnew
-        end
-        @views X[:,:] = Xnew[:,:]
-    end
-    println("ERROR: X is not converged")
-    exit()
-    return X
-end
-
-
 function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
     dt_fs = 1.0
@@ -179,7 +154,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     #
     # Start MD loop here
     #
-    NiterMax = 1000
+    NiterMax = 5000
     iter_start_XL = 5
 
     # 0-th iteration, initial condition
@@ -242,8 +217,8 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             # phi dynamics
             for i in 1:Nspin
                 # Alignment
-                O[:,:] = psis_SC[i]' * phi_m0[i]
-                U[:,:] = inv(sqrt(O*O')) * O
+                @views O[:,:] = psis_SC[i]' * phi_m0[i]
+                @views U[:,:] = inv(sqrt(O*O')) * O
                 #
                 @views psis[i][:,:] = 2*phi_m0[i] - phi_m1[i] +
                     κ * ( psis_SC[i]*U - phi_m0[i] ) +
@@ -252,14 +227,6 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
                         c2*phi_m2[i] + c3*phi_m3[i] +
                         c4*phi_m4[i] + c5*phi_m5[i]
                     )
-
-                #X = calc_X_matrix( psis[i], phi_m0[i] )
-                #@views psis[i][:,:] = psis[i][:,:] + phi_m0[i]*X
-
-                #dCtilde[:] = dC + 0.5*dt*F_elec/μ
-                #Ctilde[:] = C.data[1] + dt*dCtilde
-                #X = calc_X_matrix( Ctilde, C.data[1] )
-                #C.data[1][:,:] = Ctilde + C.data[1]*X
             end
 
             display_orthonormality("psis", psis[1])
@@ -268,10 +235,10 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             # Prepare initial guess for the electronic minimization
             #
             for i in 1:Nspin
-                psis_SC[i][:,:] = psis[i][:,:]
-                # psis_SC should be in orthonormal states
-                C[:,:] = inv( sqrt(psis_SC[i]' * psis_SC[i]) )
-                psis_SC[i][:,:] = psis_SC[i][:,:]*C
+                @views psis_SC[i][:,:] = psis[i][:,:]
+                # psis_SC should be in orthonormal states before passed to KS solver
+                @views C[:,:] = inv( sqrt(psis_SC[i]' * psis_SC[i]) )
+                @views psis_SC[i][:,:] = psis_SC[i][:,:]*C
             end
             energies, forces[:] = run_pwdft_jl!(Ham, psis_SC)
 
@@ -284,7 +251,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             #for i in 1:Nspin
             #    psis_SC0[i][:,:] = psis_SC[i][:,:]
             #end
-            energies, forces[:] = run_pwdft_jl!(Ham, psis_SC)
+            energies, forces[:] = run_pwdft_jl!(Ham, psis_SC, etot_conv_thr=1e-10)
             # Alignment, for initial state
             for i in 1:Nspin
                 O[:,:] = psis_SC[i]' * psis_SC0[i]
