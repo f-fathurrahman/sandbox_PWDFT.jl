@@ -1,4 +1,8 @@
+using Printf
+using SpecialFunctions: sphericalbesselj
 using PWDFT
+
+include("calc_qradG.jl")
 
 function create_atoms_N2H4()
     atoms = Atoms(xyz_string="""
@@ -13,32 +17,6 @@ function create_atoms_N2H4()
     """, LatVecs=gen_lattice_sc(16.0))
     return atoms
 end
-
-function compute_qrad(atoms, pw, pspots)
-    CellVolume = pw.CellVolume
-    Nspecies = atoms.Nspecies
-    prefr = 4π/CellVolume
-    ecutrho = pw.ecutrho
-
-    ndm = 0
-    for isp in 1:Nspecies
-        println("kkbeta = ", pspots[isp].kkbeta)
-        if ndm < pspots[isp].kkbeta
-            ndm = pspots[isp].kkbeta
-        end
-    end
-    println("ndm = ", ndm)
-
-    qnorm = 0.0 # XXX HARDCODED, no k-points norm of (q + k) ?
-    dq = 0.01 # XXX HARDCODED
-    cell_factor = 1.0 # hardcoded
-
-    #ndm = max( upf(:)%kkbeta )
-    #nqxq = INT( ( (SQRT(ecutrho) + qnorm) / dq + 4) * cell_factor )
-    nqxq = round(Int64, sqrt(2*ecutrho)/dq + 4) # convert to Ry
-    println("nqxq = ", nqxq)
-end
-
 
 
 
@@ -60,7 +38,8 @@ function main()
         PWDFT._build_prj_interp_table!( pspots[isp], pw )
     end
 
-    compute_qrad(atoms, pw, pspots)
+    #test_qradG_loop(atoms, pw, pspots)
+    qradG = calc_qradG(atoms, pw, pspots)
 
 end
 
