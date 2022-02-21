@@ -1,7 +1,6 @@
-using Printf
-import LightXML
+using PWDFT
 
-include("PsPot_UPF.jl")
+#include("PsPot_UPF.jl")
 
 function test_main()
     #psp = PsPot_UPF("GBRV_LDA/n_lda_v1.2.uspp.F.UPF2")

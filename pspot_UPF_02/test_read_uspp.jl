@@ -219,22 +219,22 @@ function do_read( upf_file::String )
     LightXML.free(xdoc)
 end
 
-#do_read("GBRV_LDA/pt_lda_v1.4.uspp.F.UPF2")
+#do_read("/home/efefer/pseudo/GBRV_LDA/GBRV_LDA/pt_lda_v1.4.uspp.F.UPF2")
 
 function main()
-    list_file = split(FILELIST_LDA, keepempty=false)
+    list_file = split(FILELIST_GBRV_LDA, keepempty=false)
     for f in list_file
         println("f = ", f)
-        do_read(joinpath("./GBRV_LDA", f))
+        do_read(joinpath("/home/efefer/pseudo/GBRV_LDA", f))
         println("Done reading")
     end
 
-    #list_file = split(FILELIST_PBE, keepempty=false)
-    #for f in list_file
-    #    println("f = ", f)
-    #    do_read(joinpath("./GBRV_PBE", f))
-    #    println("Done reading")
-    #end
+    list_file = split(FILELIST_GBRV_PBE, keepempty=false)
+    for f in list_file
+        println("f = ", f)
+        do_read(joinpath("/home/efefer/pseudo/GBRV_PBE/", f))
+        println("Done reading")
+    end
 end
 
 main()

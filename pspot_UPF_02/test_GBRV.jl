@@ -1,13 +1,13 @@
 using Printf
 import LightXML
+using PWDFT: PsPot_UPF
 
-include("PsPot_UPF.jl")
 include("all_gbrv_files.jl")
 
 function test_GBRV_LDA()
     list_file = split(FILELIST_GBRV_LDA, keepempty=false)
     for f in list_file
-        psp = PsPot_UPF(joinpath("./GBRV_LDA", f))
+        psp = PsPot_UPF(joinpath("/home/efefer/pseudo/GBRV_LDA", f))
         println()
         println("f = ", f)
         println("Nproj = ", psp.Nproj)
@@ -27,7 +27,7 @@ end
 function test_GBRV_PBE()
     list_file = split(FILELIST_GBRV_PBE, keepempty=false)
     for f in list_file
-        psp = PsPot_UPF(joinpath("./GBRV_PBE", f))
+        psp = PsPot_UPF(joinpath("/home/efefer/pseudo/GBRV_PBE/", f))
         println()
         println("f = ", f)
         println("Nproj = ", psp.Nproj)
