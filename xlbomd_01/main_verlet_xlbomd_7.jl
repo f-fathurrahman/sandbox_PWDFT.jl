@@ -267,6 +267,8 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
         end
         
         for i in 1:Nspin
+            phi_m7[i][:,:] = phi_m6[i][:,:]
+            phi_m6[i][:,:] = phi_m5[i][:,:]
             phi_m5[i][:,:] = phi_m4[i][:,:]
             phi_m4[i][:,:] = phi_m3[i][:,:]
             phi_m3[i][:,:] = phi_m2[i][:,:]
