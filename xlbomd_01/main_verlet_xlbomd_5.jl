@@ -130,7 +130,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     phi_m4 = zeros_BlochWavefunc(Ham) # initialize memory
     phi_m5 = zeros_BlochWavefunc(Ham) # initialize memory
 
-    energies, forces = run_pwdft_jl!(Ham, psis_SC)
+    energies, forces = run_pwdft_jl!(Ham, psis_SC, etot_conv_thr=1e-12)
     psis_SC0 = deepcopy(psis_SC) # initialize memory
 
     # Initial condition for XL-BOMD
@@ -251,7 +251,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             #for i in 1:Nspin
             #    psis_SC0[i][:,:] = psis_SC[i][:,:]
             #end
-            energies, forces[:] = run_pwdft_jl!(Ham, psis_SC, etot_conv_thr=1e-10)
+            energies, forces[:] = run_pwdft_jl!(Ham, psis_SC, etot_conv_thr=1e-12)
             # Alignment, for initial state
             for i in 1:Nspin
                 O[:,:] = psis_SC[i]' * psis_SC0[i]
