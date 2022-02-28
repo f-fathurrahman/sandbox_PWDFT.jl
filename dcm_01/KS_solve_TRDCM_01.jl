@@ -1,3 +1,22 @@
+struct DCMBlockSets
+    set1::UnitRange{Int64}
+    set2::UnitRange{Int64}
+    set3::UnitRange{Int64}
+    set4::UnitRange{Int64}
+    set5::UnitRange{Int64}
+end
+
+function DCMBlockSets(Nstates)
+    set1 = 1:Nstates
+    set2 = Nstates+1:2*Nstates
+    set3 = 2*Nstates+1:3*Nstates
+    set4 = Nstates+1:3*Nstates
+    set5 = 1:2*Nstates
+    return DCMBlockSets(set1, set2, set3, set4, set5)
+end
+
+
+
 """
 Solves Kohn-Sham problem using trust-region direct constrained minimization
 (DCM) as described by Prof. Chao Yang.
@@ -44,7 +63,6 @@ function KS_solve_TRDCM_01!(
     Rhoe = zeros(Float64,Npoints,Nspin)
 
     calc_rhoe!( Ham, psiks, Rhoe )
-
     update!(Ham, Rhoe)
 
     evals = zeros(Float64,Nstates,Nkspin)
@@ -54,12 +72,15 @@ function KS_solve_TRDCM_01!(
         Ham.ik = ik
         Ham.ispin = ispin
         i = ik + (ispin - 1)*Nkpt
-        evals[:,i], psiks[i] =
-        diag_LOBPCG( Ham, psiks[i], verbose_last=true, NiterMax=100 )
+        evals[:,i] = diag_LOBPCG!( Ham, psiks[i], verbose_last=true, NiterMax=100 )
     end
 
     # calculate E_NN
     Ham.energies.NN = calc_E_NN( Ham.atoms )
+
+    # XXX: Update Rhoe?
+    #calc_rhoe!( Ham, psiks, Rhoe )
+    #update!(Ham, Rhoe)
 
     #
     Ham.energies = calc_energies( Ham, psiks )
@@ -72,20 +93,20 @@ function KS_solve_TRDCM_01!(
     P = BlochWavefunc(undef,Nkspin)
     #
     G = Array{Array{ComplexF64,2},1}(undef,Nkspin)
-    T = Array{Array{Float64,2},1}(undef,Nkspin)
-    B = Array{Array{Float64,2},1}(undef,Nkspin)
-    A = Array{Array{Float64,2},1}(undef,Nkspin)
-    C = Array{Array{Float64,2},1}(undef,Nkspin)
+    T = Array{Array{ComplexF64,2},1}(undef,Nkspin) # XXX: can be made real?
+    B = Array{Array{ComplexF64,2},1}(undef,Nkspin) # XXX: can be made real?
+    A = Array{Array{ComplexF64,2},1}(undef,Nkspin) # XXX: can be made real?
+    C = Array{Array{ComplexF64,2},1}(undef,Nkspin) # XXX: should be complex
     for ispin in 1:Nspin, ik in 1:Nkpt
         i = ik + (ispin - 1)*Nkpt
         Y[i] = zeros( ComplexF64, Ngw[ik], 3*Nstates )
         R[i] = zeros( ComplexF64, Ngw[ik], Nstates )
         P[i] = zeros( ComplexF64, Ngw[ik], Nstates )
-        G[i] = zeros( ComplexF64, 3*Nstates, 3*Nstates )
-        T[i] = zeros( Float64, 3*Nstates, 3*Nstates )
-        B[i] = zeros( Float64, 3*Nstates, 3*Nstates )
-        A[i] = zeros( Float64, 3*Nstates, 3*Nstates )
-        C[i] = zeros( Float64, 3*Nstates, 3*Nstates )
+        G[i] = zeros( ComplexF64, 3*Nstates, 3*Nstates ) # also used to hold eigenvector of reduced problem
+        T[i] = zeros( ComplexF64, 3*Nstates, 3*Nstates )
+        B[i] = zeros( ComplexF64, 3*Nstates, 3*Nstates )
+        A[i] = zeros( ComplexF64, 3*Nstates, 3*Nstates )
+        C[i] = zeros( ComplexF64, 3*Nstates, 3*Nstates )
     end
 
     # array for saving eigenvalues of subspace problem
@@ -93,11 +114,12 @@ function KS_solve_TRDCM_01!(
 
     #XXX use plain 3d-array for G, T, and B ?
 
-    set1 = 1:Nstates
-    set2 = Nstates+1:2*Nstates
-    set3 = 2*Nstates+1:3*Nstates
-    set4 = Nstates+1:3*Nstates
-    set5 = 1:2*Nstates
+    dcm_block_sets = DCMBlockSets(Nstates)
+    set1 = dcm_block_sets.set1
+    set2 = dcm_block_sets.set2
+    set3 = dcm_block_sets.set3
+    set4 = dcm_block_sets.set4
+    set5 = dcm_block_sets.set5
 
     MaxInnerSCF = 3
     MAXTRY = 10
@@ -113,7 +135,7 @@ function KS_solve_TRDCM_01!(
 
     for iter in 1:NiterMax
         
-        _dcm_construct_Y_and_G!(Ham, iter, Nspin, Nkpt, psiks, R, T, B, Y, G)
+        _dcm_construct_Y_and_G!(Ham, iter, dcm_block_sets, psiks, R, T, B, P, Y, G)
         
         @printf("TRDCM iter: %3d\n", iter)
 
@@ -125,83 +147,13 @@ function KS_solve_TRDCM_01!(
 
         println("Etot_innerscf = ", Etot_innerscf)
 
-        for iterscf = 1:MaxInnerSCF
+        for iterscf in 1:MaxInnerSCF
             
-            for ispin = 1:Nspin, ik = 1:Nkpt
-                #
-                Ham.ik = ik
-                Ham.ispin = ispin
-                i = ik + (ispin - 1)*Nkpt
-                #
-                # Project Hartree, XC potential
-                #
-                V_loc = Ham.potentials.Hartree + Ham.potentials.XC[:,ispin]
-                #
-                if iter > 1
-                    yy = Y[i]
-                else
-                    yy = Y[i][:,set5]
-                end
-                # 
-                #if Ham.pspotNL.NbetaNL > 0
-                #    VY = op_V_Ps_nloc( Ham, yy ) + op_V_loc( ik, pw, V_loc, yy )
-                #else
-                    VY = op_V_loc( ik, pw, V_loc, yy )
-                #end
-                #
-                if iter > 1
-                    A[i] = real( T[i] + yy'*VY )
-                    A[i] = 0.5*( A[i] + A[i]' )
-                else
-                    aa = real( T[i][set5,set5] + yy'*VY )
-                    A[i] = 0.5*( aa + aa' )
-                end
-                #
-                if iter > 1
-                    BG = B[i]*G[i][:,1:Nocc]
-                    C[i] = real( BG*BG' )
-                    C[i] = 0.5*( C[i] + C[i]' )
-                else
-                    BG = B[i][set5,set5]*G[i][set5,1:Nocc]
-                    cc = real( BG*BG' )
-                    C[i][set5,set5] = 0.5*( cc + cc' )
-                end
-                #
-                # apply trust region if necessary
-                if abs(σ[i]) > SMALL # σ is not zero
-                    @printf("Trust region is imposed: ")
-                    @printf("i=%3d σ=%18.10f\n", i, σ[i])
-                    if iter > 1
-                        D[:,i], G[i] =
-                        eigen( A[i] - σ[i]*C[i], B[i] )
-                    else
-                        D[set5,i], G[i][set5,set5] =
-                        eigen( A[i][set5,set5] - σ[i]*C[i][set5,set5], B[i][set5,set5] )
-                    end
-                else
-                    if iter > 1
-                        D[:,i], G[i] = eigen( A[i], B[i] )
-                    else
-                        D[set5,i], G[i][set5,set5] = eigen( A[i][set5,set5], B[i][set5,set5] )
-                    end
-                end
-                #
-                evals[:,i] = D[1:Nstates,i]
-                #
-                # update wavefunction
-                if iter > 1
-                    psiks[i] = Y[i]*G[i][:,set1]
-                    ortho_sqrt!(psiks[i])  # is this necessary ?
-                else
-                    psiks[i] = Y[i][:,set5]*G[i][set5,set1]
-                    ortho_sqrt!(psiks[i])
-                end
-
-            end
+            # psiks is also updated            
+            _dcm_project_nonlinear_pot!(Ham, iter, dcm_block_sets, psiks, σ, evals, A, B, C, D, T, Y, G)
 
             calc_rhoe!( Ham, psiks, Rhoe )
             println("integ Rhoe = ", sum(Rhoe)*ΔV)
-            
             update!( Ham, Rhoe )
 
             # Calculate energies once again
@@ -244,7 +196,7 @@ function KS_solve_TRDCM_01!(
                             gaps = D[2:2*Nstates,i] - D[1:2*Nstates-1,i]
                         else
                             D[set5,i], G[i][set5,set5] =
-                            eigen( A[i][set5,set5] - σ[i]*C[i][set5,set5], B[i][set5,set5] )
+                            eigen(A[i][set5,set5] - σ[i]*C[i][set5,set5], B[i][set5,set5] )
                             gaps = D[2:3*Nstates,i] - D[1:3*Nstates-1,i]
                         end
                         gapmax[i] = maximum(gaps)
@@ -297,11 +249,10 @@ function KS_solve_TRDCM_01!(
                         end
                         @printf("i = %d σ = %f\n", i, σ[i])
                         if iter > 1
-                            D[:,i], G[i] =
-                            eigen( A[i] - σ[i]*C[i], B[i] )
+                            D[:,i], G[i] = eigen(A[i] - σ[i]*C[i], B[i])
                         else
                             D[set5,i], G[i][set5,set5] =
-                            eigen( A[i][set5,set5] - σ[i]*C[i][set5,set5], B[i][set5,set5] )
+                            eigen(A[i][set5,set5] - σ[i]*C[i][set5,set5], B[i][set5,set5])
                         end
                     end
 
@@ -385,7 +336,21 @@ function KS_solve_TRDCM_01!(
 end
 
 
-function _dcm_construct_Y_and_G!(Ham, iter, Nspin, Nkpt, psiks, R, T, B, Y, G)
+
+function _dcm_construct_Y_and_G!(
+    Ham, iter::Int64,
+    dcm_block_sets::DCMBlockSets,
+    psiks, R, T, B, P, Y, G
+)
+
+    set1 = dcm_block_sets.set1
+    set2 = dcm_block_sets.set2
+    set3 = dcm_block_sets.set3
+    set5 = dcm_block_sets.set5
+
+    Nstates = Ham.electrons.Nstates
+    Nspin = Ham.electrons.Nspin
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
 
     for ispin in 1:Nspin, ik in 1:Nkpt
 
@@ -405,6 +370,9 @@ function _dcm_construct_Y_and_G!(Ham, iter, Nspin, Nkpt, psiks, R, T, B, Y, G)
         R[i] = Hpsi - psiks[i]*psiHpsi
         Kprec_inplace!( ik, Ham.pw, R[i] )
 
+        println("R' * R = ")
+        display(R[i]' * R[i]); println()
+
         #
         # Construct subspace
         #
@@ -420,26 +388,124 @@ function _dcm_construct_Y_and_G!(Ham, iter, Nspin, Nkpt, psiks, R, T, B, Y, G)
         #
         if iter > 1
             KY = op_K(Ham, Y[i]) + op_V_Ps_loc(Ham, Y[i]) + op_V_Ps_nloc(Ham, Y[i])
-            T[i] = real(Y[i]'*KY)
-            B[i] = real(Y[i]'*Y[i])
-            B[i] = 0.5*( B[i] + B[i]' )
+            T[i] = Y[i]'*KY
+            bb = Y[i]'*Y[i]
+            B[i] = 0.5*( bb + bb' )
         else
             # only set5=1:2*Nstates is active for iter=1
             KY = op_K(Ham, Y[i][:,set5]) + op_V_Ps_loc(Ham, Y[i][:,set5]) +
                  op_V_Ps_nloc(Ham, Y[i][:,set5])
-            T[i][set5,set5] = real(Y[i][:,set5]'*KY)
-            bb = real(Y[i][set5,set5]'*Y[i][set5,set5])
+            T[i][set5,set5] = Y[i][:,set5]'*KY
+            bb = Y[i][set5,set5]' * Y[i][set5,set5]
             B[i][set5,set5] = 0.5*( bb + bb' )
         end
 
-
         # XXX: G is always initialized to identity matrix?
-        if iter > 1
-            G[i] = Matrix(1.0I, 3*Nstates, 3*Nstates) #eye(3*Nstates)
-        else
-            G[i][set5,set5] = Matrix(1.0I, 2*Nstates, 2*Nstates)
-        end
+        fill!(G[i], 0.0)
+        G[i][set1,set1] = Matrix(1.0I, Nstates, Nstates)
     end
 
     return
+end
+
+
+function _dcm_project_nonlinear_pot!(
+    Ham, iter::Int64,
+    dcm_block_sets::DCMBlockSets,
+    psiks, σ, evals, A, B, C, D, T, Y, G
+)
+
+    set1 = dcm_block_sets.set1
+    set2 = dcm_block_sets.set2
+    set3 = dcm_block_sets.set3
+    set5 = dcm_block_sets.set5
+
+    Nocc = Ham.electrons.Nstates_occ
+    Nstates = Ham.electrons.Nstates
+    Nspin = Ham.electrons.Nspin
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
+
+    # Nocc should be the same as Nstates
+
+    for ispin in 1:Nspin, ik in 1:Nkpt
+        #
+        Ham.ik = ik
+        Ham.ispin = ispin
+        i = ik + (ispin - 1)*Nkpt
+        #
+        # Project Hartree, XC potential
+        #
+        V_loc = Ham.potentials.Hartree + Ham.potentials.XC[:,ispin]
+        #
+        if iter > 1
+            yy = Y[i]
+        else
+            yy = Y[i][:,set5]
+        end
+        VY = op_V_loc( ik, Ham.pw, V_loc, yy )
+
+        if iter > 1
+            A[i] = T[i] + yy'*VY
+            A[i] = 0.5*( A[i] + A[i]' )
+        else
+            aa = T[i][set5,set5] + yy'*VY
+            A[i] = 0.5*( aa + aa' )
+        end
+        #
+        if iter > 1
+            BG = B[i]*G[i][:,1:Nocc]
+            C[i] = BG*BG'
+            C[i] = 0.5*( C[i] + C[i]' )
+        else
+            BG = B[i][set5,set5]*G[i][set5,1:Nocc]
+            cc = BG*BG'
+            C[i][set5,set5] = 0.5*( cc + cc' )
+        end
+
+        if iter > 1
+            D[:,i], G[i] =
+            eigen( A[i] - σ[i]*C[i], B[i] )
+        else
+            D[set5,i], G[i][set5,set5] =
+            eigen( A[i][set5,set5] - σ[i]*C[i][set5,set5], B[i][set5,set5] )
+        end
+
+        evals[:,i] = D[1:Nstates,i]
+        println("evals = ", evals)
+        #
+        # update wavefunction
+        #
+
+        #println("ortho_check before")
+        #ortho_check(psiks[i])
+
+        if iter > 1
+            psiks[i][:,:] = Y[i]*G[i][:,set1]
+            ortho_sqrt!(psiks[i])  # is this necessary ?
+            XX = G[i][:,set1]
+            println("Overlap G iter > 1: ")
+            display(XX' * XX); println()
+        else
+            psiks[i][:,:] = Y[i][:,set5]*G[i][set5,set1]
+            ortho_sqrt!(psiks[i])
+            XX = G[i][set5,set1]
+            println("Overlap G: ")
+            display(XX' * XX); println()
+        end
+
+        #println("A = ")
+        #display(A[i][set5,set5]); println()
+        #println("B = ")
+        #display(B[i][set5,set5]); println()
+        #println("C = ")
+        #display(C[i][set5,set5]); println()
+
+        ortho_check(psiks[i])
+
+        #exit()
+
+    end
+
+    return
+
 end

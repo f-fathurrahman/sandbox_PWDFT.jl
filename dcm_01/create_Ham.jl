@@ -55,6 +55,24 @@ function create_Ham_CO()
     return Hamiltonian( atoms, pspfiles, ecutwfc )
 end
 
+
+function create_Ham_CO_PBE()
+    # Atoms
+    atoms = Atoms(xyz_string=
+        """
+        2
+
+        O  -1.066 0.0 0.0
+        C   1.066 0.0 0.0
+        """, in_bohr=true, LatVecs=gen_lattice_sc(13.228) )
+
+    # Initialize Hamiltonian
+    ecutwfc = 15.0
+    pspfiles = ["/home/efefer/pseudo/ONCV_PBE/O_ONCV_PBE-1.0.upf",
+                "/home/efefer/pseudo/ONCV_PBE/C_ONCV_PBE-1.0.upf"]
+    return Hamiltonian( atoms, pspfiles, ecutwfc, xcfunc="PBE" )
+end
+
 function create_Ham_H2()
     atoms = Atoms(xyz_string=
         """
