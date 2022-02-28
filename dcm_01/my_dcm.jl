@@ -8,7 +8,6 @@ function my_dcm!( Ham )
     Rhoe_new = similar(Rhoe)
     
     Ham.energies.NN = calc_E_NN(Ham.atoms)
-    Ham.energies.PspCore = calc_PspCore_ene(Ham.atoms, Ham.pspots)
 
     Etot_old = 0.0
     Nconv = 0

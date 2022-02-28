@@ -48,6 +48,7 @@ function KS_solve_DCM_01!(
     Rhoe = zeros(Float64,Npoints,Nspin)
 
     calc_rhoe!( Ham, psiks, Rhoe )
+    println("integ Rhoe = ", sum(Rhoe)*ΔV)
 
     update!(Ham, Rhoe)
 
@@ -57,9 +58,6 @@ function KS_solve_DCM_01!(
 
     # calculate E_NN
     Ham.energies.NN = calc_E_NN( Ham.atoms )
-
-    # calculate PspCore energy
-    Ham.energies.PspCore = calc_PspCore_ene( Ham.atoms, Ham.pspots )
     
     # Starting eigenvalues and psi
     for ispin = 1:Nspin, ik = 1:Nkpt
@@ -233,6 +231,7 @@ function KS_solve_DCM_01!(
             end # ispin, ik
 
             calc_rhoe!( Ham, psiks, Rhoe )
+            println("integ Rhoe = ", sum(Rhoe)*ΔV)
 
             # mix rhoe
             #Rhoe = 0.5*Rhoe + 0.5*Rhoe_old

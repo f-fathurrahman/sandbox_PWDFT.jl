@@ -7,7 +7,7 @@ function KS_solve_TRDCM_01!(
     NiterMax = 100, startingwfc=:random,
     verbose=true,
     print_final_ebands=false, print_final_energies=true,
-    savewfc=false, etot_conv_thr=1e-6
+    etot_conv_thr=1e-6
 )
 
 
@@ -33,9 +33,7 @@ function KS_solve_TRDCM_01!(
     #
     # Initial wave function
     #
-    if startingwfc == :read
-        psiks = read_psiks( Ham )
-    else
+    if startingwfc == :random
         # generate random BlochWavefunc
         psiks = rand_BlochWavefunc( Ham )
     end
@@ -63,9 +61,6 @@ function KS_solve_TRDCM_01!(
     # calculate E_NN
     Ham.energies.NN = calc_E_NN( Ham.atoms )
 
-    # calculate PspCore energy
-    Ham.energies.PspCore = calc_PspCore_ene( Ham.atoms, Ham.pspots )
-
     #
     Ham.energies = calc_energies( Ham, psiks )
     Etot = sum(Ham.energies)
@@ -81,8 +76,7 @@ function KS_solve_TRDCM_01!(
     B = Array{Array{Float64,2},1}(undef,Nkspin)
     A = Array{Array{Float64,2},1}(undef,Nkspin)
     C = Array{Array{Float64,2},1}(undef,Nkspin)
-    for ispin = 1:Nspin
-    for ik = 1:Nkpt
+    for ispin in 1:Nspin, ik in 1:Nkpt
         i = ik + (ispin - 1)*Nkpt
         Y[i] = zeros( ComplexF64, Ngw[ik], 3*Nstates )
         R[i] = zeros( ComplexF64, Ngw[ik], Nstates )
@@ -92,7 +86,6 @@ function KS_solve_TRDCM_01!(
         B[i] = zeros( Float64, 3*Nstates, 3*Nstates )
         A[i] = zeros( Float64, 3*Nstates, 3*Nstates )
         C[i] = zeros( Float64, 3*Nstates, 3*Nstates )
-    end
     end
 
     # array for saving eigenvalues of subspace problem
@@ -111,61 +104,20 @@ function KS_solve_TRDCM_01!(
     FUDGE = 1e-12
     SMALL = 1e-12
 
-    sigma = zeros(Float64,Nkspin)
+    σ = zeros(Float64,Nkspin)
     gapmax = zeros(Float64,Nkspin)
 
     diffE = 1.0 # for evaluating convergence
 
     Nconverges = 0
 
-    for iter = 1:NiterMax
+    for iter in 1:NiterMax
         
-        for ispin = 1:Nspin, ik = 1:Nkpt
-            Ham.ik = ik
-            Ham.ispin = ispin
-            i = ik + (ispin - 1)*Nkpt
-            #
-            Hpsi = op_H( Ham, psiks[i] )
-            #
-            psiHpsi = psiks[i]' * Hpsi
-            psiHpsi = 0.5*( psiHpsi + psiHpsi' )
-            # Calculate residual
-            R[i] = Hpsi - psiks[i]*psiHpsi
-            R[i] = Kprec( ik, pw, R[i] )
-            # Construct subspace
-            Y[i][:,set1] = psiks[i]
-            Y[i][:,set2] = R[i]
-            #
-            if iter > 1
-                Y[i][:,set3] = P[i]
-            end
-            
-            #
-            # Project kinetic and ionic potential
-            #
-            if iter > 1
-                KY = op_K( Ham, Y[i] ) + op_V_Ps_loc( Ham, Y[i] )
-                T[i] = real(Y[i]'*KY)
-                B[i] = real(Y[i]'*Y[i])
-                B[i] = 0.5*( B[i] + B[i]' )
-            else
-                # only set5=1:2*Nstates is active for iter=1
-                KY = op_K( Ham, Y[i][:,set5] ) + op_V_Ps_loc( Ham, Y[i][:,set5] )
-                T[i][set5,set5] = real(Y[i][:,set5]'*KY)
-                bb = real(Y[i][set5,set5]'*Y[i][set5,set5])
-                B[i][set5,set5] = 0.5*( bb + bb' )
-            end
-
-            if iter > 1
-                G[i] = Matrix(1.0I, 3*Nstates, 3*Nstates) #eye(3*Nstates)
-            else
-                G[i][set5,set5] = Matrix(1.0I, 2*Nstates, 2*Nstates)
-            end
-        end
+        _dcm_construct_Y_and_G!(Ham, iter, Nspin, Nkpt, psiks, R, T, B, Y, G)
         
         @printf("TRDCM iter: %3d\n", iter)
 
-        sigma[:] .= 0.0  # reset sigma to zero at the beginning of inner SCF iteration
+        σ[:] .= 0.0  # reset σ to zero at the beginning of inner SCF iteration
         numtry = 0
         
         Etot_innerscf = sum(Ham.energies)
@@ -181,7 +133,7 @@ function KS_solve_TRDCM_01!(
                 Ham.ispin = ispin
                 i = ik + (ispin - 1)*Nkpt
                 #
-                # Project Hartree, XC potential, and nonlocal pspot if any
+                # Project Hartree, XC potential
                 #
                 V_loc = Ham.potentials.Hartree + Ham.potentials.XC[:,ispin]
                 #
@@ -191,11 +143,11 @@ function KS_solve_TRDCM_01!(
                     yy = Y[i][:,set5]
                 end
                 # 
-                if Ham.pspotNL.NbetaNL > 0
-                    VY = op_V_Ps_nloc( Ham, yy ) + op_V_loc( ik, pw, V_loc, yy )
-                else
+                #if Ham.pspotNL.NbetaNL > 0
+                #    VY = op_V_Ps_nloc( Ham, yy ) + op_V_loc( ik, pw, V_loc, yy )
+                #else
                     VY = op_V_loc( ik, pw, V_loc, yy )
-                end
+                #end
                 #
                 if iter > 1
                     A[i] = real( T[i] + yy'*VY )
@@ -216,15 +168,15 @@ function KS_solve_TRDCM_01!(
                 end
                 #
                 # apply trust region if necessary
-                if abs(sigma[i]) > SMALL # sigma is not zero
+                if abs(σ[i]) > SMALL # σ is not zero
                     @printf("Trust region is imposed: ")
-                    @printf("i=%3d sigma=%18.10f\n", i, sigma[i])
+                    @printf("i=%3d σ=%18.10f\n", i, σ[i])
                     if iter > 1
                         D[:,i], G[i] =
-                        eigen( A[i] - sigma[i]*C[i], B[i] )
+                        eigen( A[i] - σ[i]*C[i], B[i] )
                     else
                         D[set5,i], G[i][set5,set5] =
-                        eigen( A[i][set5,set5] - sigma[i]*C[i][set5,set5], B[i][set5,set5] )
+                        eigen( A[i][set5,set5] - σ[i]*C[i][set5,set5], B[i][set5,set5] )
                     end
                 else
                     if iter > 1
@@ -234,7 +186,7 @@ function KS_solve_TRDCM_01!(
                     end
                 end
                 #
-                evals[:,i] = D[1:Nstates,i] .+ sigma[i]
+                evals[:,i] = D[1:Nstates,i]
                 #
                 # update wavefunction
                 if iter > 1
@@ -248,6 +200,8 @@ function KS_solve_TRDCM_01!(
             end
 
             calc_rhoe!( Ham, psiks, Rhoe )
+            println("integ Rhoe = ", sum(Rhoe)*ΔV)
+            
             update!( Ham, Rhoe )
 
             # Calculate energies once again
@@ -275,22 +229,22 @@ function KS_solve_TRDCM_01!(
                     gap0 = D[Nocc+1,i] - D[Nocc,i]
 
                     while (gap0 < 0.9*gapmax[i]) && (numtry < MAXTRY)
-                        println("Increase sigma to fix gap0: numtry = ", numtry)
-                        @printf("gap0 : %f < %f\n", gap0, 0.9*gapmax[i])
-                        if abs(sigma[i]) < SMALL # approx for sigma == 0.0
-                            # initial value for sigma
-                            sigma[i] = 2*gapmax[i]
+                        println("Increase σ to fix gap0: numtry = ", numtry)
+                        @printf("gap0 : %10.5f < %10.5f\n", gap0, 0.9*gapmax[i])
+                        if abs(σ[i]) < SMALL # approx for σ == 0.0
+                            # initial value for σ
+                            σ[i] = 2*gapmax[i]
                         else
-                            sigma[i] = 2*sigma[i]
+                            σ[i] = 2*σ[i]
                         end
-                        @printf("fix gap0: i = %d, sigma = %18.10f\n", i, sigma[i])
+                        @printf("fix gap0: i = %3d, σ = %18.10f\n", i, σ[i])
                         #
                         if iter > 1
-                            D[:,i], G[i] = eigen( A[i] - sigma[i]*C[i], B[i] )
+                            D[:,i], G[i] = eigen( A[i] - σ[i]*C[i], B[i] )
                             gaps = D[2:2*Nstates,i] - D[1:2*Nstates-1,i]
                         else
                             D[set5,i], G[i][set5,set5] =
-                            eigen( A[i][set5,set5] - sigma[i]*C[i][set5,set5], B[i][set5,set5] )
+                            eigen( A[i][set5,set5] - σ[i]*C[i][set5,set5], B[i][set5,set5] )
                             gaps = D[2:3*Nstates,i] - D[1:3*Nstates-1,i]
                         end
                         gapmax[i] = maximum(gaps)
@@ -301,7 +255,7 @@ function KS_solve_TRDCM_01!(
 
             end # if Etot > Etot0
 
-            println("sigma = ", sigma)
+            println("σ = ", σ)
             numtry = 0  # reset numtry for this while loop
 
             while (Etot_innerscf > Etot_innerscf_old) &
@@ -309,8 +263,8 @@ function KS_solve_TRDCM_01!(
                   (abs(Etot_innerscf-Etot_innerscf_old) > etot_conv_thr*0.01) &
                   (numtry < MAXTRY)
 
-                @printf("Increase sigma part 2: %18.10f > %18.10f\n", Etot_innerscf, Etot_innerscf_old)
-                @printf("Increase sigma part 2: diff = %18.10e\n", Etot_innerscf - Etot_innerscf_old)
+                @printf("Increase σ part 2: %18.10f > %18.10f\n", Etot_innerscf, Etot_innerscf_old)
+                @printf("Increase σ part 2: diff = %18.10e\n", Etot_innerscf - Etot_innerscf_old)
                 #
                 # update wavefunction
                 #
@@ -333,21 +287,21 @@ function KS_solve_TRDCM_01!(
                 
                 if Etot_innerscf > Etot_innerscf_old
                     
-                    println("Increase sigma part 2")
+                    println("Increase σ part 2")
                     
                     for i in 1:Nkspin
-                        if abs(sigma[i]) > SMALL # sigma is not 0
-                            sigma[i] = 2*sigma[i]
+                        if abs(σ[i]) > SMALL # σ is not 0
+                            σ[i] = 2*σ[i]
                         else
-                            sigma[i] = 1.2*gapmax[i]
+                            σ[i] = 1.2*gapmax[i]
                         end
-                        @printf("i = %d sigma = %f\n", i, sigma[i])
+                        @printf("i = %d σ = %f\n", i, σ[i])
                         if iter > 1
                             D[:,i], G[i] =
-                            eigen( A[i] - sigma[i]*C[i], B[i] )
+                            eigen( A[i] - σ[i]*C[i], B[i] )
                         else
                             D[set5,i], G[i][set5,set5] =
-                            eigen( A[i][set5,set5] - sigma[i]*C[i][set5,set5], B[i][set5,set5] )
+                            eigen( A[i][set5,set5] - σ[i]*C[i][set5,set5], B[i][set5,set5] )
                         end
                     end
 
@@ -427,16 +381,65 @@ function KS_solve_TRDCM_01!(
         println(Ham.energies)
     end
 
+    return
+end
 
-    if savewfc
-        for i = 1:Nkpt*Nspin
-            wfc_file = open("WFC_i_"*string(i)*".data","w")
-            write( wfc_file, psiks[i] )
-            close( wfc_file )
+
+function _dcm_construct_Y_and_G!(Ham, iter, Nspin, Nkpt, psiks, R, T, B, Y, G)
+
+    for ispin in 1:Nspin, ik in 1:Nkpt
+
+        Ham.ik = ik
+        Ham.ispin = ispin
+        i = ik + (ispin - 1)*Nkpt
+            
+        #
+        # FIXME: preallocate Hpsi?
+        #
+        Hpsi = op_H( Ham, psiks[i] )
+        #
+        # Calculate residual
+        #
+        psiHpsi = psiks[i]' * Hpsi
+        psiHpsi = 0.5*( psiHpsi + psiHpsi' )
+        R[i] = Hpsi - psiks[i]*psiHpsi
+        Kprec_inplace!( ik, Ham.pw, R[i] )
+
+        #
+        # Construct subspace
+        #
+        Y[i][:,set1] = psiks[i]
+        Y[i][:,set2] = R[i]
+        #
+        if iter > 1
+            Y[i][:,set3] = P[i]
+        end
+            
+        #
+        # Project kinetic and ionic potential
+        #
+        if iter > 1
+            KY = op_K(Ham, Y[i]) + op_V_Ps_loc(Ham, Y[i]) + op_V_Ps_nloc(Ham, Y[i])
+            T[i] = real(Y[i]'*KY)
+            B[i] = real(Y[i]'*Y[i])
+            B[i] = 0.5*( B[i] + B[i]' )
+        else
+            # only set5=1:2*Nstates is active for iter=1
+            KY = op_K(Ham, Y[i][:,set5]) + op_V_Ps_loc(Ham, Y[i][:,set5]) +
+                 op_V_Ps_nloc(Ham, Y[i][:,set5])
+            T[i][set5,set5] = real(Y[i][:,set5]'*KY)
+            bb = real(Y[i][set5,set5]'*Y[i][set5,set5])
+            B[i][set5,set5] = 0.5*( bb + bb' )
+        end
+
+
+        # XXX: G is always initialized to identity matrix?
+        if iter > 1
+            G[i] = Matrix(1.0I, 3*Nstates, 3*Nstates) #eye(3*Nstates)
+        else
+            G[i][set5,set5] = Matrix(1.0I, 2*Nstates, 2*Nstates)
         end
     end
 
     return
 end
-
-

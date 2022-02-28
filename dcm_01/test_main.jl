@@ -26,10 +26,10 @@ function main()
     #KS_solve_DCM_01!( Ham, NiterMax=30, MaxInnerSCF=3 )
     #@time KS_solve_DCM_01!( Ham, NiterMax=20, MaxInnerSCF=3 )
 
-    #KS_solve_TRDCM_01!( Ham, NiterMax=20 )
-    #KS_solve_Emin_PCG!( Ham )
-    KS_solve_SCF!( Ham, mix_method="anderson" )
+    KS_solve_TRDCM_01!( Ham, print_final_ebands=true, NiterMax=20 )
+    #KS_solve_Emin_PCG!( Ham, print_final_ebands=true )
+    #KS_solve_SCF!( Ham, mix_method="anderson" )
 
 end
 
-main()
+@time main()
