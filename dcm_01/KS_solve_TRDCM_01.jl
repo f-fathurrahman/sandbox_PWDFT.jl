@@ -223,10 +223,10 @@ function KS_solve_TRDCM_01!(
                 for i = 1:Nkspin
                     if iter > 1
                         psiks[i] = Y[i]*G[i][:,set1]
-                        ortho_sqrt!(psiks[i])
+                        #ortho_sqrt!(psiks[i])
                     else
                         psiks[i] = Y[i][:,set5]*G[i][set5,set1]
-                        ortho_sqrt!(psiks[i])
+                        #ortho_sqrt!(psiks[i])
                     end
                 end
 
@@ -268,10 +268,10 @@ function KS_solve_TRDCM_01!(
         for i = 1:Nkspin
             if iter > 1
                 psiks[i] = Y[i]*G[i][:,set1]
-                ortho_sqrt!(psiks[i])
+                #ortho_sqrt!(psiks[i])
             else
                 psiks[i] = Y[i][:,set5]*G[i][set5,set1]
-                ortho_sqrt!(psiks[i])
+                #ortho_sqrt!(psiks[i])
             end
         end
         calc_rhoe!( Ham, psiks, Rhoe )
@@ -370,8 +370,8 @@ function _dcm_construct_Y_and_G!(
         R[i] = Hpsi - psiks[i]*psiHpsi
         Kprec_inplace!( ik, Ham.pw, R[i] )
 
-        println("R' * R = ")
-        display(R[i]' * R[i]); println()
+        #println("R' * R = ")
+        #display(R[i]' * R[i]); println()
 
         #
         # Construct subspace
@@ -475,22 +475,12 @@ function _dcm_project_nonlinear_pot!(
         #
         # update wavefunction
         #
-
-        #println("ortho_check before")
-        #ortho_check(psiks[i])
-
         if iter > 1
             psiks[i][:,:] = Y[i]*G[i][:,set1]
-            ortho_sqrt!(psiks[i])  # is this necessary ?
-            XX = G[i][:,set1]
-            println("Overlap G iter > 1: ")
-            display(XX' * XX); println()
+            #ortho_sqrt!(psiks[i])  # is this necessary ?
         else
             psiks[i][:,:] = Y[i][:,set5]*G[i][set5,set1]
-            ortho_sqrt!(psiks[i])
-            XX = G[i][set5,set1]
-            println("Overlap G: ")
-            display(XX' * XX); println()
+            #ortho_sqrt!(psiks[i])
         end
 
         #println("A = ")
