@@ -144,6 +144,9 @@ end
 
 
 # Should be called after genrmesh
+# This initializes the following fields:
+#   npmti, npmt
+#   npcmti, npcmt
 function init_packed_mtr!( mt_vars::MuffinTins )
     #
     nrmti = mt_vars.nrmti

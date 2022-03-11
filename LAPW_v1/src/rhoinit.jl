@@ -234,7 +234,7 @@ function rhoinit!(
         @printf("%8d %18.10e\n", i, rhomt[ia][i])
     end
 
-    exit()
+    #exit()
 
     # interstitial density determined from the atomic tails and excess charge
     println("zfft before = ", sum(zfft))
