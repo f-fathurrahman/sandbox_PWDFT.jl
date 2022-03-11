@@ -10,69 +10,8 @@ import PyPlot
 const plt = PyPlot
 
 include("create_atoms.jl")
-
-function create_atsp_mt_apwlo_vars(atoms)
-
-    Nspecies = atoms.Nspecies
-    spsymb = atoms.SpeciesSymbols
-
-    atsp_vars = AtomicSpeciesVars(Nspecies)
-    mt_vars = MuffinTins(Nspecies)
-    apwlo_vars = APWLOVars(Nspecies, mt_vars.lmaxapw)
-
-    for isp in 1:Nspecies
-        readspecies!(isp, "DATA_species/"*spsymb[isp]*".in", atsp_vars, mt_vars, apwlo_vars)
-    end
-
-    init_zero!( mt_vars )
-    checkmt!( atoms, mt_vars )
-    genrmesh!( atoms, atsp_vars, mt_vars )
-    init_packed_mtr!( mt_vars )
-    #
-    allatoms!(atsp_vars)
-
-    return atsp_vars, mt_vars, apwlo_vars
-end
-
-
-function create_pwgrid(
-    atoms, sym_info, mt_vars; rgkmax=7.0, gmaxvr=12.0, kpt_grid=[1,1,1]
-)
-
-    Natoms = atoms.Natoms
-    atm2species = atoms.atm2species
-
-    # use average muffin-tin radius (default)
-    println("Using average muffin-tin radius to determine gkmax")
-    rsum = 0.0
-    for ia in 1:Natoms
-        isp = atm2species[ia]
-        rsum = rsum + mt_vars.rmt[isp]
-        println("rmt[isp] = ", mt_vars.rmt[isp])
-    end
-    rsum = rsum/Natoms
-    gkmax = rgkmax/rsum
-    println("gkmax = ", gkmax)
-
-    if gmaxvr <= 2*gkmax
-        println("gkmax is larger than given/default gmaxvr")
-        println("Using gmaxvr = 2*gkmax")
-        gmaxvr = 2*gkmax
-    end
-    println("gmaxvr = ", gmaxvr)
-
-    ecutrho = 0.5*gmaxvr^2
-    ecutwfc = 0.5*gkmax^2
-
-    dual = ecutrho/ecutwfc
-    println("dual = ", dual)
-
-    pw = PWGrid( ecutwfc, atoms.LatVecs, dual=dual,
-        kpoints=KPoints(atoms, kpt_grid, [0,0,0], sym_info.s)
-    )
-    return pw
-end
-
+include("create_atsp_mt_apwlo_vars.jl")
+include("create_pwgrid.jl")
 
 
 function main()
@@ -137,6 +76,7 @@ function main()
 
     nrcmtmax = maximum(nrcmt)
     npcmtmax = maximum(npcmt)
+    # Array to store spherical Bessel function, defined on coarse radial grid.
     jl = OffsetArray(
         zeros(Float64,lmax+1,nrcmtmax), 0:lmax, 1:nrcmtmax
     )

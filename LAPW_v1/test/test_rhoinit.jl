@@ -1,5 +1,8 @@
 using Printf
 using LinearAlgebra
+using OffsetArrays
+using SpecialFunctions: sphericalbesselj
+
 using PWDFT
 using LAPWDFT
 
@@ -7,6 +10,7 @@ import PyPlot
 const plt = PyPlot
 
 include("create_atoms.jl")
+include("debug_rhoinit.jl")
 
 function main()
 
@@ -86,7 +90,7 @@ function main()
     end
     rhoir = zeros(Float64,Npoints)
     #
-    rhoinit!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
+    debug_rhoinit!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
 end
 
 main()

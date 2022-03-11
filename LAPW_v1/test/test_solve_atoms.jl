@@ -28,10 +28,10 @@ function main()
         readspecies!(isp, "DATA_species/"*spsymb[isp]*".in", atsp_vars, mt_vars, apwlo_vars)
     end
 
-    init_zero!( mt_vars )
+    init_zero!(mt_vars)
 
-    checkmt!( atoms, mt_vars )
-    genrmesh!( atoms, atsp_vars, mt_vars )
+    checkmt!(atoms, mt_vars )
+    genrmesh!(atoms, atsp_vars, mt_vars)
     init_packed_mtr!( mt_vars )
 
     allatoms!(atsp_vars)
