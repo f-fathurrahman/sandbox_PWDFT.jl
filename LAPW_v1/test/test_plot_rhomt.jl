@@ -5,6 +5,7 @@ using LAPWDFT
 
 import PyPlot
 const plt = PyPlot
+plt.rc("figure", dpi=150)
 
 include("create_atoms.jl")
 
@@ -107,7 +108,7 @@ function main()
         plt.plot( rlmt[isp][1:nrmti[isp],il], rho_inner[lm,:], label="lm="*string(lm) )
         plt.legend()
         plt.grid(true)
-        plt.savefig("IMG_rhomt_"*string(lm)*".pdf")
+        plt.savefig("IMG_rhomt_"*string(lm)*".png")
     end
 
 end

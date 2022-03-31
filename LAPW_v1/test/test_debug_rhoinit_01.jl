@@ -8,15 +8,15 @@ using LAPWDFT
 
 import PyPlot
 const plt = PyPlot
+plt.rc("figure", dpi=150)
 
 include("create_atoms.jl")
 include("create_atsp_mt_apwlo_vars.jl")
 include("create_pwgrid.jl")
 
-
 function main()
 
-    atoms = create_Si_atom()
+    atoms = create_Pt_atom()
 
     atsp_vars, mt_vars, apwlo_vars = create_atsp_mt_apwlo_vars(atoms)
 
@@ -174,12 +174,12 @@ function main()
     plt.clf()
     plt.plot(rho_inner[1,:], marker="o")
     plt.grid(true)
-    plt.savefig("IMG_rho_inner_before.pdf")
+    plt.savefig("IMG_rho_inner_before.png")
 
     plt.clf()
     plt.plot(rho_outer[1,:], marker="o")
     plt.grid(true)
-    plt.savefig("IMG_rho_outer_before.pdf")
+    plt.savefig("IMG_rho_outer_before.png")
 
     # convert the density from a coarse to a fine radial mesh
     rf_mt_c_to_f!( atoms, atsp_vars, mt_vars, rhomt )
@@ -189,12 +189,12 @@ function main()
     plt.clf()
     plt.plot(rho_inner[1,:], marker="o")
     plt.grid(true)
-    plt.savefig("IMG_rho_inner_after.pdf")
+    plt.savefig("IMG_rho_inner_after.png")
 
     plt.clf()
     plt.plot(rho_outer[1,:], marker="o")
     plt.grid(true)
-    plt.savefig("IMG_rho_outer_after.pdf")
+    plt.savefig("IMG_rho_outer_after.png")
 
 end
 
