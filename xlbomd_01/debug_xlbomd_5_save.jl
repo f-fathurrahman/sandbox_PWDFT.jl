@@ -76,7 +76,7 @@ end
 
 function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
-    dt_fs = 1.0
+    dt_fs = 2.0
     # Time step, in Ha atomic unit
     dt = dt_fs*10e-16/AU_SEC
     println("dt (au) = ", dt)
@@ -214,6 +214,14 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
                     )
             end
 
+            # Orthonormalize and align
+            #ortho_gram_schmidt!(psis[1]) # need this?
+            #for i in 1:Nspin
+            #    O[:,:] = psis[i]' * phi_m0[i]
+            #    U[:,:] = inv(sqrt(O*O')) * O
+            #    psis[i][:,:] = psis[i][:,:]*U
+            #end
+
             display_orthonormality("psis", psis[1])
 
             Serialization.serialize("phi_m0.dat", phi_m0[1])
@@ -225,8 +233,8 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             Serialization.serialize("psis_SC.dat", psis_SC[1])
             Serialization.serialize("psis.dat", psis[1])
 
-            println("STOPPED")
-            exit()
+            #println("STOPPED")
+            #exit()
 
             #
             # Prepare initial guess for the electronic minimization
@@ -234,8 +242,9 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             for i in 1:Nspin
                 @views psis_SC[i][:,:] = psis[i][:,:] # copy to psis_SC
                 # psis_SC should be in orthonormal states before passed to KS solver
-                @views C[:,:] = inv( sqrt(psis_SC[i]' * psis_SC[i]) )
-                @views psis_SC[i][:,:] = psis_SC[i][:,:]*C
+                #@views C[:,:] = inv( sqrt(psis_SC[i]' * psis_SC[i]) )
+                #@views psis_SC[i][:,:] = psis_SC[i][:,:]*C
+                ortho_gram_schmidt!(psis_SC[i])
             end
             energies, forces[:] = run_pwdft_jl!(Ham, psis_SC)
 
