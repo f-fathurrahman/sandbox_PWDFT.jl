@@ -7,9 +7,8 @@ const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)), "..")
 const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
 const DIR_STRUCTURES = joinpath(DIR_PWDFT, "structures")
 
-include(joinpath(DIR_PWDFT, "sandbox", "ABINIT.jl"))
-include(joinpath(DIR_PWDFT, "sandbox", "PWSCF.jl"))
-include(joinpath(DIR_PWDFT, "sandbox", "KS_solve_SCF_potmix.jl"))
+include(joinpath(DIR_PWDFT, "utilities", "ABINIT.jl"))
+include(joinpath(DIR_PWDFT, "utilities", "PWSCF.jl"))
 
 function init_Ham_GaAs_fcc( a::Float64, meshk::Array{Int64,1} )
 
