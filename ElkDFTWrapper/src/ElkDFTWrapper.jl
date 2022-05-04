@@ -24,4 +24,7 @@ end
 include("atomic_species.jl")
 include("muffin_tins.jl")
 
+include("atom.jl")
+export elk_solve_atom!
+
 end
