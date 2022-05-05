@@ -45,9 +45,14 @@ export radnucl
 include("potnucl.jl")
 export potnucl!
 
+
+# FIXME: Move to PWDFT?
 include("Libxc_old.jl")
 include("XCCalculator.jl")
 include("LDA_PW92.jl")
+export XCCalculator, LibxcXCCalculator
+export calc_epsxc_PW92
+export calc_Vxc_PW92, calc_Vxc_PW92!
 
 include("XC_funcs/XC_x_slater.jl")
 include("XC_funcs/XC_c_vwn.jl")
