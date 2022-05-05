@@ -6,39 +6,46 @@
 #   wpr    : weights for partial integration on radial mesh (in,real(4,nr))
 #   zrhomt : muffin-tin charge density (in,complex(*))
 #   zvclmt : muffin-tin Coulomb potential (out,complex(*))
-function zpotclmt!( mt_vars, nr, nri, rl, wpr, zrhomt, zvclmt )
-    # USE m_constants, ONLY: fourpi
-    # USE m_muffin_tins, ONLY: lmaxo, lmmaxo, lmmaxi, lmaxi
-    # IMPLICIT NONE 
-    # ! arguments
-    # INTEGER, intent(in) :: nr,nri,ld
-    # REAL(8), intent(in) :: rl(ld,-lmaxo-1:lmaxo+2),wpr(4,nr)
-    # COMPLEX(8), intent(in) :: zrhomt(*)
-    # COMPLEX(8), intent(out) :: zvclmt(*)
-    # ! local variables
-    # INTEGER :: nro,iro,ir
-    # INTEGER :: l,l1,l2,l3
-    # INTEGER :: m,lm,npi,i
-    # REAL(8) :: r1,r2,t0,t1,t2,t3,t4
-    # ! automatic arrays
-    # REAL(8) :: f1(nr),f2(nr),f3(nr),f4(nr),f5(nr)
+#function zpotclmt!( mt_vars, nr, nri, rl, wpr, zrhomt, zvclmt )
+function zpotclmt!( mt_vars, isp, zrhomt, zvclmt )
+# Output: zvclmt for given index
+
 
     lmaxo = mt_vars.lmaxo
     lmaxi = mt_vars.lmaxi
     lmmaxo = mt_vars.lmmaxo
     lmmaxi = mt_vars.lmmaxi
 
-    nro = nr-nri
-    iro = nri+1
+    nr = mt_vars.nrmt[isp]
+    nri = mt_vars.nrmti[isp]
+    rl = mt_vars.rlmt[isp]
+    wpr = mt_vars.wprmt[isp]
+
+    println("my_zpotclmt: nr = ", nr)
+    println("my_zpotclmt: nri = ", nri)
+    println("my_zpotclmt: sum(wpr) = ", sum(wpr))
+    println("my_zpotclmt: sum(rl)  = ", sum(rl))
+
+    nro = nr - nri
+    iro = nri + 1
     npi = lmmaxi*nri
     lm = 0
+
+    f1 = zeros(Float64,nr)
+    f2 = zeros(Float64,nr)
+    f3 = zeros(Float64,nr)
+    f4 = zeros(Float64,nr)
+    f5 = zeros(Float64,nr)
+
+    @printf("lmaxi = %4d\n", lmaxi)
     for l in 0:lmaxi
         l1 = l + 2
         l2 = -l + 1
         l3 = -l - 1
+        @printf("l1 l2 l3 = %4d %4d %4d\n", l1, l2, l3)
         t0 = 4*pi/(2*l + 1)
         for m in -l:l
-            lm = lm+1
+            lm = lm + 1
             i = lm
             for ir in 1:nri
                 t1 = real(zrhomt[i])
@@ -87,12 +94,16 @@ function zpotclmt!( mt_vars, nr, nri, rl, wpr, zrhomt, zvclmt )
             end 
         end
     end
-    
+    println("After lmaxi sum zvclmt = ", sum(zvclmt))
+
+
+    @printf("lmaxo = %4d\n", lmaxo)
     for l in lmaxi+1:lmaxo
         l1 = l + 2
         l2 = -l + 1
         l3 = -l - 1
         t0 = 4*pi/(2*l+1)
+        @printf("l1 l2 l3 = %4d %4d %4d\n", l1, l2, l3)
         for m in -l:l
             lm = lm + 1
             i = npi + lm
@@ -108,10 +119,10 @@ function zpotclmt!( mt_vars, nr, nri, rl, wpr, zrhomt, zvclmt )
                 i = i + lmmaxo
             end
             idx = iro:iro+nro-1
-            @views splintwp( nro, wpr[:,idx], f1[idx], f5[idx] )
-            @views splintwp( nro, wpr[:,idx], f2[idx], f1[idx] )
-            @views splintwp( nro, wpr[:,idx], f3[idx], f2[idx] )
-            @views splintwp( nro, wpr[:,idx], f4[idx], f3[idx] )
+            @views splintwp!( nro, wpr[:,idx], f1[idx], f5[idx] )
+            @views splintwp!( nro, wpr[:,idx], f2[idx], f1[idx] )
+            @views splintwp!( nro, wpr[:,idx], f3[idx], f2[idx] )
+            @views splintwp!( nro, wpr[:,idx], f4[idx], f3[idx] )
             t1 = f2[nr]
             t2 = f3[nr]
             i = npi + lm
@@ -125,5 +136,7 @@ function zpotclmt!( mt_vars, nr, nri, rl, wpr, zrhomt, zvclmt )
             end
         end
     end
+    println("After lmaxo sum zvclmt = ", sum(zvclmt))
+
     return
 end

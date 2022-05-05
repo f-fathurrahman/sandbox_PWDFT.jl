@@ -10,6 +10,7 @@ function main()
     atoms = create_Si_fcc()
     #atoms = create_SiPt_fcc()
     #atoms = create_Si_atom()
+    #toms = create_H2O()
 
     Nspecies = atoms.Nspecies
     spsymb = atoms.SpeciesSymbols
@@ -45,6 +46,11 @@ function main()
     rsum = rsum/Natoms
     gkmax = rgkmax/rsum
 
+    if gmaxvr <= 2.0*gkmax
+        println("INFO gengvec: gmaxvr will be set to 2*gkmax")
+        gmaxvr = 2*gkmax
+    end
+
     println("gmaxvr = ", gmaxvr)
     println("gkmax = ", gkmax)
 
@@ -60,6 +66,7 @@ function main()
 
     pw = PWGrid( ecutwfc, atoms.LatVecs, dual=dual,
         kpoints=KPoints(atoms, [2,2,2], [0,0,0], sym_info.s)
+        #kpoints=KPoints(atoms, [1,1,1], [0,0,0], sym_info.s) # for molecules
     )
     println(pw)
 
