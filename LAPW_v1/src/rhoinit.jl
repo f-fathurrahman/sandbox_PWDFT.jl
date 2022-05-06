@@ -1,3 +1,29 @@
+# Structure factor, using Elk convention
+function calc_sfacg(atoms, pw)
+    Natoms = atoms.Natoms
+    Ng = pw.gvec.Ng
+    atm2species = atoms.atm2species
+    sfacg = zeros(ComplexF64, Ng, Natoms)
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        v1 = atoms.positions[1,ia]
+        v2 = atoms.positions[2,ia]
+        v3 = atoms.positions[3,ia]
+        for ig in 1:Ng
+            ip = pw.gvec.idx_g2r[ig]
+            Gv1 = pw.gvec.G[1,ig]
+            Gv2 = pw.gvec.G[2,ig]
+            Gv3 = pw.gvec.G[3,ig]
+            x = v1*Gv1 + v2*Gv2 + v3*Gv3
+            sfacg[ig,ia] = cos(x) + im*sin(x)
+        end
+    end 
+    return sfacg
+end
+
+
+
+
 function rhoinit!(
     atoms, atsp_vars,
     mt_vars, pw,
@@ -22,13 +48,13 @@ function rhoinit!(
     rhosp = atsp_vars.rhosp 
 
     # For debugging
-    # println("Some rhosp: ")
-    #for isp in 1:Nspecies
-    #    println("rhosp for isp = ", isp)
-    #    for ir in 1:10
-    #        @printf("%4d %18.10e\n", ir, rhosp[isp][ir])
-    #    end
-    #end
+    println("Some rhosp: ")
+    for isp in 1:Nspecies
+        println("rhosp for isp = ", isp)
+        for ir in 1:10
+            @printf("%4d %18.10f\n", ir, rhosp[isp][ir])
+        end
+    end
     #exit()
 
     lmmaxi = mt_vars.lmmaxi
@@ -45,7 +71,7 @@ function rhoinit!(
     npcmt = mt_vars.npcmt
 
     # FIXME: need to precompute this?
-    sfacg = calc_strfact(atoms, pw)
+    sfacg = calc_sfacg(atoms, pw)
 
     # FIXME: need to precompute this?
     ylmg = zeros(ComplexF64, lmmaxo, Ng)
@@ -64,10 +90,9 @@ function rhoinit!(
     #
     # compute the superposition of all the atomic density tails
     #   
-    zfft = zeros(ComplexF64,Npoints)
-
+    ffg = zeros(ComplexF64,Ng,Nspecies)
+    #
     for isp in 1:Nspecies
-
         # local arrays inside the loop
         wr = zeros(Float64,nrsp[isp])
         fr = zeros(Float64,nrsp[isp])
@@ -100,18 +125,24 @@ function rhoinit!(
             @views t1 = dot( wr[nr:nrs], fr[nr:nrs] )
             # apply low-pass filter
             t1 = t1*exp(-4.0*G2[ig]/gmaxvr^2)
-            ffg = (4*pi/CellVolume)*t1
-            #
-            ip = pw.gvec.idx_g2r[ig]
-            zfft[ip] = zfft[ip] + ffg*sfacg[ig,isp]  # do not use conj
+            ffg[ig,isp] = (4*pi/CellVolume)*t1
         end
     end
 
-    #println("Some zfft")
-    #for ig in 1:10
-    #    ip = pw.gvec.idx_g2r[ig]
-    #    @printf("%8d %18.10e %18.10e\n", ip, real(zfft[ip]), imag(zfft[ip]))
-    #end
+    zfft = zeros(ComplexF64,Npoints)
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        for ig in 1:Ng
+            ip = pw.gvec.idx_g2r[ig]
+            zfft[ip] = zfft[ip] + ffg[ig,isp]*conj(sfacg[ig,ia])  # do not use conj
+        end
+    end
+
+    println("Some zfft")
+    for ig in 1:10
+        ip = pw.gvec.idx_g2r[ig]
+        @printf("%8d %18.10f %18.10f\n", ip, real(zfft[ip]), imag(zfft[ip]))
+    end
     #exit()
 
     println("sum sfacg = ", sum(sfacg))
@@ -145,7 +176,7 @@ function rhoinit!(
                     jl[l,irc] = sphericalbesselj(l, x)
                 end
             end
-            z1 = 4*pi*zfft[ip] * conj(sfacg[ig,isp]) # XXX using conj
+            z1 = 4*pi*zfft[ip] * sfacg[ig,ia]
             lm = 0
             for l in 0:lmax
                 z2 = im^l * z1
@@ -164,11 +195,11 @@ function rhoinit!(
                 end
             end
         end
-        println("Finish loop over G")
+#        println("Finish loop over G")
 
         println("Some zfmt")
         for i in 1:10
-            @printf("%8d %18.10e %18.10e\n", i, real(zfmt[i]), imag(zfmt[i]))
+            @printf("%8d %18.10f %18.10f\n", i, real(zfmt[i]), imag(zfmt[i]))
         end
 
         z_to_rf_mt!( mt_vars, nrc, nrci, zfmt, rhomt[ia] )
@@ -176,11 +207,11 @@ function rhoinit!(
         println("Some rhomt after z_to_rf_mt")
         println("inner")
         for i in 1:10
-            @printf("%8d %18.10e\n", i, rhomt[ia][i])
+            @printf("%8d %18.10f\n", i, rhomt[ia][i])
         end
         println("outer")
         for i in nrmti[isp]+1:nrmti[isp]+lmmaxo
-            @printf("%8d %18.10e\n", i, rhomt[ia][i])
+            @printf("%8d %18.10f\n", i, rhomt[ia][i])
         end
 
     end
@@ -193,11 +224,11 @@ function rhoinit!(
     println("Some rhomt after rf_mt_c_to_f")
     println("inner")
     for i in 1:10
-        @printf("%8d %18.10e\n", i, rhomt[ia][i])
+        @printf("%8d %18.10f\n", i, rhomt[ia][i])
     end
     println("outer")
     for i in nrmti[isp]+1:nrmti[isp]+lmmaxo
-        @printf("%8d %18.10e\n", i, rhomt[ia][i])
+        @printf("%8d %18.10f\n", i, rhomt[ia][i])
     end
 
     # add the atomic charge density and the excess charge in each muffin-tin
@@ -227,20 +258,18 @@ function rhoinit!(
     println("Some rhomt after adding rhosp")
     println("inner")
     for i in 1:10
-        @printf("%8d %18.10e\n", i, rhomt[ia][i])
+        @printf("%8d %18.10f\n", i, rhomt[ia][i])
     end
     println("outer")
     for i in nrmti[isp]+1:nrmti[isp]+lmmaxo
-        @printf("%8d %18.10e\n", i, rhomt[ia][i])
+        @printf("%8d %18.10f\n", i, rhomt[ia][i])
     end
 
     #exit()
 
     # interstitial density determined from the atomic tails and excess charge
-    println("zfft before = ", sum(zfft))
     G_to_R!(pw, zfft)
     zfft[:] = zfft[:]*Npoints
-    println("zfft after = ", sum(zfft))
     for ip in 1:Npoints
         rhoir[ip] = real(zfft[ip]) + t1
         # make sure that the density is always positive
@@ -249,15 +278,13 @@ function rhoinit!(
         end
     end
 
-    println("Npoints = ", Npoints)
-
-    @printf("sum rhoir = %18.10e\n", sum(rhoir))
+    @printf("sum rhoir = %18.10f\n", sum(rhoir))
     ss = 0.0
     for ia in 1:Natoms
         ss = ss + sum(rhomt[ia])
     end
-    @printf("sum rhomt = %18.10e\n", ss)
-    @printf("Total = %18.10e\n", ss + sum(rhoir))
+    @printf("sum rhomt = %18.10f\n", ss)
+    @printf("Total = %18.10f\n", ss + sum(rhoir))
 
     return
 end

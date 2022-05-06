@@ -56,6 +56,7 @@ function zpotclmt!( mt_vars, isp, zrhomt, zvclmt )
                 f2[ir] = t2*r1
                 f3[ir] = t1*r2
                 f4[ir] = t2*r2
+                #@printf("zrhomt %8d %18.10f %18.10f\n", i, t1, t2)
                 i = i + lmmaxi
             end
             for ir in iro:nr
@@ -67,6 +68,7 @@ function zpotclmt!( mt_vars, isp, zrhomt, zvclmt )
                 f2[ir] = t2*r1
                 f3[ir] = t1*r2
                 f4[ir] = t2*r2
+                #@printf("zrhomt %8d %18.10f %18.10f\n", i, t1, t2)
                 i = i + lmmaxo
             end
             splintwp!(nr, wpr, f1, f5)
@@ -82,6 +84,7 @@ function zpotclmt!( mt_vars, isp, zrhomt, zvclmt )
                 t3 = r1*f5[ir] + r2*(t1 - f2[ir])
                 t4 = r1*f1[ir] + r2*(t2 - f3[ir])
                 zvclmt[i] = t3 + im*t4
+                #@printf("zvclmt %8d %18.10f %18.10f\n", i, t3, t4)
                 i = i + lmmaxi
             end
             for ir in iro:nr
@@ -90,11 +93,13 @@ function zpotclmt!( mt_vars, isp, zrhomt, zvclmt )
                 t3 = r1*f5[ir] + r2*(t1 - f2[ir])
                 t4 = r1*f1[ir] + r2*(t2 - f3[ir])
                 zvclmt[i] = t3 + im*t4
+                #@printf("zvclmt: %8d %18.10f %18.10f\n", i, t3, t4)
                 i = i + lmmaxo
             end 
         end
     end
     println("After lmaxi sum zvclmt = ", sum(zvclmt))
+    #exit(99) # debug
 
 
     @printf("lmaxo = %4d\n", lmaxo)
