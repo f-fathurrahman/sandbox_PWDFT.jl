@@ -1,3 +1,5 @@
+#using ElkDFTWrapper: elk_solve_atom!
+
 function allatoms!( atsp_vars::AtomicSpeciesVars )
 
     #xctsp = atsp_vars.xctsp
@@ -33,11 +35,21 @@ function allatoms!( atsp_vars::AtomicSpeciesVars )
     solsc = sol
 
     for isp in 1:Nspecies
+
         solve_atom!(
             solsc, ptnucl, spzn[isp], nstsp[isp], nsp[isp], lsp[isp], ksp[isp],
             occsp[isp], xc_calc, xcgrad, nrsp[isp], rsp[isp], evalsp[isp], rhosp[isp],
             vrsp[isp], rwf[isp]
         )
+
+        #xctype = [3, 0, 0]
+        #elk_solve_atom!(
+        #    solsc, ptnucl, spzn[isp], nstsp[isp], nsp[isp], lsp[isp], ksp[isp],
+        #    occsp[isp], xctype, xcgrad, nrsp[isp], rsp[isp], evalsp[isp], rhosp[isp],
+        #    vrsp[isp], rwf[isp]
+        #)
+
+
         for ist in 1:nstsp[isp]
             @printf("%3d %18.10f\n", ist, evalsp[isp][ist])
         end
