@@ -26,6 +26,8 @@ function test_AtomicVars()
     atposl[:,1,2] = [0.25, 0.25, 0.25]
 
     atomic_vars = AtomicVars(Nspecies, Natoms, atposl, lattice_vars)
+
+    println("Pass here")
 end
 
 test_AtomicVars()
