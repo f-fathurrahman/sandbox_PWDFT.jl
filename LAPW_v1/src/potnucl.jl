@@ -1,9 +1,10 @@
-function potnucl!(ptnucl::Bool, nr, r, zn, vn )
+function potnucl!(ptnucl::Bool, r, zn, vn )
     SMALL = 1e-10
     if abs(zn) <= SMALL
         vn[:] .= 0.0
         return
     end
+    nr = size(r,1)
     if ptnucl
         # nucleus is taken to be a point particle
         for ir in 1:nr

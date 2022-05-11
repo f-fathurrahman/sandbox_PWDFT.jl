@@ -85,7 +85,7 @@ function AtomicSpeciesVars( Nspecies::Int64 )
     nrnucl = zeros(Int64, Nspecies)
     nrcnucl = zeros(Int64, Nspecies)
     
-    vcln = Vector{Vector{Float64}}(undef,2)
+    vcln = Vector{Vector{Float64}}(undef,Nspecies)
     
     spze = zeros(Float64, Nspecies)
     spmass = zeros(Float64, Nspecies)
@@ -141,11 +141,9 @@ function init_nuclear_pot!( atsp_vars::AtomicSpeciesVars )
     for isp in 1:Nspecies
         nr = nrsp[isp]
         atsp_vars.vcln[isp] = zeros(Float64,nr)
-        @views potnucl!( 
-            ptnucl, nr, rsp[:,isp], spzn[isp], atsp_vars.vcln[isp]
-        )
+        potnucl!( ptnucl, rsp[isp], spzn[isp], atsp_vars.vcln[isp] )
         for ir in 1:nr
-            atsp.vcln[ir,isp] = t1*atsp.vcln[ir,isp]
+            atsp_vars.vcln[isp][ir] = t1*atsp_vars.vcln[isp][ir]
         end
     end
     return
