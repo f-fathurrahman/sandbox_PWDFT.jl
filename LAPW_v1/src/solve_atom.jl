@@ -57,21 +57,22 @@ function solve_atom!(
     end
 
     # set up nuclear potential
-    potnucl!(ptnucl, nr, r, zn, vn)
+    # FIXME: use vcnl from atsp_vars?
+    potnucl!(ptnucl, r, zn, vn)
 
     for ir in 1:nr
         ri[ir] = 1.0/r[ir]
-        # initialise the Kohn-Sham potential to the nuclear potential
+        # initialize the Kohn-Sham potential to the nuclear potential
         vr[ir] = vn[ir]
     end
 
     # determine the weights for radial integration
     wsplintp!(nr, r, wpr)
     
-    # initialise mixing parameter
+    # initialize mixing parameter
     betamix = 0.5
     
-    # initialise eigenvalues to relativistic values (minus the rest mass energy)
+    # initialize eigenvalues to relativistic values (minus the rest mass energy)
     for ist in 1:nst
         t1 = sqrt( k[ist]^2 - (zn/sol)^2 )
         t1 = ( n[ist] - abs(k[ist]) + t1)^2
@@ -109,7 +110,7 @@ function solve_atom!(
            vh[ir] = gr1[ir]*ri[ir] + t1 - gr2[ir]
         end
     
-        # normalise charge density and potential
+        # normalize charge density and potential
         t1 = ze/gr1[nr]
         for ir in 1:nr
             rho[ir] = t1*rho[ir]
