@@ -3,7 +3,8 @@ using LinearAlgebra
 using OffsetArrays
 using SpecialFunctions: sphericalbesselj
 
-using PWDFT
+using PWDFT: Atoms, SymmetryInfo, KPoints, PWGrid
+using PWDFT: calc_strfact, G_to_R!, R_to_G!
 using LAPWDFT
 
 import PyPlot
@@ -15,9 +16,9 @@ include("debug_rhoinit.jl")
 function main()
 
     #atoms = create_H2O()
-    #atoms = create_Si_fcc()
+    atoms = create_Si_fcc()
     #atoms = create_SiPt_fcc()
-    atoms = create_Si_atom()
+    #atoms = create_Si_atom()
     #atoms = create_Pt_atom()
 
     Nspecies = atoms.Nspecies
@@ -90,7 +91,8 @@ function main()
     end
     rhoir = zeros(Float64,Npoints)
     #
-    debug_rhoinit!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
+    #debug_rhoinit!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
+    rhoinit!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
 end
 
 main()
