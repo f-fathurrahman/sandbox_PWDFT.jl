@@ -1,0 +1,22 @@
+# Structure factor, using Elk convention
+function calc_sfacg(atoms, pw)
+    Natoms = atoms.Natoms
+    Ng = pw.gvec.Ng
+    atm2species = atoms.atm2species
+    sfacg = zeros(ComplexF64, Ng, Natoms)
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        v1 = atoms.positions[1,ia]
+        v2 = atoms.positions[2,ia]
+        v3 = atoms.positions[3,ia]
+        for ig in 1:Ng
+            ip = pw.gvec.idx_g2r[ig]
+            Gv1 = pw.gvec.G[1,ig]
+            Gv2 = pw.gvec.G[2,ig]
+            Gv3 = pw.gvec.G[3,ig]
+            x = v1*Gv1 + v2*Gv2 + v3*Gv3
+            sfacg[ig,ia] = cos(x) + im*sin(x)
+        end
+    end 
+    return sfacg
+end
