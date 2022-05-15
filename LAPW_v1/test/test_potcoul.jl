@@ -78,11 +78,17 @@ function main()
         isp = atm2species[ia]
         rhomt[ia] = zeros(Float64, npmt[isp])
     end
-    rhoir = zeros(Float64,Npoints)
+    rhoir = zeros(Float64, Npoints)
     #
     rhoinit!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
 
-    potcoul!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
+    vclmt = Vector{Vector{Float64}}(undef,Natoms)
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        vclmt[ia] = zeros(Float64, npmt[isp])
+    end
+    vclir = zeros(Float64, Npoints)
+    potcoul!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir, vclmt, vclir )
 end
 
 main()
