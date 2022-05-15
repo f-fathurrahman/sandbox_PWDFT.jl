@@ -61,6 +61,9 @@ include("XC_funcs/XC_c_pw.jl")
 include("polynm.jl")
 export polynm
 
+include("factnm.jl")
+export factnm
+
 include("spline.jl")
 export spline!
 
@@ -94,11 +97,17 @@ export poly3
 include("allatoms.jl")
 export allatoms!
 
+include("calc_sfacg.jl")
+export calc_sfacg
+
 include("rhoinit.jl")
 export rhoinit!
 
 include("sbessel.jl")
 export sbessel!
+
+include("genjlgprmt.jl")
+export genjlgprmt!
 
 include("z_to_rf_mt.jl")
 include("z_to_rf_lm.jl")
@@ -128,6 +137,9 @@ export SphericalHarmonicTransform
 
 include("zpotclmt.jl")
 export zpotclmt!
+
+include("zpotcoul.jl")
+export zpotcoul!
 
 include("potcoul.jl")
 export potcoul!

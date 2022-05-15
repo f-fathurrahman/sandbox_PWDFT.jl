@@ -27,7 +27,7 @@ function main()
     checkmt!( atoms, mt_vars )
     genrmesh!( atoms, atsp_vars, mt_vars )
     init_packed_mtr!( mt_vars )
-
+    init_nuclear_pot!( atsp_vars )
     allatoms!(atsp_vars)
 
     Natoms = atoms.Natoms
