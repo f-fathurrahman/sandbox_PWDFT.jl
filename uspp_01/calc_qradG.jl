@@ -111,7 +111,8 @@ function test_qradG_loop(atoms, pw, pspots)
 
     #ndm = max( upf(:)%kkbeta )
     #nqxq = INT( ( (SQRT(ecutrho) + qnorm) / dq + 4) * cell_factor )
-    nqxq = round(Int64, sqrt(2*ecutrho)/dq + 4) # convert to Ry
+    # FIXME: Using floor instead of int?
+    nqxq = floor(Int64, sqrt(2*ecutrho)/dq + 4) # convert to Ry
     println("nqxq = ", nqxq)
 
 
