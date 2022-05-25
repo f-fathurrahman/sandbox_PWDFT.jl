@@ -2,6 +2,7 @@ using Printf
 using SpecialFunctions: sphericalbesselj
 using PWDFT
 
+include("loop_calc_qradG.jl")
 include("calc_qradG.jl")
 
 function create_atoms_N2H4()
@@ -38,7 +39,7 @@ function main()
         PWDFT._build_prj_interp_table!( pspots[isp], pw )
     end
 
-    #test_qradG_loop(atoms, pw, pspots)
+    #loop_calc_qradG(atoms, pw, pspots)
     qradG = calc_qradG(atoms, pw, pspots)
 
 end
