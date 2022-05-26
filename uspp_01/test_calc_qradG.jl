@@ -19,29 +19,32 @@ function create_atoms_N2H4()
     return atoms
 end
 
+#
+# Main program here
+#
 
+atoms = create_atoms_N2H4()
+println(atoms)
 
-function main()
-    atoms = create_atoms_N2H4()
-    println(atoms)
-
-    pw = PWGrid(20.0, atoms.LatVecs, dual=5.0)
-    println(pw)
+pw = PWGrid(20.0, atoms.LatVecs, dual=5.0)
+println(pw)
     
-    Nspecies = atoms.Nspecies
-    pspfiles = [
-        "/home/efefer/pseudo/GBRV_LDA/n_lda_v1.2.uspp.F.UPF2",
-        "/home/efefer/pseudo/GBRV_LDA/h_lda_v1.4.uspp.F.UPF2"
-    ]
-    pspots = Array{PsPot_UPF}(undef,Nspecies)
-    for isp = 1:Nspecies
-        pspots[isp] = PsPot_UPF( pspfiles[isp] )
-        PWDFT._build_prj_interp_table!( pspots[isp], pw )
-    end
+Nspecies = atoms.Nspecies
+#pspfiles = [
+#    "/home/efefer/pseudo/GBRV_LDA/n_lda_v1.2.uspp.F.UPF2",
+#    "/home/efefer/pseudo/GBRV_LDA/h_lda_v1.4.uspp.F.UPF2"
+#]
+    
+pspfiles = [
+    "/home/efefer/pseudo/PSLIB/N.pbe-n-rrkjus_psl.0.1.UPF",
+    "/home/efefer/pseudo/PSLIB/H.pbe-rrkjus_psl.0.1.UPF"
+]
 
-    #loop_calc_qradG(atoms, pw, pspots)
-    qradG = calc_qradG(atoms, pw, pspots)
-
+pspots = Array{PsPot_UPF}(undef,Nspecies)
+for isp = 1:Nspecies
+    pspots[isp] = PsPot_UPF( pspfiles[isp] )
+    PWDFT._build_prj_interp_table!( pspots[isp], pw )
 end
 
-main()
+loop_calc_qradG(atoms, pw, pspots)
+#qradG = calc_qradG(atoms, pw, pspots)

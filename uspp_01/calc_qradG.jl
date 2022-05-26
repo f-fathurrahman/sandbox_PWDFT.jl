@@ -16,21 +16,9 @@ function calc_qradG(atoms, pw, pspots)
     qnorm = 0.0 # XXX HARDCODED, no k-points norm of (q + k) ?
     dq = 0.01 # XXX HARDCODED
     cell_factor = 1.0 # hardcoded
-
-    #ndm = max( upf(:)%kkbeta )
-    #nqxq = INT( ( (SQRT(ecutrho) + qnorm) / dq + 4) * cell_factor )
-    nqxq = floor(Int64, sqrt(2*ecutrho)/dq + 4) # convert to Ry
+    nqxq = floor(Int64, sqrt(2*ecutrho)/dq + 4) # factor of 2 in 2*ecutrho (convert to Ry)
     println("nqxq = ", nqxq)
 
-    lmaxkb = -1
-    for isp in 1:Nspecies
-        for i in 1:pspots[isp].Nproj
-            lmaxkb = max(lmaxkb, pspots[isp].proj_l[i])
-        end
-    end
-    println("lmaxkb = ", lmaxkb)
-    lmaxq = 2*lmaxkb + 1
-    println("lmaxq = ", lmaxq)
 
     besr = zeros(Float64, ndm)
     aux = zeros(Float64, ndm)
@@ -39,8 +27,16 @@ function calc_qradG(atoms, pw, pspots)
     for isp in 1:Nspecies
         Nproj = pspots[isp].Nproj
         Nn2 = round(Int64, Nproj*(Nproj+1)/2)
+        # Determine lmaxq
+        lmaxkb = -1
+        for i in 1:pspots[isp].Nproj
+            lmaxkb = max(lmaxkb, pspots[isp].proj_l[i])
+        end
+        lmaxq = 2*lmaxkb + 1
         qradG[isp] = zeros(Float64, nqxq, Nn2, lmaxq)
     end
+    # third dimension can be changed to (lmaxkb[isp] + 1)
+    # at least lmaxq=1
 
 
     for isp in 1:Nspecies
@@ -58,7 +54,6 @@ function calc_qradG(atoms, pw, pspots)
             for iq in 1:nqxq
                 q = (iq - 1) * dq
                 # here we compute the spherical bessel function for each q_i
-                #CALL sph_bes( upf(nt)%kkbeta, rgrid(nt)%r, q, l, besr)
                 for ir in 1:psp.kkbeta
                     besr[ir] = sphericalbesselj(l, q*psp.r[ir])
                 end
@@ -72,6 +67,7 @@ function calc_qradG(atoms, pw, pspots)
                         cond1 = l >= abs( lnb - lmb )
                         cond2 = l <=      lnb + lmb
                         cond3 = mod(l + lnb + lmb, 2) == 0
+                        # XXX: Check qfuncl for this conditions?
                         if cond1 & cond2 & cond3
                             for ir in 1:psp.kkbeta
                                 aux[ir] = besr[ir] * psp.qfuncl[ir,ijv,l+1]
