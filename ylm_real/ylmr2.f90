@@ -85,6 +85,7 @@ SUBROUTINE ylmr2 (lmax2, ng, g, gg, ylm)
     WRITE(*,'(1x,A,I4)', advance='no') 'l = ', l
 
     c = sqrt (DBLE(2*l+1) / fpi)
+    write(*,*) 'c = ', c
     IF( l == 0 ) THEN 
       DO ig = 1, ng
         Q(ig,0,0) = 1.d0
@@ -113,6 +114,7 @@ SUBROUTINE ylmr2 (lmax2, ng, g, gg, ylm)
         Q(ig,l,l) = - sqrt(DBLE(2*l-1))/sqrt(DBLE(2*l))*sent(ig)*Q(ig,l-1,l-1)
       ENDDO 
     ENDIF 
+    write(*,*) 'sum Q = ', sum(Q(1,:,:))
     
     !
     ! Y_lm, m = 0

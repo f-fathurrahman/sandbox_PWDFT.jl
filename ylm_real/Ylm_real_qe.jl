@@ -3,8 +3,8 @@
 #
 function Ylm_real_qe!(
     lmax::Int64,
-    R::Vector{Float64},
-    Ylm::Vector{Float64}
+    R::AbstractVector{Float64},
+    Ylm::AbstractVector{Float64}
 )
 
     SMALL = 1.0e-9
@@ -46,30 +46,26 @@ function Ylm_real_qe!(
             Q[1,1] = -sint/sqrt(2)
         else
             # recursion on l for Q(:,l,m)
-            for m in 0:l-2
-                Q[l,m] = cost*(2*l-1)/sqrt(l*l - m*m) * Q[l-1,m]
-                       - sqrt((l-1)*(l-1) - m*m) / sqrt(l*l - m*m) * Q[l-2,m]
+            for m in 0:(l-2)
+                Q[l,m] = cost*(2*l-1)/sqrt(l*l - m*m) * Q[l-1,m] -
+                         sqrt((l-1)*(l-1) - m*m) / sqrt(l*l - m*m) * Q[l-2,m]
             end
             #
             Q[l,l-1] = cost * sqrt(2*l-1) * Q[l-1,l-1]
             Q[l,l] = -sqrt(2*l - 1)/sqrt(2*l) * sint * Q[l-1,l-1]
         end
-
         # Y_lm, m = 0
         lm = lm + 1
-        println("lm = ", lm)
         Ylm[lm] = c*Q[l,0]
-        
         for m in 1:l
             # Y_lm, m > 0
             lm = lm + 1
-            println("lm = ", lm)
             Ylm[lm] = c * sqrt(2) * Q[l,m] * cos(m*phi)
             # Y_lm, m < 0
             lm = lm + 1
-            println("lm = ", lm)
             Ylm[lm] = c * sqrt(2) * Q[l,m] * sin(m*phi)
         end
     end
     return
 end
+
