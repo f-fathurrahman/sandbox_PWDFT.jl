@@ -3,6 +3,27 @@
 #
 function Ylm_real_qe!(
     lmax::Int64,
+    R::Matrix{Float64},
+    Ylm::Matrix{Float64}
+)
+
+    @assert size(R,1) == 3
+
+    N = size(R,2)
+    @assert size(Ylm,1) == N
+
+    lmmax = (lmax + 1)^2
+    @assert size(Ylm,2) == lmmax
+
+    for i in 1:N
+        @views Ylm_real_qe!(lmax, R[:,i], Ylm[i,:])
+    end
+    return
+end
+
+
+function Ylm_real_qe!(
+    lmax::Int64,
     R::AbstractVector{Float64},
     Ylm::AbstractVector{Float64}
 )
