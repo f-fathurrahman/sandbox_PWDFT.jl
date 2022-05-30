@@ -11,8 +11,8 @@ def gen_Nlm(l,m):
 def gen_Ylm_complex(l,m,θ,ϕ):
     Nlm = gen_Nlm(l,m)
     # force the factor to be Rational
-    #expr1 = Rational(-1,1)**m * Nlm * assoc_legendre(l,m,cos(θ)) * exp(I*m*ϕ)
-    expr1 = Nlm * assoc_legendre(l,m,cos(θ)) * exp(I*m*ϕ) # no (-1)^m factor
+    expr1 = Rational(-1,1)**m * Nlm * assoc_legendre(l,m,cos(θ)) * exp(I*m*ϕ)
+    #expr1 = Nlm * assoc_legendre(l,m,cos(θ)) * exp(I*m*ϕ) # no (-1)^m factor
     # force sqrt(1-cos(theta)**2) -> sin(θ)
     return simplify(expr1.subs( sqrt(1 - cos(θ)**2), sin(θ) ))
 
