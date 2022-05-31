@@ -8,7 +8,7 @@ function calc_clebsch_gordan( lmaxkb::Int64 )
     lli = lmaxkb + 1
 
     # Those are parameters (HARDCODED)
-    lmaxx  = 3         # max non local angular momentum (l=0 to lmaxx)      
+    lmaxx  = 3         # max non local angular momentum (l=0 to lmaxx)
     lqmax = 2*lmaxx + 1  # max number of angular momenta of Q
 
     # maximum number of combined angular momentum
@@ -22,9 +22,6 @@ function calc_clebsch_gordan( lmaxkb::Int64 )
     @assert lli >= 0
     @assert (lli*lli) <= nlx
 
-    println("lli = ", lli)
-    println("llx = ", llx)
-
     r = zeros(Float64, 3, llx)
     for ir in 1:llx
         c = 2.0*rand() - 1.0
@@ -35,15 +32,11 @@ function calc_clebsch_gordan( lmaxkb::Int64 )
         r[3,ir] = c
     end
 
-    Ylm = zeros(Float64, llx, llx)
     # generate the real spherical harmonics for the array: ylm(ir,lm)
-    _lmax = round(Int64, sqrt(llx) - 1)
+    Ylm = zeros(Float64, llx, llx)
+     _lmax = round(Int64, sqrt(llx) - 1)
     Ylm_real_qe!(_lmax, r, Ylm)
-    #for i in 1:llx
-    #    @views Ylm_real_qe!(_lmax, r[:,i], Ylm[i,:])
-    #end
-
-    Ylminv = inv(Ylm)
+    Ylminv = inv(Ylm) # The inverse
 
     # Clebsch-Gordan coefficients for spherical harmonics
     ap = zeros(Float64, lqmax*lqmax, nlx, nlx)
@@ -52,9 +45,9 @@ function calc_clebsch_gordan( lmaxkb::Int64 )
     lpl = zeros(Int64, nlx, nlx, mx)  # list of combined angular momenta  LM
 
     # for each li,lj compute ap(l,li,lj) and the indices, lpx and lpl
-    println()
+    #println()
     for li in 1:lli*lli
-        println()
+        #println()
         for lj in 1:lli*lli
             lpx[li,lj] = 0
             for l in 1:llx
@@ -66,13 +59,13 @@ function calc_clebsch_gordan( lmaxkb::Int64 )
                         error("Error in calc_clebsch_gordan")
                     end
                     lpl[li, lj, lpx[li,lj]] = l
-                    @printf("%4d %4d %4d %18.10f\n", l, li, lj, ap[l,li,lj])
+                    #@printf("%4d %4d %4d %18.10f\n", l, li, lj, ap[l,li,lj])
                 end # if
             end
         end
     end
 
-    return ap
+    return ap, lpx, lpl
 
 end
 
