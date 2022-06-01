@@ -1,5 +1,20 @@
 # Experimenting with USPP
 
+struct PsPotNL_UPF
+    lmaxx::Int64
+    lqmax::Int64
+    lmaxkb::Int64
+    nh::Vector{Int64}
+    nhm::Int64
+    ap::Array{Float64,3}
+    lpx::Array{Int64,2}
+    lpl::Array{Int64,3}
+    indv::Array{Int64,2}
+    nhtol::Array{Int64,2}
+    nhtolm::Array{Int64,2}
+end
+
+
 function PsPotNL_UPF(
     atoms::Atoms,
     pw::PWGrid,
@@ -47,6 +62,7 @@ function PsPotNL_UPF(
             end
         end
     end
+    # TODO: Extract lm -> (l,m)
 
     println("indv = ")
     for isp in 1:Nspecies
@@ -63,8 +79,21 @@ function PsPotNL_UPF(
         println(nhtolm[1:nh[isp],isp])
     end
 
-    println("Pass here")
+    return PsPotNL_UPF(
+        lmaxx, lqmax, lmaxkb,
+        nh, nhm, ap, lpx, lpl,
+        indv, nhtol, nhtolm
+    )
 
+end
+
+
+
+import Base: show
+function show( io::IO, pw::PsPotNL_UPF )
+    println("PsPotNL_UPF:")
+    println("lmaxx = ", lmaxx)
+    println("lqmax = ", lqmax)
+    println("lmaxkb = ", lmaxkb)
     return
-
 end

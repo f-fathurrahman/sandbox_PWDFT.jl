@@ -31,5 +31,5 @@ for isp = 1:Nspecies
 end
 
 
-PsPotNL_UPF(atoms, pw, pspots)
+pspotNL = PsPotNL_UPF(atoms, pw, pspots)
 
