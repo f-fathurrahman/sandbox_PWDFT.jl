@@ -40,7 +40,7 @@ pspfiles = [
     "/home/efefer/pseudo/PSLIB/H.pbe-rrkjus_psl.0.1.UPF"
 ]
 
-pspots = Array{PsPot_UPF}(undef,Nspecies)
+pspots = Vector{PsPot_UPF}(undef,Nspecies)
 for isp = 1:Nspecies
     pspots[isp] = PsPot_UPF( pspfiles[isp] )
     PWDFT._build_prj_interp_table!( pspots[isp], pw )
