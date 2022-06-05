@@ -32,7 +32,7 @@ function PsPotNL_UPF(
         psp = pspots[isp]
         for nb in 1:psp.Nproj
             nh[isp] = nh[isp] + 2 * psp.proj_l[nb] + 1
-            lmaxkb = max(lmaxkb, psp.proj_l[isp])
+            lmaxkb = max(lmaxkb, psp.proj_l[nb])
         end
     end
     println("nh = ", nh)
@@ -90,10 +90,10 @@ end
 
 
 import Base: show
-function show( io::IO, pw::PsPotNL_UPF )
+function show( io::IO, psp::PsPotNL_UPF )
     println("PsPotNL_UPF:")
-    println("lmaxx = ", lmaxx)
-    println("lqmax = ", lqmax)
-    println("lmaxkb = ", lmaxkb)
+    println("lmaxx = ", psp.lmaxx)
+    println("lqmax = ", psp.lqmax)
+    println("lmaxkb = ", psp.lmaxkb)
     return
 end
