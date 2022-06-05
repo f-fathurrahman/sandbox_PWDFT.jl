@@ -1,6 +1,4 @@
-# From aainit of QE
-
-const LIBMINIPW = "/home/efefer/WORKS/my_github_repos/ffr-learns-qe/minipw-6.6/srclib/libqemain.so"
+# From aainit of QE-6.6
 
 # lli = lmaxkb + 1
 function calc_clebsch_gordan( lmaxkb::Int64 )
@@ -35,7 +33,7 @@ function calc_clebsch_gordan( lmaxkb::Int64 )
     # generate the real spherical harmonics for the array: ylm(ir,lm)
     Ylm = zeros(Float64, llx, llx)
      _lmax = round(Int64, sqrt(llx) - 1)
-    Ylm_real_qe!(_lmax, r, Ylm)
+    Ylm_real_qe!(_lmax, r, Ylm) # Ylm_real_qe accept l value starting from 0
     Ylminv = inv(Ylm) # The inverse
 
     # Clebsch-Gordan coefficients for spherical harmonics

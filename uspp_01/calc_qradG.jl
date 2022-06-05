@@ -1,3 +1,5 @@
+# FIXME: atoms argument can be dropped?
+#        Nspecies can be obtained from length of pspots
 function calc_qradG(atoms, pw, pspots)
     CellVolume = pw.CellVolume
     Nspecies = atoms.Nspecies
