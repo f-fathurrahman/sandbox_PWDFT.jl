@@ -24,3 +24,26 @@ function elk_write_rlmt()
     return
 end
 
+
+# FIXME: Test this !!!!
+function elk_get_nrmt()
+    nspecies = unsafe_load(cglobal((:__m_atoms_MOD_nspecies, LIBLAPW), Int32)) |> Int64
+    ptr = cglobal( (:__m_muffin_tins_MOD_nrmt, LIBLAPW), Ptr{Int32} )
+    nrmt = zeros(Int64,nspecies)
+    # XXX: Using two unsafe_load
+    for i in 1:nspecies
+        nrmt[i] = Int64(unsafe_load(ptr,i))
+    end
+    return nrmt
+end
+
+
+function elk_get_nrmti()
+    nspecies = unsafe_load(cglobal((:__m_atoms_MOD_nspecies, LIBLAPW), Int32)) |> Int64
+    ptr = cglobal( (:__m_muffin_tins_MOD_nrmti, LIBLAPW), Ptr{Int32} )
+    nrmti = zeros(Int64,nspecies)
+    for i in 1:nspecies
+        nrmti[i] = Int64(unsafe_load(ptr,i))
+    end
+    return nrmti
+end
