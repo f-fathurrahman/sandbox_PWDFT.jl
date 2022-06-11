@@ -1,3 +1,13 @@
+# Using immutable struct?
+struct PWSCFInput
+    atoms::Atoms
+    ecutwfc::Float64
+    ecutrho::Float64
+    pspfiles::Vector{String}
+    meshk::Tuple{Int64,Int64,Int64}
+end
+
+
 #
 # A naive function to read pwscf input
 # Only a subset of possible combinations of parameters are considered.
@@ -9,6 +19,9 @@ function read_pwscf_input( filename::String )
 
     Natoms = 0
     Nspecies = 0
+
+    ecutwfc = -1.0
+    ecutrho = -1.0
 
     LatVecs = zeros(3,3)
     is_parse_cell = false
@@ -22,11 +35,20 @@ function read_pwscf_input( filename::String )
 
     is_parse_kpoints = false
     N_parse_kpoints = 0
-    meshk = [0, 0, 0]
+    meshk1 = 0
+    meshk2 = 0
+    meshk3 = 0
 
     in_angstrom = false
     in_fraction = false
     in_bohr = false
+
+    is_parse_species = false
+    N_parse_species = 0
+    pspfiles = String[]
+    species_symbols = String[]
+    species_masses = Float64[]
+    pseudo_dir = "./"
 
     f = open(filename, "r")
     
@@ -34,6 +56,7 @@ function read_pwscf_input( filename::String )
         
         l = readline(f)
         
+        # FIXME: This is not robust
         if occursin("  A =", l)
             ll = split(l, "=")
             acell = parse(Float64,ll[end])*ANG2BOHR
@@ -53,7 +76,34 @@ function read_pwscf_input( filename::String )
             println("Read Nspecies = ", Nspecies)
         end
 
+
+        # Read ecutwfc
+        if occursin("ecutwfc =", l)
+            ll = split(l, "=", keepempty=false)
+            ecutwfc = parse(Float64, ll[end])
+            println("Read ecutwfc = ", ecutwfc)
+        end
+
+        # Read ecutrho
+        if occursin("ecutrho =", l)
+            ll = split(l, "=", keepempty=false)
+            ecutrho = parse(Float64, ll[end])
+            println("Read ecutrho = ", ecutrho)
+        end
+
+        # Read pseudo_dir
+        if occursin("pseudo_dir =", l)
+            # FIXME: Notice the spaces around the equal sign
+            # This is to prevent space before / in the path string
+            ll = split(l, " = ", keepempty=false)
+            pseudo_dir = replace(replace(ll[end], "'" => ""), "\"" => "")
+            println("Read pseudo_dir = ", pseudo_dir)
+        end
+
+
+        #
         # Read cell parameters
+        #
         # FIXME: They are assumed to be given in bohr !!!!
         if occursin("CELL_PARAMETERS", l)
             is_parse_cell = true
@@ -72,6 +122,10 @@ function read_pwscf_input( filename::String )
         end
 
 
+
+        #
+        # Read atomic positions
+        #
         # XXX: Natoms should be read before
         if occursin("ATOMIC_POSITIONS", l)
             is_parse_xyz = true
@@ -118,7 +172,30 @@ function read_pwscf_input( filename::String )
             N_parse_xyz = N_parse_xyz + 1
         end
 
+        #
+        # Read atomic species
+        #
+        # FIXME: Nspecies must be read before
+        if occursin("ATOMIC_SPECIES", l)
+            is_parse_species = true
+        end
 
+        # Atomic species information (pseudopotentials)
+        if is_parse_species && (N_parse_species <= Nspecies)
+            if N_parse_species == 0
+                N_parse_species = N_parse_species + 1
+                continue
+            end
+            ll = split(l, " ", keepempty=false)
+            push!(species_symbols, ll[1])
+            push!(species_masses, parse(Float64, ll[2]))
+            push!(pspfiles, joinpath(pseudo_dir, ll[3]))
+            N_parse_species = N_parse_species + 1
+        end
+
+        #
+        # Read kpoints
+        #
         if occursin("K_POINTS", l)
             is_parse_kpoints = true
         end
@@ -129,14 +206,27 @@ function read_pwscf_input( filename::String )
                 continue
             end
             ll = split(l, " ", keepempty=false)
-            meshk[1] = parse(Int64,ll[1])
-            meshk[2] = parse(Int64,ll[2])
-            meshk[3] = parse(Int64,ll[3])
+            meshk1 = parse(Int64, ll[1])
+            meshk2 = parse(Int64, ll[2])
+            meshk3 = parse(Int64, ll[3])
             N_parse_kpoints = N_parse_kpoints + 1
         end
 
     end
     close(f)
+
+
+    println(species_symbols)
+    println(species_masses)
+    println(pspfiles)
+
+    if ecutwfc <= 0.0
+        error("Cannot read ecutwfc")
+    end
+
+    if ecutrho <= 0.0
+        ecutrho = 4*ecutwfc
+    end
 
     # Only scale LatVecs with acell if it is a positive value
     if acell > 0.0
@@ -161,5 +251,5 @@ function read_pwscf_input( filename::String )
     # Set unit lattice vectors manually
     atoms.LatVecs = LatVecs
 
-    return atoms, meshk
+    return atoms, (meshk1, meshk2, meshk3)
 end
