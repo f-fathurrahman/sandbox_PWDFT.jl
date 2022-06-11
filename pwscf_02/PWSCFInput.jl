@@ -1,4 +1,3 @@
-# Using immutable struct?
 struct PWSCFInput
     atoms::Atoms
     ecutwfc::Float64
@@ -12,7 +11,7 @@ end
 # A naive function to read pwscf input
 # Only a subset of possible combinations of parameters are considered.
 #
-function read_pwscf_input( filename::String )
+function PWSCFInput( filename::String )
 
     # Default values, some are not valid for PWSCF
     acell = -1.0
@@ -251,5 +250,8 @@ function read_pwscf_input( filename::String )
     # Set unit lattice vectors manually
     atoms.LatVecs = LatVecs
 
-    return atoms, (meshk1, meshk2, meshk3)
+    return PWSCFInput(
+        atoms, ecutwfc, ecutrho, pspfiles,
+        (meshk1, meshk2, meshk3)
+    )
 end
