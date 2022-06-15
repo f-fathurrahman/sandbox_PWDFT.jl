@@ -25,7 +25,7 @@ pspfiles = [
 ]
 
 pspots = Vector{PsPot_UPF}(undef,Nspecies)
-for isp = 1:Nspecies
+for isp in 1:Nspecies
     pspots[isp] = PsPot_UPF( pspfiles[isp] )
     PWDFT._build_prj_interp_table!( pspots[isp], pw )
 end
