@@ -46,5 +46,5 @@ for isp in 1:Nspecies
     PWDFT._build_prj_interp_table!( pspots[isp], pw )
 end
 
-loop_calc_qradG(atoms, pw, pspots)
-#qradG = calc_qradG(atoms, pw, pspots)
+loop_calc_qradG(pw, pspots)
+#qradG = calc_qradG(pw, pspots)

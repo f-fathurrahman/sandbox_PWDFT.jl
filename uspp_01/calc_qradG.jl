@@ -1,8 +1,9 @@
-# FIXME: atoms argument can be dropped?
-#        Nspecies can be obtained from length of pspots
-function calc_qradG(atoms, pw, pspots)
+function calc_qradG(
+    pw::PWGrid,
+    pspots::Vector{PsPot_UPF}
+)
     CellVolume = pw.CellVolume
-    Nspecies = atoms.Nspecies
+    Nspecies = length(pspots)
     prefr = 4π/CellVolume
     ecutrho = pw.ecutrho
 

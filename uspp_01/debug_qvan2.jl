@@ -33,7 +33,7 @@ for isp in 1:Nspecies
 end
 
 pspotNL = PsPotNL_UPF(atoms, pw, pspots)
-qradG = calc_qradG(atoms, pw, pspots) # FIXME: include in PsPotNL_UPF
+qradG = calc_qradG(pw, pspots) # FIXME: include in PsPotNL_UPF
 
 #
 # Debug qvan2
