@@ -1,6 +1,9 @@
-function loop_calc_qradG(atoms, pw, pspots)
+function loop_calc_qradG(
+    pw::PWGrid,
+    pspots::Vector{PsPot_UPF}
+)
     CellVolume = pw.CellVolume
-    Nspecies = atoms.Nspecies
+    Nspecies = length(pspots)
     prefr = 4π/CellVolume
     ecutrho = pw.ecutrho
 
