@@ -204,5 +204,61 @@ f(\mathbf{G)} & =\mathrm{fw\_FT}[f(\mathbf{R})]
 
 \end_layout
 
+\begin_layout Standard
+Definitions:
+\begin_inset Formula 
+\[
+\mathrm{inv\_FT}\left[f(\mathbf{G})\right]_{uvw}=\sum_{j=0}^{N_{x}-1}\sum_{k=0}^{N_{y}-1}\sum_{l=0}^{N_{z}-1}f_{jkl}^{\mathbf{G}}\exp\left[\imath\frac{2\pi}{N_{x}}ju\right]\exp\left[\imath\frac{2\pi}{N_{y}}kv\right]\exp\left[\imath\frac{2\pi}{N_{z}}lw\right]
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\mathrm{fw\_FT}\left[f(\mathbf{R})\right]_{jkl}=\sum_{u=0}^{N_{x}-1}\sum_{v=0}^{N_{y}-1}\sum_{w=0}^{N_{z}-1}f_{uvw}^{\mathbf{R}}\exp\left[-\imath\frac{2\pi}{N_{x}}ju\right]\exp\left[-\imath\frac{2\pi}{N_{y}}kv\right]\exp\left[-\imath\frac{2\pi}{N_{z}}lw\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+with the appropriate mappings o 
+\begin_inset Formula $\mathbf{q}$
+\end_inset
+
+ and 
+\begin_inset Formula $\mathbf{g}$
+\end_inset
+
+ to the indices:
+\begin_inset Formula 
+\[
+\left[u,v,w\right]=\mathbf{q}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\left[j,k,l\right]=\mathbf{g}_{s}\ \ \ \ \ \mathbf{\mathbf{g}}_{s}\ge0
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\left[j,k,l\right]=N_{s}+\mathbf{g}_{s}
+\]
+
+\end_inset
+
+
+\end_layout
+
 \end_body
 \end_document

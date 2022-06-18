@@ -183,7 +183,44 @@ Reciprocal lattice vectors
 \begin_inset Formula $\mathbf{b}_{i}\cdot\mathbf{a}_{j}=2\pi\delta_{ij}$
 \end_inset
 
+.
+ They can be arranged into 
+\begin_inset Formula $3\times3$
+\end_inset
 
+ matrix:
+\begin_inset Formula 
+\[
+\left[\mathbf{b}_{1},\mathbf{b}_{2},\mathbf{b}_{3}\right]=2\pi\left(\mathbf{h}^{\mathsf{T}}\right)^{-1}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Plane waves:
+\begin_inset Formula 
+\[
+f_{\mathbf{G}}^{\mathrm{PW}}(\mathbf{r})=\frac{1}{\sqrt{\Omega}}\exp\left[\imath\mathbf{G}\cdot\mathbf{r}\right]=\frac{1}{\sqrt{\Omega}}\exp\left[\imath2\pi\mathbf{g}\cdot\mathbf{s}\right]
+\]
+
+\end_inset
+
+with reciprocal space vectors
+\begin_inset Formula 
+\[
+\mathbf{G}=2\pi\left(\mathbf{h}^{\mathsf{T}}\right)^{-1}\mathbf{g}
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\mathbf{g}=[j,k,l]$
+\end_inset
+
+ is a triple of integer values (Miller index).
 \end_layout
 
 \end_body
