@@ -22,7 +22,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   IMPLICIT NONE
   !
-  integer :: parameter :: dp=8
+  integer, parameter :: dp=8
   INTEGER, INTENT(IN) :: n, m, ldh
     ! dimension of the matrix to be diagonalized
     ! number of eigenstates to be calculate
@@ -151,12 +151,13 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      DEALLOCATE( work )
      !
      IF ( info > n ) THEN
-        CALL errore( 'cdiaghg', 'S matrix not positive definite', ABS( info ) )
+       write(*,*) 'info = ', info
+        stop 'cdiaghg: S matrix not positive definite' ! ABS( info ) )
      ELSE IF ( info > 0 ) THEN
-        CALL errore( 'cdiaghg', 'eigenvectors failed to converge', ABS( info ) )
+        stop 'cdiaghg: eigenvectors failed to converge' ! ABS( info ) )
      ELSE IF ( info < 0 ) THEN
-        CALL errore( 'cdiaghg', 'incorrect call to ZHEGV*', ABS( info ) )
-     END IF
+        stop 'cdiaghg: incorrect call to ZHEGV*' ! ABS( info ) )
+     ENDIF
      !
      ! ... restore input S matrix from saved diagonal and lower triangle
      !
