@@ -44,7 +44,7 @@ ccall( (:my_cegterg_v61_, LIBDAVIDSON), Cvoid,
     uspp, e, btype, notcnv, lrot, dav_iter
 )
 
-println("res.values = ", res.values[1:nvec]')
+#println("res.values = ", res.values[1:nvec]')
 println("e = ", e')
 
 #SUBROUTINE my_cegterg_v61( &

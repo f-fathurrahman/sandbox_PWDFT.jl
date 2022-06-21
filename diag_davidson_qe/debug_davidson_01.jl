@@ -16,15 +16,15 @@ S = S + N*I # Make diagonally dominant
 
 # res = eigen(H, S)
 
-Nstates = 3
-evals = zeros(Float64, Nstates)
+Nvec = 3
+evals = zeros(Float64, Nvec)
 
 # Prepare initial eigenvectors
-evc = randn(ComplexF64, N, Nstates)
+evc = randn(ComplexF64, N, Nvec)
 U = inv(sqrt(evc'*S*evc))
 evc = evc*U
 
-Nvecx = 2*Nstates
+Nvecx = 2*Nvec
 psi = zeros(ComplexF64, N, Nvecx)
 Hpsi = zeros(ComplexF64, N, Nvecx)
 Spsi = zeros(ComplexF64, N, Nvecx)
@@ -36,31 +36,30 @@ vc = zeros(ComplexF64, Nvecx, Nvecx)
 # eigenvalues of reduced Hamiltonian
 ew = zeros(Float64, Nvecx)
 
-is_conv = zeros(Bool, Nstates)
+is_conv = zeros(Bool, Nvec)
 
-notcnv = Nstates
-nbase  = Nstates
+notcnv = Nvec
+nbase  = Nvec
 
+psi[:,1:Nvec] = evc[:,1:Nvec]
 
-psi[:,1:Nstates] = evc[:,1:Nstates]
+Hpsi[:,1:Nvec] = H*psi[:,1:Nvec]
+Spsi[:,1:Nvec] = S*psi[:,1:Nvec]
 
-Hpsi[:,1:Nstates] = H*psi[:,1:Nstates]
-Spsi[:,1:Nstates] = S*psi[:,1:Nstates]
-
-Hc = psi'*Hpsi
-Sc = psi'*Spsi
+Hc[1:nbase,1:nbase] = psi[:,1:nbase]'*Hpsi[:,1:nbase]
+Sc[1:nbase,1:nbase] = psi[:,1:nbase]'*Spsi[:,1:nbase]
 
 # diagonalize the reduced hamiltonian
-ew[1:Nstates], vc[1:Nstates,1:Nstates] = eigen(
-    Hermitian(Hc[1:Nstates,1:Nstates]),
-    Hermitian(Sc[1:Nstates,1:Nstates])
+ew[1:Nvec], vc[1:Nvec,1:Nvec] = eigen(
+    Hermitian(Hc[1:Nvec,1:Nvec]),
+    Hermitian(Sc[1:Nvec,1:Nvec])
 )
-evals[1:Nstates] .= ew[1:Nstates]
-for ist in 1:Nstates
+evals[1:Nvec] .= ew[1:Nvec]
+for ist in 1:Nvec
     @printf("%4d %18.10f\n", ist, evals[ist])
 end
 
-
+EBANDS_THR = 1e-8
 maxter = 1
 dav_iter = 0
 kter = 1
@@ -70,7 +69,7 @@ while (kter <= maxter) || (notcnv == 0)
 
     println("kter = ", kter)
     np = 0
-    for ist in 1:Nstates
+    for ist in 1:Nvec
         if !is_conv[ist]
             # this root not yet converged ... 
             np = np + 1
@@ -87,13 +86,12 @@ while (kter <= maxter) || (notcnv == 0)
 
     nb1 = nbase + 1
     println("nb1 = ", nb1)
+    
     # expand the basis set with new basis vectors ( H - e*S )|psi> ...
     #IF ( uspp ) THEN
     #   CALL ZGEMM( 'N', 'N', kdim, notcnv, nbase, ONE, spsi, &
     #               kdmx, vc, nvecx, ZERO, psi(:,nb1), kdmx )
-    
     psi[:,nb1:nb1+notcnv-1] = Spsi[:,1:nbase]*vc[1:nbase,1:nbase]
-
     for np in 1:notcnv
         psi[:,nbase+np] .= -ew[nbase+np]*psi[:,nbase+np]
     end
@@ -114,7 +112,6 @@ while (kter <= maxter) || (notcnv == 0)
     #      ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
     for n in 1:notcnv
         nbn = nbase + n
-        #ew[n] = ddot( 2*npw, psi(:,nbn), 1, psi(:,nbn), 1 )
         @views ew[n] = real(dot(psi[:,nbn], psi[:,nbn]))
     end
 
@@ -125,24 +122,25 @@ while (kter <= maxter) || (notcnv == 0)
 
 
     # here compute the hpsi and spsi of the new functions
-    #Hpsi[:,nb1:nb1+notcnv-1] = H*psi[:,nb1:nb1+notcnv-1]
-    #Spsi[:,nb1:nb1+notcnv-1] = S*psi[:,nb1:nb1+notcnv-1]
-    Hpsi[:,:] = H*psi
-    Spsi[:,:] = S*psi
+    Hpsi[:,nb1:nb1+notcnv-1] = H*psi[:,nb1:nb1+notcnv-1]
+    Spsi[:,nb1:nb1+notcnv-1] = S*psi[:,nb1:nb1+notcnv-1]
+    #Hpsi[:,:] = H*psi
+    #Spsi[:,:] = S*psi
 
-    display(Hpsi); println()
-    display(Spsi); println()
+    #display(Hpsi); println()
+    #display(Spsi); println()
 
     # update the reduced Hamiltonian
+    println("nbase = ", nbase)
+    println("notcnv = ", notcnv)
+    println("nb1 = ", nb1)
     #CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, kdim, ONE, psi, &
     #            kdmx, hpsi(:,nb1), kdmx, ZERO, hc(:,nb1), nvecx )
-    #Hc[1:notcnv,nb1:nb1+notcnv-1] = psi[:,1:notcnv]' * Hpsi[:,1:notcnv]
-    Hc = psi' * Hpsi
+    Hc[1:nbase+notcnv,nb1:nb1+notcnv-1] = psi[:,1:nbase+notcnv]' * Hpsi[:,nb1:nb1+notcnv-1]
 
     #CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, kdim, ONE, psi, &
     #            kdmx, spsi(:,nb1), kdmx, ZERO, sc(:,nb1), nvecx )
-    #Sc[1:notcnv,nb1:nb1+notcnv-1] = psi[:,1:notcnv]' * Spsi[:,1:notcnv]
-    Sc = psi' * Spsi
+    Sc[1:nbase+notcnv,nb1:nb1+notcnv-1] = psi[:,1:nbase+notcnv]' * Spsi[:,nb1:nb1+notcnv-1]
 
     nbase = nbase + notcnv
     for n in 1:nbase
@@ -156,25 +154,33 @@ while (kter <= maxter) || (notcnv == 0)
         end
     end
 
-    #display(Hc); println()
-    #display(Sc); println()
-
-    println("Hc[5,5] = ", Hc[5,5])
-    println("Hc[6,6] = ", Hc[6,6])
-
-    println("Sc[5,5] = ", Sc[5,5])
-    println("Sc[6,6] = ", Sc[6,6])
-
-
     #CALL cdiaghg( nbase, nvec, hc, sc, nvecx, ew, vc )
     # diagonalize the reduced hamiltonian
-    println("nbase = ", nbase)
-    println("Nstates = ", Nstates)
-    ew[:], vc[:,:] = eigen(
+    #ew[1:Nvec], vc[1:Nvec,1:Nvec] = eigen(
+    #    Hermitian(Hc[1:Nvec,1:Nvec]),
+    #    Hermitian(Sc[1:Nvec,1:Nvec])
+    #)
+    
+    ew, vc = eigen(
         Hermitian(Hc),
         Hermitian(Sc)
     )
-    println("ew = ", ew)
+    vc[:,Nvec+1:nbase] .= 0.0
+
+    println("ew = ", ew[1:Nvec])
+    println("evals  = ", evals[1:Nvec])
+
+    # test for convergence
+    for i in 1:Nvec
+        is_conv[i] = abs(ew[i] - evals[i]) < EBANDS_THR
+    end
+    println("is_conv = ", is_conv)
+    
+    #WHERE( btype(1:nvec) == 1 )
+    #  conv(1:nvec) = ( ( ABS( ew(1:nvec) - e(1:nvec) ) < ethr ) )
+    #ELSEWHERE
+    #  conv(1:nvec) = ( ( ABS( ew(1:nvec) - e(1:nvec) ) < empty_ethr ) )
+    #END WHERE
 
 
 #=

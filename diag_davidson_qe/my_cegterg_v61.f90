@@ -84,7 +84,7 @@ SUBROUTINE my_cegterg_v61( &
   !
   ! ... LOCAL variables
   !
-  INTEGER, PARAMETER :: maxter = 40
+  INTEGER, PARAMETER :: maxter = 2
     ! maximum number of iterations
   !
   INTEGER :: kter, nbase, np, kdim, kdmx, n, m, nb1, nbn
@@ -232,6 +232,9 @@ SUBROUTINE my_cegterg_v61( &
     !
 
     nb1 = nbase + 1
+    write(*,*) 'nbase = ', nbase
+    write(*,*) 'nb1 = ', nb1
+
     ! expand the basis set with new basis vectors ( H - e*S )|psi> ...
     IF ( uspp ) THEN
        CALL ZGEMM( 'N', 'N', kdim, notcnv, nbase, ONE, spsi, &
@@ -248,7 +251,7 @@ SUBROUTINE my_cegterg_v61( &
     CALL ZGEMM( 'N', 'N', kdim, notcnv, nbase, ONE, hpsi, &
                 kdmx, vc, nvecx, ONE, psi(1,nb1), kdmx )
 
-    write(*,*) 'psi(1,nb1) = ', psi(1,nb1)
+    !write(*,*) 'psi(1,nb1) = ', psi(1,nb1)
     !stop 'ffr 252'
 
     ! approximate inverse iteration
@@ -268,7 +271,7 @@ SUBROUTINE my_cegterg_v61( &
       psi(:,nbase+n) = psi(:,nbase+n) / SQRT( ew(n) )
     ENDDO
 
-    write(*,*) 'psi(1,nb1) = ', psi(1,nb1)
+    !write(*,*) 'psi(1,nb1) = ', psi(1,nb1)
     !stop 'ffr 272'
 
      
@@ -303,19 +306,32 @@ SUBROUTINE my_cegterg_v61( &
         sc(m,n) = CONJG( sc(n,m) )
       ENDDO
     ENDDO
-     
-    write(*,*) 'Hc(5,5) = ', Hc(5,5)
-    write(*,*) 'Hc(6,6) = ', Hc(6,6)
-    
-    write(*,*) 'Sc(5,5) = ', Sc(5,5)    
-    write(*,*) 'Sc(6,6) = ', Sc(6,6)
 
-    ! diagonalize the reduced hamiltonian
-    CALL cdiaghg( nbase, nvec, hc, sc, nvecx, ew, vc )
+    write(100,*) real(Hc)
+    write(101,*) imag(Hc)
+
+    write(102,*) real(Sc)
+    write(103,*) imag(Sc)
+
+    write(*,*) 'Eigenvalues of reduced Hamiltonian before cdiaghg'
     do i=1,nbase
       write(*,'(1x,I4,F18.10)') i, ew(i)
     enddo
-    stop 'ffr 313'
+
+    ! diagonalize the reduced hamiltonian
+    CALL cdiaghg( nbase, nvec, hc, sc, nvecx, ew, vc )
+
+    write(*,*) 'nbase = ', nbase
+    write(*,*) 'nvec = ', nvec
+    write(*,*) 'Eigenvalues of reduced Hamiltonian after cdiaghg'
+    do i=1,nbase
+      write(*,'(1x,I4,F18.10)') i, ew(i)
+    enddo
+
+    write(104,*) real(vc)
+    write(105,*) imag(vc)
+
+    !return ! early return
 
     ! test for convergence
     WHERE( btype(1:nvec) == 1 )
@@ -324,10 +340,14 @@ SUBROUTINE my_cegterg_v61( &
       conv(1:nvec) = ( ( ABS( ew(1:nvec) - e(1:nvec) ) < empty_ethr ) )
     END WHERE
 
-    
+    write(*,*) 'ew[1:Nvec] = ', ew(1:nvec)
+    write(*,*) 'e[1:Nvec] = ', e(1:nvec)
+
     notcnv = COUNT( .NOT. conv(:) )
     write(*,*) 'notcnv = ', notcnv
     write(*,*) 'conv = ', conv
+
+    stop 'ffr 344'
 
     e(1:nvec) = ew(1:nvec)
 
