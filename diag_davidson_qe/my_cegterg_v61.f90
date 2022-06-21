@@ -93,7 +93,7 @@ SUBROUTINE my_cegterg_v61( &
     ! counter on the reduced basis vectors
     ! adapted npw and npwx
     ! do-loop counters
-  INTEGER :: ierr
+
   COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
@@ -110,11 +110,7 @@ SUBROUTINE my_cegterg_v61( &
     ! threshold for empty bands
   !
   REAL(DP), EXTERNAL :: ddot
-
-  write(*,*) 'npw = ', npw
-  write(*,*) 'npwx = ', npwx
-  write(*,*) 'nvec = ', nvec
-  write(*,*) 'nvecx = ', nvecx
+  integer :: i
 
   !
   if( nvec > nvecx / 2 ) then
@@ -136,30 +132,18 @@ SUBROUTINE my_cegterg_v61( &
   !   kdmx = npwx*npol
   !END IF
 
-  ALLOCATE(  psi( npwx, nvecx ), STAT=ierr )
-  if( ierr /= 0 ) then
-    stop 'my_cegterg: cannot allocate psi'
-  endif
-  
-  ALLOCATE( hpsi( npwx, nvecx ), STAT=ierr )
-  if( ierr /= 0 ) then
-    stop 'my_cegterg: cannot allocate hpsi'
-  endif
-
-
+  ALLOCATE( psi(npwx, nvecx) )
+  ALLOCATE( hpsi(npwx, nvecx) )
   IF( uspp ) THEN
-    ALLOCATE( spsi( npwx, nvecx ), STAT=ierr )
-    if( ierr /= 0 ) then
-      stop 'my_cegterg: cannot allocate spsi'
-    endif
+    ALLOCATE( spsi(npwx, nvecx) )
   ENDIF
 
   !
-  ALLOCATE( sc( nvecx, nvecx ), STAT=ierr )
-  ALLOCATE( hc( nvecx, nvecx ), STAT=ierr )  
-  ALLOCATE( vc( nvecx, nvecx ), STAT=ierr )
-  ALLOCATE( ew( nvecx ), STAT=ierr )
-  ALLOCATE( conv( nvec ), STAT=ierr )
+  ALLOCATE( sc(nvecx, nvecx) )
+  ALLOCATE( hc(nvecx, nvecx) )  
+  ALLOCATE( vc(nvecx, nvecx) )
+  ALLOCATE( ew(nvecx) )
+  ALLOCATE( conv(nvec) )
 
   notcnv = nvec
   nbase  = nvec
@@ -214,6 +198,13 @@ SUBROUTINE my_cegterg_v61( &
     CALL cdiaghg( nbase, nvec, hc, sc, nvecx, ew, vc )
     e(1:nvec) = ew(1:nvec)
   ENDIF
+
+  write(*,*) 'After first cdiaghg:'
+  do i = 1,nvec
+    write(*,'(1x,I4,F18.10)') i, e(i)
+  enddo
+
+  !stop 'ffr 207'
   
   ! ----------------------
   ! iterate
@@ -257,6 +248,9 @@ SUBROUTINE my_cegterg_v61( &
     CALL ZGEMM( 'N', 'N', kdim, notcnv, nbase, ONE, hpsi, &
                 kdmx, vc, nvecx, ONE, psi(1,nb1), kdmx )
 
+    write(*,*) 'psi(1,nb1) = ', psi(1,nb1)
+    !stop 'ffr 252'
+
     ! approximate inverse iteration
     !CALL g_psi( npwx, npw, notcnv, npol, psi(1,1,nb1), ew(nb1) )
     
@@ -273,6 +267,10 @@ SUBROUTINE my_cegterg_v61( &
     DO n = 1, notcnv
       psi(:,nbase+n) = psi(:,nbase+n) / SQRT( ew(n) )
     ENDDO
+
+    write(*,*) 'psi(1,nb1) = ', psi(1,nb1)
+    !stop 'ffr 272'
+
      
     ! here compute the hpsi and spsi of the new functions
     !CALL h_psi( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
@@ -280,19 +278,11 @@ SUBROUTINE my_cegterg_v61( &
     hpsi(:,nb1:nb1+notcnv-1) = matmul(H, psi(:,nb1:nb1+notcnv-1))
     if(uspp) spsi(:,nb1:nb1+notcnv-1) = matmul(S, psi(:,nb1:nb1+notcnv-1))
 
-    !write(*,*) 'hpsi = ', hpsi
-    !write(*,*) 'spsi = ', spsi
-
-    !write(*,*) 'shape hpsi = ', shape(hpsi)
-    !write(*,*) 'shape spsi = ', shape(spsi)
-    !write(*,*) 'nb1 = ', nb1
-    write(*,*) 'notcnv = ', notcnv
-    !write(*,*) 'Pass here 281'
-
-
     ! update the reduced hamiltonian
     CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, kdim, ONE, psi, &
                 kdmx, hpsi(:,nb1), kdmx, ZERO, hc(:,nb1), nvecx )
+    
+
 
     IF( uspp ) THEN
       CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, kdim, ONE, psi, &
@@ -314,9 +304,18 @@ SUBROUTINE my_cegterg_v61( &
       ENDDO
     ENDDO
      
+    write(*,*) 'Hc(5,5) = ', Hc(5,5)
+    write(*,*) 'Hc(6,6) = ', Hc(6,6)
+    
+    write(*,*) 'Sc(5,5) = ', Sc(5,5)    
+    write(*,*) 'Sc(6,6) = ', Sc(6,6)
 
     ! diagonalize the reduced hamiltonian
     CALL cdiaghg( nbase, nvec, hc, sc, nvecx, ew, vc )
+    do i=1,nbase
+      write(*,'(1x,I4,F18.10)') i, ew(i)
+    enddo
+    stop 'ffr 313'
 
     ! test for convergence
     WHERE( btype(1:nvec) == 1 )

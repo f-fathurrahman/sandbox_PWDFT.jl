@@ -1,5 +1,8 @@
 using LinearAlgebra
 
+using Random
+Random.seed!(1234)
+
 const LIBDAVIDSON = "./libdavidson.so"
 
 N = 20
