@@ -210,12 +210,18 @@ SUBROUTINE my_cegterg_v61( &
   ! iterate
   ! ----------------------
   !
-  iterate: DO kter = 1, maxter
+  iterate: DO kter = 1, 2
     !
+    write(*,*)
+    write(*,*) '--------------'
     write(*,*) 'kter = ', kter
+    write(*,*) '--------------'
+
     dav_iter = kter
     !
     np = 0
+    write(*,*) 'nbase = ', nbase
+    write(*,*) 'shape ew = ', shape(ew)
     !
     DO n = 1, nvec
       IF( .NOT. conv(n) ) THEN
@@ -227,6 +233,7 @@ SUBROUTINE my_cegterg_v61( &
         IF( np /= n ) vc(:,np) = vc(:,n)
         ! for use in g_psi
         ew(nbase+np) = e(n)
+        write(*,*) 'nbase + np = ', nbase + np
       ENDIF
     ENDDO
     !
@@ -347,8 +354,6 @@ SUBROUTINE my_cegterg_v61( &
     write(*,*) 'notcnv = ', notcnv
     write(*,*) 'conv = ', conv
 
-    stop 'ffr 344'
-
     e(1:nvec) = ew(1:nvec)
 
     ! if overall convergence has been achieved, or the dimension of
@@ -356,8 +361,14 @@ SUBROUTINE my_cegterg_v61( &
     ! we are at the last iteration refresh the basis set. i.e. replace
     ! the first nvec elements with the current estimate of the
     ! eigenvectors;  set the basis dimension to nvec.
+
+    write(*,*) 'nbase = ', nbase
+    write(*,*) 'notcnv = ', notcnv
+
     IF( notcnv == 0 .OR. &
         nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
+
+      write(*,*) 'Enter the IF'
 
       CALL ZGEMM( 'N', 'N', kdim, nvec, nbase, ONE, &
                    psi, kdmx, vc, nvecx, ZERO, evc, kdmx )
@@ -376,6 +387,9 @@ SUBROUTINE my_cegterg_v61( &
         !
       ENDIF
 
+      write(*,*) 'Refresh psi, Hpsi, Spsi'
+      !stop 'ffr 384'
+
       ! refresh psi, H*psi and S*psi
       psi(:,1:nvec) = evc(:,1:nvec)
       IF( uspp ) THEN
@@ -383,6 +397,8 @@ SUBROUTINE my_cegterg_v61( &
                     kdmx, vc, nvecx, ZERO, psi(:,nvec+1), kdmx )
         spsi(:,1:nvec) = psi(:,nvec+1:nvec+nvec)
       ENDIF
+      write(*,*) 'psi[:,nvec+1] = ', psi(:,nvec+1)
+      stop 'ffr 401'
 
       CALL ZGEMM( 'N', 'N', kdim, nvec, nbase, ONE, hpsi, &
                   kdmx, vc, nvecx, ZERO, psi(:,nvec+1), kdmx )

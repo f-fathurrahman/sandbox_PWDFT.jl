@@ -60,7 +60,7 @@ for ist in 1:Nvec
 end
 
 EBANDS_THR = 1e-8
-maxter = 1
+maxter = 40
 dav_iter = 0
 kter = 1
 while (kter <= maxter) || (notcnv == 0)
@@ -91,18 +91,15 @@ while (kter <= maxter) || (notcnv == 0)
     #IF ( uspp ) THEN
     #   CALL ZGEMM( 'N', 'N', kdim, notcnv, nbase, ONE, spsi, &
     #               kdmx, vc, nvecx, ZERO, psi(:,nb1), kdmx )
-    psi[:,nb1:nb1+notcnv-1] = Spsi[:,1:nbase]*vc[1:nbase,1:nbase]
+    psi[:,nb1:nb1+notcnv-1] = Spsi[:,1:nbase]*vc[1:nbase,1:notcnv]
     for np in 1:notcnv
-        psi[:,nbase+np] .= -ew[nbase+np]*psi[:,nbase+np]
+        psi[:,nbase+np] = -ew[nbase+np]*psi[:,nbase+np]
     end
 
 
     #CALL ZGEMM( 'N', 'N', kdim, notcnv, nbase, ONE, hpsi, &
     #            kdmx, vc, nvecx, ONE, psi(1,nb1), kdmx )
-
-    psi[:,nb1:nb1+notcnv-1] .+= Hpsi[:,1:nbase]*vc[1:nbase,1:nbase]
-    #psi[:,:] += Hpsi*vc
-    println(psi[1,nb1])
+    psi[:,nb1:nb1+notcnv-1] .+= Hpsi[:,1:nbase]*vc[1:nbase,1:notcnv]
 
 
     # "normalize" correction vectors psi(:,nb1:nbase+notcnv) in
@@ -118,8 +115,6 @@ while (kter <= maxter) || (notcnv == 0)
     for n in 1:notcnv
         psi[:,nbase+n] .= psi[:,nbase+n] / sqrt(ew[n])
     end
-    println(psi[1,nb1])
-
 
     # here compute the hpsi and spsi of the new functions
     Hpsi[:,nb1:nb1+notcnv-1] = H*psi[:,nb1:nb1+notcnv-1]
@@ -160,12 +155,12 @@ while (kter <= maxter) || (notcnv == 0)
     #    Hermitian(Hc[1:Nvec,1:Nvec]),
     #    Hermitian(Sc[1:Nvec,1:Nvec])
     #)
-    
-    ew, vc = eigen(
-        Hermitian(Hc),
-        Hermitian(Sc)
+    println("Before eigen: nbase = ", nbase)
+    ew[1:nbase], vc[1:nbase,1:nbase] = eigen(
+        Hermitian(Hc[1:nbase,1:nbase]),
+        Hermitian(Sc[1:nbase,1:nbase])
     )
-    vc[:,Nvec+1:nbase] .= 0.0
+    vc[:,Nvec+1:Nvecx] .= 0.0
 
     println("ew = ", ew[1:Nvec])
     println("evals  = ", evals[1:Nvec])
@@ -176,6 +171,8 @@ while (kter <= maxter) || (notcnv == 0)
     end
     println("is_conv = ", is_conv)
     
+    notcnv = sum( .!is_conv )
+
     #WHERE( btype(1:nvec) == 1 )
     #  conv(1:nvec) = ( ( ABS( ew(1:nvec) - e(1:nvec) ) < ethr ) )
     #ELSEWHERE
@@ -183,7 +180,69 @@ while (kter <= maxter) || (notcnv == 0)
     #END WHERE
 
 
+    # Assign new eigenvalues
+    evals[1:Nvec] .= ew[1:Nvec]
+
+
+    # if overall convergence has been achieved, or the dimension of
+    # the reduced basis set is becoming too large, or in any case if
+    # we are at the last iteration refresh the basis set. i.e. replace
+    # the first nvec elements with the current estimate of the
+    # eigenvectors;  set the basis dimension to nvec.
+    if (notcnv == 0) || ((nbase + notcnv) > Nvecx) || ( dav_iter == maxter )
+
+        println("ENTER THE IF: dav_iter = ", dav_iter)
+
+        #CALL ZGEMM( 'N', 'N', kdim, nvec, nbase, ONE, &
+        #           psi, kdmx, vc, nvecx, ZERO, evc, kdmx )
+        evc[:,1:Nvec] = psi[:,1:nbase]*vc[1:nbase,1:Nvec]
+
+        if notcnv == 0
+            println("all roots converged: return")
+            println("Should break from loop")
+            break
+        elseif dav_iter == maxter
+            println("Last iteration, some roots not converged: return")
+            println("Should break from loop")
+            break
+        end
+
+        println("Refresh psi, Hpsi, and Spsi")
+        println("Should not go here if from last iteration of converged")
+
+        # refresh psi, H*psi and S*psi
+        psi[:,1:Nvec] = evc[:,1:Nvec]
+        
+        #CALL ZGEMM( 'N', 'N', kdim, nvec, nbase, ONE, spsi, &
+        #            kdmx, vc, nvecx, ZERO, psi(:,nvec+1), kdmx )
+        psi[:,Nvec+1:2*Nvec] = Spsi[:,1:nbase]*vc[1:nbase,1:Nvec] 
+        Spsi[:,1:Nvec] = psi[:,Nvec+1:2*Nvec]
+
+
+        #CALL ZGEMM( 'N', 'N', kdim, nvec, nbase, ONE, hpsi, &
+        #          kdmx, vc, nvecx, ZERO, psi(:,nvec+1), kdmx )
+        psi[:,Nvec+1:2*Nvec] = Hpsi[:,1:nbase] * vc[1:nbase,1:Nvec]
+        Hpsi[:,1:Nvec] = psi[:,Nvec+1:2*Nvec]
+
+        # refresh the reduced hamiltonian 
+        nbase = Nvec
+        println("nbase = ", nbase)
+        Hc[:,1:nbase] .= 0.0 + im*0.0
+        Sc[:,1:nbase] .= 0.0 + im*0.0
+        vc[:,1:nbase] .= 0.0 + im*0.0
+        for n in 1:nbase
+            Hc[n,n] = evals[n] + im*0.0
+            Sc[n,n] = 1.0 + im*0.0
+            vc[n,n] = 1.0 + im*0.0
+        end
+
+    end # if
+
 #=
+C := alpha*op( A )*op( B ) + beta*C,
+
+(M x N) = (M x K ) (K x N)
+
 [in]    M   
 
           M is INTEGER
@@ -209,3 +268,4 @@ while (kter <= maxter) || (notcnv == 0)
 end
 
 
+println("Out of iteration")
