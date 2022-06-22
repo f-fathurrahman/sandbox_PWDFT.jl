@@ -84,7 +84,7 @@ SUBROUTINE my_cegterg_v61( &
   !
   ! ... LOCAL variables
   !
-  INTEGER, PARAMETER :: maxter = 2
+  INTEGER, PARAMETER :: maxter = 40
     ! maximum number of iterations
   !
   INTEGER :: kter, nbase, np, kdim, kdmx, n, m, nb1, nbn
@@ -210,7 +210,7 @@ SUBROUTINE my_cegterg_v61( &
   ! iterate
   ! ----------------------
   !
-  iterate: DO kter = 1, 2
+  iterate: DO kter = 1, maxter
     !
     write(*,*)
     write(*,*) '--------------'
@@ -262,7 +262,7 @@ SUBROUTINE my_cegterg_v61( &
     !stop 'ffr 252'
 
     ! approximate inverse iteration
-    !CALL g_psi( npwx, npw, notcnv, npol, psi(1,1,nb1), ew(nb1) )
+    CALL g_psi( H, S, npw, notcnv, psi(1,nb1), ew(nb1) )
     
     ! "normalize" correction vectors psi(:,nb1:nbase+notcnv) in
     ! order to improve numerical stability of subspace diagonalization
@@ -397,8 +397,9 @@ SUBROUTINE my_cegterg_v61( &
                     kdmx, vc, nvecx, ZERO, psi(:,nvec+1), kdmx )
         spsi(:,1:nvec) = psi(:,nvec+1:nvec+nvec)
       ENDIF
-      write(*,*) 'psi[:,nvec+1] = ', psi(:,nvec+1)
-      stop 'ffr 401'
+      
+      !write(*,*) 'psi[:,nvec+1] = ', psi(:,nvec+1)
+      !stop 'ffr 401'
 
       CALL ZGEMM( 'N', 'N', kdim, nvec, nbase, ONE, hpsi, &
                   kdmx, vc, nvecx, ZERO, psi(:,nvec+1), kdmx )
@@ -433,3 +434,54 @@ SUBROUTINE my_cegterg_v61( &
   !
 END SUBROUTINE 
 
+
+
+!
+!-----------------------------------------------------------------------
+subroutine g_psi (H, S, n, m, psi, e)
+  !-----------------------------------------------------------------------
+  !
+  !    This routine computes an estimate of the inverse Hamiltonian
+  !    and applies it to m wavefunctions
+  !
+  implicit none
+  integer, parameter :: DP=8
+  integer :: n, m
+  ! input: the leading dimension of psi
+  ! input: the real dimension of psi
+  ! input: the number of bands
+  ! input: the number of coordinates of psi
+  ! local variable: counter of coordinates of psi
+  real(DP) :: e(m)
+  ! input: the eigenvectors
+  complex(DP) :: H(n,n), S(n,n)
+  complex(DP) :: psi(n,m)
+  ! inp/out: the psi vector
+  !
+  !    Local variables
+  !
+  real(DP), parameter :: eps = 1.0d-4
+  ! a small number
+  !real(DP) :: x, scala
+  real(dp) :: denm
+  integer :: k, i
+  ! counter on psi functions
+  ! counter on G vectors
+  !
+
+  do k = 1, m
+     do i = 1, n
+        denm = real(H(i,i) - e(k)*S(i,i))
+        !
+        ! denm = g2+v(g=0) - e(k)
+        !
+        if(abs(denm) < eps) denm = sign(eps, denm)
+        !
+        ! denm = sign( max( abs(denm),eps ), denm )
+        !
+        psi(i,k) = psi(i,k) / denm
+     enddo
+  enddo
+
+  return
+end subroutine
