@@ -19,6 +19,9 @@ function main()
     S = 0.5*(S + S')
     S = S + N*I # Make diagonally dominant
 
+    #S = zeros(ComplexF64,N,N)
+    #S = S + I # identity matrix
+
     Nvec = 3
     evals = zeros(Float64, Nvec)
 

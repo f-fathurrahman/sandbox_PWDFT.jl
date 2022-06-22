@@ -67,16 +67,21 @@ function diag_davidson_qe!(
         end
         @views psi[:,nb1:nb1+notcnv-1] .+= Hpsi[:,1:nbase]*vc[1:nbase,1:notcnv]
 
-        #println("psi before = ")
-        #display(abs.(psi)); println()
+        
+        #=
+        println("psi before = ")
+        display(abs.(psi)); println()
 
-        #println("sum psi before = ", sum(psi))
+        println("sum psi before = ", sum(psi))
         println("nb1 before precond = ", nb1)
-        @views _precond_H_diag!(psi[:,nb1:nb1+notcnv-1], H, S, ew[nb1:nb1+notcnv-1])
+        @views _precond_H_diag_new!(psi[:,nb1:nb1+notcnv-1], H, S, ew[nb1:nb1+notcnv-1])
+        #@views _precond_H_diag!(psi[:,nb1:nb1+notcnv-1], H, S, ew[nb1:nb1+notcnv-1])
+        #@views _precond_H_inv!(psi[:,nb1:nb1+notcnv-1], H, S, ew[nb1:nb1+notcnv-1])
         println("sum psi after = ", sum(psi))
 
-        #println("psi after = ")
-        #display(abs.(psi)); println()
+        println("psi after = ")
+        display(abs.(psi)); println()
+        =#
 
 
         # "normalize" correction vectors psi(:,nb1:nbase+notcnv) in
@@ -113,10 +118,10 @@ function diag_davidson_qe!(
             end
         end
 
-        #println("Hc = ")
-        #display(abs.(Hc[1:nbase,1:nbase])); println()
-        #println("Sc = ")
-        #display(abs.(Sc[1:nbase,1:nbase])); println()
+        println("Hc = ")
+        display(abs.(Hc[1:nbase,1:nbase])); println()
+        println("Sc = ")
+        display(abs.(Sc[1:nbase,1:nbase])); println()
 
         # diagonalize the reduced hamiltonian
         ew[1:nbase], vc[1:nbase,1:nbase] = eigen(
@@ -210,5 +215,36 @@ function _precond_H_diag!(psi, H, S, ew)
         psi[i,ist] = psi[i,ist]/denm
     end
 
+    return
+end
+
+
+function _precond_H_diag_new!(psi, H, S, ew)
+    SMALL = 1e-4
+    Nbasis = size(psi,1)
+    println("ew in _precond_H_diag = ", ew)
+    notcnv = size(ew,1)
+    scal = 1.0
+    for k in 1:notcnv, i in 1:Nbasis
+        x = ( H[i,i] - ew[k]*S[i,i] )*scal
+        denm = 0.5*( 1.0 + x + sqrt(1.0 + (x-1)*(x-1)) )/scal
+        psi[i,k] = psi[i,k]/denm
+    end
+    return
+end
+
+
+# This is expensive
+function _precond_H_inv!(psi, H, S, ew)
+    SMALL = 1e-4
+    Nbasis = size(psi,1)
+    notcnv = size(ew,1)
+    println("notcnv = ", notcnv)
+    println("ew in _precond_H_inv: ", ew)
+    Hinv = zeros(ComplexF64,Nbasis,Nbasis)
+    for ist in 1:notcnv
+        @views Hinv[:,:] = Hermitian(inv(H - ew[ist]*S)) # need Hermitian?
+        @views psi[:,ist] = Hinv*psi[:,ist]
+    end
     return
 end
