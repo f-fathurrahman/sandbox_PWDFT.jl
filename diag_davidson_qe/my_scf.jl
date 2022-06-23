@@ -20,8 +20,8 @@ function my_scf!(
     @printf("\n")
 
     for iterSCF in 1:NiterMax
-        #_ = diag_davidson_qe!( Ham, psiks )
-        _ = diag_LOBPCG!( Ham, psiks )
+        _ = diag_davidson_qe!( Ham, psiks )
+        #_ = diag_LOBPCG!( Ham, psiks )
         Rhoe_new = calc_rhoe( Ham, psiks )
         Rhoe = betamix*Rhoe_new + (1-betamix)*Rhoe
         update!(Ham, Rhoe)

@@ -80,7 +80,7 @@ function diag_davidson_qe!(
     while (kter <= NiterMax) || (notcnv == 0)
 
         dav_iter = kter
-        println("kter = ", kter)
+        #println("kter = ", kter)
 
         np = 0
         for ist in 1:Nvec
@@ -152,13 +152,12 @@ function diag_davidson_qe!(
 
         # test for convergence
         # FIXME: Use different EBANDS for occupied and unoccupied bands
-        println("Convergence")
         for i in 1:Nvec
-            Δ = abs(ew[i] - evals[i])
-            @printf("%3d %18.10f %18.10f %18.10e\n", i, ew[i], evals[i], Δ)
+            #Δ = abs(ew[i] - evals[i])
+            #@printf("%3d %18.10f %18.10f %18.10e\n", i, ew[i], evals[i], Δ)
             is_conv[i] = abs(ew[i] - evals[i]) < EBANDS_THR
         end
-        println("is_conv = ", is_conv)
+        #println("is_conv = ", is_conv)
     
 
         notcnv = sum( .!is_conv )
@@ -176,14 +175,15 @@ function diag_davidson_qe!(
             @views evc[:,1:Nvec] = psi[:,1:nbase]*vc[1:nbase,1:Nvec]
 
             if notcnv == 0
-                println("all roots converged in kter = ", dav_iter)
+                #println("all roots converged in kter = ", dav_iter)
                 break
             elseif dav_iter == NiterMax
-                println("Last iteration, some roots not converged: return")
+                #println("Last iteration, some roots not converged: return")
                 break
             end
 
             # refresh psi, H*psi and S*psi
+            # CHECK ME: 2*Nvec
             @views psi[:,1:Nvec] = evc[:,1:Nvec]
             @views psi[:,Nvec+1:2*Nvec] = Spsi[:,1:nbase]*vc[1:nbase,1:Nvec] 
             @views Spsi[:,1:Nvec] = psi[:,Nvec+1:2*Nvec]
@@ -214,6 +214,5 @@ end
 # For identity matrix S, simply copy psi to Spsi
 function op_S!( Ham::Hamiltonian, psi, Spsi )
     Spsi[:] = psi[:]
-    # Don't do anything
     return
 end

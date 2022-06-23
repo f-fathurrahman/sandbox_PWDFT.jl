@@ -29,4 +29,5 @@ function test_my_scf(β::Float64)
 end
 
 test_my_scf(0.2)
+@time test_my_scf(0.2)
 
