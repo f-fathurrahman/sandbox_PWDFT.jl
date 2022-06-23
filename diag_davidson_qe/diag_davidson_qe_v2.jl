@@ -213,6 +213,6 @@ end
 
 # For identity matrix S, simply copy psi to Spsi
 function op_S!( Ham::Hamiltonian, psi, Spsi )
-    Spsi[:] = psi[:]
+    @views Spsi[:] = psi[:]
     return
 end
