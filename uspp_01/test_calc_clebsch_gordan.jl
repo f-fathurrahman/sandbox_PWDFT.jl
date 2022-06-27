@@ -6,5 +6,9 @@ include("../ylm_real/Ylm_real_qe.jl")
 #include("../ylm_real/_generate_lm_indices_qe.jl")
 include("calc_clebsch_gordan.jl")
 
-ap, lpx, lpl = calc_clebsch_gordan(1)
+function test_main()
+    ap, lpx, lpl = calc_clebsch_gordan(1)
+end
+
+test_main()
 

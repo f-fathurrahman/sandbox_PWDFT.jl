@@ -12,6 +12,7 @@ struct PsPotNL_UPF
     indv::Array{Int64,2}
     nhtol::Array{Int64,2}
     nhtolm::Array{Int64,2}
+    indv_ijkb0::Vector{Int64}
 end
 
 
@@ -20,6 +21,10 @@ function PsPotNL_UPF(
     pw::PWGrid,
     pspots::Vector{PsPot_UPF}
 )
+
+    Natoms = atoms.Natoms
+    Nspecies = atoms.Nspecies
+    atm2species = atoms.atm2species
 
     # Those are parameters (HARDCODED)
     lmaxx  = 3         # max non local angular momentum (l=0 to lmaxx)
@@ -44,11 +49,14 @@ function PsPotNL_UPF(
 
     # calculate the maximum number of beta functions
     nhm = maximum(nh)
-    # This can be made into a jagged array (vector of vector)
+    # Some helper indices, for mapping various stuffs
+    # Some of these can be made into a jagged array (vector of vector)
     indv = zeros(Int64, nhm, Nspecies)
     nhtol = zeros(Int64, nhm, Nspecies)
     nhtolm = zeros(Int64, nhm, Nspecies)
+    indv_ijkb0 = zeros(Int64, Natoms)
 
+    ijkb0 = 0
     for isp in 1:Nspecies
         ih = 1
         psp = pspots[isp]
@@ -60,6 +68,16 @@ function PsPotNL_UPF(
                 indv[ih,isp] = nb
                 ih = ih + 1
             end
+        end
+        # ijkb0 points to the last beta "in the solid" for atom ia-1
+        # i.e. ijkb0+1,.. ijkb0+nh(ityp(ia)) are the nh beta functions of
+        #      atom ia in the global list of beta functions (ijkb0=0 for ia=1)
+        for ia in 1:Natoms
+            if atm2species[ia] != isp
+                continue
+            end
+            indv_ijkb0[ia] = ijkb0
+            ijkb0 = ijkb0 + nh[isp]
         end
     end
     # TODO: Extract lm -> (l,m)
@@ -79,10 +97,15 @@ function PsPotNL_UPF(
         println(nhtolm[1:nh[isp],isp])
     end
 
+    println("nhtolm = ")
+    for ia in 1:Natoms
+        println(ia, " ", indv_ijkb0[ia])
+    end
+
     return PsPotNL_UPF(
         lmaxx, lqmax, lmaxkb,
         nh, nhm, ap, lpx, lpl,
-        indv, nhtol, nhtolm
+        indv, nhtol, nhtolm, indv_ijkb0
     )
 
 end

@@ -22,29 +22,32 @@ end
 #
 # Main program here
 #
+function test_main()
+    atoms = create_atoms_N2H4()
+    println(atoms)
 
-atoms = create_atoms_N2H4()
-println(atoms)
-
-pw = PWGrid(20.0, atoms.LatVecs, dual=5.0)
-println(pw)
+    pw = PWGrid(20.0, atoms.LatVecs, dual=5.0)
+    println(pw)
     
-Nspecies = atoms.Nspecies
-#pspfiles = [
-#    "/home/efefer/pseudo/GBRV_LDA/n_lda_v1.2.uspp.F.UPF2",
-#    "/home/efefer/pseudo/GBRV_LDA/h_lda_v1.4.uspp.F.UPF2"
-#]
+    Nspecies = atoms.Nspecies
+    #pspfiles = [
+    #    "/home/efefer/pseudo/GBRV_LDA/n_lda_v1.2.uspp.F.UPF2",
+    #    "/home/efefer/pseudo/GBRV_LDA/h_lda_v1.4.uspp.F.UPF2"
+    #]
     
-pspfiles = [
-    "/home/efefer/pseudo/PSLIB/N.pbe-n-rrkjus_psl.0.1.UPF",
-    "/home/efefer/pseudo/PSLIB/H.pbe-rrkjus_psl.0.1.UPF"
-]
+    pspfiles = [
+        "/home/efefer/pseudo/PSLIB/N.pbe-n-rrkjus_psl.0.1.UPF",
+        "/home/efefer/pseudo/PSLIB/H.pbe-rrkjus_psl.0.1.UPF"
+    ]
 
-pspots = Vector{PsPot_UPF}(undef,Nspecies)
-for isp in 1:Nspecies
-    pspots[isp] = PsPot_UPF( pspfiles[isp] )
-    PWDFT._build_prj_interp_table!( pspots[isp], pw )
+    pspots = Vector{PsPot_UPF}(undef,Nspecies)
+    for isp in 1:Nspecies
+        pspots[isp] = PsPot_UPF( pspfiles[isp] )
+        PWDFT._build_prj_interp_table!( pspots[isp], pw )
+    end
+
+    loop_calc_qradG(pw, pspots)
+    #qradG = calc_qradG(pw, pspots)
 end
 
-loop_calc_qradG(pw, pspots)
-#qradG = calc_qradG(pw, pspots)
+test_main()
