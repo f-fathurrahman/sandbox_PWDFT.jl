@@ -10,7 +10,7 @@ function pwx_get_clebsch_gordan()
     lqmax = 2*lmaxx + 1
     nlx = (lmaxx + 1)^2
 
-    # ap is automatic array
+    # ap is an automatic array, can simply use unsafe_wrap
     Ndim1 = lqmax^2
     Ndim2 = nlx
     Ndim3 = nlx

@@ -9,6 +9,9 @@ function pwx_uspp_param()
     nsp = unsafe_load(cglobal((:__ions_base_MOD_nsp, LIBMINIPW), Int32)) |> Int64
     Nspecies = nsp
     
+    Natoms = unsafe_load(cglobal((:__ions_base_MOD_nat, LIBMINIPW), Int32)) |> Int64
+
+    # nh is automatic array (1d)
     ptr = cglobal((:__uspp_param_MOD_nh, LIBMINIPW), Int32)
     nh = zeros(Int64,nsp)
     for isp in 1:nsp
@@ -77,6 +80,17 @@ function pwx_uspp_param()
     #indv = zeros(Int64, nhm, Nspecies)
     #nhtol = zeros(Int64, nhm, Nspecies)
     #nhtolm = zeros(Int64, nhm, Nspecies)
+
+
+    # indv_ijkb0 is an allocatable array, use Ptr{DataType}
+    ptr = cglobal((:__uspp_MOD_indv_ijkb0, LIBMINIPW), Ptr{Int32})
+    indv_ijkb0 = zeros(Int64, Natoms)
+    for ia in 1:Natoms
+        indv_ijkb0[ia] = unsafe_load(unsafe_load(ptr,1),ia) |> Int64
+    end
+    for ia in 1:Natoms
+        println(indv_ijkb0[ia])
+    end
 
 end
 
