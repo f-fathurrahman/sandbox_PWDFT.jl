@@ -13,6 +13,7 @@ struct PsPotNL_UPF
     nhtol::Array{Int64,2}
     nhtolm::Array{Int64,2}
     indv_ijkb0::Vector{Int64}
+    Dvan::Array{Float64,3}
 end
 
 
@@ -55,6 +56,7 @@ function PsPotNL_UPF(
     nhtol = zeros(Int64, nhm, Nspecies)
     nhtolm = zeros(Int64, nhm, Nspecies)
     indv_ijkb0 = zeros(Int64, Natoms)
+    Dvan = zeros(Float64, nhm, nhm, Nspecies)
 
     ijkb0 = 0
     for isp in 1:Nspecies
@@ -79,6 +81,15 @@ function PsPotNL_UPF(
             indv_ijkb0[ia] = ijkb0
             ijkb0 = ijkb0 + nh[isp]
         end
+
+        for ih in 1:nh[isp], jh in 1:nh[isp]
+            if ( nhtol[ih,isp] == nhtol[jh,isp] ) && 
+               ( nhtolm[ih,isp] == nhtolm[jh,isp] )
+                ihs = indv[ih,isp]
+                jhs = indv[jh,isp]
+                Dvan[ih,jh,isp] = psp.Dion[ihs,jhs]
+            end
+        end
     end
     # TODO: Extract lm -> (l,m)
 
@@ -102,11 +113,32 @@ function PsPotNL_UPF(
         println(ia, " ", indv_ijkb0[ia])
     end
 
+    println("Dvan = ")
+    for isp in 1:Nspecies
+        println("Dvan isp = ", isp)
+        display(Dvan[:,:,isp]); println()
+        println("Dion: ")
+        display(pspots[isp].Dion); println()
+    end
+
+
     return PsPotNL_UPF(
         lmaxx, lqmax, lmaxkb,
         nh, nhm, ap, lpx, lpl,
-        indv, nhtol, nhtolm, indv_ijkb0
+        indv, nhtol, nhtolm, indv_ijkb0,
+        Dvan
     )
+
+end
+
+
+# From init_us_2
+function _init_Vnl_KB(
+    atoms::Atoms,
+    pw::PWGrid,
+    pspots::Vector{PsPot_UPF}
+)
+    
 
 end
 
