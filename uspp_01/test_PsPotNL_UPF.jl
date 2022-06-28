@@ -11,8 +11,7 @@ include("PsPotNL_UPF.jl")
 #
 # Main program here
 #
-
-function test_main()
+function init_test_main()
     atoms = create_atoms_N2H4()
     #println(atoms)
 
@@ -31,9 +30,17 @@ function test_main()
         PWDFT._build_prj_interp_table!( pspots[isp], pw )
     end
 
-    pspotNL = PsPotNL_UPF(atoms, pw, pspots)
-
+    return atoms, pw, pspots
 end
 
-test_main()
+atoms, pw, pspots = init_test_main()
+pspotNL = PsPotNL_UPF(atoms, pw, pspots)
+
+println(pspotNL)
+
+# Check Vnl_KB construction
+ik = 1
+nkb = pspotNL.nkb
+Vnl_KB = zeros(ComplexF64, pw.gvecw.Ngw[ik], nkb)
+_init_Vnl_KB!( ik, atoms, pw, pspots, pspotNL, Vnl_KB )
 
