@@ -80,14 +80,14 @@ function PWSCFInput( filename::String )
         if occursin("ecutwfc =", l)
             ll = split(l, "=", keepempty=false)
             ecutwfc = parse(Float64, ll[end])
-            println("Read ecutwfc = ", ecutwfc)
+            println("Read ecutwfc (in Ry) = ", ecutwfc)
         end
 
         # Read ecutrho
         if occursin("ecutrho =", l)
             ll = split(l, "=", keepempty=false)
             ecutrho = parse(Float64, ll[end])
-            println("Read ecutrho = ", ecutrho)
+            println("Read ecutrho (in Ry) = ", ecutrho)
         end
 
         # Read pseudo_dir
@@ -250,8 +250,9 @@ function PWSCFInput( filename::String )
     # Set unit lattice vectors manually
     atoms.LatVecs = LatVecs
 
+    # Don't forget to convert ecutwfc and ecutrho to Ha
     return PWSCFInput(
-        atoms, ecutwfc, ecutrho, pspfiles,
+        atoms, 0.5*ecutwfc, 0.5*ecutrho, pspfiles,
         (meshk1, meshk2, meshk3)
     )
 end
