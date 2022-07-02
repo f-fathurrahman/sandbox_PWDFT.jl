@@ -4,28 +4,29 @@ using SpecialFunctions: sphericalbesselj
 
 using PWDFT
 
-include("create_atoms_N2H4.jl")
 include("../ylm_real/Ylm_real_qe.jl")
 include("calc_clebsch_gordan.jl")
 include("calc_qradG.jl")
 include("PsPotNL_UPF.jl")
 
+include("../pwscf_02/PWSCFInput.jl")
+
+@assert length(ARGS) == 1
+pwinput = PWSCFInput(ARGS[1])
+
 #
 # Main program here
 #
 
-atoms = create_atoms_N2H4()
+atoms = pwinput.atoms
 #println(atoms)
 
-pw = PWGrid(20.0, atoms.LatVecs, dual=5.0)
+dual = pwinput.ecutrho/pwinput.ecutwfc
+pw = PWGrid(pwinput.ecutwfc, atoms.LatVecs, dual=dual)
 #println(pw)
 
 Nspecies = atoms.Nspecies    
-pspfiles = [
-    "/home/efefer/pseudo/PSLIB/N.pbe-n-rrkjus_psl.0.1.UPF",
-    "/home/efefer/pseudo/PSLIB/H.pbe-rrkjus_psl.0.1.UPF"
-]
-
+pspfiles = pwinput.pspfiles
 pspots = Vector{PsPot_UPF}(undef,Nspecies)
 for isp in 1:Nspecies
     pspots[isp] = PsPot_UPF( pspfiles[isp] )
@@ -33,7 +34,6 @@ for isp in 1:Nspecies
 end
 
 pspotNL = PsPotNL_UPF(atoms, pw, pspots)
-qradG = calc_qradG(pw, pspots) # FIXME: include in PsPotNL_UPF
 
 #
 # Debug qvan2
@@ -47,6 +47,7 @@ lpx = pspotNL.lpx
 lpl = pspotNL.lpl
 ap = pspotNL.ap
 lmaxkb = pspotNL.lmaxkb
+qradG = pspotNL.qradG
 
 Ng = pw.gvec.Ng
 G2 = pw.gvec.G2
@@ -96,33 +97,33 @@ for lm in 1:lpx[ivl,jvl]
     # finds angular momentum l corresponding to combined index lp (l is 
     # actually l+1 because this is the way qrad is stored, check init_us_1)
     if lp == 1
-      l = 1
-      sig = 1.0
-      ind = 1 # real
+        l = 1
+        sig = 1.0
+        ind = 1 # real
     elseif lp <= 4
-      l = 2
-      sig = -1.0
-      ind = 2 # imag
+        l = 2
+        sig = -1.0
+        ind = 2 # imag
     elseif lp <= 9
-      l = 3
-      sig = -1.0
-      ind = 1
+        l = 3
+        sig = -1.0
+        ind = 1
     elseif lp <= 16
-      l = 4
-      sig = 1.0
-      ind = 2
+        l = 4
+        sig = 1.0
+        ind = 2
     elseif lp <= 25
-      l = 5
-      sig = 1.0
-      ind = 1
+        l = 5
+        sig = 1.0
+        ind = 1
     elseif lp <= 36
-      l = 6
-      sig = -1.0
-      ind = 2
+        l = 6
+        sig = -1.0
+        ind = 2
     else
-      l = 7
-      sig = -1.0
-      ind = 1
+        l = 7
+        sig = -1.0
+        ind = 1
     end
 
     println("lm = ", lm, " lp = ", lp, " l = ", l, " (im)^l = ", (-im)^l, " sig = ", sig)

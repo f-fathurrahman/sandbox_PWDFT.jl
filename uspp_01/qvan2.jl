@@ -1,6 +1,24 @@
 # TODO: using pspotNL
 function qvan2!(
+    pspotNL,
+    ih, jh, isp, G2, ylmk0, QfuncG
+)
+
+    qvan2!(
+        pspotNL.indv, pspotNL.nhtolm, pspotNL.lpl, pspotNL.lpx, pspotNL.ap,
+        pspotNL.qradG,
+        ih, jh, isp, G2, ylmk0, QfuncG
+    )
+    
+    return
+end
+
+
+
+
+function qvan2!(
     indv, nhtolm, lpl, lpx, ap,
+    qradG,
     ih, jh, isp, G2, ylmk0, QfuncG
 )
 
@@ -28,7 +46,21 @@ function qvan2!(
 
         # finds angular momentum l corresponding to combined index lp (l is 
         # actually l+1 because this is the way qrad is stored, check init_us_1)
-        l = Int64(sqrt(lp))
+        if lp == 1
+            l = 1
+        elseif lp <= 4
+            l = 2
+        elseif lp <= 9
+            l = 3
+        elseif lp <= 16
+            l = 4
+        elseif lp <= 25
+            l = 5
+        elseif lp <= 36
+            l = 6
+        else
+            l = 7
+        end
         # sig = (-im)^l
 
         prefact = (-im)^l * ap[lp,ivl,jvl]

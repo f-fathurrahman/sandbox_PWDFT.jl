@@ -15,6 +15,7 @@ struct PsPotNL_UPF
     nhtolm::Array{Int64,2}
     indv_ijkb0::Vector{Int64}
     Dvan::Array{Float64,3}
+    qradG::Vector{Array{Float64,3}}
 end
 
 
@@ -63,6 +64,8 @@ function PsPotNL_UPF(
     nhtolm = zeros(Int64, nhm, Nspecies)
     indv_ijkb0 = zeros(Int64, Natoms)
     Dvan = zeros(Float64, nhm, nhm, Nspecies)
+    qq_nt = zeros(Float64, nhm, nhm, Nspecies) # qq_nt, need qvan2
+
 
     ijkb0 = 0
     for isp in 1:Nspecies
@@ -89,8 +92,9 @@ function PsPotNL_UPF(
         end
 
         for ih in 1:nh[isp], jh in 1:nh[isp]
-            if ( nhtol[ih,isp] == nhtol[jh,isp] ) && 
-               ( nhtolm[ih,isp] == nhtolm[jh,isp] )
+            cond_l  = nhtol[ih,isp] == nhtol[jh,isp]
+            cond_lm = nhtolm[ih,isp] == nhtolm[jh,isp]
+            if cond_l && cond_lm
                 ihs = indv[ih,isp]
                 jhs = indv[jh,isp]
                 Dvan[ih,jh,isp] = psp.Dion[ihs,jhs]
@@ -98,6 +102,26 @@ function PsPotNL_UPF(
         end
     end
     # TODO: Extract lm -> (l,m)
+
+    qradG = calc_qradG(pw, pspots) # FIXME: include in PsPotNL_UPF
+
+
+#=
+    G0 = [0.0, 0.0, 0.0]
+    lmaxq = 2*lmaxkb + 1 # using 1-indexing
+    ylmk0 = zeros(Float64, 1, lmaxq*lmaxq)
+    _lmax = lmaxq - 1 # or 2*lmaxkb
+    Ylm_real_qe!(_lmax, G0, ylmk0) # Ylm_real_qe accept l value starting from 0
+    qgm = zeros(ComplexF64, 1)
+    for isp in 1:Nspecies
+        for ih in 1:nh[isp], for jh in ih:nh[isp]
+            qvan2!( indv, nhtolm, lpl, lpx, ap, 1, ih, jh, isp, G0, ylmk0, qgm )
+            qq_nt[ih,jh,nt] = pw.CellVolume * real(qgm[1])
+            qq_nt[jh,ih,nt] = pw.CellVolume * real(qgm[1])
+        end
+    end
+=#
+
 
     println("indv = ")
     for isp in 1:Nspecies
@@ -132,7 +156,7 @@ function PsPotNL_UPF(
         lmaxx, lqmax, lmaxkb,
         nh, nhm, nkb, ap, lpx, lpl,
         indv, nhtol, nhtolm, indv_ijkb0,
-        Dvan
+        Dvan, qradG
     )
 
 end
