@@ -92,6 +92,43 @@ function pwx_uspp_param()
         println(indv_ijkb0[ia])
     end
 
+    # qq_nt
+    ptr = cglobal((:__uspp_MOD_qq_nt, LIBMINIPW), Ptr{Float64})
+    Ndim1 = nhm
+    Ndim2 = nhm
+    Ndim3 = Nspecies
+    tmp = zeros(Ndim1*Ndim2*Ndim3)
+    ip = 1
+    for l in 1:Ndim3, j in 1:Ndim2, i in 1:Ndim1
+        tmp[ip] = unsafe_load(unsafe_load(ptr,1),ip)
+        ip = ip + 1
+    end
+    qq_nt = reshape(tmp, Ndim1, Ndim2, Ndim3)
+    serialize("qq_nt.dat", qq_nt)
+
+    for isp in 1:Nspecies
+        println("qq_nt")
+        display(qq_nt[:,:,isp]); println();
+    end
+
+
+    # qq_at
+    ptr = cglobal((:__uspp_MOD_qq_at, LIBMINIPW), Ptr{Float64})
+    Ndim1 = nhm
+    Ndim2 = nhm
+    Ndim3 = Natoms
+    tmp = zeros(Ndim1*Ndim2*Ndim3)
+    ip = 1
+    for l in 1:Ndim3, j in 1:Ndim2, i in 1:Ndim1
+        tmp[ip] = unsafe_load(unsafe_load(ptr,1),ip)
+        ip = ip + 1
+    end
+    qq_at = reshape(tmp, Ndim1, Ndim2, Ndim3)
+    serialize("qq_at.dat", qq_at)
+
+    CellVolume = unsafe_load(cglobal((:__cell_base_MOD_omega, LIBMINIPW), Float64))
+    println("CellVolume = ", CellVolume)
+
 end
 
 pwx_uspp_param()
