@@ -33,14 +33,19 @@ function init_from_pwinput()
         PWDFT._build_prj_interp_table!( pspots[isp], pw )
     end
 
-    return atoms, pw, pspots
+    electrons = Electrons(
+        atoms, pspots,
+        Nspin=1, Nkpt=pw.gvecw.kpoints.Nkpt, Nstates_empty=0
+    )
+
+    return atoms, pw, pspots, electrons
 end
 
 
 
 #atoms, pw, pspots = init_test_main()
 function test_main()
-    atoms, pw, pspots = init_from_pwinput()
+    atoms, pw, pspots, electrons = init_from_pwinput()
     pspotNL = PsPotNL_UPF(atoms, pw, pspots)
 
     println(pspotNL)
@@ -50,6 +55,15 @@ function test_main()
     nkb = pspotNL.nkb
     Vnl_KB = zeros(ComplexF64, pw.gvecw.Ngw[ik], nkb)
     _init_Vnl_KB!( ik, atoms, pw, pspots, pspotNL, Vnl_KB )
+
+    Ngwk = pw.gvecw.Ngw[ik]
+    Nstates = electrons.Nstates
+    psi = ones(ComplexF64, Ngwk, Nstates)
+    betaNL_psi = Vnl_KB' * psi
+    println("sum betaNL_psi = ", sum(betaNL_psi))
+
+    display(abs.(betaNL_psi[1:5,1:5])); println();
+
 end
 
 test_main()
