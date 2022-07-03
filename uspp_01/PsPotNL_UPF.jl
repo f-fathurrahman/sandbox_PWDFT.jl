@@ -64,8 +64,6 @@ function PsPotNL_UPF(
     nhtolm = zeros(Int64, nhm, Nspecies)
     indv_ijkb0 = zeros(Int64, Natoms)
     Dvan = zeros(Float64, nhm, nhm, Nspecies)
-    qq_nt = zeros(Float64, nhm, nhm, Nspecies) # qq_nt, need qvan2
-
 
     ijkb0 = 0
     for isp in 1:Nspecies
@@ -105,24 +103,36 @@ function PsPotNL_UPF(
 
     qradG = calc_qradG(pw, pspots) # FIXME: include in PsPotNL_UPF
 
+    # Compute the qq coefficients by integrating the Q.
+    # The qq are the g=0 components of Q
 
-#=
-    G0 = [0.0, 0.0, 0.0]
+    # FIXME: use Vector{Matrix} instead of 3d array
+    qq_nt = zeros(Float64, nhm, nhm, Nspecies) # qq_nt, need qvan2
+    qq_at = zeros(Float64, nhm, nhm, Natoms)
+
+    G0 = zeros(3,1)
     lmaxq = 2*lmaxkb + 1 # using 1-indexing
     ylmk0 = zeros(Float64, 1, lmaxq*lmaxq)
     _lmax = lmaxq - 1 # or 2*lmaxkb
     Ylm_real_qe!(_lmax, G0, ylmk0) # Ylm_real_qe accept l value starting from 0
     qgm = zeros(ComplexF64, 1)
     for isp in 1:Nspecies
-        for ih in 1:nh[isp], for jh in ih:nh[isp]
-            qvan2!( indv, nhtolm, lpl, lpx, ap, 1, ih, jh, isp, G0, ylmk0, qgm )
-            qq_nt[ih,jh,nt] = pw.CellVolume * real(qgm[1])
-            qq_nt[jh,ih,nt] = pw.CellVolume * real(qgm[1])
+        for ih in 1:nh[isp], jh in ih:nh[isp]
+            qvan2!( indv, nhtolm, lpl, lpx, ap, qradG, ih, jh, isp, [0.0], ylmk0, qgm )
+            qq_nt[ih,jh,isp] = pw.CellVolume * real(qgm[1])
+            qq_nt[jh,ih,isp] = pw.CellVolume * real(qgm[1])
         end
+        println("qq_nt")
+        display(qq_nt[1:nh[isp],1:nh[isp],isp]); println();
     end
-=#
+    println("pw.CellVolume = ", pw.CellVolume)
 
+    # finally we set the atomic specific qq_at matrices
+    for ia in 1:Natoms
+        qq_at[:,:,ia] = qq_nt[:,:,atm2species[ia]]
+    end
 
+#=
     println("indv = ")
     for isp in 1:Nspecies
         println(indv[1:nh[isp],isp])
@@ -150,7 +160,7 @@ function PsPotNL_UPF(
         println("Dion: ")
         display(pspots[isp].Dion); println()
     end
-
+=#
 
     return PsPotNL_UPF(
         lmaxx, lqmax, lmaxkb,

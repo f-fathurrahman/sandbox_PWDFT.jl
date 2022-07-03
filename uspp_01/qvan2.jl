@@ -37,6 +37,8 @@ function qvan2!(
 
     dq = 0.01 # XXX HARDCODED
 
+    fill!(QfuncG, 0.0) # zero out QfuncG
+
     for lm in 1:lpx[ivl,jvl]
         #
         lp = lpl[ivl,jvl,lm] # combined (l+1) index (using default 1-index based array)
