@@ -48,22 +48,36 @@ function qvan2!(
         # actually l+1 because this is the way qrad is stored, check init_us_1)
         if lp == 1
             l = 1
+            sig = 1.0
+            ind = 1 # real
         elseif lp <= 4
             l = 2
+            sig = -1.0
+            ind = 2 # imag
         elseif lp <= 9
             l = 3
+            sig = -1.0
+            ind = 1
         elseif lp <= 16
             l = 4
+            sig = 1.0
+            ind = 2
         elseif lp <= 25
             l = 5
+            sig = 1.0
+            ind = 1
         elseif lp <= 36
             l = 6
+            sig = -1.0
+            ind = 2
         else
             l = 7
+            sig = -1.0
+            ind = 1
         end
-        # sig = (-im)^l
+        # sig = (-im)^(l-1)  # using physics' l (start from 0)
 
-        prefact = (-im)^l * ap[lp,ivl,jvl]
+        prefact = (-im)^(l-1) * ap[lp,ivl,jvl]
 
         for ig in 1:Ng
             # calculates quantites depending on the module of G only when needed
@@ -83,6 +97,11 @@ function qvan2!(
                    qradG[isp][i2,ijv,l] * pwx * ux +
                    qradG[isp][i3,ijv,l] * px * uvx
             QfuncG[ig] = QfuncG[ig] + prefact * ylmk0[ig,lp] * work
+            #if ind == 1
+            #    QfuncG[ig] = QfuncG[ig] + sig * ylmk0[ig,lp] * work + im*0.0 # pure real
+            #else
+            #    QfuncG[ig] = QfuncG[ig] + sig * ylmk0[ig,lp] * work * im # pure imag 
+            #end
         end
     end
 

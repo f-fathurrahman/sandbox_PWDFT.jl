@@ -54,7 +54,7 @@ G2 = pw.gvec.G2
 QfuncG = zeros(ComplexF64,Ng)
 
 # Input
-ih = 8
+ih = 2
 jh = 8
 @assert ih <= nh[isp]
 @assert jh <= nh[isp]
@@ -126,7 +126,9 @@ for lm in 1:lpx[ivl,jvl]
         ind = 1
     end
 
-    println("lm = ", lm, " lp = ", lp, " l = ", l, " (im)^l = ", (-im)^l, " sig = ", sig)
+    println("lm = ", lm, " lp = ", lp, " l = ", l, " (-im)^l = ", (-im)^(l-1), " sig = ", sig, " ind = ", ind)
+    # Physics l
+
     # sig = sig * ap(lp, ivl, jvl) # access Clebsch-Gordan coef
     prefact = (-im)^l * ap[lp,ivl,jvl]
 
