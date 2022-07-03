@@ -16,6 +16,8 @@ struct PsPotNL_UPF
     indv_ijkb0::Vector{Int64}
     Dvan::Array{Float64,3}
     qradG::Vector{Array{Float64,3}}
+    qq_nt::Array{Float64,3}
+    qq_at::Array{Float64,3}
 end
 
 
@@ -122,51 +124,18 @@ function PsPotNL_UPF(
             qq_nt[ih,jh,isp] = pw.CellVolume * real(qgm[1])
             qq_nt[jh,ih,isp] = pw.CellVolume * real(qgm[1])
         end
-        println("qq_nt")
-        display(qq_nt[1:nh[isp],1:nh[isp],isp]); println();
     end
-    println("pw.CellVolume = ", pw.CellVolume)
 
     # finally we set the atomic specific qq_at matrices
     for ia in 1:Natoms
         qq_at[:,:,ia] = qq_nt[:,:,atm2species[ia]]
     end
 
-#=
-    println("indv = ")
-    for isp in 1:Nspecies
-        println(indv[1:nh[isp],isp])
-    end
-
-    println("nhtol = ")
-    for isp in 1:Nspecies
-        println(nhtol[1:nh[isp],isp])
-    end
-
-    println("nhtolm = ")
-    for isp in 1:Nspecies
-        println(nhtolm[1:nh[isp],isp])
-    end
-
-    println("nhtolm = ")
-    for ia in 1:Natoms
-        println(ia, " ", indv_ijkb0[ia])
-    end
-
-    println("Dvan = ")
-    for isp in 1:Nspecies
-        println("Dvan isp = ", isp)
-        display(Dvan[:,:,isp]); println()
-        println("Dion: ")
-        display(pspots[isp].Dion); println()
-    end
-=#
-
     return PsPotNL_UPF(
         lmaxx, lqmax, lmaxkb,
         nh, nhm, nkb, ap, lpx, lpl,
         indv, nhtol, nhtolm, indv_ijkb0,
-        Dvan, qradG
+        Dvan, qradG, qq_nt, qq_at
     )
 
 end
@@ -315,10 +284,57 @@ end
 
 import Base: show
 function show( io::IO, pspotNL::PsPotNL_UPF )
+    
+    println("------------")
     println("PsPotNL_UPF:")
+    println("------------")
+    
     println("lmaxx  = ", pspotNL.lmaxx)
     println("lqmax  = ", pspotNL.lqmax)
     println("lmaxkb = ", pspotNL.lmaxkb)
     println("nkb    = ", pspotNL.nkb)
+
+    nh = pspotNL.nh
+    indv = pspotNL.indv
+    nhtol = pspotNL.nhtol
+    nhtolm = pspotNL.nhtolm
+    indv_ijkb0 = pspotNL.indv_ijkb0
+    Dvan = pspotNL.Dvan
+    qq_nt = pspotNL.qq_nt
+
+    Nspecies = size(indv,2)
+    Natoms = size(indv_ijkb0,1)
+
+    println("indv = ")
+    for isp in 1:Nspecies
+        println(indv[1:nh[isp],isp])
+    end
+
+    println("nhtol = ")
+    for isp in 1:Nspecies
+        println(nhtol[1:nh[isp],isp])
+    end
+
+    println("nhtolm = ")
+    for isp in 1:Nspecies
+        println(nhtolm[1:nh[isp],isp])
+    end
+
+    println("nhtolm = ")
+    for ia in 1:Natoms
+        println(ia, " ", indv_ijkb0[ia])
+    end
+
+    println("Dvan = ")
+    for isp in 1:Nspecies
+        println("Dvan isp = ", isp)
+        display(Dvan[:,:,isp]); println()
+    end
+
+    for isp in 1:Nspecies
+        println("qq_nt")
+        display(qq_nt[1:nh[isp],1:nh[isp],isp]); println();
+    end
+
     return
 end
