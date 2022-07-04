@@ -22,8 +22,12 @@ println("nbnd = ", nbnd)
 
 
 ik = 1
-psi = ones(ComplexF64, npwx, nbnd)
+psi = zeros(ComplexF64, npwx, nbnd)
+for i in 1:nbnd
+    psi[i,i] = 1.0
+end
 hpsi = zeros(ComplexF64, npwx, nbnd)
+spsi = zeros(ComplexF64, npwx, nbnd)
 
 # XXX: Note that this will allocate some unmanaged memory
 # All references to becmod (and related modules and types) should be modified
@@ -31,8 +35,9 @@ hpsi = zeros(ComplexF64, npwx, nbnd)
 ccall( (:prepare_h_s_psi_, LIBMINIPW), Cvoid, (Ref{Int32},), Int32(ik) )
 
 
-println("Before my_h_psi: sum(psi) = ", sum(psi))
-println("Before my_h_psi: sum(hpsi) = ", sum(hpsi))
+println("Before: sum(psi) = ", sum(psi))
+println("Before: sum(hpsi) = ", sum(hpsi))
+println("Before: sum(spsi) = ", sum(spsi))
 
 # SUBROUTINE my_h_psi( lda, n, m, psi, hpsi )
 ccall(
@@ -41,7 +46,13 @@ ccall(
     Int32(npwx), Int32(ngk[ik]), Int32(nbnd), psi, hpsi
 )
 
-println("After my_h_psi: sum(psi) = ", sum(psi))
-println("After my_h_psi: sum(hpsi) = ", sum(hpsi))
+# SUBROUTINE my_s_psi( lda, n, m, psi, spsi )
+ccall(
+    (:my_s_psi_, LIBMINIPW), Cvoid, 
+    (Ref{Int32}, Ref{Int32}, Ref{Int32}, Ptr{ComplexF64}, Ptr{ComplexF64}),
+    Int32(npwx), Int32(ngk[ik]), Int32(nbnd), psi, spsi
+)
 
-println("Pass here")
+println("After: sum(psi) = ", sum(psi))
+println("After: sum(hpsi) = ", sum(hpsi))
+println("After: sum(spsi) = ", sum(spsi)) # to Ha (?)
