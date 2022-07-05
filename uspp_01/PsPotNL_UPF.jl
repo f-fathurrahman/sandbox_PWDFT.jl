@@ -15,9 +15,9 @@ struct PsPotNL_UPF
     nhtolm::Array{Int64,2}
     indv_ijkb0::Vector{Int64}
     Dvan::Array{Float64,3}
-    qradG::Vector{Array{Float64,3}}
-    qq_nt::Array{Float64,3}
-    qq_at::Array{Float64,3}
+    qradG::Union{Vector{Array{Float64,3}},Nothing}
+    qq_nt::Union{Array{Float64,3},Nothing}
+    qq_at::Union{Array{Float64,3},Nothing}
 end
 
 
@@ -103,7 +103,40 @@ function PsPotNL_UPF(
     end
     # TODO: Extract lm -> (l,m)
 
-    qradG = calc_qradG(pw, pspots) # FIXME: include in PsPotNL_UPF
+    tmp_uspp = zeros(Bool,Nspecies)
+    for isp in 1:Nspecies
+        tmp_uspp[isp] = pspots[isp].is_ultrasoft
+    end
+    #
+    if all(tmp_uspp)
+        qradG, qq_nt, qq_at = _prepare_aug_charges(
+            atoms, pw, pspots, lmaxkb, nhm, nh, indv, nhtolm, lpl, lpx, ap
+        )
+    else
+        qradG = nothing
+        qq_nt = nothing
+        qq_at = nothing
+    end
+
+    return PsPotNL_UPF(
+        lmaxx, lqmax, lmaxkb,
+        nh, nhm, nkb, ap, lpx, lpl,
+        indv, nhtol, nhtolm, indv_ijkb0,
+        Dvan, qradG, qq_nt, qq_at
+    )
+
+end
+
+
+function _prepare_aug_charges(
+    atoms, pw, pspots,
+    lmaxkb, nhm, nh, indv, nhtolm, lpl, lpx, ap
+)
+    Natoms = atoms.Natoms
+    Nspecies = atoms.Nspecies
+    atm2species = atoms.atm2species
+
+    qradG = calc_qradG(pw, pspots)
 
     # Compute the qq coefficients by integrating the Q.
     # The qq are the g=0 components of Q
@@ -131,15 +164,8 @@ function PsPotNL_UPF(
         qq_at[:,:,ia] = qq_nt[:,:,atm2species[ia]]
     end
 
-    return PsPotNL_UPF(
-        lmaxx, lqmax, lmaxkb,
-        nh, nhm, nkb, ap, lpx, lpl,
-        indv, nhtol, nhtolm, indv_ijkb0,
-        Dvan, qradG, qq_nt, qq_at
-    )
-
+    return qradG, qq_nt, qq_at
 end
-
 
 include("init_Vnl_KB.jl")
 
@@ -193,9 +219,12 @@ function show( io::IO, pspotNL::PsPotNL_UPF )
         display(Dvan[:,:,isp]); println()
     end
 
+
     for isp in 1:Nspecies
-        println("qq_nt")
-        display(qq_nt[1:nh[isp],1:nh[isp],isp]); println();
+        if qq_nt != nothing
+            println("qq_nt")
+            display(qq_nt[1:nh[isp],1:nh[isp],isp]); println();
+        end
     end
 
     return
