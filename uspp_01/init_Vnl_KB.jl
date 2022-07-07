@@ -1,10 +1,29 @@
-# From init_us_2
 function _init_Vnl_KB!(
     ik::Int64,
     atoms::Atoms,
     pw::PWGrid,
     pspots::Vector{PsPot_UPF},
     pspotNL::PsPotNL_UPF,
+    Vnl_KB::Array{ComplexF64,2}
+)
+    _init_Vnl_KB!(
+        ik, atoms, pw, pspots,
+        pspotNL.lmaxkb, pspotNL.nh, pspotNL.nhm,
+        pspotNL.nhtol, pspotNL.nhtolm, pspotNL.indv,
+        Vnl_KB
+    )
+    return
+end
+
+
+
+# From init_us_2
+function _init_Vnl_KB!(
+    ik::Int64,
+    atoms::Atoms,
+    pw::PWGrid,
+    pspots::Vector{PsPot_UPF},
+    lmaxkb, nh, nhm, nhtol, nhtolm, indv,
     Vnl_KB::Array{ComplexF64,2}
 )
 
@@ -14,13 +33,6 @@ function _init_Vnl_KB!(
     idx_gw2g = pw.gvecw.idx_gw2g
     k = pw.gvecw.kpoints.k
     G = pw.gvec.G
-
-    lmaxkb = pspotNL.lmaxkb
-    nhtolm = pspotNL.nhtolm
-    nhtol = pspotNL.nhtol
-    nhm = pspotNL.nhm
-    nh = pspotNL.nh
-    indv = pspotNL.indv
 
     Natoms = atoms.Natoms
     Nspecies = atoms.Nspecies

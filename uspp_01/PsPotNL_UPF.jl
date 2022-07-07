@@ -1,6 +1,6 @@
 # Experimenting with USPP
 
-struct PsPotNL_UPF
+mutable struct PsPotNL_UPF
     lmaxx::Int64
     lqmax::Int64
     lmaxkb::Int64
@@ -18,6 +18,7 @@ struct PsPotNL_UPF
     qradG::Union{Vector{Array{Float64,3}},Nothing}
     qq_nt::Union{Array{Float64,3},Nothing}
     qq_at::Union{Array{Float64,3},Nothing}
+    betaNL::Vector{Matrix{ComplexF64}}
 end
 
 
@@ -118,11 +119,23 @@ function PsPotNL_UPF(
         qq_at = nothing
     end
 
+    Nkpt = pw.gvecw.kpoints.Nkpt
+    betaNL = Vector{Matrix{ComplexF64}}(undef,Nkpt)
+    for ik in 1:Nkpt
+        betaNL[ik] = zeros(ComplexF64, pw.gvecw.Ngw[ik], nkb)
+        _init_Vnl_KB!(
+            ik, atoms, pw, pspots,
+            lmaxkb, nh, nhm, nhtol, nhtolm, indv,
+            betaNL[ik]
+        )
+    end
+
     return PsPotNL_UPF(
         lmaxx, lqmax, lmaxkb,
         nh, nhm, nkb, ap, lpx, lpl,
         indv, nhtol, nhtolm, indv_ijkb0,
-        Dvan, qradG, qq_nt, qq_at
+        Dvan, qradG, qq_nt, qq_at,
+        betaNL
     )
 
 end

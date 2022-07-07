@@ -53,8 +53,7 @@ function test_main()
     # Check Vnl_KB construction
     ik = 1
     nkb = pspotNL.nkb
-    Vnl_KB = zeros(ComplexF64, pw.gvecw.Ngw[ik], nkb)
-    _init_Vnl_KB!( ik, atoms, pw, pspots, pspotNL, Vnl_KB )
+    Vnl_KB = pspotNL.betaNL[ik]
 
     Ngwk = pw.gvecw.Ngw[ik]
     Nstates = electrons.Nstates
@@ -62,7 +61,7 @@ function test_main()
     betaNL_psi = Vnl_KB' * psi
     println("sum betaNL_psi = ", sum(betaNL_psi))
 
-    display(abs.(betaNL_psi[1:5,1:5])); println();
+    #display(abs.(betaNL_psi[1:5,1:5])); println();
 
 end
 

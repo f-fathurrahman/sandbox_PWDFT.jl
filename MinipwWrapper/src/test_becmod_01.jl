@@ -55,4 +55,4 @@ end
 becp_k = reshape(tmp, Ndim1, Ndim2)
 println("sum becp_k = ", sum(becp_k)*0.5)
 
-display(abs.(becp_k[1:5,1:5])*0.5); println();
+#display(abs.(becp_k[1:5,1:5])*0.5); println();
