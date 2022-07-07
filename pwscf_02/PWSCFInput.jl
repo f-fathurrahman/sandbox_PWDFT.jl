@@ -194,6 +194,8 @@ function PWSCFInput( filename::String )
 
         #
         # Read kpoints
+        # Known limitation: only Monkhorst-Pack format is supported
+        # or K_POINTS automatic
         #
         if occursin("K_POINTS", l)
             is_parse_kpoints = true
@@ -219,10 +221,24 @@ function PWSCFInput( filename::String )
     println(species_masses)
     println(pspfiles)
 
+    #
+    # Some sanity checks
+    #
+
     if ecutwfc <= 0.0
-        error("Cannot read ecutwfc")
+        error("Cannot read ecutwfc, please check or reformat the file")
     end
 
+    if Nspecies <= 0.0
+        error("Cannot read Nspecies (ntyp), please check or reformat the file")
+    end
+
+
+    #
+    # Set some values if not given using default setting
+    #
+
+    # Set ecutrho using default value
     if ecutrho <= 0.0
         ecutrho = 4*ecutwfc
     end
