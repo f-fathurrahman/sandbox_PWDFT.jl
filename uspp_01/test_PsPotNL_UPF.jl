@@ -52,7 +52,6 @@ function test_main()
 
     # Check Vnl_KB construction
     ik = 1
-    nkb = pspotNL.nkb
     Vnl_KB = pspotNL.betaNL[ik]
 
     Ngwk = pw.gvecw.Ngw[ik]
