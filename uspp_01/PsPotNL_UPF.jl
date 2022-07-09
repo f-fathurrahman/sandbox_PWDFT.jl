@@ -15,6 +15,7 @@ mutable struct PsPotNL_UPF
     nhtolm::Array{Int64,2}
     indv_ijkb0::Vector{Int64}
     Dvan::Array{Float64,3}
+    Deeq::Array{Float64,4}
     qradG::Union{Vector{Array{Float64,3}},Nothing}
     qq_nt::Union{Array{Float64,3},Nothing}
     qq_at::Union{Array{Float64,3},Nothing}
@@ -25,7 +26,8 @@ end
 function PsPotNL_UPF(
     atoms::Atoms,
     pw::PWGrid,
-    pspots::Vector{PsPot_UPF}
+    pspots::Vector{PsPot_UPF};
+    Nspin=1
 )
 
     Natoms = atoms.Natoms
@@ -108,7 +110,7 @@ function PsPotNL_UPF(
     for isp in 1:Nspecies
         tmp_uspp[isp] = pspots[isp].is_ultrasoft
     end
-    #
+    # XXX: should be any_uspp ?
     if all(tmp_uspp)
         qradG, qq_nt, qq_at = _prepare_aug_charges(
             atoms, pw, pspots, lmaxkb, nhm, nh, indv, nhtolm, lpl, lpx, ap
@@ -130,11 +132,27 @@ function PsPotNL_UPF(
         )
     end
 
+    # The D-matrix
+    # Contains NL pspot coefficients with contribution from
+    # integral of augmentation charges times Veff)
+    # Depends on spin
+    Deeq = zeros(Float64, nhm, nhm, Natoms, Nspin)
+    # Set to Dvan if no ultrasoft
+    if all(.!tmp_uspp)
+        for ia in 1:Natoms
+            isp = atm2species[ia]
+            nht = nh[isp]
+            for ispin in 1:Nspin
+                Deeq[1:nht,1:nht,ia,ispin] = Dvan[1:nht,1:nht,isp]
+            end
+        end
+    end
+
     return PsPotNL_UPF(
         lmaxx, lqmax, lmaxkb,
         nh, nhm, nkb, ap, lpx, lpl,
         indv, nhtol, nhtolm, indv_ijkb0,
-        Dvan, qradG, qq_nt, qq_at,
+        Dvan, Deeq, qradG, qq_nt, qq_at,
         betaNL
     )
 
