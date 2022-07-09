@@ -20,6 +20,7 @@ mutable struct PsPotNL_UPF
     qq_nt::Union{Array{Float64,3},Nothing}
     qq_at::Union{Array{Float64,3},Nothing}
     betaNL::Vector{Matrix{ComplexF64}}
+    are_ultrasoft::Vector{Bool}
 end
 
 
@@ -106,16 +107,18 @@ function PsPotNL_UPF(
     end
     # TODO: Extract lm -> (l,m)
 
-    tmp_uspp = zeros(Bool,Nspecies)
+    are_ultrasoft = zeros(Bool,Nspecies)
     for isp in 1:Nspecies
-        tmp_uspp[isp] = pspots[isp].is_ultrasoft
+        are_ultrasoft[isp] = pspots[isp].is_ultrasoft
     end
     # XXX: should be any_uspp ?
-    if all(tmp_uspp)
+    if all(are_ultrasoft)
         qradG, qq_nt, qq_at = _prepare_aug_charges(
             atoms, pw, pspots, lmaxkb, nhm, nh, indv, nhtolm, lpl, lpx, ap
         )
     else
+        # XXX Use zeros or nothing?
+        # XXX If we use zeros we need information about the sizes of these arrays
         qradG = nothing
         qq_nt = nothing
         qq_at = nothing
@@ -138,7 +141,7 @@ function PsPotNL_UPF(
     # Depends on spin
     Deeq = zeros(Float64, nhm, nhm, Natoms, Nspin)
     # Set to Dvan if no ultrasoft
-    if all(.!tmp_uspp)
+    #if all(.!are_ultrasoft)
         for ia in 1:Natoms
             isp = atm2species[ia]
             nht = nh[isp]
@@ -146,19 +149,21 @@ function PsPotNL_UPF(
                 Deeq[1:nht,1:nht,ia,ispin] = Dvan[1:nht,1:nht,isp]
             end
         end
-    end
+    #end
 
     return PsPotNL_UPF(
         lmaxx, lqmax, lmaxkb,
         nh, nhm, nkb, ap, lpx, lpl,
         indv, nhtol, nhtolm, indv_ijkb0,
         Dvan, Deeq, qradG, qq_nt, qq_at,
-        betaNL
+        betaNL,
+        are_ultrasoft
     )
 
 end
 
 
+# XXX Need to check the unit. It should be the same as chgden.
 function _prepare_aug_charges(
     atoms, pw, pspots,
     lmaxkb, nhm, nh, indv, nhtolm, lpl, lpx, ap
@@ -176,7 +181,7 @@ function _prepare_aug_charges(
     qq_nt = zeros(Float64, nhm, nhm, Nspecies) # qq_nt, need qvan2
     qq_at = zeros(Float64, nhm, nhm, Natoms)
 
-    G0 = zeros(3,1)
+    G0 = zeros(3,1) # Needs to be a two dimensional array
     lmaxq = 2*lmaxkb + 1 # using 1-indexing
     ylmk0 = zeros(Float64, 1, lmaxq*lmaxq)
     _lmax = lmaxq - 1 # or 2*lmaxkb
@@ -213,6 +218,7 @@ function show( io::IO, pspotNL::PsPotNL_UPF )
     println("lmaxkb = ", pspotNL.lmaxkb)
     println("nkb    = ", pspotNL.nkb)
 
+#=
     nh = pspotNL.nh
     indv = pspotNL.indv
     nhtol = pspotNL.nhtol
@@ -257,6 +263,7 @@ function show( io::IO, pspotNL::PsPotNL_UPF )
             display(qq_nt[1:nh[isp],1:nh[isp],isp]); println();
         end
     end
+=#
 
     return
 end
