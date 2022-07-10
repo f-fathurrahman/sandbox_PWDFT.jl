@@ -113,6 +113,7 @@ function test_main()
     Spsi = Spsi + Vnl_KB * ps
 
     println("sum Spsi = ", sum(Spsi))
+    println("After: sum(abs(Spsi)) = ", sum(abs.(Spsi)) - sum(psi))
 
 end
 
