@@ -4,13 +4,6 @@ using SpecialFunctions: sphericalbesselj
 
 using PWDFT
 
-include("create_atoms_N2H4.jl")
-include("../ylm_real/Ylm_real_qe.jl")
-include("calc_clebsch_gordan.jl")
-include("calc_qradG.jl")
-include("qvan2.jl")
-include("PsPotNL_UPF.jl")
-
 include("../pwscf_02/PWSCFInput.jl")
 
 function init_from_pwinput()
@@ -73,7 +66,7 @@ function test_main()
     atm2species = atoms.atm2species
 
     # Here the op_S operation
-    nkb = pspotNL.nkb
+    nkb = pspotNL.NbetaNL
     nh = pspotNL.nh
     indv_ijkb0 = pspotNL.indv_ijkb0
     qq_at = pspotNL.qq_at
