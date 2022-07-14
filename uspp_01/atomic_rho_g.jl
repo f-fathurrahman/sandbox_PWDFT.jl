@@ -13,6 +13,7 @@ function atomic_rho_g(
     Npoints = prod(pw.Ns)
     idx_g2r = pw.gvec.idx_g2r
     CellVolume = pw.CellVolume
+    Nelectrons = Ham.electrons.Nelectrons
     Nspin = Ham.electrons.Nspin
     Ngl = length(Ham.pw.gvec.G2_shells)
 
@@ -90,6 +91,12 @@ function atomic_rho_g(
 
     println("sum abs rhocg = ", sum(abs.(rhocg)))
 
+    charge = rhocg[1,1]*CellVolume
+    println("charge = ", charge)
+    # Renormalize
+    println("Renormalized to ", Nelectrons)
+    rhocg .*= Nelectrons/charge
+
     Rhoe = zeros(Npoints,Nspin)
     Rhoe_tot = real(G_to_R(pw,rhocg[:,1]))*Npoints
     
@@ -108,6 +115,20 @@ function atomic_rho_g(
 
     println("integ rhoe = ", sum(Rhoe)*CellVolume/Npoints)
 
-    return Rhoe
+    return Rhoe, rhocg
 
+end
+
+function _check_negative_rhoe(Rhoe, CellVolume)
+    Nspin = size(Rhoe, 2)
+    Npoints = size(Rhoe, 1)
+    for ispin in 1:Nspin
+        rhoneg = 0.0
+        for ip in 1:Npoints
+            rhoneg = rhoneg + min(0.0, Rhoe[ip,ispin])
+        end
+        rhoneg = rhoneg * CellVolume/Npoints
+        @printf("Negative rho for ispin %d: %15.10e\n", ispin, rhoneg)
+    end
+    return
 end

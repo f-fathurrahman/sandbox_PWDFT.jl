@@ -17,22 +17,27 @@ function init_Ham_from_pwinput()
     ecutwfc = pwinput.ecutwfc
     ecutrho = pwinput.ecutrho
     dual = ecutrho/ecutwfc
-    if abs(dual-4) >= 1e-10
-        error("Please use NCPP only")
-    end
 
     pspfiles = pwinput.pspfiles
     # Need special treatement for GTH ?
 
-    return Hamiltonian(atoms, pspfiles, ecutwfc)
+    return Hamiltonian(atoms, pspfiles, ecutwfc, dual=dual)
 end
 
 
 function test_main()
     
     Ham = init_Ham_from_pwinput()
+
+    println("Npoints = ", prod(Ham.pw.Ns))
+    println("Ns = ", Ham.pw.Ns)
     
-    Rhoe = atomic_rho_g(Ham)
+    if Ham.pw.using_dual_grid
+        println("Npoints smooth = ", prod(Ham.pw.Nss))
+        println("Nss = ", Ham.pw.Nss)
+    end
+
+    Rhoe, RhoeG = atomic_rho_g(Ham)
 
 end
 
