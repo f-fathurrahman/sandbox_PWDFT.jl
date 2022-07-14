@@ -56,7 +56,40 @@ function add_V_xc!(Ham, Rhoe, RhoeG, Veff)
     println("Exc  = ", Exc)
     println("Vtxc = ", Vtxc)
 
+    Veff[:] += Vxc[:] # Update Veff
+
     return Exc, Vtxc
+end
+
+
+# Note that RhoeG is already in FFT grid
+function add_V_Hartree!(Ham, Rhoe, RhoeG, Veff)
+
+    pw = Ham.pw
+    gvec = pw.gvec
+
+    G2 = gvec.G2
+    Ng = gvec.Ng
+    idx_g2r = gvec.idx_g2r
+    Npoints = prod(pw.Ns) # dense
+
+    VhG = zeros(ComplexF64, Npoints)
+    Ehartree = 0.0
+    # skip ig = 1, it is set to zero
+    for ig in 2:Ng
+        ip = idx_g2r[ig]
+        Ehartree = Ehartree + 2π*( RhoeG[ip].re^2 + RhoeG[ip].im^2 )/G2[ig]
+        VhG[ip] = 4π * RhoeG[ip]/G2[ig]
+    end
+
+    Ehartree *= Ham.pw.CellVolume
+    println("Ehartree = ", Ehartree)
+
+    G_to_R!(pw, VhG)
+
+    Veff[:] += real(VhG)
+
+    return Ehartree
 end
 
 
@@ -79,6 +112,7 @@ function test_main()
     Veff = zeros(Float64, Npoints, Nspin)
 
     Exc, Vtxc = add_V_xc!( Ham, Rhoe, RhoeG, Veff )
+    Ehartree = add_V_Hartree!(Ham, Rhoe, RhoeG, Veff )
 
 end
 
