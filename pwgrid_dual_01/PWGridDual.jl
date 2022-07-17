@@ -65,7 +65,7 @@ function PWGridDual(
         #
         # TODO: simply copy from gvec instead of calling this function again
         # Need to calculate Ngs (no. of G-vectors for smooth grid)
-        gvecs = PWDFT.init_gvec( Ns, RecVecs, 4*ecutwfc )
+        gvecs = PWDFT.init_gvec( Nss, RecVecs, 4*ecutwfc )
         planfws = plan_fft!( zeros(ComplexF64,Nss) )
         planbws = plan_ifft!( zeros(ComplexF64,Nss) )
     else
