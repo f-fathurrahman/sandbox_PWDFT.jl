@@ -23,7 +23,7 @@ function init_Ham_from_pwinput()
     return Hamiltonian(atoms, pspfiles, ecutwfc, dual=dual)
 end
 
-include("fft_interpolate.jl")
+include("dense_to_smooth.jl")
 
 function test_main()
     
