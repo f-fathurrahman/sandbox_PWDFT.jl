@@ -55,5 +55,5 @@ ccall(
 
 println("After: sum(psi) = ", sum(psi))
 println("After: sum(hpsi) = ", sum(hpsi))
-ss = ( sum(abs.(spsi)) - sum(psi) )*0.25
+ss = ( sum(abs.(spsi)) - sum(psi) )
 println("After: sum(spsi) = ", ss) # to Ha (?)
