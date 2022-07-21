@@ -1,4 +1,4 @@
-function calc_QVeff!( Ham )
+function calc_integ_QVeff!( Ham )
 
     Nspin = Ham.electrons.Nspin
     Ng = Ham.pw.gvec.Ng
@@ -23,11 +23,14 @@ function calc_QVeff!( Ham )
         for ip in 1:Npoints
             ctmp[ip] = Veff[ip,ispin] # Veff already contains Ps_loc
         end
+        println("sum ctmp = ", sum(ctmp))
         R_to_G!(Ham.pw, ctmp)
+        #ctmp /= sqrt(Npoints) # XXX: scale
         for ig in 1:Ng
             ip = idx_g2r[ig]
             VeffG[ig,ispin] = ctmp[ip]
         end
+        println("sum VeffG = ", sum(VeffG))
     end
 
 
@@ -55,6 +58,7 @@ function calc_QVeff!( Ham )
                 ijh = ijh + 1
                 #qvan2!( ngm, ih, jh, nt, qmod, qgm(1,ijh), ylmk0 )
                 @views qvan2!( Ham.pspotNL, ih, jh, isp, G2, ylmk0, Qgm[:,ijh] )
+                println("ijh = ", ijh, " sum Qgm = ", sum(Qgm[:,ijh]))
             end
             #
             # count max number of atoms of type isp
@@ -79,9 +83,10 @@ function calc_QVeff!( Ham )
                     nb = nb + 1
                     for ig in 1:Ng
                         GX = atpos[1,ia]*G[1,ig] + atpos[2,ia]*G[2,ig] + atpos[3,ia]*G[3,ig]
-                        Sf = cos(GX) - im*sin(GX)
+                        Sf = cos(GX) + im*sin(GX) # conjugate
                         aux[ig,nb] = VeffG[ig,ispin] * Sf
                     end
+                    println("nb = ", nb, " sum aux VeffG*Sf = ", sum(aux[:,nb]))
                 end
                 #
                 # here we compute the integral Q*V for all atoms of this kind
@@ -100,7 +105,8 @@ function calc_QVeff!( Ham )
                     ijh = 0
                     for ih in 1:nh[isp], jh in ih:nh[isp]
                         ijh = ijh + 1
-                        Deeq[ih,jh,ia,ispin] = CellVolume * deeaux[ijh,nb]
+                        Deeq[ih,jh,ia,ispin] = CellVolume * deeaux[ijh,nb] / Npoints
+                        #@printf("%4d %4d %4d %4d %18.10f\n", ih, jh, ia, ispin, Deeq[ih,jh,ia,ispin])
                         if jh > ih
                             Deeq[jh,ih,ia,ispin] = Deeq[ih,jh,ia,ispin]
                         end
@@ -112,6 +118,50 @@ function calc_QVeff!( Ham )
         end # is_ultrasoft
     
     end # Nspecies
+
+    return
+
+end
+
+
+function calc_newDeeq!( Ham )
+
+    pspotNL = Ham.pspotNL
+
+    # Early return if no USPP is used
+    # XXX probably this should be stored as variable in pspotNL
+    if all( .!pspotNL.are_ultrasoft )
+        return
+    end
+
+    # Calculate the integral between Qfunc and Veff
+    calc_integ_QVeff!( Ham )
+
+    # Some treatment for PAW here ...
+    # TODO:
+
+    atm2species = Ham.atoms.atm2species
+    Nspin = Ham.electrons.Nspin
+    Natoms = Ham.atoms.Natoms
+    nh = pspotNL.nh
+    Dvan = pspotNL.Dvan
+    Deeq = pspotNL.Deeq
+
+    # Add Dvan
+    println("sum Dvan = ", sum(Dvan))
+    println("Some Deeq")
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        for ispin in 1:Nspin
+            for ih in 1:nh[isp], jh in ih:nh[isp]
+                Deeq[ih,jh,ia,ispin] = Deeq[ih,jh,ia,ispin] + Dvan[ih,jh,isp]
+                @printf("%4d %4d %4d %4d %18.10f\n", ih, jh, ia, ispin, Deeq[ih,jh,ia,ispin]*0.5)
+                # Factor of 0.5 to match QE result (to 1/Ry?)
+                # Unit of D is 1/Ha -> 1/(2Ry)
+                Deeq[jh,ih,ia,ispin] = Deeq[ih,jh,ia,ispin]
+            end
+        end
+    end
 
     return
 
