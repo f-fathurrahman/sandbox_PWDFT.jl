@@ -53,7 +53,8 @@ ccall(
     Int32(npwx), Int32(ngk[ik]), Int32(nbnd), psi, spsi
 )
 
-println("After: sum(psi) = ", sum(psi))
-println("After: sum(hpsi) = ", sum(hpsi))
+println("After: sum psi = ", sum(psi))
+println("After: sum hpsi (in Ha) = ", sum(hpsi)*0.5)
+println("After: sum abs hpsi (in Ha) = ", sum(abs.(hpsi))*0.5)
 ss = ( sum(abs.(spsi)) - sum(psi) )
-println("After: sum(spsi) = ", ss) # to Ha (?)
+println("After: sum spsi min ref = ", ss) # to Ha (?)
