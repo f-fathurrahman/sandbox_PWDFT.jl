@@ -6,6 +6,7 @@ using PWDFT
 
 include("../pwscf_02/PWSCFInput.jl")
 include("atomic_rho_g.jl")
+include("dense_to_smooth.jl")
 
 function init_Ham_from_pwinput()
     println("ARGS = ", ARGS)
@@ -86,6 +87,9 @@ function add_V_Hartree!(Ham, Rhoe, RhoeG, Veff)
     println("Ehartree = ", Ehartree)
 
     G_to_R!(pw, VhG)
+    VhG[:] *= Npoints # XXX: scale by Npoints
+
+    println("sum abs VhG after G_to_R!: ", sum(abs.(VhG)))
 
     Veff[:] += real(VhG)
 
@@ -109,10 +113,26 @@ function test_main()
 
     Nspin = Ham.electrons.Nspin
     Npoints = prod(Ham.pw.Ns)
-    Veff = zeros(Float64, Npoints, Nspin)
+    Veff = Ham.potentials.Total
 
+    # FIXME: also set Ham.potentials.XC and Ham.potentials.Hartree
     Exc, Vtxc = add_V_xc!( Ham, Rhoe, RhoeG, Veff )
-    Ehartree = add_V_Hartree!(Ham, Rhoe, RhoeG, Veff )
+    println("After add_V_xc! sum abs Veff = ", sum(Veff))
+
+    Ehartree = add_V_Hartree!( Ham, Rhoe, RhoeG, Veff )
+    println("After add_V_Hartree! sum abs Veff = ", sum(Veff))
+
+    println("sum potentials.Ps_loc = ", sum(Ham.potentials.Ps_loc))
+
+    for ispin in 1:Nspin
+        Ham.potentials.Total[:,ispin] .+= Ham.potentials.Ps_loc[:]
+    end
+
+    if Ham.pw.using_dual_grid
+        dense_to_smooth!( Ham.pw, Ham.potentials.Total, Ham.potentials.TotalSmooth )
+    end
+
+    println("sum TotalSmooth = ", sum(Ham.potentials.TotalSmooth))
 
 end
 
