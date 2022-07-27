@@ -16,7 +16,6 @@ function update_positions!( Ham::Hamiltonian, new_pos::Array{Float64,2} )
     Ng = Ham.pw.gvec.Ng
     Nspecies = Ham.atoms.Nspecies
     idx_g2r = Ham.pw.gvec.idx_g2r
-    idx_g2rm = Ham.pw.gvec.idx_g2rm
 
     Ngl = length(G2_shells)
     Vgl = zeros(Float64, Ngl)
@@ -37,9 +36,6 @@ function update_positions!( Ham::Hamiltonian, new_pos::Array{Float64,2} )
             #
             ip = idx_g2r[ig]
             Vg[ip] = strf[ig,isp] * Vgl[igl]
-            #
-            ipm = idx_g2rm[ig]
-            Vg[ipm] = conj(strf[ig,isp]) * Vgl[igl]
         end
         #
         V_Ps_loc[:] = V_Ps_loc[:] + real( G_to_R(pw, Vg) ) * Npoints / CellVolume

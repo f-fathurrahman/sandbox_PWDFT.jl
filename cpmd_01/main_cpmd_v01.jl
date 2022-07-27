@@ -137,7 +137,7 @@ end
 
 function calc_X_matrix(Ctilde::Array{ComplexF64,2}, C::Array{ComplexF64,2})
     A = Ctilde' * Ctilde
-    B = C * Ctilde
+    B = C' * Ctilde
     X = 0.5*(I - A)
     Xnew = similar(X)
     for iter in 1:100
@@ -154,8 +154,7 @@ function calc_X_matrix(Ctilde::Array{ComplexF64,2}, C::Array{ComplexF64,2})
         end
         @views X[:,:] = Xnew[:,:]
     end
-    println("ERROR: X is not converged")
-    exit()
+    error("ERROR: X is not converged")
     return X
 end
 
@@ -192,8 +191,8 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     filetraj = open(fnametrj, "w")
     fileetot = open(fnameetot, "w")
 
-    C = rand_BlochWavefunc(Ham)
-    energies, forces = minimize_electrons!(Ham, C, etot_conv_thr=1e-8)
+    psiks = rand_BlochWavefunc(Ham)
+    energies, forces = minimize_electrons!(Ham, psiks, etot_conv_thr=1e-8)
 
     Etot = sum(energies)
     Ekin_elec = 0.0
@@ -211,6 +210,10 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
 
     @assert Ham.electrons.Nspin == 1
+    @assert Ham.pw.gvecw.kpoints.Nkpt == 1
+
+    C = psiks[1]
+
     F_elec = zeros(ComplexF64,size(C))
     Ctilde = zeros(ComplexF64,size(C))
     dCtilde = zeros(ComplexF64,size(C))
@@ -219,8 +222,9 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
     Rhoe = similar(Ham.rhoe)
 
-    calc_grad!(Ham, C, F_elec)
-    F_elec = -F_elec
+    #calc_grad!(Ham, C, F_elec)
+    F_elec = -calc_grad(Ham, C)
+    #F_elec = -F_elec
 
     NiterMax = 5
     #
@@ -238,9 +242,9 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
         #
         dCtilde[:] = dC + 0.5*dt*F_elec/μ
-        Ctilde[:] = C.data[1] + dt*dCtilde
-        X = calc_X_matrix( Ctilde, C.data[1] )
-        C.data[1][:,:] = Ctilde + C.data[1]*X
+        Ctilde[:] = C + dt*dCtilde
+        X = calc_X_matrix( Ctilde, C )
+        C[:,:] = Ctilde + C*X
         
         println("Test ortho: ")
         println(dot(C,C))
@@ -249,16 +253,17 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
         println( dot(C[:,1], C[:,3]) )
         #exit()
 
-        Rhoe[:,:] = calc_rhoe(Ham, C)
+        Rhoe[:,:] = calc_rhoe(Ham, psiks)
         update!(Ham, Rhoe)
         println("integ Rhoe = ", sum(Rhoe)*dVol)
 
-        energies = calc_energies(Ham, C)
+        energies = calc_energies(Ham, psiks)
         Etot = sum(energies)
 
-        forces[:,:] = calc_forces(Ham, C)
-        calc_grad!(Ham, C, F_elec)
-        F_elec = -F_elec
+        forces[:,:] = calc_forces(Ham, psiks)
+        F_elec = -calc_grad(Ham, C)
+        #calc_grad!(Ham, C, F_elec)
+        #F_elec = -F_elec
 
         # Update ions' velocities
         Ekin_ions = 0.0
@@ -297,10 +302,11 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
         if Ekin_elec > 1e-3
             println("Quenching ...")
-            energies, forces[:] = minimize_electrons!(Ham, C)
+            energies, forces[:] = minimize_electrons!(Ham, psiks)
             dC[:] .= 0.0
-            calc_grad!(Ham, C.data[1], F_elec)
-            F_elec[:] = -F_elec
+            #calc_grad!(Ham, C, F_elec)
+            F_elec[:,:] = calc_grad(Ham, C)
+            #F_elec[:] = -F_elec
         end
 
 
