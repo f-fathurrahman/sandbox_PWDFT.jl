@@ -14,138 +14,38 @@ include("update_positions.jl")
 
 Random.seed!(1234)
 
-# From QE
-const AMU_SI = 1.660538782e-27
-const ELECTRONMASS_SI = 9.10938215e-31
-const AMU_AU = AMU_SI / ELECTRONMASS_SI
-
-const H_PLANCK_SI = 6.62607015e-34      # J s
-const HARTREE_SI = 4.3597447222071e-18  # J
-const AU_SEC = H_PLANCK_SI/(2*pi)/HARTREE_SI
-const AU_PS  = AU_SEC*1.0e12
-
-function init_Ham_H2O()
-    ecutwfc = 15.0
-    filename = joinpath(DIR_STRUCTURES, "DATA_G2_mols", "H2O.xyz")
-    atoms = Atoms(ext_xyz_file=filename)
-    pspfiles = get_default_psp(atoms)
-    Ham = Hamiltonian( atoms, pspfiles, ecutwfc )
-    # Set masses
-    Ham.atoms.masses[:] = [16.0, 2.0]*AMU_AU
-
-    return Ham
-end
-
-
-function init_Ham_CO2()
-    ecutwfc = 15.0
-    #filename = joinpath(DIR_STRUCTURES, "DATA_G2_mols", "CO2.xyz")
-    filename = joinpath("../md_01/CO2.xyz")
-    atoms = Atoms(ext_xyz_file=filename)
-    pspfiles = get_default_psp(atoms)
-    Ham = Hamiltonian( atoms, pspfiles, ecutwfc )
-    # Set masses
-    Ham.atoms.masses[:] = [14.0, 16.0]*AMU_AU
-
-    return Ham
-end
-
-
-function init_Ham_Si8()
-    ecutwfc = 15.0
-    atoms = Atoms(xyz_string="""
-    8
-
-    Si       0.1000000000       0.0000000000       0.0000000000
-    Si       7.6969017521       7.6969017521       2.5656339174
-    Si       5.1312678348       0.0000000000       5.1312678348
-    Si       7.6969017521       2.5656339174       7.6969017521
-    Si       0.0000000000       5.1312678348       5.1312678348
-    Si       2.5656339174       2.5656339174       2.5656339174
-    Si       2.5656339174       7.6969017521       7.6969017521
-    Si       5.1312678348       5.1312678348       0.0000000000
-    """, in_bohr=true, LatVecs=gen_lattice_sc(10.2625356695))
-    write_xsf("TEMP_Si8.xsf", atoms)
-    pspfiles = get_default_psp(atoms)
-    Ham = Hamiltonian( atoms, pspfiles, ecutwfc )
-    # Set masses
-    Ham.atoms.masses[:] = [28.085]*AMU_AU
-    return Ham
-end
-
+include("additional_constants.jl")
+include("init_Ham.jl")
+include("utils_md.jl")
 
 # Initial minimization
-function minimize_electrons!( Ham, psis; NiterMax=200, etot_conv_thr=1e-8 )
-    KS_solve_Emin_PCG!( Ham, psis,
+function minimize_electrons!( Ham, psiks; NiterMax=200, etot_conv_thr=1e-8 )
+    KS_solve_Emin_PCG!( Ham, psiks,
         skip_initial_diag=true, etot_conv_thr=etot_conv_thr,
         NiterMax=NiterMax
     )
-    forces = calc_forces( Ham, psis )
+    forces = calc_forces( Ham, psiks )
     return sum(Ham.energies), forces
 end
 
-function calc_elec_energies!(Ham, psis, μ, dpsis)
-    Rhoe = calc_rhoe(Ham, psis)
-    update!(Ham, psis)
-    energies = calc_energies(Ham, psis)
+# μ is fictitious electron mass
+function calc_elec_energies!(Ham, psiks, μ, dpsiks)
+    Rhoe = calc_rhoe(Ham, psiks)
+    update!(Ham, psiks)
+    energies = calc_energies(Ham, psiks)
     Etot = sum(energies)
-    Ekin_elec = 0.5*μ*dot(dpsis,dpsis)
+    Ekin_elec = 0.5*μ*dot(dpsiks,dpsiks)
     return Etot, Ekin_elec
 end 
 
-
-function write_traj_files(
-    filetraj, fileetot,
-    atoms, forces,
-    Etot_conserved, Etot, Ekin_ions, Ekin_elec,
-    dt, iter
-)
-    # Forces are in Ha/bohr
-    # Xcrysden expect the forces are in Ha/angstrom
-    F = forces*(1.0/BOHR2ANG)
-    #
-    @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", atoms.Natoms, Etot_conserved)
-    @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f %18.10f\n",
-            AU_PS*iter*dt, Etot_conserved, Etot, Ekin_ions, Ekin_elec)
-    for ia in 1:atoms.Natoms
-        isp = atoms.atm2species[ia]
-        r = atoms.positions*BOHR2ANG # convert from bohr to angstrom
-        @printf(filetraj, "%3s %18.10f %18.10f %18.10f %18.10f %18.10f %18.10f\n",
-                atoms.SpeciesSymbols[isp],
-                r[1,ia], r[2,ia], r[3,ia],
-                F[1,ia], F[2,ia], F[3,ia]
-        ) # printf
-    end
-    flush(filetraj)
-    flush(fileetot)
-
-    return
-end
-
-
-function info_md(atoms, energies, forces, iter)
-    @printf("\nMD Iter = %3d, Etot = %18.10f\n", iter, sum(energies))
-    println("Forces = ")
-    for ia in 1:atoms.Natoms
-        isp = atoms.atm2species[ia]
-        atsymb = atoms.SpeciesSymbols[isp]
-        @printf("%3s %18.10f %18.10f %18.10f\n", atsymb,
-            forces[1,ia], forces[2,ia], forces[3,ia])
-    end
-end
-
-
+# RATTLE algorithm
 function calc_X_matrix(Ctilde::Array{ComplexF64,2}, C::Array{ComplexF64,2})
     A = Ctilde' * Ctilde
     B = C' * Ctilde
     X = 0.5*(I - A)
     Xnew = similar(X)
     for iter in 1:100
-        Xnew[:,:] = 0.5*( I - A + X*(I - B) + (I-B)*X - X*X )
-        #println("real X - Xnew")
-        #display(real(X - Xnew)); println()
-        #println("imag X-Xnew")
-        #display(imag(X - Xnew)); println()
+        Xnew[:,:] = 0.5*( I - A + X*(I - B) + (I - B)*X - X*X )
         ΔX = norm(X-Xnew)
         println("norm X-Xnew = ", ΔX)
         if ΔX < 1e-10
@@ -158,10 +58,17 @@ function calc_X_matrix(Ctilde::Array{ComplexF64,2}, C::Array{ComplexF64,2})
     return X
 end
 
+# Need this?
+struct CarParrinelloMDParameters
+    dt_fs::Float64
+    dt::Float64
+    μ::Float64
+end
 
 function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
     dt_fs = 0.125
+    #dt_fs = 0.3
     # Time step, in Ha atomic unit
     dt = dt_fs*10e-16/AU_SEC
     println("dt (au) = ", dt)
@@ -185,8 +92,9 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     v = zeros(Float64,3,Natoms)
     vtilde = zeros(Float64,3,Natoms)
 
-    # Electronic variables (other than psis)
-    μ = 400.0 # fictitious mass of electron
+    # Electronic variables (other than psiks)
+    #μ = 400.0 # fictitious mass of electron
+    μ = 800.0 # fictitious mass of electron
 
     filetraj = open(fnametrj, "w")
     fileetot = open(fnameetot, "w")
@@ -226,7 +134,8 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     F_elec = -calc_grad(Ham, C)
     #F_elec = -F_elec
 
-    NiterMax = 5
+    NiterMax = 1
+
     #
     for iter in 1:NiterMax
 
@@ -245,7 +154,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
         Ctilde[:] = C + dt*dCtilde
         X = calc_X_matrix( Ctilde, C )
         C[:,:] = Ctilde + C*X
-        
+
         println("Test ortho: ")
         println(dot(C,C))
         println( dot(C[:,1], C[:,1]) )
@@ -280,12 +189,16 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
         # Update electrons' velocities
         dCpr[:] = Ctilde + 0.5*dt*F_elec/μ
         Q = C' * dCpr
-        Y = -0.5*(Q + Q')
+        Y = -0.5*(Q + Q') # Marx Eq. 3.135
         dC[:] = dCpr + C*Y
+        # Y can be ontained without iteration
+        # The velocity constraint condition is satisfied exacatly,
+        # up to machine precision, at teach time step
+        # Marx Sec. 3.7.1
 
         # Orthogonality condition on orbital velocities
-        println("test1 = ", dot(dC, C))
-        println("test2 = ", dot(C, dC))
+        println("test1 dot dC,C = ", dot(dC, C))
+        println("test2 dot C,dC = ", dot(C, dC))
 
         Ekin_elec = 0.5*μ*real(dot(dC,dC))
         println("Ekin_elec = ", Ekin_elec)
@@ -328,15 +241,15 @@ end
 
 #main(init_Ham_H2O, fnametrj="TRAJ_H2O_v4.xyz", fnameetot="ETOT_H2O_v4.dat")
 
-main(init_Ham_CO2,
-    fnametrj="TRAJ_CO2_cpmd.xyz",
-    fnameetot="ETOT_CO2_cpmd.dat"
-)
-
-#main(init_Ham_Si8,
-#    fnametrj="TRAJ_Si8_cpmd.xyz",
-#    fnameetot="ETOT_Si8_cpmd.dat"
+#main(init_Ham_CO2,
+#    fnametrj="TRAJ_CO2_cpmd.xyz",
+#    fnameetot="ETOT_CO2_cpmd.dat"
 #)
+
+main(init_Ham_Si8,
+    fnametrj="TRAJ_Si8_cpmd.xyz",
+    fnameetot="ETOT_Si8_cpmd.dat"
+)
 
 #main(init_Ham_CO2,
 #    fnametrj="TRAJ_CO2_step10_extrap2nd.xyz",
