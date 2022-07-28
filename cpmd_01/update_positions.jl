@@ -2,6 +2,9 @@
 function update_positions!( Ham::Hamiltonian, new_pos::Array{Float64,2} )
     Ham.atoms.positions[:] = new_pos[:]
 
+    println("New poisitons: ")
+    display(Ham.atoms.positions'); println();
+
     # pwgrid and kpoints should not change.
 
     atoms = Ham.atoms
@@ -30,7 +33,7 @@ function update_positions!( Ham::Hamiltonian, new_pos::Array{Float64,2} )
         end
         #
         Vg[1] = strf[1,isp]*Vgl[1] # G=(0,0,0)
-        for ig = 2:Ng
+        for ig in 2:Ng
             #
             igl = idx_g2shells[ig]
             #
