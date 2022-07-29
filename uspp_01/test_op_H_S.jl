@@ -13,17 +13,13 @@ include("update_from_rhoe.jl")
 include("newd.jl")
 include("op_S.jl")
 
-#atoms, pw, pspots = init_test_main()
 function test_main()
 
     Ham = init_Ham_from_pwinput()
 
-
     Rhoe, RhoeG = atomic_rho_g(Ham)
 
     update_from_rhoe!( Ham, Rhoe, RhoeG )
-
-    calc_newDeeq!( Ham )
 
     ik = 1
     Ham.ik = ik # set the current k index of H

@@ -19,6 +19,9 @@ function update_from_rhoe!(Ham, Rhoe, RhoeG)
         dense_to_smooth!( Ham.pw, Ham.potentials.Total, Ham.potentials.TotalSmooth )
     end
 
+    # Also update nonlocal potential coefficients here
+    calc_newDeeq!( Ham ) # should be included in update_from_rhoe!
+
     return # energies?
 end
 

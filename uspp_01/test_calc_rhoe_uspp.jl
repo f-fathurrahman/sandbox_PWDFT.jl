@@ -26,8 +26,6 @@ function test_main()
 
     update_from_rhoe!( Ham, Rhoe, RhoeG )
 
-    calc_newDeeq!( Ham ) # should be included in update_from_rhoe!
-
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
     Nstates = Ham.electrons.Nstates
     
