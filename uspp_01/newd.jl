@@ -23,14 +23,14 @@ function calc_integ_QVeff!( Ham )
         for ip in 1:Npoints
             ctmp[ip] = Veff[ip,ispin] # Veff already contains Ps_loc
         end
-        println("sum ctmp = ", sum(ctmp))
+        #println("sum ctmp = ", sum(ctmp))
         R_to_G!(Ham.pw, ctmp)
         #ctmp /= sqrt(Npoints) # XXX: scale
         for ig in 1:Ng
             ip = idx_g2r[ig]
             VeffG[ig,ispin] = ctmp[ip]
         end
-        println("sum VeffG = ", sum(VeffG))
+        #println("sum VeffG = ", sum(VeffG))
     end
 
 
@@ -49,7 +49,7 @@ function calc_integ_QVeff!( Ham )
             nij = round(Int64, nh[isp] * (nh[isp] + 1)/2 )
 
             Qgm = zeros(ComplexF64, Ng, nij)
-            println("nij = ", nij)
+            #println("nij = ", nij)
             #
             # Compute and store Q(G) for this atomic species 
             # (without structure factor)
@@ -58,7 +58,7 @@ function calc_integ_QVeff!( Ham )
                 ijh = ijh + 1
                 #qvan2!( ngm, ih, jh, nt, qmod, qgm(1,ijh), ylmk0 )
                 @views qvan2!( Ham.pspotNL, ih, jh, isp, G2, ylmk0, Qgm[:,ijh] )
-                println("ijh = ", ijh, " sum Qgm = ", sum(Qgm[:,ijh]))
+                #println("ijh = ", ijh, " sum Qgm = ", sum(Qgm[:,ijh]))
             end
             #
             # count max number of atoms of type isp
@@ -86,7 +86,7 @@ function calc_integ_QVeff!( Ham )
                         Sf = cos(GX) + im*sin(GX) # conjugate
                         aux[ig,nb] = VeffG[ig,ispin] * Sf
                     end
-                    println("nb = ", nb, " sum aux VeffG*Sf = ", sum(aux[:,nb]))
+                    #println("nb = ", nb, " sum aux VeffG*Sf = ", sum(aux[:,nb]))
                 end
                 #
                 # here we compute the integral Q*V for all atoms of this kind
@@ -94,7 +94,7 @@ function calc_integ_QVeff!( Ham )
                 #CALL DGEMM( 'C', 'N', nij, nab, 2*ngm, fact, qgm, 2*ngm, aux, &
                 #         2*ngm, 0.0_dp, deeaux, nij )
 
-                println("isp = ", isp, " size deeaux = ", size(deeaux))
+                #println("isp = ", isp, " size deeaux = ", size(deeaux))
         
                 nb = 0
                 for ia in 1:Natoms
@@ -148,14 +148,14 @@ function calc_newDeeq!( Ham )
     Deeq = pspotNL.Deeq
 
     # Add Dvan
-    println("sum Dvan = ", sum(Dvan))
-    println("Some Deeq")
+    #println("sum Dvan = ", sum(Dvan))
+    #println("Some Deeq")
     for ia in 1:Natoms
         isp = atm2species[ia]
         for ispin in 1:Nspin
             for ih in 1:nh[isp], jh in ih:nh[isp]
                 Deeq[ih,jh,ia,ispin] = Deeq[ih,jh,ia,ispin] + Dvan[ih,jh,isp]
-                @printf("%4d %4d %4d %4d %18.10f\n", ih, jh, ia, ispin, Deeq[ih,jh,ia,ispin]*0.5)
+                #@printf("%4d %4d %4d %4d %18.10f\n", ih, jh, ia, ispin, Deeq[ih,jh,ia,ispin]*0.5)
                 # Factor of 0.5 to match QE result (to 1/Ry?)
                 # Unit of D is 1/Ha -> 1/(2Ry)
                 Deeq[jh,ih,ia,ispin] = Deeq[ih,jh,ia,ispin]
