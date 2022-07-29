@@ -3,6 +3,7 @@ using Random
 using Printf
 using PWDFT
 
+include("op_S_identity.jl")
 include("diag_davidson_qe_v2.jl")
 include("my_scf.jl")
 

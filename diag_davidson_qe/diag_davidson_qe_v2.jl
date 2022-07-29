@@ -185,7 +185,7 @@ function diag_davidson_qe!(
             # refresh psi, H*psi and S*psi
             # CHECK ME: 2*Nvec
             @views psi[:,1:Nvec] = evc[:,1:Nvec]
-            @views psi[:,Nvec+1:2*Nvec] = Spsi[:,1:nbase]*vc[1:nbase,1:Nvec] 
+            @views psi[:,Nvec+1:2*Nvec] = Spsi[:,1:nbase] * vc[1:nbase,1:Nvec] 
             @views Spsi[:,1:Nvec] = psi[:,Nvec+1:2*Nvec]
             @views psi[:,Nvec+1:2*Nvec] = Hpsi[:,1:nbase] * vc[1:nbase,1:Nvec]
             @views Hpsi[:,1:Nvec] = psi[:,Nvec+1:2*Nvec]
@@ -209,10 +209,4 @@ function diag_davidson_qe!(
 
     return evals
 
-end
-
-# For identity matrix S, simply copy psi to Spsi
-function op_S!( Ham::Hamiltonian, psi, Spsi )
-    @views Spsi[:] = psi[:]
-    return
 end
