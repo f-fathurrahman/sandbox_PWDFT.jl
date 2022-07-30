@@ -1,28 +1,57 @@
+function update_from_rhoe!(Ham, Rhoe)
+
+    Nspin = size(Rhoe,2)
+    Npoints = size(Rhoe,1)
+
+    # We do not consider about spinpol at the moment
+    @assert Nspin == 1
+
+    # RhoeG is not given we need to calculate it
+    RhoeG = zeros(ComplexF64, Npoints, Nspin)
+    ctmp = zeros(ComplexF64, Npoints)
+    ctmp[:] = Rhoe[:,1]
+    #
+    R_to_G!(Ham.pw, ctmp) # FIXME: add method
+    RhoeG[:,1] = ctmp[:]/Npoints
+    # Need to be careful about the normalization
+    # Check the charge in G-space
+    charge = RhoeG[1,1]*Ham.pw.CellVolume
+    println("Check charge from RhoeG: ", charge)
+    #
+    return update_from_rhoe!(Ham, Rhoe, RhoeG)
+end
+
+
 function update_from_rhoe!(Ham, Rhoe, RhoeG)
 
     Ham.rhoe[:,:] = Rhoe[:,:] # Need copy?
 
+    # Reset total effective potential to zero
+    fill!(Ham.potentials.Total, 0.0)
+
     # FIXME: also set Ham.potentials.XC and Ham.potentials.Hartree
     Exc, Evtxc = _add_V_xc!( Ham, Rhoe, RhoeG )
     Ehartree = _add_V_Hartree!( Ham, Rhoe, RhoeG )
-    
-    Veff = Ham.potentials.Total
-    println("After add_V_Hartree! sum abs Veff = ", sum(Veff))
-    println("sum potentials.Ps_loc = ", sum(Ham.potentials.Ps_loc))
+
+    @printf("in update_from_rhoe: Exc = %18.10f\n", Exc)
+    @printf("in update_from_rhoe: Ehartree = %18.10f\n", Ehartree)
+    @printf("in update_from_rhoe: Evtxc = %18.10f\n", Evtxc)
 
     Nspin = Ham.electrons.Nspin
     for ispin in 1:Nspin
         Ham.potentials.Total[:,ispin] .+= Ham.potentials.Ps_loc[:]
     end
+    println("sum Ham.potentials.Total = ", sum(Ham.potentials.Total))
 
     if Ham.pw.using_dual_grid
         dense_to_smooth!( Ham.pw, Ham.potentials.Total, Ham.potentials.TotalSmooth )
     end
+    println("sum Ham.potentials.TotalSmooth = ", sum(Ham.potentials.TotalSmooth))
 
     # Also update nonlocal potential coefficients here
-    calc_newDeeq!( Ham ) # should be included in update_from_rhoe!
+    calc_newDeeq!( Ham )
 
-    return # energies?
+    return Ehartree, Exc, Evtxc # energies?
 end
 
 

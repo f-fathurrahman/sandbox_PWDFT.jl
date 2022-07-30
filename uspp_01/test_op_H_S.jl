@@ -19,7 +19,7 @@ function test_main()
 
     Rhoe, RhoeG = atomic_rho_g(Ham)
 
-    update_from_rhoe!( Ham, Rhoe, RhoeG )
+    Ehartree, Exc, Evtxc = update_from_rhoe!( Ham, Rhoe, RhoeG )
 
     ik = 1
     Ham.ik = ik # set the current k index of H
