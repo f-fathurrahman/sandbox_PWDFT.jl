@@ -13,9 +13,11 @@ include("dense_to_smooth.jl")
 include("update_from_rhoe.jl")
 include("newd.jl")
 include("op_S.jl")
-include("my_scf_01.jl")
 include("calc_rhoe_uspp.jl")
 include("../diag_davidson_qe/diag_davidson_qe_v2.jl")
+
+include("my_scf_02.jl")
+
 
 function ortho_sqrt_with_S!( Ham::Hamiltonian, psi::Array{ComplexF64,2} )
     O = psi' * op_S(Ham, psi)
@@ -34,8 +36,8 @@ function ortho_check_with_S( Ham::Hamiltonian, psi::Array{ComplexF64,2}; dVol=1.
         @printf("State: #%5d: (%18.10f,%18.10f)\n", ist, c.re, c.im)
     end
     @printf("\nOrtho check w.r.t state #1:\n")
-    for ist = 2:Nstates
-        c = dot( psi[:,ist], Spsi[:,1] ) * dVol
+    for ist = 1:Nstates
+        c = dot( psi[:,ist], Spsi[:,2] ) * dVol
         @printf("State: #%5d: (%18.10f,%18.10f)\n", ist, c.re, c.im)
     end
     @printf("\n")
@@ -46,6 +48,8 @@ end
 function test_main()
 
     Ham = init_Ham_from_pwinput()
+
+    println(Ham)
 
     dVol = Ham.pw.CellVolume/prod(Ham.pw.Ns)
 
