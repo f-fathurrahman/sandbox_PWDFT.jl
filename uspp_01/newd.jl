@@ -163,6 +163,8 @@ function calc_newDeeq!( Ham )
         end
     end
 
+    println("sum Deeq = ", sum(Deeq))
+
     return
 
 end
