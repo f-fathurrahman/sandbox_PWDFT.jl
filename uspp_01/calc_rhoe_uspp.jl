@@ -1,8 +1,15 @@
+function calc_rhoe_uspp( Ham::Hamiltonian, psiks::BlochWavefunc )
+    Npoints = prod(Ham.pw.Ns)
+    Nspin = Ham.electrons.Nspin
+    Rhoe = zeros(Float64, Npoints, Nspin)
+    calc_rhoe_uspp!(Ham, psiks, Rhoe)
+    return Rhoe
+end
+
 function calc_rhoe_uspp!(
     Ham::Hamiltonian,
     psiks::BlochWavefunc,
-    Rhoe::Array{Float64,2};
-    renormalize=true
+    Rhoe::Array{Float64,2}
 )
     pw = Ham.pw
     Focc = Ham.electrons.Focc
@@ -24,6 +31,13 @@ function calc_rhoe_uspp!(
     # dont forget to zero out the Rhoe first
     fill!(Rhoe, 0.0)
     NptsPerSqrtVol = Npoints/sqrt(CellVolume)
+
+    nhm = Ham.pspotNL.nhm
+    Natoms = Ham.atoms.Natoms
+    Nbecsum = Int64( nhm * (nhm + 1)/2 )
+
+    becsum = zeros(Float64, Nbecsum, Natoms, Nspin)
+
     #
     for ispin in 1:Nspin, ik in 1:Nkpt
         #
@@ -50,6 +64,12 @@ function calc_rhoe_uspp!(
                 Rhoe[ip,ispin] += w*real( conj(ctmp[ip])*ctmp[ip] )
             end
         end
+        #
+        # Add ultrasoft contrib
+        #
+        fill!(becsum, 0.0) # zero out becsum
+        _add_becsum!(ik, ispin, Ham, psiks, becsum)
+        _add_usdens!(Ham, becsum, Rhoe)
     end # ik, ispin
 
     # renormalize
@@ -59,6 +79,8 @@ function calc_rhoe_uspp!(
     #        Rhoe[i] *= Nelectrons_true/integ_rho
     #    end
     #end
+
+    # FIXME: Need to calculate RhoeG here?
 
     # Symmetrize Rhoe if needed
     #if Ham.sym_info.Nsyms > 1

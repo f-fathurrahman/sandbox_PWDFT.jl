@@ -24,7 +24,7 @@ function test_main()
 
     Rhoe, RhoeG = atomic_rho_g(Ham)
 
-    update_from_rhoe!( Ham, Rhoe, RhoeG )
+    Ehartree, Exc, Evtxc = update_from_rhoe!( Ham, Rhoe, RhoeG )
 
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
     Nstates = Ham.electrons.Nstates
@@ -47,19 +47,6 @@ function test_main()
 
     Rhoe = zeros(Float64, Npoints, Nspin)
     calc_rhoe_uspp!(Ham, psiks, Rhoe )
-    println("integ Rhoe = ", sum(Rhoe)*dVol)
-
-    nhm = Ham.pspotNL.nhm
-    Natoms = Ham.atoms.Natoms
-    ik = 1
-    ispin = 1
-    Nbecsum = Int64( nhm * (nhm + 1)/2 )
-    becsum = zeros(Float64, Nbecsum, Natoms, Nspin)
-
-    _add_becsum!(ik, ispin, Ham, psiks, becsum)
-
-    _add_usdens!(Ham, becsum, Rhoe)
-
     println("integ Rhoe = ", sum(Rhoe)*dVol)
 
 end
