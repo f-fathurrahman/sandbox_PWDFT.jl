@@ -25,27 +25,39 @@ function my_scf!(
     @printf("\n")
 
     Vin = zeros(Float64, Npoints)
-    Nspin = 1
-    Nkpt = 1
-    ikspin = 1
+    Nspin = Ham.electrons.Nspin
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
 
     Vhartree = Ham.potentials.Hartree
     Vxc = Ham.potentials.XC
     Focc = Ham.electrons.Focc
+    wk = Ham.pw.gvecw.kpoints.wk
+
+    evals = zeros(Float64, Nstates, Nkpt*Nspin)
 
     for iterSCF in 1:NiterMax
         
         println("\niterSCF = ", iterSCF)
-        evals = diag_davidson_qe!( Ham, psiks )
+        evals[:,:] = diag_davidson_qe!( Ham, psiks )
 
-        println("Eigenvalues in eV: ")
+        for ispin in 1:Nspin, ik in 1:Nkpt
+            ikspin = ik + (ispin - 1)*Nkpt
+            Ham.ik = ik
+            Ham.ispin = ispin
+            ortho_check_with_S(Ham, psiks[ikspin])
+        end
+
+        println("Eigenvalues in eV: ikspin = 1")
         for ist in 1:Nstates
-            @printf("%5d %18.10f\n", ist, evals[ist]*Ha2eV)
+            @printf("%5d %18.10f\n", ist, evals[ist,1]*Ha2eV)
         end
 
         Eband = 0.0
-        for ist in 1:Nstates
-            Eband = Eband + Focc[ist,ikspin]*evals[ist]
+        for ispin in 1:Nspin, ik in 1:Nkpt
+            ikspin = ik + (ispin - 1)*Nkpt
+            for ist in 1:Nstates
+                Eband = Eband + wk[ik]*Focc[ist,ikspin]*evals[ist,ikspin]
+            end
         end
 
         Rhoe_new = calc_rhoe_uspp( Ham, psiks )

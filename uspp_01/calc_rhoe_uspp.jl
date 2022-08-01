@@ -38,6 +38,8 @@ function calc_rhoe_uspp!(
 
     NptsPerSqrtVol = NpointsSmooth/sqrt(CellVolume)
 
+    dVol = CellVolume/Npoints # dense
+
     nhm = Ham.pspotNL.nhm
     Natoms = Ham.atoms.Natoms
     Nbecsum = Int64( nhm * (nhm + 1)/2 )
@@ -74,21 +76,27 @@ function calc_rhoe_uspp!(
         end
     end # ik, ispin
 
+    println("calc_rhoe_uspp: integ RhoeSmooth = ", sum(RhoeSmooth)*dVol)
+
     # Interpolate
     for ispin in 1:Nspin
         @views smooth_to_dense!(pw, RhoeSmooth, Rhoe)
     end
 
+    println("calc_rhoe_uspp: integ Rhoe = ", sum(Rhoe)*dVol)
+
     #
     # Add ultrasoft contrib
     #
     if pw.using_dual_grid
+        fill!(becsum, 0.0) # zero out becsum
         for ispin in 1:Nspin, ik in 1:Nkpt
-            fill!(becsum, 0.0) # zero out becsum
             _add_becsum!(ik, ispin, Ham, psiks, becsum)
-            _add_usdens!(Ham, becsum, Rhoe) # using real space
         end
+        _add_usdens!(Ham, becsum, Rhoe) # using real space
     end
+
+    println("calc_rhoe_uspp: integ Rhoe after adding becsum = ", sum(Rhoe)*dVol)
 
     # renormalize
     #if renormalize
@@ -166,9 +174,6 @@ function _add_usdens!( Ham, becsum, Rhoe )
         for ispin in 1:Nspin
             # sum over atoms
             aux2 = Skk * tbecsum[:,:,ispin]'
-            #CALL dgemm( 'N', 'T', 2*ngm, nij, nab, 1.0_dp, skk, 2*ngm, &
-            #           tbecsum(1,1,is), nij, 0.0_dp, aux2, 2*ngm )
-
             # sum over lm indices of Q_{lm}
             ijh = 0
             for ih in 1:nh[isp], jh in ih:nh[isp]
@@ -218,6 +223,8 @@ function _add_becsum!( ik, ispin, Ham, psiks, becsum )
     ikspin = ik + (ispin-1)*Nkpt
     psi = psiks[ikspin]
 
+    wk = Ham.pw.gvecw.kpoints.wk
+
     Nstates = size(psi, 2)
 
     betaNL_psi = Ham.pspotNL.betaNL[ik]' * psi
@@ -248,7 +255,7 @@ function _add_becsum!( ik, ispin, Ham, psiks, becsum )
                 ikb = indv_ijkb0[ia] + ih
                 for ist in 1:Nstates
                     auxk1[ist,ih] = betaNL_psi[ikb,ist]
-                    auxk2[ist,ih] = Focc[ist,ikspin]*betaNL_psi[ikb,ist]
+                    auxk2[ist,ih] = wk[ik]*Focc[ist,ikspin]*betaNL_psi[ikb,ist]
                 end
             end
             #

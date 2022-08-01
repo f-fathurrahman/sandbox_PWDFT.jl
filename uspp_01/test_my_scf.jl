@@ -17,8 +17,8 @@ include("op_S.jl")
 include("calc_rhoe_uspp.jl")
 include("../diag_davidson_qe/diag_davidson_qe_v2.jl")
 
-include("my_scf_01.jl")
-#include("my_scf_02.jl")
+#include("my_scf_01.jl")
+include("my_scf_02.jl")
 
 function ortho_sqrt_with_S!( Ham::Hamiltonian, psi::Array{ComplexF64,2} )
     O = psi' * op_S(Ham, psi)
@@ -57,26 +57,19 @@ function test_main()
     # Initial density
     Rhoe, RhoeG = atomic_rho_g(Ham)
 
-    #println("integ Rhoe after atomic_rho_g (1): ", sum(Rhoe)*dVol)
     Ehartree, Exc, Evtxc = update_from_rhoe!( Ham, Rhoe, RhoeG )
-
-    #println("integ Rhoe after atomic_rho_g (2): ", sum(Rhoe)*dVol)
-    #println("After update_from_rhoe: ", sum(Ham.rhoe)*dVol)
 
     # Initial wavefunc
     psiks = rand_BlochWavefunc(Ham)
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
+    Nspin = Ham.electrons.Nspin
     # Reorthonormalize (FIXME: need to be included in rand_Blochwavefunc)
-    for i in 1:size(psiks,1)
-        ortho_sqrt_with_S!(Ham, psiks[i])
+    for ispin in 1:Nspin, ik in 1:Nkpt
+        Ham.ispin = ispin
+        Ham.ik = ik
+        ikspin = ik + (ispin - 1)*Nkpt
+        ortho_sqrt_with_S!(Ham, psiks[ikspin])
     end
-
-    # Check
-    ortho_check_with_S(Ham, psiks[1])
-    #O = psiks[1]' * op_S(Ham, psiks[1])
-    #println("Real O = ")
-    #display(real.(O)); println()
-    #println("Imag O = ")
-    #display(imag.(O)); println()
 
     my_scf!(Ham, psiks, NiterMax=100)
 
