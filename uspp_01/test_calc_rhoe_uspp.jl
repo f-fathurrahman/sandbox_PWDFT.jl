@@ -10,6 +10,7 @@ include("../pwscf_02/init_Ham_from_pwinput.jl")
 
 include("atomic_rho_g.jl")
 include("dense_to_smooth.jl")
+include("smooth_to_dense.jl")
 include("update_from_rhoe.jl")
 include("newd.jl")
 include("op_S.jl")

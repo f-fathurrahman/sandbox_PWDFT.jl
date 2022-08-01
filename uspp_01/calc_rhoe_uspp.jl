@@ -23,14 +23,20 @@ function calc_rhoe_uspp!(
     wk = pw.gvecw.kpoints.wk
     idx_gw2r = pw.gvecw.idx_gw2r
     Npoints = prod(Ns)
+    if pw.using_dual_grid
+        NpointsSmooth = prod(pw.Nss)
+    else
+        NpointsSmooth = Npoints
+    end
     Nstates = size(psiks[1])[2]
 
-    RhoeG = zeros(ComplexF64, Npoints, Nspin)
-    ctmp = zeros(ComplexF64, Npoints)
+    RhoeSmooth = zeros(Float64, NpointsSmooth, Nspin)
+    ctmp = zeros(ComplexF64, NpointsSmooth)
 
     # dont forget to zero out the Rhoe first
     fill!(Rhoe, 0.0)
-    NptsPerSqrtVol = Npoints/sqrt(CellVolume)
+
+    NptsPerSqrtVol = NpointsSmooth/sqrt(CellVolume)
 
     nhm = Ham.pspotNL.nhm
     Natoms = Ham.atoms.Natoms
@@ -52,25 +58,37 @@ function calc_rhoe_uspp!(
                 ip = idx_gw2r[ik][igw]
                 ctmp[ip] = psi[igw,ist]
             end
-            # to real space
-            G_to_R!(pw, ctmp)
+            # to real space (use smooth grid if using dual grid)
+            G_to_R!(pw, ctmp, smooth=pw.using_dual_grid)
             # Renormalize
-            for ip in 1:Npoints
+            for ip in 1:NpointsSmooth
                 ctmp[ip] *= NptsPerSqrtVol
             end
+            #
             w = wk[ik]*Focc[ist,ikspin]
-            for ip in 1:Npoints
+            #
+            for ip in 1:NpointsSmooth
                 # accumulate
-                Rhoe[ip,ispin] += w*real( conj(ctmp[ip])*ctmp[ip] )
+                RhoeSmooth[ip,ispin] += w*real( conj(ctmp[ip])*ctmp[ip] )
             end
         end
-        #
-        # Add ultrasoft contrib
-        #
-        fill!(becsum, 0.0) # zero out becsum
-        _add_becsum!(ik, ispin, Ham, psiks, becsum)
-        _add_usdens!(Ham, becsum, Rhoe)
     end # ik, ispin
+
+    # Interpolate
+    for ispin in 1:Nspin
+        @views smooth_to_dense!(pw, RhoeSmooth, Rhoe)
+    end
+
+    #
+    # Add ultrasoft contrib
+    #
+    if pw.using_dual_grid
+        for ispin in 1:Nspin, ik in 1:Nkpt
+            fill!(becsum, 0.0) # zero out becsum
+            _add_becsum!(ik, ispin, Ham, psiks, becsum)
+            _add_usdens!(Ham, becsum, Rhoe) # using real space
+        end
+    end
 
     # renormalize
     #if renormalize
@@ -83,9 +101,9 @@ function calc_rhoe_uspp!(
     # FIXME: Need to calculate RhoeG here?
 
     # Symmetrize Rhoe if needed
-    #if Ham.sym_info.Nsyms > 1
-    #    symmetrize_rhoe!( Ham.pw, Ham.sym_info, Ham.rhoe_symmetrizer, Rhoe )
-    #end
+    if Ham.sym_info.Nsyms > 1
+        symmetrize_rhoe!( Ham.pw, Ham.sym_info, Ham.rhoe_symmetrizer, Rhoe )
+    end
 
     return
 end
@@ -173,21 +191,12 @@ function _add_usdens!( Ham, becsum, Rhoe )
         ip = idx_g2r[ig]
         ctmp[ip] = aux[ig,1]
     end
+    # Use the dense grid
     G_to_R!(Ham.pw, ctmp)
     ctmp[:] *= Npoints # rescale
-    println("integ ctmp = ", sum(real(ctmp))*dVol)
     Rhoe[:,1] += real(ctmp)
 
-    println("integ rhoe in _add_usdens = ", sum(Rhoe)*dVol)
-
     return
-
-    #for ispin in 1:Nspin, ig in 1:Ng
-    #    ip = idx_g2r[ig]
-    #    RhoeG[ip,ispin] += aux[ig,ispin]
-    #end
-
-    #return aux
 end
 
 
