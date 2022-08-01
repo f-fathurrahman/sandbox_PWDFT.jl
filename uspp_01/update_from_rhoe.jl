@@ -33,20 +33,49 @@ function update_from_rhoe!(Ham, Rhoe, RhoeG)
     Exc, Evtxc = _add_V_xc!( Ham, Rhoe, RhoeG )
     Ehartree = _add_V_Hartree!( Ham, Rhoe, RhoeG )
 
-    @printf("in update_from_rhoe: Exc = %18.10f\n", Exc)
-    @printf("in update_from_rhoe: Ehartree = %18.10f\n", Ehartree)
-    @printf("in update_from_rhoe: Evtxc = %18.10f\n", Evtxc)
+    @printf("update_from_rhoe: Ehartree = %18.10f\n", Ehartree)
+    @printf("update_from_rhoe: Exc      = %18.10f\n", Exc)
+    @printf("update_from_rhoe: Evtxc    = %18.10f\n", Evtxc)
+
+    println("sum Ham.potentials.Ps_loc = ", sum(Ham.potentials.Ps_loc))
 
     Nspin = Ham.electrons.Nspin
     for ispin in 1:Nspin
         Ham.potentials.Total[:,ispin] .+= Ham.potentials.Ps_loc[:]
     end
-    println("sum Ham.potentials.Total = ", sum(Ham.potentials.Total))
 
+    println("sum pot.Total before dense_to_smooth       = ", sum(Ham.potentials.Total))
+    #
     if Ham.pw.using_dual_grid
+        #
+        fill!(Ham.potentials.TotalSmooth, 0.0)
+        #println("sum pot.TotalSmooth before dense_to_smooth = ", sum(Ham.potentials.TotalSmooth))
+        #
         dense_to_smooth!( Ham.pw, Ham.potentials.Total, Ham.potentials.TotalSmooth )
+        #
+        #println("sum pot.TotalSmooth after dense_to_smooth = ", sum(Ham.potentials.TotalSmooth))
+        #vin = Ham.potentials.Total
+        #vout = Ham.potentials.TotalSmooth
+        #println("Some pots Total and TotalSmooth:")
+        #for i in 1:10
+        #    @printf("%5d %18.10f %18.10f\n", i, vin[i], vout[i])
+        #end
+
+        #write_xsf("TEMP_PotsTotal.xsf", Ham.atoms )
+        #write_xsf_data3d_crystal("TEMP_PotsTotal.xsf", Ham.atoms, Ham.pw.Ns, dropdims(vin, dims=2))
+
+        #write_xsf("TEMP_PotsSmooth.xsf", Ham.atoms )
+        #write_xsf_data3d_crystal("TEMP_PotsSmooth.xsf", Ham.atoms, Ham.pw.Nss, dropdims(vout, dims=2))
+
+    #else
+    #    vin = Ham.potentials.Total
+    #    println("Some pots Total:")
+    #    for i in 1:10
+    #        @printf("%5d %18.10f\n", i, vin[i])
+    #    end
     end
-    println("sum Ham.potentials.TotalSmooth = ", sum(Ham.potentials.TotalSmooth))
+    #
+    println("sum pot.Total after dense_to_smooth       = ", sum(Ham.potentials.Total))
 
     # Also update nonlocal potential coefficients here
     calc_newDeeq!( Ham )
@@ -66,17 +95,19 @@ function _add_V_xc!(Ham, Rhoe, RhoeG)
     epsxc = zeros(Float64, Npoints)
     Vxc = Ham.potentials.XC
 
+    dVol = Ham.pw.CellVolume / Npoints
+
     # XC potential
     # VWN is the default
     if Ham.rhoe_core == nothing
         epsxc[:], Vxc[:,1] = calc_epsxc_Vxc_VWN( Ham.xc_calc, Rhoe[:,1] )
+        Exc = sum(epsxc .* Rhoe[:,1])*dVol
     else
         epsxc[:], Vxc[:,1] = calc_epsxc_Vxc_VWN( Ham.xc_calc, Rhoe[:,1] + Ham.rhoe_core )
+        Exc = sum(epsxc .* (Rhoe[:,1] + Ham.rhoe_core))*dVol
     end
 
-    dVol = Ham.pw.CellVolume / Npoints
-    # Calculate etxc and vtxc
-    Exc = sum(epsxc .* (Rhoe[:,1] + Ham.rhoe_core))*dVol
+    # Also calculate Evtxc
     Evtxc = sum(Vxc[:,1] .* Rhoe)*dVol # Evtxc does not include rhoe_core
 
     Ham.potentials.Total[:,1] += Vxc[:,1] # Update

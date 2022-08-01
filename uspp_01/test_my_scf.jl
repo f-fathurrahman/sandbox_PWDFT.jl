@@ -10,14 +10,15 @@ include("../pwscf_02/init_Ham_from_pwinput.jl")
 
 include("atomic_rho_g.jl")
 include("dense_to_smooth.jl")
+include("smooth_to_dense.jl")
 include("update_from_rhoe.jl")
 include("newd.jl")
 include("op_S.jl")
 include("calc_rhoe_uspp.jl")
 include("../diag_davidson_qe/diag_davidson_qe_v2.jl")
 
-include("my_scf_02.jl")
-
+include("my_scf_01.jl")
+#include("my_scf_02.jl")
 
 function ortho_sqrt_with_S!( Ham::Hamiltonian, psi::Array{ComplexF64,2} )
     O = psi' * op_S(Ham, psi)

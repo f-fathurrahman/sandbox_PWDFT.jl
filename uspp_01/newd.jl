@@ -42,6 +42,9 @@ function calc_integ_QVeff!( Ham )
     Deeq = Ham.pspotNL.Deeq
     CellVolume = Ham.pw.CellVolume
 
+    # Deeq will be recalculated here
+    # No need to reset it to zeros.
+
     for isp in 1:Nspecies
 
         if Ham.pspots[isp].is_ultrasoft
@@ -63,13 +66,6 @@ function calc_integ_QVeff!( Ham )
             #
             # count max number of atoms of type isp
             nab = sum(atm2species .== isp)
-            # nab = 0
-            #for ia in 1:Natoms
-            #    if atm2species[ia] != isp
-            #        continue
-            #    end
-            #    nab = nab + 1
-            #end
             #
             aux = zeros(ComplexF64, Ng, nab)
             #
@@ -119,6 +115,8 @@ function calc_integ_QVeff!( Ham )
     
     end # Nspecies
 
+    println("sum Deeq in calc_integ_QVeff = ", sum(Deeq))
+
     return
 
 end
@@ -148,8 +146,9 @@ function calc_newDeeq!( Ham )
     Deeq = pspotNL.Deeq
 
     # Add Dvan
-    #println("sum Dvan = ", sum(Dvan))
-    #println("Some Deeq")
+    println("sum Deeq after calc_integ_QVeff: ", sum(Deeq))
+    println("sum Dvan = ", sum(Dvan))
+    println("Some Deeq")
     for ia in 1:Natoms
         isp = atm2species[ia]
         for ispin in 1:Nspin
