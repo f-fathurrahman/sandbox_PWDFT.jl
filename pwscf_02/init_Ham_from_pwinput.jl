@@ -17,5 +17,7 @@ function init_Ham_from_pwinput()
         end
     end
 
-    return Hamiltonian(atoms, pspfiles, ecutwfc, dual=dual)
+    meshk = pwinput.meshk
+
+    return Hamiltonian(atoms, pspfiles, ecutwfc, meshk=[meshk[1], meshk[2], meshk[3]], dual=dual)
 end
