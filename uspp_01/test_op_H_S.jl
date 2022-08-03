@@ -16,6 +16,7 @@ include("op_S.jl")
 function test_main()
 
     Ham = init_Ham_from_pwinput()
+    println(Ham)
 
     Rhoe, RhoeG = atomic_rho_g(Ham)
 
@@ -28,7 +29,7 @@ function test_main()
 
     psi = zeros(ComplexF64, Ngwk, Nstates)
     for i in 1:Nstates
-        psi[i,i] = 1.0
+        psi[i,i] = 1.1
     end
 
     Spsi = zeros(ComplexF64, Ngwk, Nstates)
@@ -37,11 +38,19 @@ function test_main()
     op_H!(Ham, psi, Hpsi)
     op_S!(Ham, psi, Spsi)
 
+    println("\nTry 1")
     println("sum Hpsi = ", sum(Hpsi))
     println("sum(abs(Hpsi)) = ", sum(abs.(Hpsi)))
-
+    println()
     println("sum Spsi = ", sum(Spsi))
     println("sum(abs(Spsi)) min ref = ", sum(abs.(Spsi)) - sum(psi))
+
+    fill!(Hpsi, 0.0)
+    op_H!(Ham, psi, Hpsi)
+
+    println("\nTry 2")
+    println("sum Hpsi = ", sum(Hpsi))
+    println("sum(abs(Hpsi)) = ", sum(abs.(Hpsi)))
 
 end
 

@@ -35,10 +35,11 @@ function test_main()
     NptsSmooth = prod(Ham.pw.Nss)
 
     vin = zeros(Float64, NptsDense)
-    vout = zeros(Float64, NptsSmooth)
+    #vout = zeros(Float64, NptsSmooth)
+    vout = zeros(Float64, NptsDense) # QE use NptsDense
 
     vin[:] .= 1.1
-    vin[1:10] .= 2.5
+    vin[1:5] .= 2.5
 
     println("sum vin before dense_to_smooth = ", sum(vin))
     println("sum vout before dense_to_smooth = ", sum(vout))
@@ -46,7 +47,8 @@ function test_main()
     dense_to_smooth!( Ham.pw, vin, vout )
 
     println("sum vin after dense_to_smooth = ", sum(vin))
-    println("sum vout after dense_to_smooth = ", sum(vout))
+    println("sum vout after dense_to_smooth smooth = ", sum(vout[1:NptsSmooth]))
+    println("sum vout after dense_to_smooth dense = ", sum(vout))
 
     println("Some vin and vout")
     for i in 1:10
