@@ -24,7 +24,7 @@ println("nbnd = ", nbnd)
 ik = 1
 psi = zeros(ComplexF64, npwx, nbnd)
 for i in 1:nbnd
-    psi[i,i] = 1.0
+    psi[i,i] = 1.1
 end
 hpsi = zeros(ComplexF64, npwx, nbnd)
 spsi = zeros(ComplexF64, npwx, nbnd)
