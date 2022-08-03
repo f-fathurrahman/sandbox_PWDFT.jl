@@ -115,7 +115,7 @@ function calc_integ_QVeff!( Ham )
     
     end # Nspecies
 
-    println("sum Deeq in calc_integ_QVeff = ", sum(Deeq))
+    #println("sum Deeq in calc_integ_QVeff = ", sum(Deeq))
 
     return
 
@@ -146,9 +146,9 @@ function calc_newDeeq!( Ham )
     Deeq = pspotNL.Deeq
 
     # Add Dvan
-    println("sum Deeq after calc_integ_QVeff: ", sum(Deeq))
-    println("sum Dvan = ", sum(Dvan))
-    println("Some Deeq")
+    #println("sum Deeq after calc_integ_QVeff: ", sum(Deeq))
+    #println("sum Dvan = ", sum(Dvan))
+    #println("Some Deeq")
     for ia in 1:Natoms
         isp = atm2species[ia]
         for ispin in 1:Nspin
@@ -162,7 +162,7 @@ function calc_newDeeq!( Ham )
         end
     end
 
-    println("sum Deeq = ", sum(Deeq))
+    #println("sum Deeq = ", sum(Deeq))
 
     return
 

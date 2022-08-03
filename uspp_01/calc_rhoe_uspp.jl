@@ -76,14 +76,14 @@ function calc_rhoe_uspp!(
         end
     end # ik, ispin
 
-    println("calc_rhoe_uspp: integ RhoeSmooth = ", sum(RhoeSmooth)*dVol)
+    #println("calc_rhoe_uspp: integ RhoeSmooth = ", sum(RhoeSmooth)*dVol)
 
     # Interpolate
     for ispin in 1:Nspin
         @views smooth_to_dense!(pw, RhoeSmooth, Rhoe)
     end
 
-    println("calc_rhoe_uspp: integ Rhoe = ", sum(Rhoe)*dVol)
+    #println("calc_rhoe_uspp: integ Rhoe = ", sum(Rhoe)*dVol)
 
     #
     # Add ultrasoft contrib
@@ -96,7 +96,7 @@ function calc_rhoe_uspp!(
         _add_usdens!(Ham, becsum, Rhoe) # using real space
     end
 
-    println("calc_rhoe_uspp: integ Rhoe after adding becsum = ", sum(Rhoe)*dVol)
+    #println("calc_rhoe_uspp: integ Rhoe after adding becsum = ", sum(Rhoe)*dVol)
 
     # renormalize
     #if renormalize
