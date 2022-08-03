@@ -211,6 +211,9 @@ function PWSCFInput( filename::String )
             meshk2 = parse(Int64, ll[2])
             meshk3 = parse(Int64, ll[3])
             N_parse_kpoints = N_parse_kpoints + 1
+            #
+            # FIXME: Shifts are not read yet
+            #
         end
 
     end
