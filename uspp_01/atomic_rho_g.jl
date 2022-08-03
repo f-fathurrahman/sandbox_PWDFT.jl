@@ -30,7 +30,7 @@ function atomic_rho_g(
             NpointsMax = pspots[isp].Nr
         end
     end
-    println("NpointsMax = ", NpointsMax)
+    #println("NpointsMax = ", NpointsMax)
 
     aux = zeros(Float64, NpointsMax)
     rhocgnt = zeros(Float64, Ngl)
@@ -45,7 +45,7 @@ function atomic_rho_g(
 
         psp = pspots[isp]
 
-        println("sum psp.rhoatom = ", sum(psp.rhoatom))
+        #println("sum psp.rhoatom = ", sum(psp.rhoatom))
 
         # G == 0 term
         for ir in 1:psp.Nr
@@ -66,7 +66,7 @@ function atomic_rho_g(
             rhocgnt[igl] = PWDFT.integ_simpson( psp.Nr, aux, psp.rab )
         end
 
-        println("sum rhocgnt = ", sum(rhocgnt))
+        #println("sum rhocgnt = ", sum(rhocgnt))
 
         for ig in 1:Ng
             ip = idx_g2r[ig]
@@ -84,17 +84,17 @@ function atomic_rho_g(
 
     end # loop over species
 
-    println("Some rhocg: ")
-    for ip in 1:5
-        @printf("%3d %18.10f %18.10f\n", ip, real(rhocg[ip,1]), imag(rhocg[ip,1]))
-    end
+    #println("Some rhocg: ")
+    #for ip in 1:5
+    #    @printf("%3d %18.10f %18.10f\n", ip, real(rhocg[ip,1]), imag(rhocg[ip,1]))
+    #end
 
-    println("sum abs rhocg = ", sum(abs.(rhocg)))
+    #println("sum abs rhocg = ", sum(abs.(rhocg)))
 
     charge = rhocg[1,1]*CellVolume
-    println("charge = ", charge)
+    print("atomic_rho_g: Initial charge = ", charge)
     # Renormalize
-    println("Renormalized to ", Nelectrons)
+    println(" Renormalized to ", Nelectrons)
     rhocg .*= Nelectrons/charge
 
     Rhoe = zeros(Npoints,Nspin)
@@ -113,7 +113,7 @@ function atomic_rho_g(
         Rhoe[:,1] = Rhoe_tot
     end
 
-    println("integ rhoe = ", sum(Rhoe)*CellVolume/Npoints)
+    println("atomic_rho_g: integ rhoe = ", sum(Rhoe)*CellVolume/Npoints)
 
     return Rhoe, rhocg
 
