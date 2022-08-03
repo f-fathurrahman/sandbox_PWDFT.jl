@@ -1,7 +1,7 @@
 function my_scf!(
     Ham::Hamiltonian, psiks;
     NiterMax=150,
-    betamix=0.1,
+    betamix=0.2,
     etot_conv_thr=1e-6
 )
 
@@ -22,18 +22,17 @@ function my_scf!(
     @printf("SCF iteration starts (with density mixing), betamix = %f\n", betamix)
     @printf("\n")
 
+    is_converged = false
+
     for iterSCF in 1:NiterMax
         
         println("\niterSCF = ", iterSCF)
         evals = diag_davidson_qe!( Ham, psiks )
 
-        println("Eigenvalues: ")
+        println("Eigenvalues in eV: ")
         for ist in 1:Nstates
-            @printf("%5d %18.10f\n", ist, evals[ist])
+            @printf("%5d %18.10f\n", ist, evals[ist]*Ha2eV)
         end
-
-        println("Ortho check after diag_davidson_qe")
-        ortho_check_with_S(Ham, psiks[1])
 
         Rhoe_new = calc_rhoe_uspp( Ham, psiks )
         println("integ Rhoe_new = ", sum(Rhoe_new)*dVol)
@@ -59,18 +58,42 @@ function my_scf!(
             Nconv = 0
         end
         if Nconv >= 2
+            is_converged = true
             @printf("SCF is converged in %d iterations\n", iterSCF)
-            return
-        end
-
-        if diffRhoe < 1e-5
-            @printf("converged by diffRhoe\n")
-            return
+            break
         end
 
         Etot_old = Etot
         flush(stdout)
     end
-    @printf("WARNING: SCF is not converged after %d iterations\n", NiterMax)
+
+    if !is_converged
+        @printf("WARNING: SCF is not converged after %d iterations\n", NiterMax)
+    end
+
+    energies = Ham.energies
+
+    E_OneEle = energies.Kinetic + energies.Ps_loc + energies.Ps_nloc
+
+    println("\nTotal energy in Ry")
+    println("-------------------------------------")
+    @printf("Kinetic    energy: %18.10f\n", 2*energies.Kinetic )
+    @printf("Ps_loc     energy: %18.10f\n", 2*energies.Ps_loc )
+    @printf("Ps_nloc    energy: %18.10f\n", 2*energies.Ps_nloc )
+    @printf("OneEle     energu: %18.10f\n", 2*E_OneEle) 
+    @printf("Hartree    energy: %18.10f\n", 2*energies.Hartree )
+    @printf("XC         energy: %18.10f\n", 2*energies.XC )
+    @printf("-------------------------------------\n")
+    
+    E_elec = energies.Kinetic + energies.Ps_loc + energies.Ps_nloc +
+             energies.Hartree + energies.XC + energies.mTS
+    
+    @printf("Electronic energy: %18.10f\n", 2*E_elec)
+    @printf("NN         energy: %18.10f\n", 2*energies.NN )
+    @printf("-------------------------------------\n")
+    
+    E_total = E_elec + energies.NN
+    @printf("Total      energy: %18.10f\n", 2*E_total)
+
     return
 end
