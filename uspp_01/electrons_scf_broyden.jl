@@ -81,7 +81,8 @@ function electrons_scf_broyden!(
         #
         # Mix the density
         #
-        mix_broyden!( Rhoe, Rhoe_new, betamix, iterSCF, mixdim, df, dv )
+        #mix_broyden!( Rhoe, Rhoe_new, betamix, iterSCF, mixdim, df, dv )
+        mix_anderson!( Rhoe, Rhoe_new, betamix, df, dv, iterSCF, mixdim )
 
         println("integ Rhoe after mix: ", sum(Rhoe)*dVol)
 
