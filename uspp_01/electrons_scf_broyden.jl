@@ -1,7 +1,7 @@
 function electrons_scf_broyden!(
     Ham::Hamiltonian, psiks;
     NiterMax=150,
-    betamix=0.2,
+    betamix=0.7,
     etot_conv_thr=1e-6,
     ethr_evals_last=1e-13
 )
@@ -37,8 +37,17 @@ function electrons_scf_broyden!(
     evals = zeros(Float64, Nstates, Nkpt*Nspin)
     
     mixdim = 8
+    
+    # Mix directly in G-space
     df = zeros(Float64,Npoints*Nspin, mixdim)
     dv = zeros(Float64,Npoints*Nspin, mixdim)
+    
+    #df = zeros(ComplexF64,Npoints*Nspin, mixdim)
+    #dv = zeros(ComplexF64,Npoints*Nspin, mixdim)
+
+    #Ng = Ham.pw.gvec.Ng
+    #df = zeros(ComplexF64, Ng*Nspin, mixdim)
+    #dv = zeros(ComplexF64, Ng*Nspin, mixdim)
 
     ethr = 1e-5 # default
 
@@ -81,8 +90,11 @@ function electrons_scf_broyden!(
         #
         # Mix the density
         #
-        #mix_broyden!( Rhoe, Rhoe_new, betamix, iterSCF, mixdim, df, dv )
-        mix_anderson!( Rhoe, Rhoe_new, betamix, df, dv, iterSCF, mixdim )
+        #mix_broyden_03!( Ham, Rhoe, Rhoe_new, betamix, iterSCF, mixdim, df, dv )
+        #mix_broyden_02!( Ham.pw, Rhoe, Rhoe_new, betamix, iterSCF, mixdim, df, dv )
+        
+        mix_broyden_02!( Rhoe, Rhoe_new, betamix, iterSCF, mixdim, df, dv )
+        #mix_anderson!( Rhoe, Rhoe_new, betamix, df, dv, iterSCF, mixdim )
 
         println("integ Rhoe after mix: ", sum(Rhoe)*dVol)
 

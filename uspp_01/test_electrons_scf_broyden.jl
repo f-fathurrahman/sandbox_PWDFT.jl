@@ -21,7 +21,8 @@ include("calc_rhoe_uspp.jl")
 include("../diag_davidson_qe/diag_davidson_qe_v2.jl")
 
 include("electrons_scf_broyden.jl")
-
+include("mix_broyden_02.jl")
+#include("mix_broyden_03.jl")
 
 function ortho_sqrt_with_S!( Ham::Hamiltonian, psi::Array{ComplexF64,2} )
     O = psi' * op_S(Ham, psi)
