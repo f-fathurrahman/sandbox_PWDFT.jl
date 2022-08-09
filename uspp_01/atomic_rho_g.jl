@@ -99,12 +99,12 @@ function atomic_rho_g(
 
     Rhoe = zeros(Npoints,Nspin)
     Rhoe_tot = real(G_to_R(pw,rhocg[:,1]))*Npoints
-    
+
+    # Convert to Rhoe_up and Rhoe_dn    
     # Rhoe_tot = Rhoe_up + Rhoe_dn
     # magn = Rhoe_up - Rhoe_dn
     # 2*Rhoe_up = Rhoe_tot + magn
     # 2*Rhoe_dn = Rhoe_tot - magn
-
     if Nspin == 2
         magn = real(G_to_R(pw,rhocg[:,2]))*Npoints
         Rhoe[:,1] = 0.5*(Rhoe_tot + magn)
