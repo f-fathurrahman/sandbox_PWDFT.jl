@@ -51,6 +51,8 @@ function electrons_scf_broyden!(
 
     ethr = 1e-5 # default
 
+    is_converged = false
+
     for iterSCF in 1:NiterMax
         
         # determine convergence criteria for diagonalization
@@ -131,7 +133,8 @@ function electrons_scf_broyden!(
         end
         if Nconv >= 2
             @printf("SCF is converged in %d iterations\n", iterSCF)
-            return
+            is_converged = true
+            break
         end
 
         #if diffRhoe < 1e-5
@@ -142,6 +145,15 @@ function electrons_scf_broyden!(
         Etot_old = Etot
         flush(stdout)
     end
-    @printf("WARNING: SCF is not converged after %d iterations\n", NiterMax)
+
+    if !is_converged
+        @printf("WARNING: SCF is not converged after %d iterations\n", NiterMax)
+    end
+
+    # Evaluating energy
+    energies = calc_energies(Ham, psiks)
+    println("\nUsing original formula for total energy")
+    println(energies)
+
     return
 end
