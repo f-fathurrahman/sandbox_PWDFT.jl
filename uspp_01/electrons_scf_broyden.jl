@@ -38,7 +38,7 @@ function electrons_scf_broyden!(
     
     mixdim = 8
     
-    # Mix directly in G-space
+    # Mix directly in R-space
     df = zeros(Float64,Npoints*Nspin, mixdim)
     dv = zeros(Float64,Npoints*Nspin, mixdim)
     
@@ -131,7 +131,7 @@ function electrons_scf_broyden!(
         else
             Nconv = 0
         end
-        if Nconv >= 2
+        if Nconv >= 1
             @printf("SCF is converged in %d iterations\n", iterSCF)
             is_converged = true
             break
