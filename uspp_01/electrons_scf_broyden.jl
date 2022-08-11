@@ -131,7 +131,7 @@ function electrons_scf_broyden!(
         else
             Nconv = 0
         end
-        if Nconv >= 1
+        if Nconv >= 2
             @printf("SCF is converged in %d iterations\n", iterSCF)
             is_converged = true
             break
