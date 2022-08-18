@@ -52,18 +52,6 @@ function init_Ham_CO2()
     return Ham
 end
 
-function run_pwscf( Ham )
-    run(`rm -rfv TEMP_pwscf/\*`)
-    write_pwscf( Ham, prefix_dir="TEMP_pwscf" )
-    cd("./TEMP_pwscf")
-    run(pipeline(`pw.x`, stdin="PWINPUT", stdout="LOG1"))
-    cd("../")
-
-    pwscf_energies = read_pwscf_etotal("TEMP_pwscf/LOG1")
-    pwscf_forces = read_pwscf_forces("TEMP_pwscf/LOG1")
-    return pwscf_energies, pwscf_forces
-end
-
 function run_pwdft_jl( Ham )
     psiks = rand_BlochWavefunc(Ham)
     #KS_solve_Emin_PCG!( Ham, psiks )
@@ -120,7 +108,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     # Start MD loop here
     #
     NiterMax = 10
-    for iter = 1:NiterMax
+    for iter in 1:NiterMax
 
         @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
         @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n", (iter-1)*dt, Etot_conserved, Etot, Ekin_ions)
