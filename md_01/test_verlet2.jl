@@ -21,6 +21,11 @@ const AMU_SI = 1.660538782e-27
 const ELECTRONMASS_SI = 9.10938215e-31
 const AMU_AU = AMU_SI / ELECTRONMASS_SI
 
+#FORCE_evAng = 2*Ry2eV/BOHR2ANG
+# XXX Xcrysden assumes the forces are in Ha/angstrom
+const FORCE_evAng = 1.0/BOHR2ANG
+
+
 function init_Ham_H2O()
     # Atoms
     atoms = Atoms( ext_xyz_file="H2O.xyz" )
@@ -86,7 +91,6 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     # Momenta
     p = zeros(Float64,3,Natoms)
     Ekin_ions = 0.0  # assume initial velocities is zeroes
-    Etot_conserved = Etot + Ekin_ions
 
     dr = zeros(Float64,3,Natoms)
     v = zeros(Float64,3,Natoms)
@@ -100,28 +104,15 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     filetraj = open(fnametrj, "w")
     fileetot = open(fnameetot, "w")
 
-    #FORCE_evAng = 2*Ry2eV/BOHR2ANG
-    # XXX Xcrysden assumes the forces are in Ha/angstrom
-    FORCE_evAng = 1.0/BOHR2ANG
-
     #
     # Start MD loop here
     #
-    NiterMax = 10
+    NiterMax = 3
     for iter in 1:NiterMax
 
-        @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
-        @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n", (iter-1)*dt, Etot_conserved, Etot, Ekin_ions)
-        for ia in 1:Natoms
-            isp = atm2species[ia]
-            r = Ham.atoms.positions
-            @printf(filetraj, "%3s %18.10f %18.10f %18.10f %18.10f %18.10f %18.10f\n",
-                    Ham.atoms.SpeciesSymbols[isp],
-                    r[1,ia]*BOHR2ANG, r[2,ia]*BOHR2ANG, r[3,ia]*BOHR2ANG,
-                    forces[1,ia]*FORCE_evAng, forces[2,ia]*FORCE_evAng, forces[3,ia]*FORCE_evAng)
-        end
-        flush(filetraj)
-        flush(fileetot)
+        write_Etot_traj( filetraj, fileetot, (iter-1)*dt,
+            Ham.atoms, Etot, Ekin_ions, forces,
+        )
 
         Ekin_ions = 0.0
         for ia in 1:Natoms
@@ -134,9 +125,10 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
             end
             Ekin_ions = Ekin_ions + 0.5*m[isp]*ptot2
         end
-        Etot_conserved = Etot + Ekin_ions
-        update_positions!( Ham, dr )
 
+        # Update the positions and also the Hamiltonian
+        update_positions!( Ham, dr )
+        # Calculate the forces
         energies, forces[:] = run_pwdft_jl!(Ham, psiks)
         Etot = sum(energies)
 
@@ -151,20 +143,44 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
 
     end
 
-    @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
-    @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n", NiterMax*dt, Etot_conserved, Etot, Ekin_ions)
-    for ia in 1:Natoms
-        isp = atm2species[ia]
-        r = Ham.atoms.positions
-        @printf(filetraj, "%3s %18.10f %18.10f %18.10f %18.10f %18.10f %18.10f\n",
-                Ham.atoms.SpeciesSymbols[isp],
-                r[1,ia]*BOHR2ANG, r[2,ia]*BOHR2ANG, r[3,ia]*BOHR2ANG,
-                forces[1,ia]*FORCE_evAng, forces[2,ia]*FORCE_evAng, forces[3,ia]*FORCE_evAng)
-    end
+    write_Etot_traj( filetraj, fileetot, NiterMax*dt,
+        Ham.atoms, Etot, Ekin_ions, forces )
 
+    # Dont't forget to close the streams
     close(filetraj)
     close(fileetot)
 
+    return
+end
+
+
+
+function write_Etot_traj(
+    filetraj, fileetot, t::Float64,
+    atoms, Etot, Ekin_ions, forces
+)
+    R = atoms.positions * BOHR2ANG
+    atm2species = atoms.atm2species
+    F = forces * FORCE_evAng
+    spsymb = atoms.SpeciesSymbols
+    Natoms = atoms.Natoms
+    Etot_conserved = Etot + Ekin_ions
+    #
+    @printf(filetraj, "%d  Etot_conserved = %18.10f\n\n", Natoms, Etot_conserved)
+    @printf(fileetot, "%18.10f %18.10f %18.10f %18.10f\n", t, Etot_conserved, Etot, Ekin_ions)
+    #
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        @printf(filetraj,
+                "%3s %18.10f %18.10f %18.10f %18.10f %18.10f %18.10f\n",
+                spsymb[isp],
+                R[1,ia], R[2,ia], R[3,ia],
+                F[1,ia], F[2,ia], F[3,ia])
+    end
+    # Immediately flush
+    flush(filetraj)
+    flush(fileetot)
+    return
 end
 
 #main(init_Ham_H2O, fnametrj="TRAJ_H2O_v4.xyz", fnameetot="ETOT_H2O_v4.dat")
