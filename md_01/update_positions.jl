@@ -2,6 +2,9 @@
 function update_positions!( Ham::Hamiltonian, dr::Array{Float64,2} )
     Ham.atoms.positions[:] = Ham.atoms.positions[:] + dr[:]
 
+    # Make sure that the symmetry is not changed
+    # Probably this is not mandatory, but the some fields
+    # of Hamiltonian need to be changed.
     println("Nsyms = ", Ham.sym_info.Nsyms)
     if Ham.sym_info.Nsyms > 1
         println("Nsyms = ", Ham.sym_info.Nsyms)
@@ -27,14 +30,15 @@ function update_positions!( Ham::Hamiltonian, dr::Array{Float64,2} )
     V_Ps_loc = zeros(Float64, Npoints)
     Vg = zeros(ComplexF64, Npoints)
 
-    for isp = 1:Nspecies
+    for isp in 1:Nspecies
         psp = pspots[isp]
         # FIXME: This is not really depends on ionic positions
-        for igl = 1:Ngl
+        # Probably we should save Vgl in Hamiltonian
+        for igl in 1:Ngl
             Vgl[igl] = eval_Vloc_G( psp, G2_shells[igl] )
         end
         #
-        for ig = 1:Ng
+        for ig in 1:Ng
             ip = idx_g2r[ig]
             igl = idx_g2shells[ig]
             Vg[ip] = strf[ig,isp] * Vgl[igl]
