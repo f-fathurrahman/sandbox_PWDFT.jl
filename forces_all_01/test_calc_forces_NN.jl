@@ -1,6 +1,11 @@
 using LinearAlgebra
 using Printf
-using PWDFT
+
+import PWDFT
+using PWDFT: Hamiltonian, PWGrid, rand_BlochWavefunc, BlochWavefunc, KPoints
+using PWDFT: ANG2BOHR, Atoms, zeros_BlochWavefunc, guess_rhoe, update!, diag_LOBPCG!
+using PWDFT: calc_E_NN, calc_rhoe, calc_energies, op_H, ortho_sqrt!, ortho_sqrt
+using PWDFT: PsPot_GTH, Electrons, PsPotNL, gen_lattice_sc, gen_lattice_fcc
 
 const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)),"..")
 const DIR_STRUCTURES = joinpath(DIR_PWDFT, "structures")

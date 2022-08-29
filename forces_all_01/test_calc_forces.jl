@@ -1,13 +1,16 @@
 using LinearAlgebra
 using Printf
-using PWDFT
 using Random
+
+import PWDFT
+using PWDFT: Hamiltonian, PWGrid, rand_BlochWavefunc, BlochWavefunc, KPoints
+using PWDFT: ANG2BOHR, Atoms, zeros_BlochWavefunc, guess_rhoe, update!, diag_LOBPCG!
+using PWDFT: calc_E_NN, calc_rhoe, calc_energies, op_H, ortho_sqrt!, ortho_sqrt
+using PWDFT: PsPot_GTH, Electrons, PsPotNL, R_to_G, eval_Vloc_G
 
 const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)),"..")
 const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
 const DIR_STRUCTURES = joinpath(DIR_PWDFT, "structures")
-
-include(joinpath(DIR_PWDFT, "sandbox", "KS_solve_SCF_NLsolve.jl"))
 
 include("create_Ham.jl")
 
@@ -16,6 +19,10 @@ include("../NLopt_v3/linmin_grad.jl")
 include("../NLopt_v3/KS_solve_Emin_PCG_new.jl")
 include("../NLopt_v3/KS_solve_Emin_PCG_dot.jl")
 include("../NLopt_v3/KS_solve_Emin_PCG_vec.jl")
+
+include("calc_forces_NN.jl")
+include("calc_forces_Ps_loc.jl")
+include("calc_forces_Ps_nloc.jl")
 
 function test_main()
 
@@ -58,8 +65,8 @@ function test_main()
                 F_Ps_loc[1,ia], F_Ps_loc[2,ia], F_Ps_loc[3,ia] )
     end
 
-    F_Ps_nloc =
-    calc_forces_Ps_nloc( Ham, psiks )*2.0
+#=
+    F_Ps_nloc = calc_forces_Ps_nloc( Ham, psiks )*2.0
     println("Ps nloc forces: (in Ry/bohr)")
     for ia = 1:Natoms
         @printf("%s %18.10f %18.10f %18.10f\n", atsymbs[ia],
@@ -91,6 +98,8 @@ function test_main()
         @printf("%s %18.10f %18.10f %18.10f\n", atsymbs[ia],
                 F_total[1,ia], F_total[2,ia], F_total[3,ia] )
     end
+=#
+
 
 end
 

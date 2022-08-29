@@ -1,7 +1,11 @@
 using LinearAlgebra
 using Printf
-using PWDFT
 using Random
+
+import PWDFT
+using PWDFT: Hamiltonian, PsPot_GTH, Atoms, PWGrid, ANG2BOHR
+using PWDFT: gen_lattice_fcc, gen_lattice_sc
+using PWDFT: KS_solve_SCF!, R_to_G, eval_Vloc_G, calc_strfact, G_to_R
 
 const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)),"..")
 const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
@@ -31,8 +35,8 @@ function test_H2()
     atsymbs = atoms.atsymbs
 
     println("")
-    F_Ps_loc = calc_forces_Ps_loc( Ham.atoms, Ham.pw, Ham.pspots, Ham.rhoe )*2.0
-    for ia = 1:Natoms
+    F_Ps_loc = calc_forces_Ps_loc(Ham)*2.0
+    for ia in 1:Natoms
         @printf("%s %18.10f %18.10f %18.10f\n", atsymbs[ia],
                 F_Ps_loc[1,ia], F_Ps_loc[2,ia], F_Ps_loc[3,ia] )
     end
@@ -40,7 +44,7 @@ function test_H2()
     println("")
     F_Ps_loc = calc_forces_Ps_loc_finite_diff( Ham.atoms, Ham.pw, Ham.pspots, Ham.rhoe )*2.0
     println("Using finite difference")
-    for ia = 1:Natoms
+    for ia in 1:Natoms
         @printf("%s %18.10f %18.10f %18.10f\n", atsymbs[ia],
                 F_Ps_loc[1,ia], F_Ps_loc[2,ia], F_Ps_loc[3,ia] )
     end
@@ -53,7 +57,7 @@ function test_Si_fcc()
         """
         2
 
-        Si  0.0  0.0  0.0
+        Si  0.0  0.0  0.1
         Si  0.25  0.25  0.25
         """, in_bohr=true, LatVecs=gen_lattice_fcc(5.431*ANG2BOHR))
 
@@ -72,8 +76,8 @@ function test_Si_fcc()
     atsymbs = atoms.atsymbs
 
     println("")
-    F_Ps_loc = calc_forces_Ps_loc( Ham.atoms, Ham.pw, Ham.pspots, Ham.rhoe )*2.0
-    for ia = 1:Natoms
+    F_Ps_loc = calc_forces_Ps_loc(Ham)*2.0
+    for ia in 1:Natoms
         @printf("%s %18.10f %18.10f %18.10f\n", atsymbs[ia],
                 F_Ps_loc[1,ia], F_Ps_loc[2,ia], F_Ps_loc[3,ia] )
     end

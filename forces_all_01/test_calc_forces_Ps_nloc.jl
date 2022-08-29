@@ -1,7 +1,11 @@
 using LinearAlgebra
 using Printf
-using PWDFT
 using Random
+
+import PWDFT
+using PWDFT: Hamiltonian, KS_solve_Emin_PCG!, PsPot_GTH, Atoms, PWGrid, Electrons
+using PWDFT: PsPotNL, BlochWavefunc, gen_lattice_fcc, ANG2BOHR, rand_BlochWavefunc
+using PWDFT: calc_betaNL_psi, Ylm_real, eval_proj_G
 
 const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)),"..")
 const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
@@ -26,10 +30,9 @@ function test_Si_fcc()
     println(Ham)
 
     Random.seed!(1234)
-    KS_solve_Emin_PCG!( Ham, savewfc=true )
+    psiks = rand_BlochWavefunc( Ham )
+    KS_solve_Emin_PCG!( Ham, psiks )
     #KS_solve_SCF!(Ham, mix_method="rpulay", etot_conv_thr=1e-6, savewfc=true)
-
-    psiks = read_psiks(Ham)
 
     Natoms = atoms.Natoms
     atsymbs = atoms.atsymbs
