@@ -28,34 +28,26 @@ function calc_forces_Ps_nloc(
 
     dbetaNL = calc_dbetaNL(atoms, pw, pspots, pspotNL)
 
-    for ispin = 1:Nspin
-    for ik = 1:Nkpt
+    for ispin in 1:Nspin, ik in 1:Nkpt
+        #
         ikspin = ik + (ispin - 1)*Nkpt
         psi = psiks[ikspin]
         betaNL_psi = calc_betaNL_psi( ik, pspotNL.betaNL, psi )
         dbetaNL_psi = calc_dbetaNL_psi( ik, dbetaNL, psi )
         
-        for ist = 1:Nstates
-            for ia = 1:Natoms
-                isp = atm2species[ia]
-                psp = pspots[isp]
-                for l = 0:psp.lmax
-                for m = -l:l
-                for iprj = 1:psp.Nproj_l[l+1]
-                for jprj = 1:psp.Nproj_l[l+1]
+        for ist in 1:Nstates, ia in 1:Natoms
+            isp = atm2species[ia]
+            psp = pspots[isp]
+            for l in 0:psp.lmax, m in -l:l
+                for iprj in 1:psp.Nproj_l[l+1], jprj in 1:psp.Nproj_l[l+1]
                     ibeta = prj2beta[iprj,ia,l+1,m+psp.lmax+1]
                     jbeta = prj2beta[jprj,ia,l+1,m+psp.lmax+1]
                     hij = psp.h[l+1,iprj,jprj]
                     fnl1 = hij*conj(betaNL_psi[ist,ibeta])*dbetaNL_psi[:,ist,jbeta]
                     F_Ps_nloc[:,ia] = F_Ps_nloc[:,ia] + 2*wk[ik]*Focc[ist,ikspin]*real(fnl1)
-                    #println("fnl1 = ", fnl1)
                 end
-                end
-                end # m
-                end # l
-            end
+            end # l, m
         end 
-    end
     end
 
     return F_Ps_nloc
