@@ -1,3 +1,19 @@
+function create_Ham_Si64()
+    # Atoms
+    atoms = Atoms(ext_xyz_file="Si64_cubic.xyz")
+    pspfiles = [joinpath(DIR_PSP, "Si-q4.gth")]
+    ecutwfc = 15.0
+    return Hamiltonian( atoms, pspfiles, ecutwfc )
+end
+
+function create_Ham_Si8()
+    # Atoms
+    atoms = Atoms(ext_xyz_file="Si8_cubic.xyz")
+    pspfiles = [joinpath(DIR_PSP, "Si-q4.gth")]
+    ecutwfc = 15.0
+    return Hamiltonian( atoms, pspfiles, ecutwfc )
+end
+
 function create_Ham_CO()
     # Atoms
     atoms = Atoms(xyz_string=
