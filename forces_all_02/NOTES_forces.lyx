@@ -130,6 +130,18 @@ Local potential contribution:
 
 \end_layout
 
+\begin_layout Standard
+Nonlocal pseudopotential
+\begin_inset Formula 
+\[
+2\mathrm{Re}\left\{ \sum_{\mathbf{k}}w_{\mathbf{k}}\sum_{l=0}^{l_{\mathrm{max}}}\sum_{m=-l}^{l}\sum_{i=1}^{N_{\mathbf{k}}}f_{i}^{(\mathbf{k})}\alpha_{lm}^{s}F_{I,i}^{lm,s*}D_{I,i}^{lm,s}\right\} 
+\]
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section*
 Marx and Hutter (Section 3.4.3)
 \end_layout
@@ -176,6 +188,26 @@ Need to multiply by (-1) to get the force.
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+Nuclear gradient of nonlocal projectors: (
+\begin_inset Formula $i$
+\end_inset
+
+: electronic state index)
+\begin_inset Formula 
+\[
+\frac{\partial F_{I,i}^{\alpha}}{\partial R_{I,s}}=-\frac{1}{\sqrt{\Omega}}\sum\imath G_{s}P_{\alpha}^{I}(\mathbf{G})\ S_{I}(\mathbf{G})\ c_{i}^{*}(\mathbf{G})
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+betaNL_psi
 \end_layout
 
 \end_body
