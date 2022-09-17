@@ -24,13 +24,6 @@ pw = PWGrid(ecutwfc, LatVecs)
 
 println(pw)
 
-atoms = Atoms(xyz_string="""
-1
-
-H  5.0  5.0  5.0
-""", LatVecs=LatVecs)
-println(atoms)
-
 Ng = pw.gvec.Ng
 G2 = pw.gvec.G2
 G = pw.gvec.G
