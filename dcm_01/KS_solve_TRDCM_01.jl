@@ -23,9 +23,11 @@ Solves Kohn-Sham problem using trust-region direct constrained minimization
 """
 function KS_solve_TRDCM_01!(
     Ham::Hamiltonian;
-    NiterMax = 100, startingwfc=:random,
+    NiterMax=100,
+    startingwfc=:random,
     verbose=true,
-    print_final_ebands=false, print_final_energies=true,
+    print_final_ebands=false,
+    print_final_energies=true,
     etot_conv_thr=1e-6
 )
 
@@ -61,8 +63,11 @@ function KS_solve_TRDCM_01!(
     # Calculated electron density from this wave function and update Hamiltonian
     #
     Rhoe = zeros(Float64,Npoints,Nspin)
-
-    calc_rhoe!( Ham, psiks, Rhoe )
+    #if startingrhoe == :gaussian
+        @assert Nspin == 1
+        Rhoe[:,1] = guess_rhoe( Ham )
+    #end
+    #calc_rhoe!( Ham, psiks, Rhoe )
     update!(Ham, Rhoe)
 
     evals = zeros(Float64,Nstates,Nkspin)
@@ -72,7 +77,7 @@ function KS_solve_TRDCM_01!(
         Ham.ik = ik
         Ham.ispin = ispin
         i = ik + (ispin - 1)*Nkpt
-        evals[:,i] = diag_LOBPCG!( Ham, psiks[i], verbose_last=true, NiterMax=100 )
+        evals[:,i] = diag_LOBPCG!( Ham, psiks[i], verbose_last=false, NiterMax=100 )
     end
 
     # calculate E_NN
@@ -207,7 +212,7 @@ function KS_solve_TRDCM_01!(
 
             end # if Etot > Etot0
 
-            println("σ = ", σ)
+            #println("σ = ", σ)
             numtry = 0  # reset numtry for this while loop
 
             while (Etot_innerscf > Etot_innerscf_old) &
@@ -247,7 +252,7 @@ function KS_solve_TRDCM_01!(
                         else
                             σ[i] = 1.2*gapmax[i]
                         end
-                        @printf("i = %d σ = %f\n", i, σ[i])
+                        @printf("ikspin = %d σ = %f\n", i, σ[i])
                         if iter > 1
                             D[:,i], G[i] = eigen(A[i] - σ[i]*C[i], B[i])
                         else
@@ -265,7 +270,7 @@ function KS_solve_TRDCM_01!(
         end # end of inner SCF iteration
 
 
-        for i = 1:Nkspin
+        for i in 1:Nkspin
             if iter > 1
                 psiks[i] = Y[i]*G[i][:,set1]
                 #ortho_sqrt!(psiks[i])
@@ -471,7 +476,7 @@ function _dcm_project_nonlinear_pot!(
         end
 
         evals[:,i] = D[1:Nstates,i]
-        println("evals = ", evals)
+        #println("evals = ", evals)
         #
         # update wavefunction
         #
@@ -490,7 +495,7 @@ function _dcm_project_nonlinear_pot!(
         #println("C = ")
         #display(C[i][set5,set5]); println()
 
-        ortho_check(psiks[i])
+        #ortho_check(psiks[i])
 
         #exit()
 

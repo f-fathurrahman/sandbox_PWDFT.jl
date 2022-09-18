@@ -20,7 +20,7 @@ function main()
     #Ham = create_Ham_CO()
     #Ham = create_Ham_CO_PBE()
     #Ham = create_Ham_H2()
-    Ham = create_Ham_GaAs_v1()
+    #Ham = create_Ham_GaAs_v1()
 
     #println(Ham)
 
