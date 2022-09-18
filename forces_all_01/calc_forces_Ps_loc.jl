@@ -47,7 +47,7 @@ function calc_forces_Ps_loc!(
             Sf = cos(GX) - im*sin(GX)
             VlocG = eval_Vloc_G( psp, G2[ig] )
             ip = idx_g2r[ig]
-            F_Ps_loc[:,ia] += real( im*G[:,ig] * VlocG * conj(RhoeG[ip])*Sf )
+            @views F_Ps_loc[:,ia] .+= real( im*G[:,ig] * VlocG * conj(RhoeG[ip])*Sf )
         end
     end
 
