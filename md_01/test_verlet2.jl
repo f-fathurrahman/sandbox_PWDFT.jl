@@ -67,6 +67,7 @@ end
 
 function run_pwdft_jl!( Ham, psiks )
     KS_solve_Emin_PCG_vec!( Ham, psiks, skip_initial_diag=true, etot_conv_thr=1e-8 )
+    #KS_solve_SCF_potmix!( Ham, psiks, etot_conv_thr=1e-8 ) # not good, slow convergence
     forces = calc_forces( Ham, psiks )
     return sum(Ham.energies), forces
 end
@@ -107,7 +108,7 @@ function main( init_func; fnametrj="TRAJ.xyz", fnameetot="ETOT.dat" )
     #
     # Start MD loop here
     #
-    NiterMax = 3
+    NiterMax = 10
     for iter in 1:NiterMax
 
         write_Etot_traj( filetraj, fileetot, (iter-1)*dt,
