@@ -5,6 +5,7 @@ using PWDFT
 
 const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)),"..")
 const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
+const DIR_STRUCTURES = joinpath(DIR_PWDFT, "structures")
 
 include("create_Ham.jl")
 
@@ -45,7 +46,13 @@ end
 
 function main()
 
-    Ham = create_Ham_CO()
+    #Ham = create_Ham_CO()
+    #Ham = create_Ham_NH3()
+    #Ham = create_Ham_N2()
+    Ham = create_Ham_G2_mols(molname="H2O")
+
+    #KS_solve_Emin_PCG!( Ham )
+    #return
 
     @assert Ham.pw.gvecw.kpoints.Nkpt == 1
 
@@ -78,6 +85,7 @@ function main()
     Ham.energies = energies
     Etot = sum(energies)
 
+    Etot_old = 0.0  # declare the variable
 
     Ndiis = 5
     psiks_diis = Vector{BlochWavefunc}(undef, Ndiis)
@@ -96,51 +104,63 @@ function main()
         Kg_diis[i] = zeros_BlochWavefunc(Ham)
     end
 
+    _calc_all_grads!(Ham, psiks_diis[1], g_diis[1], Kg_diis[1])
     for i in 2:Ndiis
+        Etot_old = Etot
         println("\nSteepest descent step = ", i)
-        _steepest_descent_step!(
+        Etot = _steepest_descent_step!(
             Ham, psiks_diis[i-1],
             g_diis[i-1], Kg_diis[i-1],
             psiks_diis[i]
         )
+        @printf("iterSD %5d %18.10f %18.10e\n", i, Etot, abs(Etot - Etot_old))
+        # Calculate new gradients
+        _calc_all_grads!(Ham, psiks_diis[i], g_diis[i], Kg_diis[i])
+        #
     end
 
-    # Calculate Kg_diis for idiis = Ndiis
-    for ispin in 1:Nspin, ik in 1:Nkpt
-        Ham.ik = ik
-        Ham.ispin = ispin
-        i = ik + (ispin - 1)*Nkpt
-        g_diis[Ndiis][i][:,:] .= calc_grad( Ham, psiks[i] )
-        Kg_diis[Ndiis][i][:,:] .= Kprec( Ham.ik, Ham.pw, g_diis[Ndiis][i] )
-    end
+    d_diis = _calc_d_diis(Kg_diis)
+    println("real d_diis = ", real(d_diis))
+    println("imag d_diis = ", imag(d_diis))
+    println("sum d_diis = ", sum(d_diis))
 
-    for NNNN in 1:2
+
+    # Run more SD steps
+    NMoreSDSteps = 0
+    for iterSD in Ndiis+1:NMoreSDSteps
+
+        println("\nBegin iterSD = ", iterSD)
+
         # FIXME: Shift, until some convergence is reached then start using DIIS
         for i in 2:Ndiis
             psiks_diis[i-1][1][:,:] = psiks_diis[i][1][:,:]
             g_diis[i-1][1][:,:] = g_diis[i][1][:,:]
             Kg_diis[i-1][1][:,:] = Kg_diis[i][1][:,:]
         end
+        # *_diis[1][1][:,:] are discarded
         #
-        _steepest_descent_step!(
+        #
+        Etot_old = Etot
+        Etot = _steepest_descent_step!(
             Ham, psiks_diis[Ndiis-1],
             g_diis[Ndiis-1], Kg_diis[Ndiis-1],
             psiks_diis[Ndiis]
         )
         # Calculate Kg_diis for idiis = Ndiis
-        for ispin in 1:Nspin, ik in 1:Nkpt
-            Ham.ik = ik
-            Ham.ispin = ispin
-            i = ik + (ispin - 1)*Nkpt
-            g_diis[Ndiis][i][:,:] .= calc_grad( Ham, psiks[i] )
-            Kg_diis[Ndiis][i][:,:] .= Kprec( Ham.ik, Ham.pw, g_diis[Ndiis][i] )
-        end
+        _calc_all_grads!(Ham, psiks_diis[Ndiis], g_diis[Ndiis], Kg_diis[Ndiis])
+
+        # Check DIIS
+        d_diis = _calc_d_diis(Kg_diis)
+        println("real d_diis = ", real(d_diis))
+        println("imag d_diis = ", imag(d_diis))
+        println("sum d_diis = ", sum(d_diis))
+
+        @printf("iterSD %5d %18.10f %18.10e\n", iterSD, Etot, abs(Etot - Etot_old))
+
     end
 
 
-    d_diis = _calc_d_diis(Kg_diis)
-
-    println("sum d_diis = ", sum(d_diis))
+    MAX_ITER_DIIS = 100 # set to zero to disable DIIS
 
     # New psiks and g, and Kg
     ik = 1 # limit to Nkspin = 1
@@ -149,34 +169,73 @@ function main()
     #
     g_new = zeros_BlochWavefunc(Ham)
     Kg_new = zeros_BlochWavefunc(Ham)
-    # Approximate g
-    for i in 1:Ndiis
-        g_new[ikspin][:,:] += d_diis[i]*g_diis[i][ikspin][:,:]
-    end
-    Kg_new[ikspin][:,:] .= Kprec(ik, Ham.pw, g_new[ikspin])
-
     psiks_new = zeros_BlochWavefunc(Ham)
-    for i in 1:Ndiis
-        psiks_new[ikspin][:,:] += d_diis[i]*psiks_diis[i][ikspin][:,:]
+
+    for iterDIIS in 1:MAX_ITER_DIIS
+
+        # DIIS procedure starts here
+        d_diis = _calc_d_diis(Kg_diis)
+
+        println("real d_diis = ", real(d_diis))
+        println("imag d_diis = ", imag(d_diis))
+        println("sum d_diis = ", sum(d_diis))
+
+        # Approximate g
+        fill!(g_new[ikspin], 0.0)
+        for i in 1:Ndiis
+            g_new[ikspin][:,:] += d_diis[i]*g_diis[i][ikspin][:,:]
+        end
+        Kg_new[ikspin][:,:] .= Kprec(ik, Ham.pw, g_new[ikspin])
+
+        # New psiks
+        fill!(psiks_new[ikspin], 0.0)
+        for i in 1:Ndiis
+            psiks_new[ikspin][:,:] += d_diis[i]*psiks_diis[i][ikspin][:,:]
+        end
+        psiks_new[ikspin][:,:] -= Kg_new[ikspin][:,:] # Note that the sign is different
+
+        # Don't forget to orthogonalize
+        ortho_sqrt!( psiks_new[ikspin] )
+
+        # New Hamiltonian, calculate energies
+        calc_rhoe!(Ham, psiks_new, Rhoe)
+        println("DIIS: Integ Rhoe = ", sum(Rhoe)*dVol)
+        update_pots_from_rhoe!(Ham)
+
+        Ham.energies = calc_energies( Ham, psiks_new )
+        Etot_old = Etot
+        Etot = sum(Ham.energies)
+        diffE = abs(Etot - Etot_old)
+    
+        @printf("iterDIIS %5d %18.10f %18.10e\n", iterDIIS, Etot, diffE)
+
+        if diffE <= 1e-6
+            println("DIIS converged")
+            break
+        end
+
+        # Calculate actual g using psiks_new
+        for i in 1:Ndiis
+            g_new[ikspin][:,:] .= calc_grad(Ham, psiks_new[ikspin])
+        end
+        Kg_new[ikspin][:,:] .= Kprec(ik, Ham.pw, g_new[ikspin])
+        # FIXME: use calc_all_grads
+
+        for i in 2:Ndiis
+            psiks_diis[i-1][ikspin][:,:] = psiks_diis[i][ikspin][:,:]
+            g_diis[i-1][ikspin][:,:] = g_diis[i][ikspin][:,:]
+            Kg_diis[i-1][ikspin][:,:] = Kg_diis[i][ikspin][:,:]
+        end
+        psiks_diis[Ndiis][ikspin][:,:] = psiks_new[ikspin][:,:]
+        g_diis[Ndiis][ikspin][:,:] = g_new[ikspin][:,:] # use the actual g_new?
+        Kg_diis[Ndiis][ikspin][:,:] = Kg_new[ikspin][:,:] # gnew ?
+
     end
-    psiks_new[ikspin][:,:] += Kg_new[ikspin][:,:]
-
-    # Don't forget to orthogonalize
-    ortho_sqrt!( psiks_new[ikspin] )
-
-    # New Hamiltonian, calculate energies
-    calc_rhoe!(Ham, psiks_new, Rhoe)
-    update_pots_from_rhoe!(Ham)
-
-    Ham.energies = calc_energies( Ham, psiks_new )
-    Etot = sum(Ham.energies)
-    println("Etot = ", Etot)
-
-
-    println("Pass here")
 
     return
+
 end
+
 
 function _calc_d_diis(Kg_diis)
     
@@ -193,29 +252,46 @@ function _calc_d_diis(Kg_diis)
     for k in 1:Ndiis, l in 1:Ndiis
         B[k,l] = dot(Kg_diis[k][ikspin], Kg_diis[l][ikspin])
     end
-    display(real(B)); println()
-    display(imag(B)); println()
+
+    println("\nDIIS matrix B:\n")
+    display(real(B)); println() # only show real parts for simplicity
+    #display(imag(B)); println()
 
     rhs_vec = zeros(ComplexF64, Ndiis+1)
     rhs_vec[Ndiis+1] = 1
 
     d_full = B\rhs_vec
-    println(d_full[1:Ndiis])
 
     return d_full[1:Ndiis]
 end
 
+function _calc_all_grads!(Ham, psiks, g, Kg)
+    #
+    Nspin = Ham.electrons.Nspin
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
+    #
+    for ispin in 1:Nspin, ik in 1:Nkpt
+        Ham.ik = ik
+        Ham.ispin = ispin
+        i = ik + (ispin - 1)*Nkpt
+        g[i][:,:] .= calc_grad( Ham, psiks[i] )
+        Kg[i][:,:] .= Kprec( Ham.ik, Ham.pw, g[i] )
+    end
+    return
+end
 
+# g and Kg is calculated before calling this function
 function _steepest_descent_step!(Ham, psiks, g, Kg, psiks_new)
     
     Nspin = Ham.electrons.Nspin
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
     Nkspin = Nkpt*Nspin
-    Rhoe = Ham.rhoe
+
+    Rhoe = Ham.rhoe # alias
 
     d    = zeros_BlochWavefunc(Ham)
-    psic = deepcopy(g)
-    gt   = deepcopy(g)
+    psic = zeros_BlochWavefunc(Ham)
+    gt   = zeros_BlochWavefunc(Ham)
     
     α_t = 3e-5
 
@@ -223,16 +299,8 @@ function _steepest_descent_step!(Ham, psiks, g, Kg, psiks_new)
     α = zeros(Nkspin)
 
     for ispin in 1:Nspin, ik in 1:Nkpt
-
-        Ham.ik = ik
-        Ham.ispin = ispin
         i = ik + (ispin - 1)*Nkpt
-
-        g[i][:,:] .= calc_grad( Ham, psiks[i] )
-        Kg[i][:,:] .= Kprec( Ham.ik, Ham.pw, g[i] )
-
-        d[i] = -Kg[i]
-
+        d[i][:,:] = -Kg[i][:,:]
         psic[i] = ortho_sqrt(psiks[i] + α_t*d[i])
     end
         
@@ -265,9 +333,8 @@ function _steepest_descent_step!(Ham, psiks, g, Kg, psiks_new)
 
     Ham.energies = calc_energies( Ham, psiks_new )
     Etot = sum(Ham.energies)
-    println("Etot = ", Etot)
 
-    return
+    return Etot
 end
 
 main()
