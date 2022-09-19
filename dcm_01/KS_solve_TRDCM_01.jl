@@ -77,7 +77,7 @@ function KS_solve_TRDCM_01!(
         Ham.ik = ik
         Ham.ispin = ispin
         i = ik + (ispin - 1)*Nkpt
-        evals[:,i] = diag_LOBPCG!( Ham, psiks[i], verbose_last=false, NiterMax=100 )
+        evals[:,i] = diag_LOBPCG!( Ham, psiks[i], verbose_last=false, NiterMax=10 )
     end
 
     # calculate E_NN
@@ -158,7 +158,7 @@ function KS_solve_TRDCM_01!(
             _dcm_project_nonlinear_pot!(Ham, iter, dcm_block_sets, psiks, σ, evals, A, B, C, D, T, Y, G)
 
             calc_rhoe!( Ham, psiks, Rhoe )
-            println("integ Rhoe = ", sum(Rhoe)*ΔV)
+            #println("integ Rhoe = ", sum(Rhoe)*ΔV)
             update!( Ham, Rhoe )
 
             # Calculate energies once again
