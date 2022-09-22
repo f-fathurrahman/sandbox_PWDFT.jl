@@ -4,14 +4,7 @@ using SpecialFunctions: sphericalbesselj
 
 using PWDFT
 
-include("../ylm_real/Ylm_real_qe.jl")
-include("calc_clebsch_gordan.jl")
-include("calc_qradG.jl")
-include("PsPotNL_UPF.jl")
-include("qvan2.jl")
-
 include("../pwscf_02/PWSCFInput.jl")
-
 
 function init_from_pwinput()
     println("ARGS = ", ARGS)
@@ -53,9 +46,9 @@ function test_main()
     lmaxkb = pspotNL.lmaxkb
 
     # Input
-    isp = 2
-    ih = 1
-    jh = 1
+    isp = 1
+    ih = 8
+    jh = 2
 
     @assert ih <= nh[isp]
     @assert jh <= nh[isp]
@@ -68,7 +61,7 @@ function test_main()
     Ylm_real_qe!(_lmax, pw.gvec.G, ylmk0) # Ylm_real_qe accept l value starting from 0
 
     qvan2!(pspotNL, ih, jh, isp, G2, ylmk0, QfuncG)
-    for i in 1:5
+    for i in 1:10
         @printf("%5d [%18.10f,%18.10f]\n", i, real(QfuncG[i]), imag(QfuncG[i]))
     end
 

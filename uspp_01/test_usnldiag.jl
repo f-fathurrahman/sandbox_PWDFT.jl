@@ -5,11 +5,6 @@ using SpecialFunctions: sphericalbesselj
 using PWDFT
 
 include("create_atoms_N2H4.jl")
-include("../ylm_real/Ylm_real_qe.jl")
-include("calc_clebsch_gordan.jl")
-include("calc_qradG.jl")
-include("qvan2.jl")
-include("PsPotNL_UPF.jl")
 include("usnldiag.jl")
 
 include("../pwscf_02/PWSCFInput.jl")

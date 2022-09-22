@@ -4,11 +4,6 @@ using SpecialFunctions: sphericalbesselj
 
 using PWDFT
 
-include("../ylm_real/Ylm_real_qe.jl")
-include("calc_clebsch_gordan.jl")
-include("calc_qradG.jl")
-include("PsPotNL_UPF.jl")
-
 include("../pwscf_02/PWSCFInput.jl")
 
 @assert length(ARGS) == 1

@@ -4,12 +4,6 @@ using SpecialFunctions: sphericalbesselj
 
 using PWDFT
 
-include("../ylm_real/Ylm_real_qe.jl")
-include("calc_clebsch_gordan.jl")
-include("calc_qradG.jl")
-include("qvan2.jl")
-include("PsPotNL_UPF.jl")
-
 include("../pwscf_02/PWSCFInput.jl")
 
 function init_from_pwinput()
@@ -44,8 +38,15 @@ end
 function test_main()
     atoms, pw, pspots, electrons = init_from_pwinput()
     
+    println(pspots)
+
+    println(electrons)
+
     pspotNL = PsPotNL_UPF(atoms, pw, pspots)
-    pspotNL_ref = PsPotNL(atoms, pw, pspots)
+
+    # This will not work. We need pspots to be of type Vector{PsPot_GTH} to make this work.
+    # With the inclusion of PsPot_UPF in PWDFT.jl, PsPotNL with PsPot_UPF doesn't worked anymore.
+    #pspotNL_ref = PsPotNL(atoms, pw, pspots)
 
     # Check Vnl_KB construction
     ik = 1
@@ -64,17 +65,17 @@ function test_main()
     println("sum betaNL_psi = ", sum(betaNL_psi))
     #display(abs.(betaNL_psi[1:5,1:5])); println();
 
-    println("\nUsing PsPotNL")
-    println("-------------")
-    println("sum betaNL = ", sum(pspotNL_ref.betaNL[1]))
-    println("size betaNL = ", size(pspotNL_ref.betaNL[1]))
-    betaNL_psi = pspotNL_ref.betaNL[1]' * psi
-    println("sum betaNL_psi = ", sum(betaNL_psi))
+    #println("\nUsing PsPotNL")
+    #println("-------------")
+    #println("sum betaNL = ", sum(pspotNL_ref.betaNL[1]))
+    #println("size betaNL = ", size(pspotNL_ref.betaNL[1]))
+    #betaNL_psi = pspotNL_ref.betaNL[1]' * psi
+    #println("sum betaNL_psi = ", sum(betaNL_psi))
     #display(abs.(betaNL_psi[1:5,1:5])); println();
 
     println(pspotNL)
 
-    println(pspotNL_ref)
+    #println(pspotNL_ref)
 
 end
 
