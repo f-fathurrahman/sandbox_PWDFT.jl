@@ -1,7 +1,6 @@
 using Printf
 using OffsetArrays
 using LinearAlgebra
-using SpecialFunctions: sphericalbesselj
 using Random
 
 using PWDFT

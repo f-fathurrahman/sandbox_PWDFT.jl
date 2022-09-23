@@ -1,6 +1,5 @@
 using Printf
 using OffsetArrays
-using SpecialFunctions: sphericalbesselj
 
 using PWDFT
 
