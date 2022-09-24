@@ -80,7 +80,7 @@ function my_scf!(
     @printf("Kinetic    energy: %18.10f\n", 2*energies.Kinetic )
     @printf("Ps_loc     energy: %18.10f\n", 2*energies.Ps_loc )
     @printf("Ps_nloc    energy: %18.10f\n", 2*energies.Ps_nloc )
-    @printf("OneEle     energu: %18.10f\n", 2*E_OneEle) 
+    @printf("OneEle     energy: %18.10f\n", 2*E_OneEle) 
     @printf("Hartree    energy: %18.10f\n", 2*energies.Hartree )
     @printf("XC         energy: %18.10f\n", 2*energies.XC )
     @printf("-------------------------------------\n")
