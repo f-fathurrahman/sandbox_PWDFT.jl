@@ -33,12 +33,12 @@ function my_scf!(
     Focc = Ham.electrons.Focc
     wk = Ham.pw.gvecw.kpoints.wk
 
-    evals = zeros(Float64, Nstates, Nkpt*Nspin)
+    evals = Ham.electrons.ebands
 
     for iterSCF in 1:NiterMax
         
         println("\niterSCF = ", iterSCF)
-        evals[:,:] = diag_davidson_qe!( Ham, psiks )
+        evals[:,:] .= diag_davidson_qe!( Ham, psiks )
 
         for ispin in 1:Nspin, ik in 1:Nkpt
             ikspin = ik + (ispin - 1)*Nkpt

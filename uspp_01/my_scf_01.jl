@@ -24,14 +24,17 @@ function my_scf!(
 
     is_converged = false
 
+    evals = Ham.electrons.ebands
+
     for iterSCF in 1:NiterMax
         
         println("\niterSCF = ", iterSCF)
-        evals = diag_davidson_qe!( Ham, psiks )
+        evals[:,:] .= diag_davidson_qe!( Ham, psiks )
 
+        ikspin = 1
         println("Eigenvalues in eV: ")
         for ist in 1:Nstates
-            @printf("%5d %18.10f\n", ist, evals[ist]*Ha2eV)
+            @printf("%5d %18.10f\n", ist, evals[ist,ikspin]*Ha2eV)
         end
 
         Rhoe_new = calc_rhoe_uspp( Ham, psiks )
