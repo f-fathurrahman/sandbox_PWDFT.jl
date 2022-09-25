@@ -1,6 +1,7 @@
 using Printf
 using OffsetArrays
 using LinearAlgebra
+import Serialization
 
 using PWDFT
 
@@ -69,8 +70,10 @@ function test_main()
         ikspin = ik + (ispin - 1)*Nkpt
         ortho_sqrt_with_S!(Ham, psiks[ikspin])
     end
-
+    
     my_scf!(Ham, psiks, NiterMax=100)
+    Serialization.serialize("Hamiltonian.dat", Ham)
+    Serialization.serialize("psiks.dat", psiks)
 
 end
 
