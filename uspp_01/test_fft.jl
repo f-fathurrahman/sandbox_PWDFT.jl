@@ -1,6 +1,5 @@
 using Printf
 using OffsetArrays
-using SpecialFunctions: sphericalbesselj
 
 using PWDFT
 
@@ -22,8 +21,6 @@ function init_Ham_from_pwinput()
 
     return Hamiltonian(atoms, pspfiles, ecutwfc, dual=dual)
 end
-
-include("fft_interpolate.jl")
 
 function test_main()
     

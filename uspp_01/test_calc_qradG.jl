@@ -1,9 +1,7 @@
 using Printf
-using SpecialFunctions: sphericalbesselj
 using PWDFT
 
 include("loop_calc_qradG.jl")
-include("calc_qradG.jl")
 
 function create_atoms_N2H4()
     atoms = Atoms(xyz_string="""
