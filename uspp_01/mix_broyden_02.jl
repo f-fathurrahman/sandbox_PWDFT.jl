@@ -57,8 +57,9 @@ function mix_broyden_02!( deltain, deltaout_, alphamix::Float64, iter::Int64, n_
 
     deltaout = copy(deltaout_)  # do not replace deltaout_
 
-    maxter = 8
-    wg0 = 0.01
+    maxter = 8  # FIXME: should be checked against calling functions
+    #wg0 = 0.01
+    wg0 = 0.0 # QE
     wg = ones(maxter)
 
     deltainsave = copy( deltain )
@@ -95,6 +96,10 @@ function mix_broyden_02!( deltain, deltaout_, alphamix::Float64, iter::Int64, n_
         end
         beta[i,i] = wg0^2 + wg[i]^2
     end
+
+    println("\nbeta matrix before inverse")
+    display(beta); println()
+
 
     beta_inv = inv(beta[1:iter_used,1:iter_used])
 
