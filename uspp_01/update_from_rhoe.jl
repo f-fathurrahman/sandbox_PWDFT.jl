@@ -26,6 +26,9 @@ function update_from_rhoe!(Ham, Rhoe, RhoeG)
 
     Ham.rhoe[:,:] = Rhoe[:,:] # Need copy?
 
+    # Save old potential
+    Ham.potentials.TotalOld[:,:] .= Ham.potentials.Total[:,:]
+
     # Reset total effective potential to zero
     fill!(Ham.potentials.Total, 0.0)
 
@@ -33,12 +36,7 @@ function update_from_rhoe!(Ham, Rhoe, RhoeG)
     Exc, Evtxc = _add_V_xc!( Ham, Rhoe, RhoeG )
     Ehartree = _add_V_Hartree!( Ham, Rhoe, RhoeG )
 
-    #@printf("update_from_rhoe: Ehartree = %18.10f\n", Ehartree)
-    #@printf("update_from_rhoe: Exc      = %18.10f\n", Exc)
-    #@printf("update_from_rhoe: Evtxc    = %18.10f\n", Evtxc)
-
-    #println("sum Ham.potentials.Ps_loc = ", sum(Ham.potentials.Ps_loc))
-
+    # Add V_Ps_loc contribution
     Nspin = Ham.electrons.Nspin
     for ispin in 1:Nspin
         Ham.potentials.Total[:,ispin] .+= Ham.potentials.Ps_loc[:]
@@ -47,31 +45,8 @@ function update_from_rhoe!(Ham, Rhoe, RhoeG)
     #println("sum pot.Total before dense_to_smooth       = ", sum(Ham.potentials.Total))
     #
     if Ham.pw.using_dual_grid
-        #
-        #fill!(Ham.potentials.TotalSmooth, 0.0)
-        #println("sum pot.TotalSmooth before dense_to_smooth = ", sum(Ham.potentials.TotalSmooth))
-        #
         dense_to_smooth!( Ham.pw, Ham.potentials.Total, Ham.potentials.TotalSmooth )
-        #
-        #println("sum pot.TotalSmooth after dense_to_smooth = ", sum(Ham.potentials.TotalSmooth))
-        #vin = Ham.potentials.Total
-        #vout = Ham.potentials.TotalSmooth
-        #println("Some pots Total and TotalSmooth:")
-        #for i in 1:10
-        #    @printf("%5d %18.10f %18.10f\n", i, vin[i], vout[i])
-        #end
-
-        #write_xsf("TEMP_PotsTotal.xsf", Ham.atoms )
-        #write_xsf_data3d_crystal("TEMP_PotsTotal.xsf", Ham.atoms, Ham.pw.Ns, dropdims(vin, dims=2))
-
-        #write_xsf("TEMP_PotsSmooth.xsf", Ham.atoms )
-        #write_xsf_data3d_crystal("TEMP_PotsSmooth.xsf", Ham.atoms, Ham.pw.Nss, dropdims(vout, dims=2))
-
     end
-    
-
-    #
-    #println("sum pot.Total after dense_to_smooth       = ", sum(Ham.potentials.Total))
 
     # Also update nonlocal potential coefficients here
     calc_newDeeq!( Ham )
