@@ -2,6 +2,7 @@ using Printf
 using OffsetArrays
 using LinearAlgebra
 import Serialization
+import Random
 
 using PWDFT
 
@@ -16,6 +17,10 @@ include("newd.jl")
 include("op_S.jl")
 include("calc_rhoe_uspp.jl")
 include("../diag_davidson_qe/diag_davidson_qe_v2.jl")
+
+include("LinearMixer.jl")
+include("BroydenMixer.jl")
+include("PulayMixer.jl")
 
 include("my_scf_01.jl")
 #include("my_scf_02.jl")
@@ -47,6 +52,8 @@ end
 
 
 function test_main()
+
+    Random.seed!(1234)
 
     Ham = init_Ham_from_pwinput()
 

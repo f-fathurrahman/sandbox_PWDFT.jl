@@ -1,8 +1,9 @@
 function my_scf!(
     Ham::Hamiltonian, psiks;
     NiterMax=150,
-    betamix=0.2,
-    etot_conv_thr=1e-6
+    betamix=0.7,
+    etot_conv_thr=1e-6,
+    ethr_evals_last=1e-13
 )
 
     Ham.energies.NN = calc_E_NN(Ham.atoms)
@@ -16,20 +17,34 @@ function my_scf!(
     Rhoe = Ham.rhoe
     println("Initial integ Rhoe = ", sum(Rhoe)*dVol)
 
+    #mixer = LinearMixer(Rhoe, betamix)
+    #mixer = BroydenMixer(Rhoe, betamix, mixdim=4)
+    mixer = PulayMixer(Rhoe, betamix, mixdim=4)
+
     diffRhoe = 0.0
+    is_converged = false
+    evals = Ham.electrons.ebands
+
+    ethr = 1e-5 # default
 
     @printf("\n")
     @printf("SCF iteration starts (with density mixing), betamix = %f\n", betamix)
     @printf("\n")
 
-    is_converged = false
-
-    evals = Ham.electrons.ebands
-
     for iterSCF in 1:NiterMax
-        
+
+        # determine convergence criteria for diagonalization
+        if iterSCF == 1
+            ethr = 0.1
+        elseif iterSCF == 2
+            ethr = 0.01
+        else
+            ethr = ethr/5.0
+            ethr = max( ethr, ethr_evals_last )
+        end
+
         println("\niterSCF = ", iterSCF)
-        evals[:,:] .= diag_davidson_qe!( Ham, psiks )
+        evals[:,:] .= diag_davidson_qe!( Ham, psiks, tol=ethr )
 
         ikspin = 1
         println("Eigenvalues in eV: ")
@@ -40,7 +55,8 @@ function my_scf!(
         Rhoe_new = calc_rhoe_uspp( Ham, psiks )
         println("integ Rhoe_new = ", sum(Rhoe_new)*dVol)
 
-        Rhoe = betamix*Rhoe_new + (1 - betamix)*Rhoe
+        #Rhoe = betamix*Rhoe_new + (1 - betamix)*Rhoe
+        do_mix!(mixer, Rhoe, Rhoe_new, iterSCF)
         println("integ Rhoe after mix: ", sum(Rhoe)*dVol)
 
         diffRhoe = norm(Rhoe - Rhoe_new)
