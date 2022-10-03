@@ -120,3 +120,78 @@ function _do_mix_broyden!(
     return
 
 end
+
+function do_mix_precKerker!(
+    mixer::BroydenMixer,
+    pw::PWGrid,
+    deltain, deltaout_,
+    iterSCF::Int64
+)
+    _do_mix_broyden!(
+        pw,
+        deltain, deltaout_,
+        mixer.betamix,
+        iterSCF, mixer.mixdim,
+        mixer.df, mixer.dv
+    )
+    return
+end
+
+
+function _do_mix_broyden!(
+    pw::PWGrid,
+    deltain, deltaout_,
+    alphamix::Float64,
+    iter::Int64, n_iter::Int64,
+    df, dv 
+)
+    deltaout = copy(deltaout_)  # do not replace deltaout_
+    maxter = n_iter
+    wg0 = 0.01
+    wg = ones(maxter)
+
+    deltainsave = copy( deltain )
+    iter_used = min(iter-1,n_iter)
+    ipos = iter - 1 - floor(Int64, (iter-2)/n_iter)*n_iter
+
+    deltaout[:] = precKerker(pw, deltaout - deltain)
+
+    if iter > 1
+        @views df[:,ipos] = deltaout[:] - df[:,ipos]
+        @views dv[:,ipos] = deltain[:]  - dv[:,ipos]
+        @views nrm = norm(df[:,ipos])
+        @views df[:,ipos] = df[:,ipos]/nrm
+        @views dv[:,ipos] = dv[:,ipos]/nrm
+    end
+
+    beta = zeros(maxter,maxter)
+
+    for i in 1:iter_used
+        for j in i+1:iter_used
+            beta[i,j] = wg[i] * wg[j] * real(dot(df[:,j],df[:,i]))
+            beta[j,i] = beta[i,j]
+        end
+        beta[i,i] = wg0^2 + wg[i]^2
+    end
+
+    beta_inv = inv(beta[1:iter_used,1:iter_used])
+    work = zeros(iter_used)
+    for i in 1:iter_used
+        work[i] = real(dot(df[:,i], deltaout))
+    end
+    
+    @views deltain[:] = deltain[:] + alphamix*deltaout[:]
+
+    for i in 1:iter_used
+        gammamix = 0.0
+        for j in 1:iter_used
+            gammamix = gammamix + beta[j,i] * wg[j] * work[j]
+        end
+        @views deltain[:] = deltain[:] - wg[i]*gammamix*( alphamix*df[:,i] + dv[:,i] )
+    end
+
+    inext = iter - floor(Int64, (iter - 1)/n_iter)*n_iter
+    @views df[:,inext] = deltaout[:]
+    @views dv[:,inext] = deltainsave[:]
+    return
+end

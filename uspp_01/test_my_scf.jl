@@ -22,6 +22,7 @@ include("LinearMixer.jl")
 include("AdaptiveLinearMixer.jl")
 include("BroydenMixer.jl")
 include("AndersonMixer.jl")
+include("PulayMixer.jl")
 include("RestartedPulayMixer.jl")
 include("PeriodicPulayMixer.jl")
 
