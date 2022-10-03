@@ -19,8 +19,11 @@ include("calc_rhoe_uspp.jl")
 include("../diag_davidson_qe/diag_davidson_qe_v2.jl")
 
 include("LinearMixer.jl")
+include("AdaptiveLinearMixer.jl")
 include("BroydenMixer.jl")
-include("PulayMixer.jl")
+include("AndersonMixer.jl")
+include("RestartedPulayMixer.jl")
+include("PeriodicPulayMixer.jl")
 
 include("my_scf_01.jl")
 #include("my_scf_02.jl")

@@ -1,7 +1,7 @@
 function my_scf!(
     Ham::Hamiltonian, psiks;
     NiterMax=150,
-    betamix=0.7,
+    betamix=0.2,
     etot_conv_thr=1e-6,
     ethr_evals_last=1e-13
 )
@@ -19,13 +19,17 @@ function my_scf!(
 
     #mixer = LinearMixer(Rhoe, betamix)
     #mixer = BroydenMixer(Rhoe, betamix, mixdim=4)
-    mixer = PulayMixer(Rhoe, betamix, mixdim=4)
+    #mixer = PulayMixer(Rhoe, betamix, mixdim=4)
+    #mixer = AndersonMixer(Rhoe, betamix, mixdim=4)
+    #mixer = AdaptiveLinearMixer(Rhoe, betamix)
+    #mixer = RestartedPulayMixer(Rhoe, betamix)
+    mixer = PeriodicPulayMixer(Rhoe, betamix)
 
     diffRhoe = 0.0
     is_converged = false
     evals = Ham.electrons.ebands
-
-    ethr = 1e-5 # default
+    ethr = 1e-5
+    mae_rhoe = 1.0
 
     @printf("\n")
     @printf("SCF iteration starts (with density mixing), betamix = %f\n", betamix)
@@ -55,11 +59,21 @@ function my_scf!(
         Rhoe_new = calc_rhoe_uspp( Ham, psiks )
         println("integ Rhoe_new = ", sum(Rhoe_new)*dVol)
 
-        #Rhoe = betamix*Rhoe_new + (1 - betamix)*Rhoe
+        diffRhoe = norm(Rhoe - Rhoe_new)
+        println("Before mix: diffRhoe = ", diffRhoe)
+
+        mae_rhoe = sum(abs.(Rhoe - Rhoe_new))/length(Rhoe)
+        println("Before mix: mae_rhoe = ", mae_rhoe)
+
         do_mix!(mixer, Rhoe, Rhoe_new, iterSCF)
+
         println("integ Rhoe after mix: ", sum(Rhoe)*dVol)
 
         diffRhoe = norm(Rhoe - Rhoe_new)
+        println("After mix: diffRhoe = ", diffRhoe)
+
+        mae_rhoe = sum(abs.(Rhoe - Rhoe_new))/length(Rhoe)
+        println("After mix: mae_rhoe = ", mae_rhoe)
 
         #
         _ = update_from_rhoe!(Ham, Rhoe)
