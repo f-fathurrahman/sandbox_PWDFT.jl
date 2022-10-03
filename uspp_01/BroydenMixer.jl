@@ -16,7 +16,7 @@ end
 function do_mix!(
     mixer::BroydenMixer,
     deltain, deltaout_,
-    iterSCF
+    iterSCF::Int64
 )
     # XXX: alphamix -> mixer.betamix for now
     _do_mix_broyden!(
@@ -47,8 +47,8 @@ function _do_mix_broyden!(
     deltaout = copy(deltaout_)  # do not replace deltaout_
 
     maxter = n_iter  # FIXME: should be checked against calling functions
-    #wg0 = 0.01
-    wg0 = 0.0 # QE
+    wg0 = 0.01
+    #wg0 = 0.0 # QE
     wg = ones(maxter)
 
     deltainsave = copy( deltain )
@@ -62,7 +62,8 @@ function _do_mix_broyden!(
     # are stored. ipos=iter-1 until ipos=n_iter, THEN back to 1,2,...
     #
     ipos = iter - 1 - floor(Int64, (iter-2)/n_iter)*n_iter
-    println("ipos = ", ipos)
+
+    println("mix_broyden: ipos = ", ipos)
 
     @views deltaout[:] = deltaout[:] - deltain[:]
     @printf("iter = %4d, norm diff Rhoe (deltaout) = %15.10e\n", iter, norm(deltaout))
