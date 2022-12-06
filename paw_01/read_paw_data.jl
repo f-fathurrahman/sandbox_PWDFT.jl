@@ -1,4 +1,22 @@
-function _read_paw_data(xroot, Nr::Int64, lmax::Int64)
+# a helper function to read xml strings into array
+function _read_xml_str_vector!(root_elem, tagname, Nr, f)
+    # Get the element by its tagname
+    pp_f = LightXML.get_elements_by_tagname(root_elem, tagname)[1]
+    # Get the content (as string)
+    pp_f_str = LightXML.content(pp_f)
+    # Replace new line with space (to be parsed)
+    pp_f_str = replace(pp_f_str, "\n" => " ")
+    # Parse into an array
+    spl_str = split(pp_f_str, keepempty=false)
+    for i in 1:Nr
+        f[i] = parse(eltype(f), spl_str[i])
+    end
+    return
+end
+
+
+
+function _read_paw_data(xroot, Nr::Int64, lmax::Int64, Nproj::Int64)
     #
     # Read some additional data that are present in case of PAW
     #
@@ -6,6 +24,7 @@ function _read_paw_data(xroot, Nr::Int64, lmax::Int64)
     Nwfc = parse(Int64, LightXML.attributes_dict(pp_full_wfc[1])["number_of_wfc"])
     println("Nwfc = ", Nwfc)
     # XXX Compare Nwfc with number of projectors ?
+    println("Nproj = ", Nproj)
 
     aewfc = zeros(Float64, Nr, Nwfc)
     pswfc = zeros(Float64, Nr, Nwfc) # different from chi
@@ -32,16 +51,19 @@ function _read_paw_data(xroot, Nr::Int64, lmax::Int64)
     paw_pp_occ = zeros(Float64, Nocc)
     _read_xml_str_vector!(pp_paw[1], "PP_OCCUPATIONS", Nocc, paw_pp_occ)
     println("paw_pp_occ = ", paw_pp_occ)
+    oc = paw_pp_occ
 
     # This will be paw.ae_rho_atc
     pp_ae_nlcc = zeros(Float64, Nr)
     _read_xml_str_vector!(pp_paw[1], "PP_AE_NLCC", Nr, pp_ae_nlcc)
     println("Done reading pp_ae_nlcc")
+    ae_rho_atc = pp_ae_nlcc
 
     # paw.ae_vloc
     pp_ae_vloc = zeros(Float64, Nr)
     _read_xml_str_vector!(pp_paw[1], "PP_AE_VLOC", Nr, pp_ae_vloc)
     println("Done reading pp_ae_vloc")
+    ae_vloc = pp_ae_vloc
 
     # Other parameters from PP_AUGMENTATION
     pp_nonlocal = LightXML.get_elements_by_tagname(xroot, "PP_NONLOCAL")
@@ -68,11 +90,31 @@ function _read_paw_data(xroot, Nr::Int64, lmax::Int64)
     # CALL xmlr_readtag('augmentation_epsilon', upf%qqq_eps )
     # CALL xmlr_readtag('l_max_aug', upf%paw%lmax_aug )
 
-    # paw.core_energy
 
     # Prepare paw.pfunc
+    pfunc = zeros(Float64, Nr, Nproj, Nproj)
+    # NOTE: Nproj should be equal to Nwfc
+    # FIXME: if psp has_so is true also prepare pfunc_rel
+    for nb in 1:Nproj, mb in 1:nb
+        pfunc[1:Nr, nb, mb] .= aewfc[1:Nr,nb] .* aewfc[1:Nr,mb]
+        pfunc[(iraug+1):Nr,nb,mb] .= 0.0 # force to zero
+        pfunc[1:Nr,mb,nb] .= pfunc[1:Nr,nb,mb] # symmetric w.r.t nb and mb
+    end
 
     # Prepare paw.ptfunc
+    # Pseudo wavefunctions (not only the ones for oc > 0)
+    # All-electron wavefunctions
+    ptfunc = zeros(Float64, Nr, Nproj, Nproj)
+    for nb in 1:Nproj, mb in 1:nb
+        ptfunc[1:Nr,nb,mb] .= pswfc[1:Nr,nb] .* pswfc[1:Nr,mb]
+        ptfunc[(iraug+1):Nr,nb,mb] .= 0.0
+        ptfunc[1:Nr,mb,nb] .= ptfunc[1:Nr,nb,mb]
+    end
+
+    paw_data = PAWData_UPF(
+        ae_rho_atc, pfunc, ptfunc,
+        ae_vloc, oc, raug, iraug, lmax_aug, core_energy, augshape
+    )
 
     println("Pass here ...")
 

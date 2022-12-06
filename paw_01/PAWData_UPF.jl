@@ -24,11 +24,20 @@ mutable struct PAWData_UPF
     oc::Vector{Float64}
 
     # REAL(DP) :: raug          ! augfunction max radius
+    raug::Float64
+
     # INTEGER  :: iraug         ! index on rgrid closer to, and >, raug
+    iraug::Int64
+
     # INTEGER  :: lmax_aug      ! max angmom of augmentation functions, it is ==
     # ! to 2* max{l of pseudized wavefunctions}
     # ! note that nqlc of upf also includes the angmom of
     # ! empty virtual channel used to generate local potential
+    lmax_aug::Int64
+
     # REAL(DP)         :: core_energy   ! constant to add in order to get all-electron energy
+    core_energy::Float64
+
     # CHARACTER(len=12):: augshape      ! shape of augmentation charge
+    augshape::String
 end

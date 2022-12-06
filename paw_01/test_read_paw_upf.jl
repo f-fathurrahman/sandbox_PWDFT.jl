@@ -1,21 +1,7 @@
 import LightXML
 using PWDFT: PsPot_UPF
 
-function _read_xml_str_vector!(root_elem, tagname, Nr, f)
-    # Get the element by its tagname
-    pp_f = LightXML.get_elements_by_tagname(root_elem, tagname)[1]
-    # Get the content (as string)
-    pp_f_str = LightXML.content(pp_f)
-    # Replace new line with space (to be parsed)
-    pp_f_str = replace(pp_f_str, "\n" => " ")
-    # Parse into an array
-    spl_str = split(pp_f_str, keepempty=false)
-    for i in 1:Nr
-        f[i] = parse(eltype(f), spl_str[i])
-    end
-    return
-end
-
+include("PAWData_UPF.jl")
 include("read_paw_data.jl")
 
 function test_paw(upf_file)
@@ -30,8 +16,9 @@ function test_paw(upf_file)
     #zval = Int64( parse( Float64, LightXML.attributes_dict(pp_header[1])["z_valence"] ) )
     lmax = parse( Int64, LightXML.attributes_dict(pp_header[1])["l_max"] )
     Nr = parse(Int64,LightXML.attributes_dict(pp_header[1])["mesh_size"])
+    Nproj = parse(Int64,LightXML.attributes_dict(pp_header[1])["number_of_proj"])
     #
-    _read_paw_data(xroot, Nr, lmax)
+    _read_paw_data(xroot, Nr, lmax, Nproj)
     return
 end
 
