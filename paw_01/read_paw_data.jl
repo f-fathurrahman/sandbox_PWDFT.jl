@@ -44,6 +44,24 @@ function _read_paw_data(xroot, Nr::Int64, lmax::Int64)
     println("Done reading pp_ae_vloc")
 
     # Other parameters from PP_AUGMENTATION
+    pp_nonlocal = LightXML.get_elements_by_tagname(xroot, "PP_NONLOCAL")
+    pp_aug = LightXML.get_elements_by_tagname(pp_nonlocal[1], "PP_AUGMENTATION")
+
+    # These attributes should be present in case of PAW
+    #
+    augshape = LightXML.attributes_dict(pp_aug[1])["shape"]
+    println("augshape = ", augshape)
+
+    raug = parse(Float64, LightXML.attributes_dict(pp_aug[1])["cutoff_r"])
+    iraug = parse(Int64, LightXML.attributes_dict(pp_aug[1])["cutoff_r_index"])
+    println("raug = ", raug, " iraug = ", iraug)
+
+    qqq_eps = parse(Float64, LightXML.attributes_dict(pp_aug[1])["augmentation_epsilon"])
+    println("qqq_eps = ", qqq_eps)
+
+    lmax_aug = parse(Int64, LightXML.attributes_dict(pp_aug[1])["l_max_aug"])
+    println("lmax_aug = ", lmax_aug)
+
     # CALL xmlr_readtag('shape', upf%paw%augshape )
     # CALL xmlr_readtag('cutoff_r', upf%paw%raug )
     # CALL xmlr_readtag('cutoff_r_index', upf%paw%iraug )
