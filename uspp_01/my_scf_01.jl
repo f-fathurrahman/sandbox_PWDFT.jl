@@ -1,7 +1,7 @@
 function my_scf!(
     Ham::Hamiltonian, psiks;
     NiterMax=150,
-    betamix=0.2,
+    betamix=0.7,
     etot_conv_thr=1e-6,
     ethr_evals_last=1e-13
 )
@@ -18,12 +18,12 @@ function my_scf!(
     println("Initial integ Rhoe = ", sum(Rhoe)*dVol)
 
     #mixer = LinearMixer(Rhoe, betamix)
-    #mixer = BroydenMixer(Rhoe, betamix, mixdim=4)
-    #mixer = PulayMixer(Rhoe, betamix, mixdim=4)
-    #mixer = AndersonMixer(Rhoe, betamix, mixdim=4)
     #mixer = AdaptiveLinearMixer(Rhoe, betamix)
+    #mixer = BroydenMixer(Rhoe, betamix, mixdim=4)
+    #mixer = AndersonMixer(Rhoe, betamix, mixdim=8)
+    mixer = PulayMixer(Rhoe, betamix, mixdim=4)
     #mixer = RestartedPulayMixer(Rhoe, betamix)
-    mixer = PeriodicPulayMixer(Rhoe, betamix)
+    #mixer = PeriodicPulayMixer(Rhoe, betamix)
 
     diffRhoe = 0.0
     is_converged = false
@@ -66,6 +66,7 @@ function my_scf!(
         println("Before mix: mae_rhoe = ", mae_rhoe)
 
         do_mix!(mixer, Rhoe, Rhoe_new, iterSCF)
+        #do_mix_precKerker!(mixer, Ham.pw, Rhoe, Rhoe_new, iterSCF)
 
         println("integ Rhoe after mix: ", sum(Rhoe)*dVol)
 

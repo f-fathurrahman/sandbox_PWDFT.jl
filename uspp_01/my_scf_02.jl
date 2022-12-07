@@ -40,13 +40,6 @@ function my_scf!(
         println("\niterSCF = ", iterSCF)
         evals[:,:] .= diag_davidson_qe!( Ham, psiks )
 
-        for ispin in 1:Nspin, ik in 1:Nkpt
-            ikspin = ik + (ispin - 1)*Nkpt
-            Ham.ik = ik
-            Ham.ispin = ispin
-            ortho_check_with_S(Ham, psiks[ikspin])
-        end
-
         println("Eigenvalues in eV: ikspin = 1")
         for ist in 1:Nstates
             @printf("%5d %18.10f\n", ist, evals[ist,1]*Ha2eV)

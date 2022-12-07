@@ -101,6 +101,7 @@ function electrons_scf_broyden!(
         println("integ Rhoe after mix: ", sum(Rhoe)*dVol)
 
         diffRhoe = norm(Rhoe - Rhoe_new)
+        #diffRhoe = dot(Rhoe - Rhoe_new, Rhoe - Rhoe_new)
 
         #
         Ehartree, Exc, Evtxc = update_from_rhoe!(Ham, Rhoe)
@@ -137,8 +138,9 @@ function electrons_scf_broyden!(
             break
         end
 
-        #if diffRhoe < 1e-5
+        #if diffRhoe < 1e-6
         #    @printf("converged by diffRhoe\n")
+        #    is_converged = true
         #    return
         #end
 
