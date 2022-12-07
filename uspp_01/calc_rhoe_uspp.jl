@@ -205,6 +205,17 @@ function _add_usdens!( Ham, becsum, Rhoe )
 end
 
 
+# Based on compute_becsum and sum_bec in QE
+#
+# Compute "becsum" = \sum_i w_i <psi_i|beta_l><beta_m|\psi_i> term.
+# Output in module uspp and (PAW only) in rho%bec (symmetrized)
+# if iflag = 1, weights w_k are re-computed.
+#
+# or:
+#
+# \[ \sum_i \langle\psi_i|\beta_l\rangle w_i \langle\beta_m|\psi_i\rangle \]
+#
+# for point "ik" and, for LSDA, spin "current_spin".  
 function _add_becsum!( ik, ispin, Ham, psiks, becsum )
 
     Natoms = Ham.atoms.Natoms
