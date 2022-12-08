@@ -18,6 +18,7 @@ function test_GBRV_LDA()
             @printf("%s does not have NLCC\n", f)
         end
         println("proj_l = ", psp.proj_l)
+        println("lmax_rho = ", psp.lmax_rho)
         println("Dion = ")
         display(psp.Dion); println()
     end
@@ -38,6 +39,7 @@ function test_GBRV_PBE()
             @printf("%s does not have NLCC\n", f)
         end
         println("proj_l = ", psp.proj_l)
+        println("lmax_rho = ", psp.lmax_rho)
         println("Dion = ")
         display(psp.Dion); println()
     end
