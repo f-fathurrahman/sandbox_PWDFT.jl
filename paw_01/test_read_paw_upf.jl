@@ -24,7 +24,7 @@ end
 
 function test_main()
     prefix_dir = "/home/efefer/pseudo/PSLIB/"
-    files = readlines("PSLIB_PAW")
+    files = readlines("PSLIB_PAW.dat")
     for f in files
         filepath = joinpath(prefix_dir, f)
         println("\nfilepath = ", filepath)
