@@ -1,12 +1,15 @@
 # From d_matrix.f90 in QE
 
-function init_d_matrices(sr, Nsyms)
+# sr: rotation matrices in Cartesian
+function init_d_matrices( sr::Array{Float64,3} )
     # !! Calculates the d-matrices.
     # !
     # USE kinds,            ONLY: DP
     # USE symm_base,        ONLY: nsym, sr
     # USE random_numbers,   ONLY: randy
     # USE matrix_inversion
+
+    Nsyms = size(sr, 3)
 
     # Hardcoded parameters 
     # MAXL = max value of l allowed
@@ -20,14 +23,14 @@ function init_d_matrices(sr, Nsyms)
 
     # These arrays will be returned
     dy1 = zeros(Float64, 3, 3, 48)
-    dy2 = zeros(Float64, 4, 5, 48)
+    dy2 = zeros(Float64, 5, 5, 48)
     dy3 = zeros(Float64, 7, 7, 48)
 
     #
     # randomly distributed points on a sphere
     #
     rl = zeros(Float64, 3, MAXM)
-    for m in 1:maxm
+    for m in 1:MAXM
         rl[1,m] = rand() - 0.5
         rl[2,m] = rand() - 0.5
         rl[3,m] = rand() - 0.5
@@ -35,9 +38,7 @@ function init_d_matrices(sr, Nsyms)
   
     # CALL ylmr2( maxlm, 2*maxl+1, rl, rrl, ylm )
     ylm = zeros(Float64, MAXM, MAXLM)
-    _lmax = MAXL + 1
-    Ylm_real_qe!(_lmax, rl, ylm) # Ylm_real_qe accept l value starting from 0
-
+    Ylm_real_qe!(MAXL, rl, ylm) # Ylm_real_qe accept l value starting from 0
 
 
     # invert Yl for each block of definite l (note the transpose operation)
@@ -80,7 +81,7 @@ function init_d_matrices(sr, Nsyms)
         # srl = MATMUL( sr(:,:,isym), rl )
         
         # CALL ylmr2( maxlm, maxm, srl, rrl, ylms )
-        Ylm_real_qe!(_lmax, srl, ylms)
+        Ylm_real_qe!(MAXL, srl, ylms)
 
         #  find  D_S = Yl_S * Yl_inv (again, beware the transpose)
         
@@ -98,7 +99,7 @@ function init_d_matrices(sr, Nsyms)
 
 
         # l = 3 block
-        for m in 1:7, in n in 1:7
+        for m in 1:7, n in 1:7
             yl3[m,n] = ylms[n,9+m]
         end
         @views dy3[:,:,isym] = yl3[:,:] * yl3_inv[:,:]
@@ -128,7 +129,7 @@ function _check_is_d_orthogonal(isym, D, l, Nsize, delt, SMALL)
         cc += ( dd - delt[m,n] )^2
     end
     if cc > SMALL
-        @printf("D_S (l=%d) for this symmetry operation (isym=%d) is not orthogonal" % l, isym)
+        @printf("D_S (l=%d) for this symmetry operation (isym=%d) is not orthogonal\n", l, isym)
         error("Error in init_d_matrices")
     end
     return
