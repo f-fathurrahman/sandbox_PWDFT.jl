@@ -45,6 +45,11 @@ function main()
     sym_info = SymmetryInfo(atoms)
     dy1, dy2, dy3 = init_d_matrices( sym_info.sr )
 
+    println("Nsyms = ", sym_info.Nsyms)
+    display(dy1[:,:,sym_info.Nsyms]); println()
+    display(dy2[:,:,sym_info.Nsyms]); println()
+    display(dy3[:,:,sym_info.Nsyms]); println()
+
 end
 
 main()
