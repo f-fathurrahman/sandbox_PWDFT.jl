@@ -13,7 +13,7 @@ InteractiveUtils.versioninfo()
 import Dates
 println("Now = ", Dates.now())
 
-function main( ; method="SCF" )
+function main()
 
     Random.seed!(1234)
 
@@ -36,9 +36,9 @@ function main( ; method="SCF" )
     # Solve the KS problem
     #
 
-    KS_solve_Emin_PCG!( Ham, verbose=true )
-    #KS_solve_SCF!( Ham )
+    #KS_solve_Emin_PCG!( Ham, verbose=true )
+    KS_solve_SCF!( Ham, mix_method="broyden" )
 end
 
-@time main(method="Emin")
+@time main()
 #@time main(method="Emin")
