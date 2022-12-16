@@ -127,7 +127,7 @@ function my_scf!(
     @printf("-------------------------------------\n")
     
     E_total = E_elec + energies.NN
-    @printf("Total      energy: %18.10f\n", 2*E_total)
+    @printf("! Total      energy: %18.10f\n", 2*E_total)
 
     return
 end

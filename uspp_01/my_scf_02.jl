@@ -34,7 +34,8 @@ function my_scf!(
     wk = Ham.pw.gvecw.kpoints.wk
 
     evals = Ham.electrons.ebands
-
+    is_converged = false
+    
     for iterSCF in 1:NiterMax
         
         println("\niterSCF = ", iterSCF)
@@ -73,23 +74,9 @@ function my_scf!(
 
         descf = sum( (Rhoe[:,1] .- Rhoe_new[:,1]).*(Vhartree + Vxc[:,1]) )*dVol
 
+        # FIXME: Entropy term is missing (metallic occupation is not yet supported)
         Etot = Eband + deband + Ehartree + Exc + Ham.energies.NN + descf # entropy missed
-        
-        println("-----------------------")        
-        println("Energy components in Ry")
-        println("-----------------------")
-        @printf("Eband    = %18.10f\n", Eband*2)
-        @printf("deband   = %18.10f\n", deband*2)
-        @printf("descf    = %18.10f\n", descf*2)
-        @printf("-----------------------------\n")
-        @printf("OneEle   = %18.10f\n", 2*(Eband + deband))
-        @printf("Ehartree = %18.10f\n", 2*Ehartree)
-        @printf("Exc      = %18.10f\n", 2*Exc)
-        @printf("NN       = %18.10f\n", 2*Ham.energies.NN)
-        @printf("-----------------------------\n")
-        @printf("Total    = %18.10f\n", 2*Etot)
 
-        #
         diffEtot = abs(Etot - Etot_old)
         @printf("\nSCF: %5d %18.10f %10.5e %10.5e\n", iterSCF, Etot, diffEtot, diffRhoe)
         if diffEtot <= etot_conv_thr
@@ -99,17 +86,33 @@ function my_scf!(
         end
         if Nconv >= 2
             @printf("SCF is converged in %d iterations\n", iterSCF)
-            return
-        end
-
-        if diffRhoe < 1e-5
-            @printf("converged by diffRhoe\n")
-            return
+            is_converged = true
         end
 
         Etot_old = Etot
         flush(stdout)
     end
-    @printf("WARNING: SCF is not converged after %d iterations\n", NiterMax)
+
+    if !is_converged
+        @printf("WARNING: SCF is not converged after %d iterations\n", NiterMax)
+    end
+
+    println()
+    println("Final result")
+    println()
+    println("-----------------------")        
+    println("Energy components in Ry")
+    println("-----------------------")
+    @printf("Eband    = %18.10f\n", Eband*2)
+    @printf("deband   = %18.10f\n", deband*2)
+    @printf("descf    = %18.10f\n", descf*2)
+    @printf("-----------------------------\n")
+    @printf("OneEle   = %18.10f\n", 2*(Eband + deband))
+    @printf("Ehartree = %18.10f\n", 2*Ehartree)
+    @printf("Exc      = %18.10f\n", 2*Exc)
+    @printf("NN       = %18.10f\n", 2*Ham.energies.NN)
+    @printf("-----------------------------\n")
+    @printf("! Total  = %18.10f\n", 2*Etot)
+
     return
 end
