@@ -26,8 +26,8 @@ include("PulayMixer.jl")
 include("RestartedPulayMixer.jl")
 include("PeriodicPulayMixer.jl")
 
-include("my_scf_01.jl")
-#include("my_scf_02.jl")
+#include("my_scf_01.jl")
+include("my_scf_02.jl")
 
 function ortho_sqrt_with_S!( Ham::Hamiltonian, psi::Array{ComplexF64,2} )
     O = psi' * op_S(Ham, psi)
@@ -61,6 +61,8 @@ function test_main()
 
     Ham = init_Ham_from_pwinput()
 
+    write_xsf("ATOMS.xsf", Ham.atoms)
+
     println(Ham)
 
     dVol = Ham.pw.CellVolume/prod(Ham.pw.Ns)
@@ -83,9 +85,11 @@ function test_main()
     end
     
     my_scf!(Ham, psiks, NiterMax=100)
-    Serialization.serialize("Hamiltonian.dat", Ham)
-    Serialization.serialize("psiks.dat", psiks)
+    #Serialization.serialize("Hamiltonian.dat", Ham)
+    #Serialization.serialize("psiks.dat", psiks)
 
 end
+
+# Implement Rhoe_out <- KS_rhoe_map!(Ham, Rhoe_in, psiks)
 
 test_main()
