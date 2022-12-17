@@ -33,9 +33,19 @@ function my_scf!(
     Focc = Ham.electrons.Focc
     wk = Ham.pw.gvecw.kpoints.wk
 
+    mixer = BroydenMixer(Rhoe, betamix, mixdim=8)
+
     evals = Ham.electrons.ebands
     is_converged = false
     
+    # Other energy terms
+    Eband = 0.0
+    deband = 0.0
+    descf = 0.0
+    Etot = 0.0
+    Ehartree = 0.0
+    Exc = 0.0
+
     for iterSCF in 1:NiterMax
         
         println("\niterSCF = ", iterSCF)
@@ -64,7 +74,9 @@ function my_scf!(
         #
         # Mix the density
         #
-        Rhoe = betamix*Rhoe_new + (1 - betamix)*Rhoe
+        #Rhoe = betamix*Rhoe_new + (1 - betamix)*Rhoe
+        do_mix!(mixer, Rhoe, Rhoe_new, iterSCF)
+
         println("integ Rhoe after mix: ", sum(Rhoe)*dVol)
 
         diffRhoe = norm(Rhoe - Rhoe_new)
@@ -87,6 +99,7 @@ function my_scf!(
         if Nconv >= 2
             @printf("SCF is converged in %d iterations\n", iterSCF)
             is_converged = true
+            break
         end
 
         Etot_old = Etot
