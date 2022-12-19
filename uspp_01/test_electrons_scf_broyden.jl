@@ -29,6 +29,7 @@ include("ortho_with_S.jl")
 
 function test_main()
     Ham = init_Ham_from_pwinput()
+    write_xsf("ATOMS_from_pwinput.xsf", Ham.atoms)
     println(Ham)
     psiks = rand_BlochWavefunc(Ham)
     electrons_scf_broyden!(Ham, psiks, NiterMax=100)
