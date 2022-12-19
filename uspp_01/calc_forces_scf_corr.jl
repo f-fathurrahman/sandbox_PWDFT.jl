@@ -32,10 +32,10 @@ function my_calc_forces_scf_corr!(
     # Calculate difference between new and old potential
     ctmp = zeros(ComplexF64, Npoints)
     for ispin in 1:Nspin, ip in 1:Npoints
-        ctmp[ip] += Vtot[ip,ispin] - VtotOld[ip,ispin]
+        ctmp[ip] += ( Vtot[ip,ispin] - VtotOld[ip,ispin] )
     end
 
-    println("sum ctmp = ", sum(ctmp))
+    println("avg ctmp (R space) = ", sum(abs.(ctmp))/Npoints)
 
     #R_to_G!(pw, ctmp)
     ff = reshape(ctmp, pw.Ns)
@@ -43,11 +43,11 @@ function my_calc_forces_scf_corr!(
     planfw = plan_fft!( zeros(ComplexF64,pw.Ns) ) # using default plan
     planfw*ff
 
-    ctmp[:] *= (1/Npoints) # rescale
-
-    println("pw.planfw = ", typeof(pw.planfw))
+    @views ctmp[:] /= Npoints # rescale
 
     println("sum ctmp after forward FFT = ", sum(ctmp))
+
+    println("avg ctmp (G space) = ", sum(abs.(ctmp))/Npoints)
 
     # Determine maximum radial points for every atomic species
     NpointsMax = 0
@@ -87,7 +87,7 @@ function my_calc_forces_scf_corr!(
                 ip = idx_g2r[ig]
                 GX = G[1,ig]*X[1,ia] + G[2,ig]*X[2,ia] + G[3,ig]*X[3,ia]
                 Sf = sin(GX) + im*cos(GX)
-                @views F_scf_corr[:,ia] .+= real.( rhocgnt[igl] * Sf * G[:,ig] * conj(ctmp[ip]) )
+                @views F_scf_corr[:,ia] .+= rhocgnt[igl] * G[:,ig] * real(Sf*conj(ctmp[ip]))
             end
         end
 
