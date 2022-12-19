@@ -25,7 +25,7 @@ end
 function electrons_scf_broyden!(
     Ham::Hamiltonian, psiks;
     NiterMax=150,
-    betamix=0.7,
+    betamix=0.5,
     etot_conv_thr=1e-6,
     ethr_evals_last=1e-13
 )
@@ -77,6 +77,12 @@ function electrons_scf_broyden!(
 
     is_converged = false
 
+    # Other energy terms
+    Eband = 0.0
+    deband = 0.0
+    descf = 0.0
+    Etot = 0.0
+
     for iterSCF in 1:NiterMax
         
         @views Vin[:] .= Vhartree[:] + Vxc[:,1]
@@ -101,6 +107,7 @@ function electrons_scf_broyden!(
         Rhoe[:,:] = calc_rhoe_uspp( Ham, psiks )
         println("integ output Rhoe = ", sum(Rhoe)*dVol)
 
+        # This is not used later?
         hwf_energy = Eband + deband_hwf + Ehartree + Exc + Ham.energies.NN
         # entropy term missing
 
@@ -154,15 +161,26 @@ function electrons_scf_broyden!(
             break
         end
 
-        #if diffRhoe < 1e-6
-        #    @printf("SCF: diffRhoe is converged\n")
-        #    is_converged = true
-        #    return
-        #end
-
         Etot_old = Etot
         flush(stdout)
     end
+
+    println()
+    println(">>>> Final result:")
+    println()
+    println("-----------------------")
+    println("Energy components in Ry")
+    println("-----------------------")
+    @printf("Eband    = %18.10f\n", Eband*2)
+    @printf("deband   = %18.10f\n", deband*2)
+    @printf("descf    = %18.10f\n", descf*2)
+    @printf("-----------------------------\n")
+    @printf("OneEle   = %18.10f\n", 2*(Eband + deband))
+    @printf("Ehartree = %18.10f\n", 2*Ehartree)
+    @printf("Exc      = %18.10f\n", 2*Exc)
+    @printf("NN       = %18.10f\n", 2*Ham.energies.NN)
+    @printf("-----------------------------\n")
+    @printf("! Total  = %18.10f\n", 2*Etot)
 
     if !is_converged
         @printf("WARNING: SCF is not converged after %d iterations\n", NiterMax)
