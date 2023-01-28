@@ -89,9 +89,11 @@ function ElecVars( Ham::Hamiltonian, psiks::BlochWavefunc )
         #
         Hsub[i] = zeros(ComplexF64,Nstates,Nstates)
         #
-        Hsub[i][:] = psiks[i]' * op_H(Ham, psiks[i])
+        Hsub[i][:] = Hermitian(psiks[i]' * op_H(Ham, psiks[i]))
+        #Hsub[i] = rand(ComplexF64,Nstates,Nstates)
+        #Hsub[i][:,:] = 0.5*(Hsub[i] +Hsub[i]') # not working ?
         #
-        Hsub_eigs[:,i] = eigvals(Hermitian(Hsub[i]))  # set Haux_eigs to eigenvalues of Hsub
+        Hsub_eigs[:,i] = eigvals(Hsub[i])  # set Haux_eigs to eigenvalues of Hsub
     end
 
     return ElecVars(psiks, Hsub, Hsub_eigs)
