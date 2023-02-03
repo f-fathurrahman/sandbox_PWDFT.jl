@@ -76,7 +76,7 @@ function PAW_symmetrize!( becsum )
             continue
         end
         #
-        for ih in 1, nh[isp], jh in ih:nh[nt]
+        for ih in 1:nh[isp], jh in ih:nh[nt]
             # note: jh >= ih
             # ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
             ijh = ijtoh[ih,jh,isp]
