@@ -44,7 +44,9 @@ function _read_paw_data(xroot, Nr::Int64, lmax::Int64, Nproj::Int64)
     println("core_energy = ", core_energy)
 
     pp_occ = LightXML.get_elements_by_tagname(pp_paw[1], "PP_OCCUPATIONS")
-    Nocc = parse(Int64, LightXML.attributes_dict(pp_occ[1])["size"])
+    #Nocc = parse(Int64, LightXML.attributes_dict(pp_occ[1])["size"])
+    Nocc = Nwfc
+    # ld1.x in QE-6.6 does not output size attribute in PP_OCCUPATIONS
     println("Nocc = ", Nocc)
     # Nocc should be the same as Nwf?
     # This is paw.oc
