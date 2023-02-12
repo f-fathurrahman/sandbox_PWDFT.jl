@@ -30,8 +30,8 @@ function PAW_atomic_becsum(atoms, pspots, pspotNL; Nspin=1)
     #IF ( starting_wfc=='atomic+random') noise = 0.05_DP
     #IF ( starting_wfc=='random')        noise = 0.10_DP
     
-    #noise = 0.1
-    noise = 0.0
+    noise = 0.1
+    #noise = 0.0
       
     for ia in 1:Natoms
         isp = atm2species[ia]

@@ -1,3 +1,7 @@
+function PAW_symmetrize!(Ham::Hamiltonian, becsum)
+    PAW_symmetrize!(Ham.atoms, Ham.pspots, Ham.sym_info, Ham.pspotNL, becsum)
+    return
+end
 
 function PAW_symmetrize!(
     atoms::Atoms,

@@ -13,6 +13,7 @@ include(joinpath(DIR_PWDFT, "utilities", "PWSCFInput.jl"))
 include(joinpath(DIR_PWDFT, "utilities", "init_Ham_from_pwinput.jl"))
 
 include("PAW_atomic_becsum.jl")
+include("PAW_symmetrize.jl")
 
 function main()
     Ham, pwinput = init_Ham_from_pwinput()
@@ -23,6 +24,10 @@ function main()
     end
 
     becsum = PAW_atomic_becsum(Ham.atoms, Ham.pspots, Ham.pspotNL, Nspin=1)
+    
+    println("sum becsum before PAW_symmetrize: ", sum(becsum))
+    PAW_symmetrize!(Ham, becsum)
+    println("sum becsum after PAW_symmetrize: ", sum(becsum))
 
 end
 
