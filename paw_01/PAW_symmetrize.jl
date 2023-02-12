@@ -1,5 +1,11 @@
 
-function PAW_symmetrize!( becsum )
+function PAW_symmetrize!(
+    atoms::Atoms,
+    pspots,
+    sym_info::SymmetryInfo,
+    pspotNL,
+    becsum
+)
 
     #REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)
     #!! cross band occupations
@@ -22,31 +28,18 @@ function PAW_symmetrize!( becsum )
     #INTEGER :: isym         ! counter for symmetry operation
     #INTEGER :: ipol, kpol
 
-    # !
-    # ! The following mess is necessary because the symmetrization operation
-    # ! in LDA+U code is simpler than in PAW, so the required quantities are
-    # ! represented in a simple but not general way.
-    # ! I will fix this when everything works.
-    # REAL(DP), TARGET :: d0(1,1,48)
-    # TYPE symmetrization_tensor
-    #     REAL(DP),POINTER :: d(:,:,:)
-    # END TYPE symmetrization_tensor
-    # TYPE(symmetrization_tensor) :: D(0:3)
+    Nsyms = sym_info.Nsyms
+    if Nsyms == 1
+        return
+    end
+
+    Nspin = size(becsum,3)
     
     D = Vector{Array{Float64,3}}(undef,4)
-    D[1] = ones(1,1,48)
-    D[2] = zeros(3,3,48)
-    D[3] = zeros(5,5,48)
-    D[4] = zeros(7,7,48)
-
-    # IF( nsym==1 ) RETURN
-    
-    # d0(1,1,:) = 1._dp
-    # D(0)%d => d0 ! d0(1,1,48)
-    # D(1)%d => d1 ! d1(3,3,48)
-    # D(2)%d => d2 ! d2(5,5,48)
-    # D(3)%d => d3 ! d3(7,7,48)
-
+    D[1] = ones(1,1,Nsyms)
+    D[2] = sym_info.D1
+    D[3] = sym_info.D2
+    D[4] = sym_info.D3
 
 # !
 # ! => lm = l**2 + m
@@ -63,6 +56,15 @@ function PAW_symmetrize!( becsum )
 # !
 # !
 
+    atm2species = atoms.atm2species
+    Natoms = atoms.Natoms
+
+    nh = pspotNL.nh
+    ijtoh = pspotNL.ijtoh
+    nhtolm = pspotNL.nhtolm
+    nhtol = pspotNL.nhtol
+
+    irt = sym_info.irt
 
     becsym = zeros(size(becsum))
     usym = 1.0/Nsyms
@@ -72,11 +74,11 @@ function PAW_symmetrize!( becsum )
         isp = atm2species[ia]
         # No need to symmetrize non-PAW atoms
         # IF ( .NOT. upf(nt)%tpawp ) CYCLE
-        if !pspot[isp].is_paw
+        if !pspots[isp].is_paw
             continue
         end
         #
-        for ih in 1:nh[isp], jh in ih:nh[nt]
+        for ih in 1:nh[isp], jh in ih:nh[isp]
             # note: jh >= ih
             # ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
             ijh = ijtoh[ih,jh,isp]
@@ -95,7 +97,7 @@ function PAW_symmetrize!( becsum )
                 for m_o in 1:(2*l_i+1), m_u in (1:2*l_j+1)
                     oh = ih - m_i + m_o
                     uh = jh - m_j + m_u
-                    ouh = ijtoh[oh,uh,nt]
+                    ouh = ijtoh[oh,uh,isp]
                     # In becsum off-diagonal terms are multiplied by 2
                     # neutralize this factor and restore it later  
                     if oh == uh
@@ -104,8 +106,10 @@ function PAW_symmetrize!( becsum )
                         pref = usym
                     end
                     #
-                    becsym[ijh,ia,ispin += D[l_i+1][m_o,m_i,isym]*D[l_j+1][m_u,m_j,isym]*pref*becsum[ouh,ma,ispin]
-                    # Starting index for D is 1
+                    becsym[ijh,ia,ispin] += D[l_i+1][m_o,m_i,isym]*D[l_j+1][m_u,m_j,isym]*pref*becsum[ouh,ma,ispin]
+                    # Note that starting index for D is 1
+                    # D[1] -> l=0
+                    # D[2] -> l=1, etc
                 end
             end # isym
             # Put the prefactor back in:  
@@ -118,7 +122,7 @@ function PAW_symmetrize!( becsum )
     # noncollinear spin is not yet implemented
 
     # Apply symmetrization:
-    @views becsum[:,:,:] .= becsym[:,:,:]
+    @views becsum[:,:,:] .= becsym[:,:,:] # need views?
 
     return
 
