@@ -22,9 +22,9 @@ function init_d_matrices( sr::Array{Float64,3} )
     SMALL = 1.0e-9
 
     # These arrays will be returned
-    dy1 = zeros(Float64, 3, 3, 48)
-    dy2 = zeros(Float64, 5, 5, 48)
-    dy3 = zeros(Float64, 7, 7, 48)
+    dy1 = zeros(Float64, 3, 3, Nsyms)
+    dy2 = zeros(Float64, 5, 5, Nsyms)
+    dy3 = zeros(Float64, 7, 7, Nsyms)
 
     #
     # randomly distributed points on a sphere
