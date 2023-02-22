@@ -27,8 +27,8 @@ struct PAWAtomicSphere
     #! additional variables for gradient correction
     #REAL(DP),POINTER :: dylmt(:,:),&! |d(ylm)/dtheta|**2
     #                    dylmp(:,:)  ! |d(ylm)/dphi|**2
-    dylmt::Matrix{Float64}
-    dylmp::Matrix{Float64}
+    dylmt::Union{Matrix{Float64},Nothing}
+    dylmp::Union{Matrix{Float64},Nothing}
 
     #REAL(DP),POINTER :: cos_phi(:)  ! cos(phi)
     cos_phi::Vector{Float64}
@@ -43,7 +43,7 @@ struct PAWAtomicSphere
     sin_th::Vector{Float64}
 
     #REAL(DP),POINTER :: cotg_th(:)  ! cos(theta)/sin(theta)  (for divergence)
-    cotg_th::Vector{Float64}
+    cotg_th::Union{Vector{Float64},Nothing}
 end
 
 
@@ -52,15 +52,15 @@ end
 #!
 #! IMPORTANT: routine PW/summary.f90 has the initialization parameters hardcoded in it
 #!            remember to update it if you change this!
-function PAWAtomicSphere(l::Int64, ls::Int64)
 
-    # INTEGER, INTENT(IN) :: l
-    # !! max angular momentum component that will be integrated
-    # !! exactly (to numerical precision).
+# INTEGER, INTENT(IN) :: l
+# !! max angular momentum component that will be integrated
+# !! exactly (to numerical precision).
 
-    # INTEGER, INTENT(IN) :: ls
-    # !! additional max l that will be used when computing gradient
-    # !! and divergence in speherical coords
+# INTEGER, INTENT(IN) :: ls
+# !! additional max l that will be used when computing gradient
+# !! and divergence in speherical coords
+function PAWAtomicSphere(l::Int64, ls::Int64; need_gradient::Bool=false)
 
     # !
     # ! ... local variables
@@ -89,78 +89,88 @@ function PAWAtomicSphere(l::Int64, ls::Int64)
     dphi = 2.0*pi/nphi #(rad%lmax+1)
     
     # number of samples for theta angle
-    n = (lmax + 2)/2
+    n = floor(Int64, (lmax + 2)/2)
 
     x = zeros(Float64, n)
     w = zeros(Float64, n)
 
-"""
+    # compute weights for theta integration
+    _init_gauss_weights!(x, w)
 
-  !
-  ALLOCATE( x(n), w(n) )
-  ! compute weights for theta integration
-  CALL gauss_weights( x, w, n )
-  !
-  ! number of integration directions
-  rad%nx = n*nphi !(rad%lmax+1)
-  !write(*,*) "paw --> directions",rad%nx," lmax:",rad%lmax
-  !
-  ALLOCATE( r(3,rad%nx), r2(rad%nx), rad%ww(rad%nx), ath(rad%nx), aph(rad%nx) )
-  !
-  ! compute real weights multiplying theta and phi weights
-  ii = 0
-  !
-  DO i = 1, n
-    z = x(i)
-    rho = SQRT(1._DP-z**2)
-    DO m = 1, nphi !rad%lmax
-      ii= ii+1
-      phi = dphi*DBLE(m-1)
-      r(1,ii) = rho*COS(phi)
-      r(2,ii) = rho*SIN(phi)
-      r(3,ii) = z
-      rad%ww(ii) = w(i)*2._dp*pi/nphi !(rad%lmax+1)
-      r2(ii) = r(1,ii)**2+r(2,ii)**2+r(3,ii)**2
-      ! these will be used later:
-      ath(ii) = ACOS(z/SQRT(r2(ii)))
-      aph(ii) = phi
-    ENDDO
-  ENDDO
-  ! cleanup
-  DEALLOCATE( x, w )
-  !
-  ! initialize spherical harmonics that will be used
-  ! to convert rho_lm to radial grid
-  rad%lm_max = (rad%lmax+1)**2
-  !
-  ALLOCATE( rad%ylm(rad%nx,rad%lm_max) )
-  CALL ylmr2( rad%lm_max, rad%nx, r, r2, rad%ylm )
-  ! As I will mostly use the product ww*ylm I can 
-  ! precompute it here:
-  ALLOCATE( rad%wwylm(rad%nx,rad%lm_max) )
-  !
-  DO i = 1, rad%nx
-    DO lm = 1, rad%lm_max
-      rad%wwylm(i,lm) = rad%ww(i) * rad%ylm(i,lm)
-    ENDDO
-  ENDDO
-  !
-  ALLOCATE( rad%cos_phi(rad%nx) )
-  ALLOCATE( rad%sin_phi(rad%nx) )
-  ALLOCATE( rad%cos_th(rad%nx) )
-  ALLOCATE( rad%sin_th(rad%nx) )
-  !
-  DO i = 1, rad%nx
-    rad%cos_phi(i) = COS(aph(i))
-    rad%sin_phi(i) = SIN(aph(i))
-    rad%cos_th(i) = COS(ath(i))
-    rad%sin_th(i) = SIN(ath(i))
-  ENDDO
-  !
-  ! if gradient corrections will be used than we need
-  ! to initialize the gradient of ylm, as we are working in spherical
-  ! coordinates the formula involves \hat{theta} and \hat{phi}
-  gradient: IF (dft_is_gradient()) THEN
+    # number of integration directions
+    nx = n*nphi #(rad%lmax+1)
+    #write(*,*) "paw --> directions",rad%nx," lmax:",rad%lmax
+  
+    #ALLOCATE( r(3,rad%nx), r2(rad%nx), rad%ww(rad%nx), ath(rad%nx), aph(rad%nx) )
+    r = zeros(Float64, 3, nx)
+    r2 = zeros(Float64, nx)
+    ww = zeros(Float64, nx)
+    ath = zeros(Float64, nx)
+    aph = zeros(Float64, nx)
+
+    # compute real weights multiplying theta and phi weights
+    ii = 0
+
+    for i in 1:n
+        z = x[i]
+        rho = sqrt(1.0 - z^2)
+        for m in 1:nphi  # rad%lmax
+            ii = ii + 1
+            phi = dphi*(m-1)
+            r[1,ii] = rho*cos(phi)
+            r[2,ii] = rho*cos(phi)
+            r[3,ii] = z
+            ww[ii] = w[i]*2.0 * pi/nphi #(rad%lmax+1)
+            r2[ii] = r[1,ii]^2 + r[2,ii]^2 + r[3,ii]^2
+            # these will be used later:
+            ath[ii] = acos( z/sqrt(r2[ii]) )
+            aph[ii] = phi
+        end
+    end
+
+    # initialize spherical harmonics that will be used
+    # to convert rho_lm to radial grid
+    lm_max = (lmax + 1)^2
+  
+    #ALLOCATE( rad%ylm(rad%nx,rad%lm_max) )
+    #CALL ylmr2( rad%lm_max, rad%nx, r, r2, rad%ylm )
+    ylm = zeros(Float64, nx, lm_max)
+    Ylm_real_qe!(lmax, r, ylm)
+
+    # As I will mostly use the product ww*ylm I can 
+    # precompute it here:
+    #ALLOCATE( rad%wwylm(rad%nx,rad%lm_max) )
+    wwylm = zeros(Float64, nx, lm_max)
+
+    for i in 1:nx
+        for lm in 1:lm_max
+            wwylm[i,lm] = ww[i] * ylm[i,lm]
+        end
+    end
+    
+    cos_phi = zeros(Float64, nx)
+    sin_phi = zeros(Float64, nx)
+    cos_th = zeros(Float64, nx)
+    sin_th = zeros(Float64, nx)
+  
+    for i in 1:nx
+        cos_phi[i] = cos(aph[i])
+        sin_phi[i] = sin(aph[i])
+        cos_th[i] = cos(ath[i])
+        sin_th[i] = sin(ath[i])
+    end
+  
+    #
+    # if gradient corrections will be used than we need
+    # to initialize the gradient of ylm, as we are working in spherical
+    # coordinates the formula involves \hat{theta} and \hat{phi}
+  
+    dylmt = nothing
+    dylmp = nothing
+    cotg_th = nothing
+
+#=
+    gradient: IF (dft_is_gradient()) THEN
     ALLOCATE( rad%dylmt(rad%nx,rad%lm_max), &
               rad%dylmp(rad%nx,rad%lm_max), &
               aux(rad%nx,rad%lm_max) )
@@ -200,17 +210,16 @@ function PAWAtomicSphere(l::Int64, ls::Int64)
     DEALLOCATE( aux )
     !
   ENDIF gradient
-  ! cleanup
-  DEALLOCATE( r, r2, ath, aph )
-  !
-  IF (TIMING) CALL stop_clock( 'PAW_rad_init' )
+  =#
+
+    println("nx = ", nx)
+    println("ww = ", ww)
   
-  write(*,*) '------------------'
-  write(*,*) 'Exit PAW_rad_init'
-  write(*,*) '------------------'
-
-"""
-
+    return PAWAtomicSphere(
+        lmax, ladd, lm_max,
+        nx, ww, ylm, wwylm, dylmt, dylmp,
+        cos_phi, sin_phi, cos_th, sin_th, cotg_th
+    )
 
 end
 
@@ -225,11 +234,12 @@ function _init_gauss_weights!( x::Vector{Float64}, w::Vector{Float64} )
     @assert n == length(w)
 
     m = floor(Int64, (n + 1)/2) # FIXME: floor or round?
+    pp = 0.0
+    z = 0.0
     
     for i in 1:m
         z1 = 2.0
         z = cos( pi*(i - 0.25)/(n + 0.5) )
-        
         while abs(z - z1) > SMALL
             p1 = 1.0
             p2 = 0.0
