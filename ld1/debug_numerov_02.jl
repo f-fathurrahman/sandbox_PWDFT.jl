@@ -91,7 +91,7 @@ function my_bisection(f, x1, x2; TOL=1.0e-9, verbose=false, NiterMax=nothing)
     x3 = 0.0
     x3_old = 0.0
 
-    for i in range(1,NiterMax+1)
+    for i in 1:NiterMax
 
         x3_old = x3
         x3 = 0.5*(x1 + x2)
