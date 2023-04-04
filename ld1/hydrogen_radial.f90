@@ -15,7 +15,7 @@ PROGRAM hydrogen
   !
   INTEGER, PARAMETER :: dp = selected_real_kind(14,200)
   INTEGER :: Nrmesh
-  integer :: n, l, i
+  INTEGER :: n, l, i
   REAL(dp) ::  zeta, zmesh, rmax, xmin, dx, e
   REAL(dp), ALLOCATABLE :: r(:), sqr(:), r2(:), y(:), vpot(:)
   !
@@ -45,11 +45,11 @@ PROGRAM hydrogen
   !
   ! initialize the potential
   !
-  call init_pot( zeta, r, Nrmesh, vpot)
+  CALL init_pot( zeta, r, Nrmesh, vpot)
   !
   ! open output file that will contain the wavefunctions
   !
-  OPEN(7,file='wfc.out',status='unknown',form='formatted')
+  OPEN(7,file='TEMP_wfc.out',status='unknown',form='formatted')
   
   WRITE(*,'(" n, l > ")', advance='no')
   READ(*,*) n,l
@@ -132,7 +132,7 @@ SUBROUTINE init_pot( zeta, r, Nrmesh, vpot )
   REAL(dp), INTENT(out):: vpot(0:Nrmesh)
   INTEGER :: i
 
-  OPEN(7,file='pot.out',status='unknown',form='formatted')
+  OPEN(7,file='TEMP_pot.out',status='unknown',form='formatted')
   WRITE(7,'("#       r             V(r)")')
   DO i = 0,Nrmesh
     vpot(i) = -2.0_dp*zeta/r(i) ! in Ry
