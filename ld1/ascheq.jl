@@ -5,34 +5,20 @@
 # in the root directory of the present distribution,
 # or http://www.gnu.org/copyleft/gpl.txt .
 
-# numerical integration of the radial schroedinger equation for
+# Numerical integration of the radial schroedinger equation for
 # bound states in a local potential.
 # thresh determines the absolute accuracy for the eigenvalue
-function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
-    # use kinds, only : DP
-    # use radial_grids, only: radial_grid_type, series
-    # implicit none
-    # type(radial_grid_type), intent(in) :: grid
-    # integer :: mesh,lam, ierr
-    # integer:: nn,nstop,maxter,iter,l1,i,ik,ncross,n, &
-    #      nstart,ns,n2,nst2,ndcr
-    # real(DP) :: ze2,ddx12,eup,elw,b0e,ymx,rap,rstart,di,expn,  &
-    #      c1,c2,fe,a0,a1,a2,sum0,f2,sum,sqlhf,f0,f1,dfe,de,eps, &
-    #      yln,xp,sum1,xl1,x4l6
-    # real(DP):: vpot(mesh), y(mesh)
-    # real(DP),allocatable:: c(:), el(:), f(:)
-    # real(DP):: b(0:3),e,thresh0, thresh
-    # data maxter/50/
-  
+function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
+ 
     Nrmesh = grid.Nrmesh
     println("input e = ", e)
 
     #
     #  set up constants and initialize
     #
-    c = zeros(Float64,Nrmesh)
-    f = zeros(Float64,Nrmesh)
-    el = zeros(Float64,Nrmesh)
+    c = zeros(Float64, Nrmesh)
+    f = zeros(Float64, Nrmesh)
+    el = zeros(Float64, Nrmesh)
 
     thresh = thresh0
     
@@ -41,9 +27,9 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
     end
     
     ddx12 = grid.dx^2 / 12.0
-    l1 = lam + 1
-    sqlhf = 0.5*(lam + 0.5)^2 # Ha unit
-    ndcr = nn - lam - 1
+    l1 = l + 1
+    sqlhf = 0.5*(l + 0.5)^2 # Ha unit
+    ndcr = nn - l - 1
     
     # set initial lower and upper bounds to the eigenvalue
     eup = vpot[Nrmesh] + sqlhf/grid.r2[Nrmesh]
@@ -67,7 +53,10 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
         e = 0.9*elw + 0.1*eup
     end
 
-    @printf("e = %18.10f\n", e)
+    println()
+    println("Initial lower and upper bounds to the eigenvalue (in Ha)")
+    println()
+    @printf("e   = %18.10f\n", e)
     @printf("eup = %18.10f\n", eup)
     @printf("elw = %18.10f\n", elw)
     
@@ -75,41 +64,45 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
     #  series developement of the potential near the origin
     #
     for i in 1:4
-        println()
-        println("y[i] before = ", y[i])
         y[i] = vpot[i] - Zval/grid.r[i]
-        println("vpot[i] = ", vpot[i])
-        println("y[i] = ", y[i])
-        println("r[i] = ", grid.r[i])
     end
-    b = zeros(Float64,4)
+    b = zeros(Float64,4) # XXX: b is originally b(0:3)
     radial_grid_series!( y, grid.r, grid.r2, b )
-    println("b = ", b)
+
+    println()
+    println("Near origin: r, vpot, yi, b (in Ha)")
+    println()
+    for i in 1:4
+        @printf("%18.10e %18.10e %18.10e %18.10e\n", grid.r[i], vpot[i], y[i], b[i])
+    end
+
     #exit()
 
-    maxter = 50
+    NmaxIter = 50
 
     # needed outside the loop
     nstart = 0
     f2 = 0.0
 
-    # 300 continue
-    #iter = iter + 1
-    for iter in 1:maxter
+    println()
+
+    for iterSch in 1:NmaxIter
     
-        println("============================")
-        println("Starting iteration = ", iter)
-        println("============================")
+        println("===============================")
+        println("iterSch = ", iterSch)
+        println("===============================")
 
         nstop = 300
     
         #
-        #  set up the f-function and determine the position of its last
-        #  change of sign
-        #  f < 0 (approximatively) means classically allowed   region
-        #  f > 0         "           "        "      forbidden   "
+        # set up the f-function and determine the position of its last
+        # change of sign
+        #
+        # f < 0 (approximatively) means classically allowed   region
+        # f > 0         "           "        "      forbidden   "
         #
         ik = 0
+        # Using Numerov algorithm
         f[1] = ddx12*( grid.r2[1]*( vpot[1] - e ) + sqlhf)
         for i in 2:Nrmesh
             f[i] = ddx12*( grid.r2[i]*( vpot[i] - e ) + sqlhf)
@@ -120,6 +113,7 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
         println("f = ", f[1:4])
         nstop = 302
     
+        # XXX: What's this?
         if ik >= (Nrmesh - 2)
             println("Line 106: Should go to 900")
             break
@@ -137,20 +131,14 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
   
         # determination of the wave-function in the first two points by
         # series developement
-        xl1 = lam + 1.0
-        x4l6 = 4.0*lam + 6.0
+        xl1 = l + 1.0
+        x4l6 = 4.0*l + 6.0
         b0e = b[1] - e # Ha unit
         c1 = Zval/xl1  # in Ha?
         c2 = (c1*Zval + b0e)/x4l6 # Ha
-        @printf("xl1 = %18.10f\n", xl1)
-        @printf("x4l6 = %18.10f\n", x4l6)
-        @printf("b0e = %18.10f\n", b0e)
-        @printf("c1 = %18.10f\n", c1)
-        @printf("c2 = %18.10f\n", c2)
-
-
         println("e = ", e)
-        start_scheq!( lam, e, b, grid, Zval, y )
+        start_scheq!( l, e, b, grid, Zval, y )
+        @printf("After start_scheq! ")
         @printf("y[1] = %18.10f\n", y[1])
         @printf("y[2] = %18.10f\n", y[2])
         #if iter == 1
@@ -158,14 +146,16 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
         #    exit()
         #end
 
-        #  start outward integration and count number of crossings
+        # start outward integration and count number of crossings
         ncross = 0
         ymx = 0.0
         println("\nStarting outward integration")
         println("ik = ", ik)
         println("fn = ", f[1:4])
         for n in 2:(ik-1)
-            y[n+1] = ( ( 12.0 - 10.0*f[n] )*y[n] - f[n-1]*y[n-1] ) / f[n+1] 
+            # Numerov algorithm
+            y[n+1] = ( ( 12.0 - 10.0*f[n] )*y[n] - f[n-1]*y[n-1] ) / f[n+1]
+            # Check for crossing here
             if y[n] != abs(y[n])*sign(y[n+1])
                 ncross = ncross + 1
             end
@@ -185,7 +175,7 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
             # too many crossings. e is an upper bound to the true eigenvalue.
             # increase abs(e)
             eup = e
-            rap = ( Float64(ncross+l1)/nn )^2
+            rap = ( Float64(ncross + l1)/nn )^2
             e = (e - vpot[Nrmesh] )*rap + vpot[Nrmesh]
             if e < elw
                 e = 0.9*elw + 0.1*eup
@@ -213,10 +203,10 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
         #end
 
 
-        #  prepare inward integration
-        #  charlotte froese can j phys 41,1895(1963)
+        # prepare inward integration
+        # charlotte froese can j phys 41,1895(1963)
         #
-        #            start at  min( rmax, 10*rmatch )
+        # start at  min(rmax, 10*rmatch)
         #
         nstart = Nrmesh
         ns = 10
@@ -240,7 +230,7 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
         #end
 
 
-        #  set up a, l, and c vectors
+        # set up a, l, and c vectors
         n = ik + 1
         el[n] = 10.0*f[n] - 12.0
         c[n] = -f[ik]*y[ik]
@@ -257,7 +247,7 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
         #    exit()
         #end
 
-        #  start inward integration by the froese's tail procedure
+        # Start inward integration by the Froese's tail procedure
         expn = exp( -sqrt( 12.0*abs(1.0 - f[nstart-1]) ) )
         y[nstart-1] = c[nstart-1]/( el[nstart-1] + f[nstart]*expn )
         y[nstart] = expn*y[nstart-1]
@@ -270,9 +260,8 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
         #    exit()
         #end
 
-
-        #  if necessary, improve the trial eigenvalue by the cooley's
-        #  procedure. jw cooley math of comp 15,363(1961)
+        # if necessary, improve the trial eigenvalue by the cooley's
+        # procedure. jw cooley math of comp 15,363(1961)
         fe = ( 12.0 - 10.0*f[ik] )*y[ik] - f[ik-1]*y[ik-1] - f[ik+1]*y[ik+1]
         @printf("fe = %18.10f\n", fe)
         #if iter == 1
@@ -294,20 +283,14 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
         #    println("exit ffr 283")
         #    exit()
         #end
-
     
-        a0 = 1.0/(2*lam + 3)
-        a1 = c1/(lam + 2)
-        a2 = (c1*c1 + c2 + c2)/(2*lam+5)
-    
-        sum0 = (a0 + grid.r[1]*( a1 + grid.r[1]*a2 ) )*grid.r[1]^(2*lam+3)
-    
-        nst2 = nstart-2
-    
+        a0 = 1.0/(2*l + 3)
+        a1 = c1/(l + 2)
+        a2 = (c1*c1 + c2 + c2)/(2*l + 5)
+        sum0 = (a0 + grid.r[1]*( a1 + grid.r[1]*a2 ) )*grid.r[1]^(2*l + 3)
+        nst2 = nstart - 2
         f2 = grid.r2[1]*y[1]*y[1]
-
         ss = grid.r[1]*f2/(2*l1 + 1)
-
         for n in range(1, stop=nst2, step=2)
             f0 = f2
             f1 = grid.r2[n+1]*y[n+1]*y[n+1]
@@ -334,7 +317,7 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
         #end
 
 
-        println("iter = ", iter, " e = ", e,  " de = ", de)
+        println("iterSch = ", iterSch, " e = ", e,  " de = ", de)
         if abs(de) < 2*thresh
             println("GOTO 600 here ....")
             break
@@ -391,7 +374,7 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
     # LOOP
 
 
-    #  normalize the eigenfunction and exit
+    # normalize the eigenfunction and exit
     for n in nstart:(Nrmesh-1)
         
         y[n+1] = 0.0
@@ -402,7 +385,7 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
         end
         
         yln = log(abs(y[n]))
-        xp = -sqrt(12.0*abs(1.0-f[n]))
+        xp = -sqrt(12.0*abs(1.0 - f[n]))
         expn = yln + xp
         if expn < -80.0
             continue
@@ -436,18 +419,5 @@ function ascheq!(nn, lam, e, grid, vpot, Zval, thresh0, y, nstop)
     nstop = 0
     
     return e, nstop
-
-    #
-    #  error exit
-    #
-    # 900  write(6,9000) nstop,nn,lam,elw,eup
-    # 9000 format(5x,'error in ascheq: nstop =',i4,'. n l =',2i3,/ &
-    #     & 5x,'elw =',f15.10,' eup =',f15.10)
-    
-    #900 continue
-    #deallocate(el)
-    #deallocate(f )
-    #deallocate(c )
-    #return
 
 end

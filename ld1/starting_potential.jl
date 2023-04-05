@@ -7,22 +7,16 @@
 #
 #
 
+#
+# starting potential: generalized thomas-fermi atomic potential
+# it is assumed that the effective charge seen by the reference
+# electron cannot be smaller than 1 (far from the core)
+#
 function starting_potential!(
   Nrmesh, Zval, Zed, Nwf, oc, nn, ll, r, enl,
   v0, vxt, vpot, enne, Nspin;
   frozen_core=false, noscf=false
 )
-    #
-    # starting potential: generalized thomas-fermi atomic potential
-    # it is assumed that the effective charge seen by the reference
-    # electron cannot be smaller than 1 (far from the core)
-    #
-    #implicit none
-    #integer :: nwf, nn(nwf), ll(nwf), ndm, mesh, n, i, nspin
-    #real(DP) :: r(ndm), vpot(ndm,2), v0(ndm), vxt(ndm), enl(nwf), oc(nwf), &
-    #   zed, zval, zz, zen, enne, t,x, vext, oce
-    #real(DP), parameter :: e2 = 2.0
-    #external vext
   
     enne = 0.0
     zz = max(Zed, Zval)
@@ -31,7 +25,7 @@ function starting_potential!(
        oce = max(0.0, oc[n])
        enne = enne + oce
        zen= 0.0
-       for i = 1:Nwf
+       for i in 1:Nwf
             oce = max(0.0, oc[i])
             if nn[i] < nn[n] 
                 zen = zen + oce
@@ -52,7 +46,7 @@ function starting_potential!(
        x = r[i]*enne^(1.0/3.0)/0.885
        t = zz/(1.0 + sqrt(x)*(0.02747 - x*(0.1486 - 0.007298*x)) + x*(1.243 + x*(0.2302 + 0.006944*x)))
        t = max(1.0,t)
-       v0[i]= -Zed/r[i]
+       v0[i] = -Zed/r[i]
        if noscf
           vpot[i,1] = v0[i] + vxt[i]
        else
@@ -61,7 +55,7 @@ function starting_potential!(
     end
     
     if Nspin == 2
-       for i = 1:Nrmesh
+       for i in 1:Nrmesh
           vpot[i,2] = vpot[i,1]
        end
     end
