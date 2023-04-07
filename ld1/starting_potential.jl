@@ -3,14 +3,12 @@
 # This file is distributed under the terms of the
 # GNU General Public License. See the file `License'
 # in the root directory of the present distribution,
-# or http://www.gnu.org/copyleft/gpl.txt .
+# or http://www.gnu.org/copyleft/gpl.txt.
 #
-#
-
-#
-# starting potential: generalized thomas-fermi atomic potential
+# starting potential: Generalized Thomas-Fermi atomic potential
 # it is assumed that the effective charge seen by the reference
 # electron cannot be smaller than 1 (far from the core)
+# TODO: add reference
 #
 function starting_potential!(
   Nrmesh, Zval, Zed, Nwf, oc, nn, ll, r, enl,
