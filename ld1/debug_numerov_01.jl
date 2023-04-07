@@ -30,7 +30,8 @@ function radial_wfc_numerov(r0; n=1, l=0, Z=1, du=0.001)
     gn = zeros(Float64, Nr)
     fn = zeros(Float64, Nr)
     for i in 1:Nr
-        gn[i] = E + 2*Z / r0[i] - l*(l+1)/r0[i]^2
+        Veff = -2*Z/r0[i] + l*(l+1)/r0[i]^2
+        gn[i] = E - Veff
         fn[i] = 1.0 + h12 * gn[i]
     end
 
@@ -62,6 +63,7 @@ function main()
     
     plt.clf()
     plt.plot(r0, ur3)
+    plt.grid(true)
 
     return
 end
