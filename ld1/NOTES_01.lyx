@@ -77,7 +77,141 @@
 
 \begin_body
 
+\begin_layout Subsection*
+Logarithmic grid (Gianozzi, mq2 notes)
+\end_layout
+
 \begin_layout Standard
+Introduce new integration variable 
+\begin_inset Formula $x$
+\end_inset
+
+ and a constant-step grid in 
+\begin_inset Formula $x$
+\end_inset
+
+.
+ Define mapping between 
+\begin_inset Formula $r$
+\end_inset
+
+ and 
+\begin_inset Formula $x$
+\end_inset
+
+ via:
+\begin_inset Formula 
+\[
+x=x(r)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The relation between constant-step grid spacing 
+\begin_inset Formula $\Delta x$
+\end_inset
+
+ and variable-step grid spacing is
+\begin_inset Formula 
+\[
+\Delta x=x'(r)\Delta r
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Using specific choice of mapping:
+\begin_inset Formula 
+\[
+x(r)\equiv\log\left(\frac{Zr}{a_{0}}\right)
+\]
+
+\end_inset
+
+we obtain:
+\begin_inset Formula 
+\[
+\Delta x=\frac{\Delta r}{r}
+\]
+
+\end_inset
+
+As 
+\begin_inset Formula $\Delta x$
+\end_inset
+
+ is taken to be constant, the ratio 
+\begin_inset Formula $\Delta r/r$
+\end_inset
+
+ remains constant on the grid of 
+\begin_inset Formula $r$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+By transforming the equation to new variable 
+\begin_inset Formula $x$
+\end_inset
+
+, a term with first derivative appears, preventing the usage of Numerov's
+ method.
+ The problem can be circumvented by transforming the unknown function as
+ follows:
+\begin_inset Formula 
+\[
+y(x)=\frac{1}{\sqrt{r}}\chi(r(x))
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+By expressing the radial Schroedinger equation in 
+\begin_inset Formula $x$
+\end_inset
+
+ and 
+\begin_inset Formula $y$
+\end_inset
+
+, the terms containing first-order derivatives disappear and by multiplying
+ both sides of the equation by 
+\begin_inset Formula $r^{3/2}$
+\end_inset
+
+ one finds:
+\begin_inset Formula 
+\[
+\frac{\mathrm{d}^{2}y}{\mathrm{d}x^{2}}+\left[\frac{2m_{e}}{\hbar^{2}}r^{2}\left(E-V(r)\right)-\left(l+\frac{1}{2}\right)^{2}\right]y(x)=0
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $V(r)=-Zq_{e}^{2}/r$
+\end_inset
+
+ for the Coulomb potential.
+ This equation no longer presents any singularity for 
+\begin_inset Formula $r=0$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
 Type RadialGrid
 \end_layout
 
