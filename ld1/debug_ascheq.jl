@@ -3,17 +3,19 @@ using Printf
 include("RadialGrid.jl")
 include("start_scheq.jl")
 
+import PyPlot
+const plt = PyPlot
 
 mutable struct AtomicElectronsConfig
     Zval::Float64
     Nspin::Int64
-    NatomicWavefuncs::Int64
+    Nwf::Int64
     # These quantities might depend on Nspin,
     # but we assume that Nspin=1 for the moment
     nn::Vector{Int64}
     ll::Vector{Int64}
     Focc::Vector{Int64}
-    Enl::Vector{Int64}
+    Enl::Vector{Float64}
 end
 
 function init_atom_Si()
@@ -48,7 +50,8 @@ end
 
 
 function starting_potential!(
-  elec_config, rgrid,
+  elec_config::AtomicElectronsConfig,
+  grid::RadialGrid,
   V0, Vxt, Vpot;
   frozen_core=false, noscf=false
 )
@@ -59,13 +62,17 @@ function starting_potential!(
     enne = 0.0
     # zz = max(Zed, Zval)
     # zed equal to zval (?_
-    zz = elec_config.Zval
-
+    Zval = elec_config.Zval
+    zz = Zval
     nn = elec_config.nn
     ll = elec_config.ll
     Focc = elec_config.Focc
     Enl = elec_config.Enl
     Nwf = elec_config.Nwf
+    Nspin = elec_config.Nspin
+
+    Nrmesh = grid.Nrmesh
+    r = grid.r
 
     for iwf in 1:Nwf
        oce = max(0.0, Focc[iwf])
@@ -73,7 +80,7 @@ function starting_potential!(
        zen = 0.0
        for jwf in 1:Nwf
             oce = max(0.0, Focc[jwf])
-            if nn[jwf] < nn[iwf] 
+            if nn[jwf] < nn[iwf]
                 zen = zen + oce
             end
             if (nn[jwf] == nn[iwf]) && (ll[jwf] <= ll[iwf])
@@ -97,7 +104,7 @@ function starting_potential!(
         if noscf
             Vpot[i,1] = V0[i] + Vxt[i]
         else
-            Vpot[i,1] = -t/r[i] + Vxt[i]
+            Vpot[i,1] = -t/r[i] + Vxt[i] # V0 is not used
         end
     end
     
@@ -111,96 +118,78 @@ function starting_potential!(
 end
 
 
-function test_main()
-    elec_config = init_atom_Si()
-    grid = init_radial_grid(elec_config.Zval)
-    
-    starting_potential!(
-        elec_config, grid,
-        V
-    )
-
-    println("Pass here")
-end
-
-test_main()
-
-#=
 function debug_ascheq!(
-    elec_config::AtomicElectronsConfig,
+    Zval, 𝓃::Int64, 𝓁::Int64, Enl_guess::Float64,
     grid::RadialGrid,
-    Vpot, y,
-    thresh0
+    Vpot, y, thresh0;
+    ispin=1
 )
 
 
     Nrmesh = grid.Nrmesh
-    println("input e = ", e)
+    println("input Enl_guess = ", Enl_guess)
 
     #
-    #  set up constants and initialize
+    # set up constants and initialize
     #
     c = zeros(Float64, Nrmesh)
     f = zeros(Float64, Nrmesh)
     el = zeros(Float64, Nrmesh)
 
     thresh = thresh0
-    
-    if e < -5e2
+    if Enl_guess < -5e2
         thresh = thresh0*10.0
     end
     
     ddx12 = grid.dx^2 / 12.0
-    l1 = l + 1
-    sqlhf = 0.5*(l + 0.5)^2 # Ha unit
-    ndcr = nn - l - 1
+    l1 = 𝓁 + 1
+    sqlhf = 0.5*(𝓁 + 0.5)^2 # Ha unit
+    ndcr = 𝓃 - 𝓁 - 1
     
+    Enl = Enl_guess
     # set initial lower and upper bounds to the eigenvalue
-    eup = vpot[Nrmesh] + sqlhf/grid.r2[Nrmesh]
-    elw = eup
+    Enl_up = Vpot[Nrmesh] + sqlhf/grid.r2[Nrmesh]
+    Enl_lw = Enl_up
     for i in 1:Nrmesh
-       elw = min( elw, vpot[i] + sqlhf/grid.r2[i] )
+       Enl_lw = min( Enl_lw, Vpot[i,ispin] + sqlhf/grid.r2[i] )
     end
     
     nstop = 200
-    
-    if eup == elw
-        println("Should go to 900")
-        #go to 900
+    if Enl_up == Enl_lw
+        error("Should go to 900")
     end
     
-    if e > eup
-        e = 0.9*eup + 0.1*elw
+    if Enl_lw > Enl_up
+        Enl = 0.9*Enl_up + 0.1*Enl_lw
     end
     
-    if e < elw
-        e = 0.9*elw + 0.1*eup
+    if Enl < Enl_lw
+        Enl = 0.9*Enl_lw + 0.1*Enl_up
     end
 
     println()
     println("Initial lower and upper bounds to the eigenvalue (in Ha)")
     println()
-    @printf("e   = %18.10f\n", e)
-    @printf("eup = %18.10f\n", eup)
-    @printf("elw = %18.10f\n", elw)
+    @printf("Enl_guess = %18.10f\n", Enl)
+    @printf("Enl_up    = %18.10f\n", Enl_up)
+    @printf("Enl_lw    = %18.10f\n", Enl_lw)
     
     #
     #  series developement of the potential near the origin
     #
     for i in 1:4
-        y[i] = vpot[i] - Zval/grid.r[i]
+        y[i] = Vpot[i] - Zval/grid.r[i]
     end
     b = zeros(Float64,4) # XXX: b is originally b(0:3)
     radial_grid_series!( y, grid.r, grid.r2, b )
 
     println()
-    println("Near origin: r, vpot, yi, b (in Ha)")
+    println("Near origin: r, Vpot, yi, b (in Ha)")
     println()
     for i in 1:4
-        @printf("%18.10e %18.10e %18.10e %18.10e\n", grid.r[i], vpot[i], y[i], b[i])
+        @printf("%18.10e %18.10e %18.10e %18.10e\n", grid.r[i], Vpot[i], y[i], b[i])
     end
 
-    #exit()
 
     NmaxIter = 50
 
@@ -210,6 +199,7 @@ function debug_ascheq!(
 
     println()
 
+    # iterSch = 1
     for iterSch in 1:NmaxIter
     
         println("===============================")
@@ -218,30 +208,30 @@ function debug_ascheq!(
 
         nstop = 300
     
-        #
         # set up the f-function and determine the position of its last
         # change of sign
         #
         # f < 0 (approximatively) means classically allowed   region
         # f > 0         "           "        "      forbidden   "
         #
-        ik = 0
+        #
         # Using Numerov algorithm
-        f[1] = ddx12*( grid.r2[1]*( vpot[1] - e ) + sqlhf)
+        #
+        ik = 0
+        f[1] = ddx12*( grid.r2[1]*( Vpot[1] - Enl ) + sqlhf)
         for i in 2:Nrmesh
-            f[i] = ddx12*( grid.r2[i]*( vpot[i] - e ) + sqlhf)
+            f[i] = ddx12*( grid.r2[i]*( Vpot[i] - Enl ) + sqlhf)
             if f[i] != abs(f[i])*sign(f[i-1])
                 ik = i
             end
         end
         println("f = ", f[1:4])
+        println("ik = ", ik)
         nstop = 302
     
         # XXX: What's this?
         if ik >= (Nrmesh - 2)
-            println("Line 106: Should go to 900")
-            break
-            #go to 900
+            error("ik is too big: " * string(ik))
         end
 
         for i in 1:Nrmesh
@@ -250,25 +240,22 @@ function debug_ascheq!(
         for i in 1:4
             @printf("f = %18.10f\n", f[i])
         end
-        @printf("ddx12 = %18.10f\n", ddx12)
         fill!(y, 0.0)
   
-        # determination of the wave-function in the first two points by
-        # series developement
-        xl1 = l + 1.0
-        x4l6 = 4.0*l + 6.0
-        b0e = b[1] - e # Ha unit
+        # Determination of the wave-function in the first two points
+        # by series developement
+        # TODO: add reference(s)
+        xl1 = 𝓁 + 1.0
+        x4l6 = 4.0*𝓁 + 6.0
+        b0e = b[1] - Enl # Ha unit
         c1 = Zval/xl1  # in Ha?
         c2 = (c1*Zval + b0e)/x4l6 # Ha
-        println("e = ", e)
-        start_scheq!( l, e, b, grid, Zval, y )
-        @printf("After start_scheq! ")
+
+        start_scheq!( 𝓁, Enl, b, grid, Zval, y )
+
+        @printf("After start_scheq!\n")
         @printf("y[1] = %18.10f\n", y[1])
         @printf("y[2] = %18.10f\n", y[2])
-        #if iter == 1
-        #    println("exit ffr 138")
-        #    exit()
-        #end
 
         # start outward integration and count number of crossings
         ncross = 0
@@ -276,61 +263,61 @@ function debug_ascheq!(
         println("\nStarting outward integration")
         println("ik = ", ik)
         println("fn = ", f[1:4])
-        for n in 2:(ik-1)
+        for i in 2:(ik-1)
             # Numerov algorithm
-            y[n+1] = ( ( 12.0 - 10.0*f[n] )*y[n] - f[n-1]*y[n-1] ) / f[n+1]
+            y[i+1] = ( ( 12.0 - 10.0*f[i] )*y[i] - f[i-1]*y[i-1] ) / f[i+1]
+            #
             # Check for crossing here
-            if y[n] != abs(y[n])*sign(y[n+1])
+            #
+            if y[i] != abs(y[i])*sign(y[i+1])
+                println("Found crossing")
                 ncross = ncross + 1
             end
-            ymx = max( ymx, abs(y[n+1]) )
+            # Track maximum value of y (wavefunction)
+            ymx = max( ymx, abs(y[i+1]) )
         end
+        
+        plt.clf()
+        plt.plot(grid.r[1:ik-1], y[1:ik-1], color="blue", label="outward")
+        
         @printf("ymx = %18.10f\n", ymx)
         println("ncross = ", ncross)
-        #if iter == 1
-        #    println("exit ffr 159")
-        #    exit()
-        #end
 
-
-        #  matching radius has been reached going out. if ncross is not
-        #  equal to ndcr, modify the trial eigenvalue.
+        # matching radius has been reached going out. if ncross is not
+        # equal to ndcr, modify the trial eigenvalue.
         if ndcr < ncross
-            # too many crossings. e is an upper bound to the true eigenvalue.
-            # increase abs(e)
-            eup = e
-            rap = ( Float64(ncross + l1)/nn )^2
-            e = (e - vpot[Nrmesh] )*rap + vpot[Nrmesh]
-            if e < elw
-                e = 0.9*elw + 0.1*eup
+            # Too many crossings.
+            # Enl is an upper bound to the true eigenvalue.
+            # Increase abs(Enl)
+            println("Too many crossing")
+            Enl_up = Enl
+            rap = ( Float64(ncross + l1)/𝓃 )^2
+            Enl = (Enl - Vpot[Nrmesh] )*rap + Vpot[Nrmesh]
+            if Enl < Enl_lw
+                Enl = 0.9*Enl_lw + 0.1*Enl_up
             end
-            # go to 300 # skip iter: continue
-            continue
+            # continue # need this?
         elseif ndcr > ncross
-            #  too few crossings. e is a lower bound to the true eigen-
-            #  value. decrease abs(e)
-            #
-            elw = e
-            rap = ( Float64(ncross+l1)/nn )^2
-            e = ( e - vpot[Nrmesh] )*rap + vpot[Nrmesh]
-            if e > eup
-                e = 0.9*eup + 0.1*elw
+            # too few crossings.
+            # Enl is a lower bound to the true eigenvalue.
+            # Decrease abs(e)
+            println("Too few crossing")
+            elw = Enl
+            rap = ( Float64(ncross + l1)/𝓃 )^2
+            Enl = ( Enl - Vpot[Nrmesh] )*rap + Vpot[Nrmesh]
+            if Enl > eup
+                Enl = 0.9*Enl_up + 0.1*Enl_lw
             end
-            #go to 300
-            continue
+            # go to 300
+            # continue
         end
     
         println("ndcr = ", ndcr)
-        #if iter == 1
-        #    println("exit ffr 201")
-        #    exit()
-        #end
 
-
-        # prepare inward integration
+        # Prepare inward integration
         # charlotte froese can j phys 41,1895(1963)
         #
-        # start at  min(rmax, 10*rmatch)
+        # Start at min(rmax, 10*rmatch)
         #
         nstart = Nrmesh
         ns = 10
@@ -379,20 +366,18 @@ function debug_ascheq!(
             y[n] = ( c[n] - f[n+1]*y[n+1])/el[n]
         end
         @printf("y = %18.10f\n", y[ik+1])
-        #if iter == 1
-        #    println("exit ffr 260")
-        #    exit()
-        #end
 
-        # if necessary, improve the trial eigenvalue by the cooley's
-        # procedure. jw cooley math of comp 15,363(1961)
+        plt.plot(grid.r[ik+1:nstart], y[ik+1:nstart], color="red", label="inward")
+        plt.legend()
+        plt.grid(true)
+        plt.title("Enl = " * string(Enl))
+        plt.savefig("IMG_trial_psi_" * string(iterSch) * ".png", dpi=150)
+
+
+        # If necessary, improve the trial eigenvalue by the cooley's procedure.
+        # J.W. Cooley, Math of Comp 15, 363 (1961)
         fe = ( 12.0 - 10.0*f[ik] )*y[ik] - f[ik-1]*y[ik-1] - f[ik+1]*y[ik+1]
         @printf("fe = %18.10f\n", fe)
-        #if iter == 1
-        #    println("exit ffr 270")
-        #    exit()
-        #end
-
 
         #  calculate the normalization
         if ymx >= 1.0e10
@@ -403,18 +388,21 @@ function debug_ascheq!(
         @printf("ymx = %18.10f\n", ymx)        
         @printf("y[1] = %18.10f\n", y[1])
         @printf("y[Nrmesh] = %18.10f\n", y[Nrmesh])
-        #if iter == 1
-        #    println("exit ffr 283")
-        #    exit()
-        #end
+
+        plt.clf()
+        plt.plot(grid.r[1:nstart], y[1:nstart], label="trial psi (normalized)")
+        plt.legend()
+        plt.grid(true)
+        plt.savefig("IMG_trial_psi_normalized_" * string(iterSch) * ".png", dpi=150)
     
-        a0 = 1.0/(2*l + 3)
-        a1 = c1/(l + 2)
-        a2 = (c1*c1 + c2 + c2)/(2*l + 5)
-        sum0 = (a0 + grid.r[1]*( a1 + grid.r[1]*a2 ) )*grid.r[1]^(2*l + 3)
+        a0 = 1.0/(2*𝓁 + 3)
+        a1 = c1/(𝓁 + 2)
+        a2 = (c1*c1 + c2 + c2)/(2*𝓁 + 5)
+        sum0 = (a0 + grid.r[1]*( a1 + grid.r[1]*a2 ) )*grid.r[1]^(2*𝓁 + 3)
         nst2 = nstart - 2
         f2 = grid.r2[1]*y[1]*y[1]
         ss = grid.r[1]*f2/(2*l1 + 1)
+        # Integrate using Simpson's rule?
         for n in range(1, stop=nst2, step=2)
             f0 = f2
             f1 = grid.r2[n+1]*y[n+1]*y[n+1]
@@ -422,31 +410,18 @@ function debug_ascheq!(
             ss = ss + f0 + f2 + 4.0*f1
         end
         @printf("ss = %18.10f\n", ss)
-        #if iter == 1
-        #    println("exit ffr 310")
-        #    exit()
-        #end
-
         ss = sum0 + grid.dx*ss/3.0
         dfe = -y[ik]*f[ik]/grid.dx/ss
         de = -fe*dfe*0.5 # Ha unit?
-        eeps = abs(de/e)
+        eeps = abs(de/Enl)
         
         @printf("ss = %18.10f\n", ss)
         @printf("de = %18.10f\n", de)
 
-        #if iter == 4
-        #    println("exit ffr 321")
-        #    exit()
-        #end
-
-
-        println("iterSch = ", iterSch, " e = ", e,  " de = ", de)
+        println("iterSch = ", iterSch, " Enl = ", Enl,  " de = ", de)
         if abs(de) < 2*thresh
-            println("GOTO 600 here ....")
+            println("*** CONVERGED ***")
             break
-            #go to 600
-            #continue
         end
     
         if eeps > 0.25
@@ -455,94 +430,146 @@ function debug_ascheq!(
         end
 
         if de > 0.0
-            println("Updating elw in 346")
-            elw = e
+            println("Updating Enl_lw")
+            Enl_lw = Enl
         end
     
         if de < 0.0
-            println("Updating eup")
-            eup = e
+            println("Updating Enl_up")
+            Enl_up = Enl
         end
   
-        e = e + de
-        println("de = ", de)
-        println("e = ", e)
+        Enl = Enl + de
+        println("de  = ", de)
+        println("Enl = ", Enl)
   
-        if e > eup
-            println("Updating e 358")
-            e = 0.9*eup + 0.1*elw
-        end
-    
-        if e < elw
-            println("Updating e 363")
-            e = 0.9*elw + 0.1*eup
+        if Enl > Enl_up
+            Enl = 0.9*Enl_up + 0.1*Enl_lw
         end
     
-        #if(iter .lt. maxter) go to 300
+        if Enl < Enl_lw
+            Enl = 0.9*Enl_lw + 0.1*Enl_up
+        end
   
-        nstop = 50
+        nstop = 50 # ???
     
         println("New data:")
-        @printf("e = %18.10f\n", e)
-        @printf("eup = %18.10f\n", eup)
-        @printf("elw = %18.10f\n", elw)
+        @printf("Enl    = %18.10f\n", Enl)
+        @printf("Enl_up = %18.10f\n", Enl_up)
+        @printf("Enl_lw = %18.10f\n", Enl_lw)
 
     end
 
-    println("e = ", e)
 
-    #println("exit ffr 340")
-    #exit()
+    println("Final Enl = ", Enl)
 
-    #600 continue
-    # LOOP
-
-
-    # normalize the eigenfunction and exit
-    for n in nstart:(Nrmesh-1)
-        
-        y[n+1] = 0.0
-        
-        if y[n] == 0.0 # FIXME
+    # Set the values for tail
+    for i in nstart:(Nrmesh-1)
+        y[i+1] = 0.0
+        if y[i] == 0.0 # FIXME
             continue
-            #go to 601
-        end
-        
-        yln = log(abs(y[n]))
-        xp = -sqrt(12.0*abs(1.0 - f[n]))
+        end        
+        yln = log(abs(y[i]))
+        xp = -sqrt(12.0*abs(1.0 - f[i]))
         expn = yln + xp
         if expn < -80.0
             continue
-            #go to 601
         end
-        
-        y[n+1] = abs(exp(expn))*sign(y[n])
-        # 601 continue
+        y[i+1] = abs(exp(expn))*sign(y[i])
     end
 
-
+    # normalize the eigenfunction and exit
     sum1 = 0.0
-    for n in range(nstart, stop=Nrmesh-2, step=2)
-       f0 = f2
-       f1 = grid.r2[n+1]*y[n+1]*y[n+1]
-       f2 = grid.r2[n+2]*y[n+2]*y[n+2]
-       sum1 = sum1 + f0 + f2 +4.0*f1
+    println("nstart for normalization: ", nstart)
+    for i in range(nstart, stop=Nrmesh-2, step=2)
+        f0 = f2
+        f1 = grid.r2[i+1] * y[i+1] * y[i+1]
+        f2 = grid.r2[i+2] * y[i+2] * y[i+2]
+        sum1 = sum1 + f0 + f2 + 4.0*f1
     end
     ss = ss + grid.dx*sum1/3.0
     ss = sqrt(ss)
-    for n in 1:Nrmesh
-        y[n] = grid.sqrtr[n]*y[n]/ss
+    for i in 1:Nrmesh
+        y[i] = grid.sqrtr[i]*y[i]/ss
     end
+
+    # Check integration
+    xl1 = 𝓁 + 1.0
+    x4l6 = 4.0*𝓁 + 6.0
+    b0e = b[1] - Enl # Ha unit
+    c1 = Zval/xl1
+    c2 = (c1*Zval + b0e)/x4l6 # Ha
+    a0 = 1.0/(2*𝓁 + 3)
+    a1 = c1/(𝓁 + 2)
+    a2 = (c1*c1 + c2 + c2)/(2*𝓁 + 5)
+    sum0 = (a0 + grid.r[1]*( a1 + grid.r[1]*a2 ) )*grid.r[1]^(2*𝓁 + 3)
+    nst2 = nstart - 2
+    f2 = grid.r2[1]*y[1]*y[1]
+    ss = grid.r[1]*f2/(2*l1 + 1)
+    # Integrate using Simpson's rule?
+    for i in range(1, stop=Nrmesh-2, step=2)
+        f0 = f2
+        f1 = grid.r2[i+1]*y[i+1]*y[i+1]
+        f2 = grid.r2[i+2]*y[i+2]*y[i+2]
+        ss = ss + f0 + f2 + 4.0*f1
+    end
+    @printf("ss = %18.10f\n", ss)
+    ss = sum0 + grid.dx*ss/3.0
+    println("Check norm: ", ss) # ???
+
     
     if nstop < 100
         println("Should go to 900")
-        return e, nstop
-        #go to 900
+        return Enl, nstop
     end
     
     nstop = 0
+    return Enl, nstop
+end
+
+
+
+function test_main()
+    elec_config = init_atom_Si()
+    grid = init_radial_grid(elec_config.Zval)
     
-    return e, nstop
+    Nrmesh = grid.Nrmesh
+    V0 = zeros(Float64, Nrmesh)
+    Vxt = zeros(Float64, Nrmesh)
+    Vpot = zeros(Float64, Nrmesh, 2)
+    enne = starting_potential!(
+        elec_config, grid,
+        V0, Vxt, Vpot
+    )
+    println("enne = ", enne) # should be equal to Zval
+    println("elec_config.Enl = ")
+    println(elec_config.Enl)
+
+    #plt.clf()
+    #plt.plot(grid.r, Vpot[:,1], label="Vpot")
+    #plt.xlim(0.0, 0.2)
+    #plt.savefig("IMG_Vpot.png", dpi=150)
+
+    # Solve for all states
+    ze2 = -elec_config.Zval # using negative sign and should be 2*Zval in Ry unit
+    thresh0 = 1.0e-10
+    Nwf = elec_config.Nwf
+    psi = zeros(Float64, Nrmesh, Nwf)
+    iwf = 2
+    #for iwf in 1:Nwf
+        @views psi1 = psi[:,iwf] # zeros wavefunction
+        elec_config.Enl[iwf], nstop = debug_ascheq!(
+            ze2,
+            elec_config.nn[iwf],
+            elec_config.ll[iwf],
+            elec_config.Enl[iwf],
+            grid, Vpot,
+            psi1, thresh0
+        )
+    #end
 
 end
-=#
+
+test_main()
+
+
