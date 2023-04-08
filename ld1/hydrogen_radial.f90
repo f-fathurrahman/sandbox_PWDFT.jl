@@ -267,12 +267,19 @@ SUBROUTINE solve_sheq( n, l, e, Nrmesh, dx, r, sqr, r2, vpot, zeta, y )
     !  \int f(r)dr => \sum_i f_i r_i Delta x
     !
     norm = 0.d0
-    DO i=0,Nrmesh
+    DO i = 0,Nrmesh
       norm = norm + y(i)*y(i) * r2(i) * dx
     ENDDO 
     norm = sqrt(norm)
     y = y / norm
-    
+ 
+    norm = 0.d0
+    DO i = 0,Nrmesh
+      norm = norm + y(i)*y(i) * r2(i) * dx
+    ENDDO 
+    WRITE(*,*) 'After normalization: norm = ', norm
+
+
     !
     ! find the value of the cusp at the matching point (icl)
     !
