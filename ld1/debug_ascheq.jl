@@ -153,10 +153,9 @@ function debug_ascheq!(
     for i in 1:Nrmesh
        Enl_lw = min( Enl_lw, Vpot[i,ispin] + sqlhf/grid.r2[i] )
     end
-    
-    nstop = 200
+
     if Enl_up == Enl_lw
-        error("Should go to 900")
+        error("Enl_up and Enl_lw is the same")
     end
     
     if Enl_lw > Enl_up
@@ -205,8 +204,6 @@ function debug_ascheq!(
         println("===============================")
         println("iterSch = ", iterSch)
         println("===============================")
-
-        nstop = 300
     
         # set up the f-function and determine the position of its last
         # change of sign
@@ -227,7 +224,6 @@ function debug_ascheq!(
         end
         println("f = ", f[1:4])
         println("ik = ", ik)
-        nstop = 302
     
         # XXX: What's this?
         if ik >= (Nrmesh - 2)
@@ -277,8 +273,8 @@ function debug_ascheq!(
             ymx = max( ymx, abs(y[i+1]) )
         end
         
-        plt.clf()
-        plt.plot(grid.r[1:ik-1], y[1:ik-1], color="blue", label="outward")
+        #plt.clf()
+        #plt.plot(grid.r[1:ik-1], y[1:ik-1], color="blue", label="outward")
         
         @printf("ymx = %18.10f\n", ymx)
         println("ncross = ", ncross)
@@ -296,7 +292,7 @@ function debug_ascheq!(
             if Enl < Enl_lw
                 Enl = 0.9*Enl_lw + 0.1*Enl_up
             end
-            # continue # need this?
+            continue # skip to the next iteration
         elseif ndcr > ncross
             # too few crossings.
             # Enl is a lower bound to the true eigenvalue.
@@ -308,8 +304,7 @@ function debug_ascheq!(
             if Enl > eup
                 Enl = 0.9*Enl_up + 0.1*Enl_lw
             end
-            # go to 300
-            # continue
+            continue # skip to the next iteration
         end
     
         println("ndcr = ", ndcr)
@@ -367,11 +362,11 @@ function debug_ascheq!(
         end
         @printf("y = %18.10f\n", y[ik+1])
 
-        plt.plot(grid.r[ik+1:nstart], y[ik+1:nstart], color="red", label="inward")
-        plt.legend()
-        plt.grid(true)
-        plt.title("Enl = " * string(Enl))
-        plt.savefig("IMG_trial_psi_" * string(iterSch) * ".png", dpi=150)
+        #plt.plot(grid.r[ik+1:nstart], y[ik+1:nstart], color="red", label="inward")
+        #plt.legend()
+        #plt.grid(true)
+        #plt.title("Enl = " * string(Enl))
+        #plt.savefig("IMG_trial_psi_" * string(iterSch) * ".png", dpi=150)
 
 
         # If necessary, improve the trial eigenvalue by the cooley's procedure.
@@ -389,11 +384,11 @@ function debug_ascheq!(
         @printf("y[1] = %18.10f\n", y[1])
         @printf("y[Nrmesh] = %18.10f\n", y[Nrmesh])
 
-        plt.clf()
-        plt.plot(grid.r[1:nstart], y[1:nstart], label="trial psi (normalized)")
-        plt.legend()
-        plt.grid(true)
-        plt.savefig("IMG_trial_psi_normalized_" * string(iterSch) * ".png", dpi=150)
+        #plt.clf()
+        #plt.plot(grid.r[1:nstart], y[1:nstart], label="trial psi (normalized)")
+        #plt.legend()
+        #plt.grid(true)
+        #plt.savefig("IMG_trial_psi_normalized_" * string(iterSch) * ".png", dpi=150)
     
         a0 = 1.0/(2*𝓁 + 3)
         a1 = c1/(𝓁 + 2)
@@ -450,8 +445,6 @@ function debug_ascheq!(
         if Enl < Enl_lw
             Enl = 0.9*Enl_lw + 0.1*Enl_up
         end
-  
-        nstop = 50 # ???
     
         println("New data:")
         @printf("Enl    = %18.10f\n", Enl)
@@ -489,6 +482,7 @@ function debug_ascheq!(
     end
     ss = ss + grid.dx*sum1/3.0
     ss = sqrt(ss)
+    println("ss for normalization: ", ss)
     for i in 1:Nrmesh
         y[i] = grid.sqrtr[i]*y[i]/ss
     end
@@ -517,19 +511,18 @@ function debug_ascheq!(
     ss = sum0 + grid.dx*ss/3.0
     println("Check norm: ", ss) # ???
 
-    
-    if nstop < 100
-        println("Should go to 900")
-        return Enl, nstop
+    ss = 0.0
+    for i in 1:Nrmesh
+        ss = ss + y[i]*y[i] # * grid.dx
     end
-    
-    nstop = 0
-    return Enl, nstop
+    println("Check norm 2: ", ss*grid.dx)
+
+    return Enl
 end
 
 
 
-function test_main()
+#function test_main()
     elec_config = init_atom_Si()
     grid = init_radial_grid(elec_config.Zval)
     
@@ -555,10 +548,10 @@ function test_main()
     thresh0 = 1.0e-10
     Nwf = elec_config.Nwf
     psi = zeros(Float64, Nrmesh, Nwf)
-    iwf = 2
+    iwf = 5
     #for iwf in 1:Nwf
         @views psi1 = psi[:,iwf] # zeros wavefunction
-        elec_config.Enl[iwf], nstop = debug_ascheq!(
+        elec_config.Enl[iwf] = debug_ascheq!(
             ze2,
             elec_config.nn[iwf],
             elec_config.ll[iwf],
@@ -568,8 +561,8 @@ function test_main()
         )
     #end
 
-end
+#end
 
-test_main()
+#test_main()
 
 
