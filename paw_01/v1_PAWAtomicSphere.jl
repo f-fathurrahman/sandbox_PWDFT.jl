@@ -47,38 +47,12 @@ struct PAWAtomicSphere
 end
 
 
-#!! Initialize several quantities related to radial integration: spherical harmonics and their 
-#!! gradients along a few (depending on lmaxq) directions, weights for spherical integration.
-#!
-#! IMPORTANT: routine PW/summary.f90 has the initialization parameters hardcoded in it
-#!            remember to update it if you change this!
 
-# INTEGER, INTENT(IN) :: l
-# !! max angular momentum component that will be integrated
-# !! exactly (to numerical precision).
-
-# INTEGER, INTENT(IN) :: ls
-# !! additional max l that will be used when computing gradient
-# !! and divergence in speherical coords
 function PAWAtomicSphere(l::Int64, ls::Int64; need_gradient::Bool=false)
-
-    # !
-    # ! ... local variables
-    # !
-    # REAL(DP), ALLOCATABLE :: x(:)    ! nx versors in smart directions
-    # REAL(DP), ALLOCATABLE :: w(:)    ! temporary integration weights
-    # REAL(DP), ALLOCATABLE :: r(:,:)  ! integration directions
-    # REAL(DP), ALLOCATABLE :: r2(:)   ! square modulus of r
-    # REAL(DP), ALLOCATABLE :: ath(:), aph(:)
-    #                          ! angles in sph coords for r
-    # INTEGER :: i, ii, n, nphi   ! counters
-    # INTEGER :: lm, m            ! indexes for ang.mom
-    # REAL(DP) :: phi, dphi, rho  ! spherical coordinates
-    # REAL(DP) :: z               ! cartesian coordinates
-    # ! for gradient corrections:
-    # INTEGER :: ipol
-    # REAL(DP), ALLOCATABLE :: aux(:,:)  ! workspace
-    # REAL(DP) :: vth(3), vph(3)         !versors for theta and phi
+    # l: max angular momentum component that will be
+    #    integrated exactly (to numerical precision).
+    # ls: additional max l that will be used when computing gradient
+    #     and divergence in speherical coords
 
     #  maximum value of l correctly integrated
     lmax = l + ls
