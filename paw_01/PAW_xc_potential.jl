@@ -2,7 +2,7 @@
 # and energy, as xc functional is not diagonal on angular momentum
 # numerical integration is performed.
 function PAW_xc_potential!(
-    ia,
+    AE::Bool, ia,
     atoms, pspots, pspotNL,
     xc_calc,
     rho_lm, v_lm
@@ -49,7 +49,11 @@ function PAW_xc_potential!(
   
     isp = atoms.atm2species[ia]
     r2 = pspots[isp].r.^2
-    rho_core = pspots[isp].paw_data.ae_rho_atc
+    if AE
+        rho_core = pspots[isp].paw_data.ae_rho_atc
+    else
+        rho_core = pspots[isp].rho_atc
+    end
     nx = pspotNL.paw.spheres[isp].nx
 
     Nrmesh = size(rho_lm, 1)
@@ -102,7 +106,7 @@ function PAW_xc_potential!(
         # Integrate to obtain the energy
         #
         if Nspin == 1
-            arho[:,1] = rho_loc[:,1] .+ rho_core[:]
+            @views arho[:,1] .= rho_loc[:,1] .+ rho_core[:]
             # CALL xc( i%m, 1, 1, arho(:,1), ex, ec, vx(:,1), vc(:,1) )
             e_rad[:,1], v_rad[:,ix,1] = calc_epsxc_Vxc_VWN( xc_calc, arho[:,1] )
             e_rad .= e_rad .* ( rho_rad[:,1] .+ rho_core .* r2 )
