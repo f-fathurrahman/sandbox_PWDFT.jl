@@ -35,13 +35,14 @@ function main(;filename=nothing)
     println("sum becsum after PAW_symmetrize: ", sum(becsum))
 
     Nspin = 1
-    ia = 3
+    ia = 1
+    AE = true
+
     isp = Ham.atoms.atm2species[ia]
     Nrmesh = Ham.pspots[isp].Nr
     l2 = (Ham.pspots[isp].lmax_rho + 1)^2
 
     rho_lm = zeros(Float64, Nrmesh, l2, Nspin)
-    AE = false
     PAW_rho_lm!(AE, ia, Ham.atoms, Ham.pspots, Ham.pspotNL, becsum, rho_lm)
     println("sum rho_lm = ", sum(rho_lm))
 
