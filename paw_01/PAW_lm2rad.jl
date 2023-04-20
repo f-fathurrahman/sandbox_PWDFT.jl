@@ -1,5 +1,6 @@
 # Build radial charge distribution from its spherical harmonics expansion.
-function PAW_lm2rad!( ia, ix,
+function PAW_lm2rad!(
+    ia, ix,
     atoms, pspots, pspotNL,
     F_lm, F_rad
 )
@@ -14,11 +15,11 @@ function PAW_lm2rad!( ia, ix,
     Nspin = size(F_rad,2)
     isp = atoms.atm2species[ia]
     l2 = (pspots[isp].lmax_rho + 1)^2
-    rad = pspotNL.paw.spheres[isp]
+    sphere = pspotNL.paw.spheres[isp]
 
     fill!(F_rad, 0.0)
     for ispin in 1:Nspin, lm in 1:l2
-        F_rad[:,ispin] .+= rad[isp].ylm[ix,lm]*F_lm[:,lm,ispin]
+        F_rad[:,ispin] .+= sphere.ylm[ix,lm]*F_lm[:,lm,ispin]
     end
     return
 end
