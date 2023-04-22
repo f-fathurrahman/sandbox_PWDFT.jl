@@ -47,6 +47,9 @@ function PAW_potential!(
     # Begin loop over all atoms
     for ia in 1:Natoms
 
+        println()
+        println("Loop PAW_potential ia = ", ia)
+
         isp = atm2species[ia]
         # Skip this atoms if it is not using PAW
         if !pspots[isp].is_paw
@@ -80,17 +83,28 @@ function PAW_potential!(
             PAW_rho_lm!(AE, ia, atoms, pspots, pspotNL, becsum, rho_lm)
             println("sum rho_lm = ", sum(rho_lm))
 
+            # Hartree term
             @views energy = PAW_h_potential!( ia, atoms, pspots, rho_lm, v_lm[:,:,1] )
             energy_tot += sgn*energy
             e_cmp[ia,1,i_what] = sgn*energy # Hartree, all-electron
             for ispin in 1:Nspin # ... v_H has to be copied to all spin components
                 @views savedv_lm[:,:,ispin] = v_lm[:,:,1]
             end
+            println("sum v_lm after PAW_h_potential: ", sum(v_lm))
 
+            # XC term
             @views energy = PAW_xc_potential!( AE, ia, atoms, pspots, pspotNL, xc_calc, rho_lm, v_lm )
             energy_tot += sgn*energy
             e_cmp[ia,2,i_what] = sgn*energy # XC, all-electron
+            println("sum v_lm after PAW_xc_potential: ", sum(v_lm))
+
             savedv_lm[:,:,:] .+= v_lm[:,:,:]
+
+            println("sum savedv_lm = ", sum(savedv_lm))
+
+            println("--------------------------")
+            println("ENTER Calculating ddd_paw:")
+            println("--------------------------")
 
             for ispin in 1:Nspin
                 nmb = 0
@@ -101,19 +115,33 @@ function PAW_potential!(
                     # compute the density from a single pfunc
                     becfake[nmb,ia,ispin] = 1.0
                     PAW_rho_lm!(AE, ia, atoms, pspots, pspotNL, becfake, rho_lm)
+                    println()
+                    @printf("nmb = %3d, sum(rho_lm) = %18.10f\n", nmb, sum(rho_lm))
                     #
                     # Now I multiply the rho_lm and the potential, I can use
                     # rho_lm itself as workspace
+                    #
                     for lm in 1:l2
-                        rho_lm[1:Nrmesh,lm,ispin] .*= savedv_lm[1:Nrmesh,lm,ispin]
+                        for ir in 1:Nrmesh
+                            rho_lm[ir,lm,ispin] *= savedv_lm[ir,lm,ispin]
+                        end
                         # Integrate (XXX: why using kkbeta?)
+                        println("Nrmesh = ", Nrmesh)
+                        @printf("kkbeta = %d, sum integrand = %18.10f\n", kkbeta, sum(rho_lm))
                         res = PWDFT.integ_simpson( kkbeta, rho_lm[:,lm,ispin], pspots[isp].rab )
+                        @printf("lm = %3d integ_simpson = %18.10f\n", lm, sgn*res)
                         ddd_paw[nmb,ia,ispin] += sgn*res
                     end
                     # restore becfake to zero
                     becfake[nmb,ia,ispin] = 0.0
                 end
             end # Nspin
+
+            println("-------------------------")
+            println("EXIT Calculating ddd_paw:")
+            println("-------------------------")
+
+
         end # AE, PS
     end # loop over all atoms
 

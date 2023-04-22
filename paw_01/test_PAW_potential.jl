@@ -1,6 +1,7 @@
 using Printf
 using OffsetArrays
 using LinearAlgebra
+using Serialization
 
 using Random
 Random.seed!(1234)
@@ -43,8 +44,11 @@ function main(;filename=nothing)
     EHxc_paw = PAW_potential!( Ham.atoms, Ham.pspots, Ham.pspotNL, Ham.xc_calc,
         becsum, ddd_paw, e_cmp
     )
+
+    serialize("ddd_paw_jl.dat", ddd_paw)
     println("EHxc_paw = ", EHxc_paw)
+    println("sum ddd_paw = ", sum(ddd_paw))
 
 end
 
-main()
+main(filename="PWINPUT")

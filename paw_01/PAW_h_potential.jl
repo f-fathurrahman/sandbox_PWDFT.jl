@@ -45,7 +45,7 @@ function PAW_h_potential!(
     r = pspots[isp].r
     dx = pspots[isp].dx
 
-    Nrmesh = size(rho_lm, 1)
+    Nrmesh = pspots[isp].Nr
     aux = zeros(Float64, Nrmesh)
     nspin_lsda = size(rho_lm, 3)
 
@@ -57,7 +57,6 @@ function PAW_h_potential!(
         for k in 1:Nrmesh
             aux[k] = pref * sum(rho_lm[k,lm,1:nspin_lsda])
         end
-        println("sum aux = ", sum(aux))
         @views radial_hartree!( l, 2*l + 2, r, dx, aux, v_lm[:,lm] )
     end
     #

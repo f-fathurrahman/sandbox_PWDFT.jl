@@ -7,45 +7,6 @@ function PAW_xc_potential!(
     xc_calc,
     rho_lm, v_lm
 )
-    #!
-    #USE noncollin_module,       ONLY : nspin_mag
-    #USE constants,              ONLY : e2, eps12
-    #USE uspp_param,             ONLY : upf
-    #USE lsda_mod,               ONLY : nspin
-    #USE atom,                   ONLY : g => rgrid
-    #USE funct,                  ONLY : dft_is_gradient
-    #USE xc_lda_lsda,            ONLY : xc
-    #USE constants,              ONLY : fpi ! REMOVE
-    #!
-    #TYPE(paw_info), INTENT(IN) :: i !! atom's minimal info
-    #REAL(DP), INTENT(IN) :: rho_lm(i%m,i%l**2,nspin) !! charge density as lm components
-    #REAL(DP), INTENT(IN) :: rho_core(i%m) !! core charge, radial and spherical
-    #REAL(DP), INTENT(OUT) :: v_lm(i%m,i%l**2,nspin) !! potential density as lm components
-    #REAL(DP),OPTIONAL,INTENT(OUT) :: energy !! XC energy (if required)
-    #!
-    #! ... local variables
-    #!
-    #REAL(DP), ALLOCATABLE :: rho_loc(:,:)       ! local density (workspace), up and down
-    #REAL(DP) :: v_rad(i%m,rad(i%t)%nx,nspin)    ! radial potential (to be integrated)
-    #REAL(DP), ALLOCATABLE :: g_rad(:,:,:)       ! radial potential
-    #!
-    #REAL(DP), ALLOCATABLE :: rho_rad(:,:)       ! workspace (only one radial slice of rho)
-    #!
-    #REAL(DP), ALLOCATABLE :: e_rad(:)           ! aux, used to store radial slices of energy
-    #REAL(DP), ALLOCATABLE :: e_of_tid(:)        ! aux, for openmp parallel reduce
-    #REAL(DP) :: e                               ! aux, used to integrate energy
-    #!
-    #INTEGER :: ix,k                             ! counters on directions and radial grid
-    #INTEGER :: lsd                              ! switch for local spin density
-    #REAL(DP) :: vs, amag
-    #INTEGER :: kpol 
-    #INTEGER :: mytid, ntids
-    #!
-    #REAL(DP), ALLOCATABLE :: arho(:,:)
-    #REAL(DP), ALLOCATABLE :: ex(:), ec(:)
-    #REAL(DP), ALLOCATABLE :: vx(:,:), vc(:,:)
-    #REAL(DP), PARAMETER   :: eps = 1.e-30_dp
-    #!
   
     isp = atoms.atm2species[ia]
     r2 = pspots[isp].r.^2
@@ -56,9 +17,8 @@ function PAW_xc_potential!(
     end
     nx = pspotNL.paw.spheres[isp].nx
 
-    Nrmesh = size(rho_lm, 1)
+    Nrmesh = pspots[isp].Nr
     Nspin = size(rho_lm, 3)
-    println("Nspin = ", Nspin)
 
     # This will hold the "true" charge density, without r**2 or other factors
     rho_loc = zeros(Float64, Nrmesh, Nspin)
@@ -82,7 +42,7 @@ function PAW_xc_potential!(
 
     for ix in 1:nx
 
-        println("ix = ", ix)
+        #println("ix = ", ix)
 
         # LDA (and LSDA) part (no gradient correction)
         # convert _lm density to real density along ix
@@ -99,8 +59,8 @@ function PAW_xc_potential!(
             end
         end
 
-        println("sum rho_loc = ", sum(rho_loc))
-        println("sum rho_core = ", sum(rho_core))
+        #println("sum rho_loc = ", sum(rho_loc))
+        #println("sum rho_core = ", sum(rho_core))
 
         #
         # Integrate to obtain the energy
@@ -110,8 +70,8 @@ function PAW_xc_potential!(
             # CALL xc( i%m, 1, 1, arho(:,1), ex, ec, vx(:,1), vc(:,1) )
             e_rad[:,1], v_rad[:,ix,1] = calc_epsxc_Vxc_VWN( xc_calc, arho[:,1] )
             e_rad .= e_rad .* ( rho_rad[:,1] .+ rho_core .* r2 )
-            println("sum abs v_rad[:,ix,1] = ", sum(abs.(v_rad[:,ix,1])))
-            println("sum abs e_rad = ", sum(abs.(e_rad)))
+            #println("sum abs v_rad[:,ix,1] = ", sum(abs.(v_rad[:,ix,1])))
+            #println("sum abs e_rad = ", sum(abs.(e_rad)))
         else
             @views arho[:,1] .= rho_loc[:,1] .+ rho_loc[:,2] .+ rho_core[:]
             @views arho[:,2] .= rho_loc[:,1] .- rho_loc[:,2]
@@ -133,7 +93,7 @@ function PAW_xc_potential!(
     lmax_loc = pspots[isp].lmax_rho + 1
     PAW_rad2lm!( ia, atoms, pspotNL, lmax_loc, v_rad, v_lm )
 
-    println("energy = ", energy)
+    #println("energy = ", energy)
     println("After sum v_rad = ", sum(v_rad))
     println("After sum v_lm  = ", sum(v_lm))
 
