@@ -13,9 +13,6 @@ function PAW_rad2lm!(
     isp = atoms.atm2species[ia]
     sphere = pspotNL.paw.spheres[isp]
 
-    println("PAW_rad2lm: sum(sphere.wwylm) = ", sum(sphere.wwylm))
-    println("PAW_rad2ln: sphere.nx = ", sphere.nx)
-
     for ispin in 1:Nspin, lm in 1:lmax_loc^2
         F_lm[:,lm,ispin] .= 0.0
         for ix in 1:sphere.nx, j in 1:Nrmesh

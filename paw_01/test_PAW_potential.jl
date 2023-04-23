@@ -13,18 +13,6 @@ const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)), "..")
 include(joinpath(DIR_PWDFT, "utilities", "PWSCFInput.jl"))
 include(joinpath(DIR_PWDFT, "utilities", "init_Ham_from_pwinput.jl"))
 
-include("PAW_atomic_becsum.jl")
-include("PAW_symmetrize.jl")
-include("../ld1/RadialGrid.jl")
-include("radial_hartree.jl")
-include("PAW_rho_lm.jl")
-include("PAW_lm2rad.jl")
-include("PAW_rad2lm.jl")
-include("PAW_h_potential.jl")
-include("PAW_xc_potential.jl")
-include("PAW_potential.jl")
-
-
 function main(;filename=nothing)
     Ham, pwinput = init_Ham_from_pwinput(filename=filename)
 

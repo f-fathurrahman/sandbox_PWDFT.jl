@@ -30,23 +30,16 @@ function PAW_xc_potential!(
     rho_rad = zeros(Float64, Nrmesh, Nspin) 
     arho = zeros(Float64, Nrmesh, 2) # XXX: Nspin = 2
     # it is also 2 in case of noncollinear spin (?)
-
-    # FIXME: This is not really needed
-    #ex = zeros(Float64, Nrmesh)
-    #ec = zeros(Float64, Nrmesh)
-    #vx = zeros(Float64, Nrmesh, 2)
-    #vc = zeros(Float64, Nrmesh, 2)
     
     energy = 0.0
     e_rad = zeros(Float64, Nrmesh)
 
     for ix in 1:nx
 
-        #println("ix = ", ix)
-
         # LDA (and LSDA) part (no gradient correction)
         # convert _lm density to real density along ix
         PAW_lm2rad!( ia, ix, atoms, pspots, pspotNL, rho_lm, rho_rad )
+
         # compute the potential along ix
         if Nspin == 2
             for k in 1:Nrmesh
@@ -59,48 +52,39 @@ function PAW_xc_potential!(
             end
         end
 
-        #println("sum rho_loc = ", sum(rho_loc))
-        #println("sum rho_core = ", sum(rho_core))
-
         #
         # Integrate to obtain the energy
         #
         if Nspin == 1
             @views arho[:,1] .= rho_loc[:,1] .+ rho_core[:]
-            # CALL xc( i%m, 1, 1, arho(:,1), ex, ec, vx(:,1), vc(:,1) )
-            e_rad[:,1], v_rad[:,ix,1] = calc_epsxc_Vxc_VWN( xc_calc, arho[:,1] )
+            @views calc_epsxc_Vxc_VWN!( xc_calc, arho[:,1], e_rad[:,1], v_rad[:,ix,1] )
             e_rad .= e_rad .* ( rho_rad[:,1] .+ rho_core .* r2 )
-            #println("sum abs v_rad[:,ix,1] = ", sum(abs.(v_rad[:,ix,1])))
-            #println("sum abs e_rad = ", sum(abs.(e_rad)))
         else
+            # This is not yet working
+            println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            println("WARNING: This is not yet tested")
+            println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             @views arho[:,1] .= rho_loc[:,1] .+ rho_loc[:,2] .+ rho_core[:]
             @views arho[:,2] .= rho_loc[:,1] .- rho_loc[:,2]
-            #CALL xc( i%m, 2, 2, arho, ex, ec, vx, vc )
-            e_rad[:,:], v_rad[:,ix,:] .= calc_epsxc_Vxc_VWN( xc_calc, arho )
-            e_rad .= e_rad .* ( rho_rad[:,1] + rho_rad[:,2] + rho_core .* r2 )
+            calc_epsxc_Vxc_VWN!( xc_calc, arho, e_rad[:,:], v_rad[:,ix,:] )
+            e_rad .= e_rad .* ( rho_rad[:,1] .+ rho_rad[:,2] .+ rho_core .* r2 )
         end
     
         # Integrate to obtain the energy
-        energy += pspotNL.paw.spheres[isp].ww[ix]*PWDFT.integ_simpson( Nrmesh, e_rad, pspots[isp].rab )
+        wx = pspotNL.paw.spheres[isp].ww[ix]
+        energy += wx*PWDFT.integ_simpson( Nrmesh, e_rad, pspots[isp].rab )
   
     end
-  
-    println("Before sum v_rad = ", sum(v_rad))
-    println("Before sum v_lm  = ", sum(v_lm))
 
     #
     # Recompose the sph. harm. expansion
     lmax_loc = pspots[isp].lmax_rho + 1
     PAW_rad2lm!( ia, atoms, pspotNL, lmax_loc, v_rad, v_lm )
 
-    #println("energy = ", energy)
-    println("After sum v_rad = ", sum(v_rad))
-    println("After sum v_lm  = ", sum(v_lm))
-
-    #!
-    #! Add gradient correction, if necessary
-    #!
-    #IF( dft_is_gradient() ) CALL PAW_gcxc_potential( i, rho_lm, rho_core, v_lm, energy )
+    #
+    # Add gradient correction, if necessary
+    #
+    # Not yet implemented
 
     return energy
 
