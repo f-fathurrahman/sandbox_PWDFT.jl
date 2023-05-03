@@ -12,9 +12,6 @@ const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)), "..")
 include(joinpath(DIR_PWDFT, "utilities", "PWSCFInput.jl"))
 include(joinpath(DIR_PWDFT, "utilities", "init_Ham_from_pwinput.jl"))
 
-include("PAW_atomic_becsum.jl")
-include("PAW_symmetrize.jl")
-
 function main()
     Ham, pwinput = init_Ham_from_pwinput()
 

@@ -34,6 +34,9 @@ function main(;filename=nothing)
     )
 
     serialize("ddd_paw_jl.dat", ddd_paw)
+
+    println()
+    println("After PAW_potential:")
     println("EHxc_paw = ", EHxc_paw)
     println("sum ddd_paw = ", sum(ddd_paw))
 
