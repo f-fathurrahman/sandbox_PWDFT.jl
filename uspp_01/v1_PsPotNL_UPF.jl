@@ -58,7 +58,7 @@ function PsPotNL_UPF(
        nkb = nkb + nh[isp]
     end
 
-    ap, lpx, lpl = calc_clebsch_gordan(lmaxkb + 1)
+    ap, lpx, lpl = calc_clebsch_gordan(lmaxkb)
 
 
     # calculate the maximum number of beta functions
