@@ -18,10 +18,21 @@ json_wwylm = reshape(convert(Vector{Float64}, json_data["wwylm"]), shape_wwylm..
 
 
 # pseudo_upf or PsPot_UPF
-json_data = JSON.parsefile("pseudo_upf_1.json")["pseudo_upf"]
+using JSON
+json_data = JSON.parsefile("pseudo_upf_1.json")["pseudo_upf"];
 
-shape_dion = convert(Vector{Int64}, json_data["shape_dion"])
-dion = reshape(convert(Vector{Float64}, json_data["dion"]), shape_dion...)
+shape_dion = convert(Vector{Int64}, json_data["shape_dion"]);
+dion = reshape(convert(Vector{Float64}, json_data["dion"]), shape_dion...);
 
-shape_qfuncl = convert(Vector{Int64}, json_data["shape_qfuncl"])
-qfuncl = reshape(convert(Vector{Float64}, json_data["qfuncl"]), shape_qfuncl...)
+shape_qfuncl = convert(Vector{Int64}, json_data["shape_qfuncl"]);
+qfuncl = reshape(convert(Vector{Float64}, json_data["qfuncl"]), shape_qfuncl...);
+
+#
+using JSON
+json_data = JSON.parsefile("scf_mod.json")["scf_mod"];
+rhoe_core = convert(Vector{Float64}, json_data["rho_core"]);
+
+diff1 = Ham.rhoe_core  - rhoe_core;
+maximum(abs.(diff1))
+
+vltot = convert(Vector{Float64}, json_data["vltot"]);
