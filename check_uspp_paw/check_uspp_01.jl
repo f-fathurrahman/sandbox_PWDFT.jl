@@ -47,6 +47,21 @@ function load_clebsch_gordan()
     return ap, lpx, lpl
 end
 
+
+function load_qradG()
+    json_data = JSON.parsefile("uspp_mod.json")["uspp"]
+    
+    shape_qrad = convert(Vector{Int64}, json_data["shape_qrad"])
+    qradG = reshape(
+        convert(Vector{Float64}, json_data["qrad"]),
+        shape_qrad...
+    )
+    return qradG
+end
+
+
+
+
 function check_clebsch_gordan(Ham)
 
     println()
