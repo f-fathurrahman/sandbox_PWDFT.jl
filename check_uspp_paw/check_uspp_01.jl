@@ -91,30 +91,29 @@ end
 
 function check_qq_at_qq_nt(Ham::Hamiltonian)
 
-    if !any(Ham.pspotNL.are_ultrasoft)
-        println("No USPP or PAW data: skipped")
-        return
-    end
-
     println()
     println("------------------------")
     println("Checking qq_at and qq_nt")
     println("------------------------")
 
-    Q_CONV_FACTOR = 4
+
+    if !any(Ham.pspotNL.are_ultrasoft)
+        println("No USPP or PAW data: skipped")
+        return
+    end
 
     qq_at, qq_nt = load_qq_at_nt()
 
     println()
     println("qq_at")
-    diff1 = Ham.pspotNL.qq_at - qq_at*Q_CONV_FACTOR
+    diff1 = Ham.pspotNL.qq_at - qq_at
     println("maximum abs diff = ", maximum(abs.(diff1)))
     println("minimum abs diff = ", minimum(abs.(diff1)))
     println("mean    abs diff = ", mean(abs.(diff1)))
 
     println()
     println("qq_nt")
-    diff1 = Ham.pspotNL.qq_nt - qq_nt*Q_CONV_FACTOR
+    diff1 = Ham.pspotNL.qq_nt - qq_nt
     println("maximum abs diff = ", maximum(abs.(diff1)))
     println("minimum abs diff = ", minimum(abs.(diff1)))
     println("mean    abs diff = ", mean(abs.(diff1)))
@@ -128,26 +127,24 @@ function load_dvan()
         convert(Vector{Float64}, json_data["dvan"]),
         shape_dvan...
     )
-    return dvan
+    return dvan*0.5 # convert to Ha
 end
 
 function check_Dvan(Ham::Hamiltonian)
-
-    if !any(Ham.pspotNL.are_ultrasoft)
-        println("No USPP or PAW data: skipped")
-        return
-    end
 
     println()
     println("-------------")
     println("Checking Dvan")
     println("-------------")
 
-    CONV_FACTOR = 2
+    if !any(Ham.pspotNL.are_ultrasoft)
+        println("No USPP or PAW data: skipped")
+        return
+    end
 
     dvan = load_dvan()
 
-    diff1 = Ham.pspotNL.Dvan - dvan*CONV_FACTOR
+    diff1 = Ham.pspotNL.Dvan - dvan
     println("maximum abs diff = ", maximum(abs.(diff1)))
     println("minimum abs diff = ", minimum(abs.(diff1)))
     println("mean    abs diff = ", mean(abs.(diff1)))
@@ -207,32 +204,29 @@ function load_deeq()
         convert(Vector{Float64}, json_data["deeq"]),
         shape_deeq...
     )
-    return deeq
+    return deeq*0.5 # convert to Ha
 end
 
 
 function check_Deeq(Ham::Hamiltonian)
-
-    if !any(Ham.pspotNL.are_ultrasoft)
-        println("No USPP or PAW data: skipped")
-        return
-    end
 
     println()
     println("-------------")
     println("Checking Deeq")
     println("-------------")
 
-    CONV_FACTOR = 2
+    if !any(Ham.pspotNL.are_ultrasoft)
+        println("No USPP or PAW data: skipped")
+        return
+    end
 
     deeq = load_deeq()
 
-    diff1 = Ham.pspotNL.Deeq - deeq*CONV_FACTOR
+    diff1 = Ham.pspotNL.Deeq - deeq
     println("maximum abs diff = ", maximum(abs.(diff1)))
     println("minimum abs diff = ", minimum(abs.(diff1)))
     println("mean    abs diff = ", mean(abs.(diff1)))
 end
-
 
 
 function check_clebsch_gordan(Ham)
@@ -464,6 +458,7 @@ end
 
 
 include("pseudo_upf.jl")
+include("paw_variables.jl")
 
 function main()
     if length(ARGS) >= 1
@@ -481,6 +476,8 @@ function main()
     check_Rhoe(Ham)
     check_v_of_r(Ham)
     check_clebsch_gordan(Ham)
+    check_ddd_paw(Ham)
+    check_paw_radial(Ham)
 
     return
 end

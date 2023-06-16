@@ -3,7 +3,7 @@ function load_Dion( isp::Int64 )
     shape_dion = convert(Vector{Int64}, json_data["shape_dion"])
     dion = reshape(
         convert(Vector{Float64}, json_data["dion"]), shape_dion...
-    )*2 # convert to 1/Ry to 1/Ha
+    )*0.5 # to Ha
     return dion
 end
 
