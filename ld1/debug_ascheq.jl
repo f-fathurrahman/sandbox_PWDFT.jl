@@ -273,8 +273,8 @@ function debug_ascheq!(
             ymx = max( ymx, abs(y[i+1]) )
         end
         
-        #plt.clf()
-        #plt.plot(grid.r[1:ik-1], y[1:ik-1], color="blue", label="outward")
+        plt.clf()
+        plt.plot(grid.r[1:ik-1], y[1:ik-1], color="blue", label="outward")
         
         @printf("ymx = %18.10f\n", ymx)
         println("ncross = ", ncross)
@@ -362,11 +362,11 @@ function debug_ascheq!(
         end
         @printf("y = %18.10f\n", y[ik+1])
 
-        #plt.plot(grid.r[ik+1:nstart], y[ik+1:nstart], color="red", label="inward")
-        #plt.legend()
-        #plt.grid(true)
-        #plt.title("Enl = " * string(Enl))
-        #plt.savefig("IMG_trial_psi_" * string(iterSch) * ".png", dpi=150)
+        plt.plot(grid.r[ik+1:nstart], y[ik+1:nstart], color="red", label="inward")
+        plt.legend()
+        plt.grid(true)
+        plt.title("Enl = " * string(Enl))
+        plt.savefig("IMG_trial_psi_" * string(iterSch) * ".png", dpi=150)
 
 
         # If necessary, improve the trial eigenvalue by the cooley's procedure.
@@ -384,11 +384,11 @@ function debug_ascheq!(
         @printf("y[1] = %18.10f\n", y[1])
         @printf("y[Nrmesh] = %18.10f\n", y[Nrmesh])
 
-        #plt.clf()
-        #plt.plot(grid.r[1:nstart], y[1:nstart], label="trial psi (normalized)")
-        #plt.legend()
-        #plt.grid(true)
-        #plt.savefig("IMG_trial_psi_normalized_" * string(iterSch) * ".png", dpi=150)
+        plt.clf()
+        plt.plot(grid.r[1:nstart], y[1:nstart], label="trial psi (normalized)")
+        plt.legend()
+        plt.grid(true)
+        plt.savefig("IMG_trial_psi_normalized_" * string(iterSch) * ".png", dpi=150)
     
         a0 = 1.0/(2*𝓁 + 3)
         a1 = c1/(𝓁 + 2)
