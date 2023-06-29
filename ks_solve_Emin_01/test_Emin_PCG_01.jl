@@ -117,7 +117,7 @@ function main( ; method="SCF" )
     
 end
 
-@time main(method="Emin")
+#@time main(method="Emin")
 @time main(method="Emin_01")
-@time main(method="SCF_potmix")
+#@time main(method="SCF_potmix")
 
