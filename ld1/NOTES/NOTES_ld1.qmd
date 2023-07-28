@@ -1,0 +1,64 @@
+---
+title: Atomic DFT calculations
+format:
+  revealjs:
+    scrollable: true
+    smaller: true
+    width: 1028
+---
+
+## Logarithmic grid (Gianozzi, mq2 notes)
+
+Introduce new integration variable $x$ and a constant-step grid in
+$x$. Define mapping between $r$ and $x$ via:
+$$
+x=x(r)
+$$
+
+The relation between constant-step grid spacing $\Delta x$ and variable-step
+grid spacing is
+$$
+\Delta x=x'(r)\Delta r
+$$
+
+Using specific choice of mapping:
+$$
+x(r)\equiv\log\left(\frac{Zr}{a_{0}}\right)
+$$
+we obtain:
+$$
+\Delta x=\frac{\Delta r}{r}
+$$
+As $\Delta x$ is taken to be constant, the ratio $\Delta r/r$ remains
+constant on the grid of $r$.
+
+By transforming the equation to new variable $x$, a term with first
+derivative appears, preventing the usage of Numerov's method. The
+problem can be circumvented by transforming the unknown function as
+follows:
+$$
+y(x)=\frac{1}{\sqrt{r}}\chi(r(x))
+$$
+
+By expressing the radial Schroedinger equation in $x$ and $y$, the
+terms containing first-order derivatives disappear and by multiplying
+both sides of the equation by $r^{3/2}$ one finds:
+$$
+\frac{\mathrm{d}^{2}y}{\mathrm{d}x^{2}}+\left[\frac{2m_{e}}{\hbar^{2}}r^{2}\left(E-V(r)\right)-\left(l+\frac{1}{2}\right)^{2}\right]y(x)=0
+$$
+where $V(r)=-Zq_{e}^{2}/r$ for the Coulomb potential. This equation
+no longer presents any singularity for $r=0$
+
+## Type RadialGrid
+
+$$
+r_{i}=\frac{\exp\left[x_{\mathrm{min}}+(i-1)\Delta x\right]}{z_{\mathrm{mesh}}}
+$$
+
+```{fortran}
+r(i) = exp ( xmin + (i-1) dx ) / zmesh i=1,mesh
+```
+
+`r2(i)` is `r(i)` squared, `sqr(i)` is sqaure root of `(r(i))` and
+`rab(i)` is the integration element `r(i)*dx`
+
