@@ -4,49 +4,117 @@ format:
   revealjs:
     scrollable: true
     smaller: true
-    width: 1028
+    width: 1500
 ---
+
+## Schroedinger equation
+
+$$
+H \psi(\mathbf{r}) \equiv \left[
+ -\frac{\hbar^2}{2m} \nabla^2 + V(\mathbf{r})
+\right] \psi(\mathbf{r}) = E \psi(\mathbf{r})
+$$
+
+Polar coordinate system $(r,\theta,\phi)$
+where $\theta$  is the polar angle, $\phi$ is azimuthal angle.
+Polar axis coincides witht eh $z$ Cartesian axis.
+
+$$
+H = -\frac{\hbar^2}{2m} \frac{1}{r^2} \frac{\partial}{\partial r} \left(
+r^2 \frac{\partial}{\partial r}
+\right) + \frac{L^2}{2mr^2} + V(r)
+$$
+
+$$
+\psi(\r,\theta,\phi) = R(r) Y_{lm}(\theta,\phi)
+$$
+
+Radial equation:
+$$
+-\frac{\hbar^2}{2m} \frac{1}{r^2} \frac{\partial}{\partial r}
+\left( r^2 \frac{\partial R_{nl}}{\partial r} \right) +
+\left[ V(r) + \frac{\hbar^2 l(l + 1)}{2mr^2} \right] R_{nl}(r) =
+E_{nl} R_{nl}(r)
+$$
+
+The complete wave function:
+$$
+\psi_{nlm}(r,\theta,\phi) = R_{nl}(r) Y_{lm}(\theta,\phi)
+$$
+The energy does not depend on $m$.
+
+
+## Radial equation
+
+$$
+p(r)\, \mathrm{d}r = \int_{\Omega} \psi^{*}_{nlm}(r,\theta,\phi)
+\psi_{nlm}(r,\theta,\phi)\, \mathrm{d}\mathbf{r}  
+$$
+
+
+$\chi(r) = rR(r)$
 
 ## Logarithmic grid (Gianozzi, mq2 notes)
 
 Introduce new integration variable $x$ and a constant-step grid in
 $x$. Define mapping between $r$ and $x$ via:
 $$
-x=x(r)
+x = x(r)
 $$
 
 The relation between constant-step grid spacing $\Delta x$ and variable-step
 grid spacing is
 $$
-\Delta x=x'(r)\Delta r
+\Delta x = x'(r) \Delta r
 $$
 
 Using specific choice of mapping:
 $$
-x(r)\equiv\log\left(\frac{Zr}{a_{0}}\right)
+x(r) \equiv\ \log\left(\frac{Zr}{a_{0}}\right)
 $$
 we obtain:
 $$
-\Delta x=\frac{\Delta r}{r}
+\Delta x = \frac{\Delta r}{r}
 $$
+
 As $\Delta x$ is taken to be constant, the ratio $\Delta r/r$ remains
 constant on the grid of $r$.
+
+We nee to transform the radial equation in $r$ variable
+$$
+-\frac{\hbar^2}{2m} \frac{\mathrm{d}^2}{\mathrm{d}r^2} \chi(r) + 
+\left[ V(r) + \frac{\hbar^2 l(l + 1)}{2mr^2} - E \right] \chi(r) = 0
+$$
+
+into new variable $x$.
+
+$$
+\frac{\mathrm{d}^2}{\mathrm{d}r^2} \chi(r) = 
+\frac{\mathrm{d}}{\mathrm{d}r} \left( \frac{\mathrm{d}\chi(r)}{\mathrm{d}r} \right) =
+\frac{\mathrm{d}}{\mathrm{d}r} \left( \frac{\mathrm{d}\chi(x)}{\mathrm{d}x}
+\frac{\mathrm{d}x}{\mathrm{d}r} \right)
+$$
+
 
 By transforming the equation to new variable $x$, a term with first
 derivative appears, preventing the usage of Numerov's method. The
 problem can be circumvented by transforming the unknown function as
 follows:
 $$
-y(x)=\frac{1}{\sqrt{r}}\chi(r(x))
+y(x) = \frac{1}{\sqrt{r}} \chi(r(x))
 $$
 
 By expressing the radial Schroedinger equation in $x$ and $y$, the
 terms containing first-order derivatives disappear and by multiplying
 both sides of the equation by $r^{3/2}$ one finds:
 $$
-\frac{\mathrm{d}^{2}y}{\mathrm{d}x^{2}}+\left[\frac{2m_{e}}{\hbar^{2}}r^{2}\left(E-V(r)\right)-\left(l+\frac{1}{2}\right)^{2}\right]y(x)=0
+\frac{\mathrm{d}^{2}y}{\mathrm{d}x^{2}} +
+\left[
+  \frac{2m}{\hbar^{2}} r^{2} \left( E - V(r) \right) -
+  \left( l + \frac{1}{2} \right)^{2}
+\right] y(x) = 0
 $$
-where $V(r)=-Zq_{e}^{2}/r$ for the Coulomb potential. This equation
+where $V(r) = -Zq_{e}^{2}/r$ for the Coulomb potential. This equation
 no longer presents any singularity for $r=0$
 
 ## Type RadialGrid
@@ -55,8 +123,8 @@ $$
 r_{i}=\frac{\exp\left[x_{\mathrm{min}}+(i-1)\Delta x\right]}{z_{\mathrm{mesh}}}
 $$
 
-```{fortran}
-r(i) = exp ( xmin + (i-1) dx ) / zmesh i=1,mesh
+```fortran
+r(i) = exp ( xmin + (i-1) dx ) / zmesh ! for i=1,mesh
 ```
 
 `r2(i)` is `r(i)` squared, `sqr(i)` is sqaure root of `(r(i))` and
