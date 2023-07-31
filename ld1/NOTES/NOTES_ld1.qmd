@@ -7,6 +7,81 @@ format:
     width: 1500
 ---
 
+## Numerov's method
+
+Consider 2nd order differential equations of the general form:
+
+$$
+\frac{\mathrm{d}^2 y}{\mathrm{d}x^2} = -g(x) y(x) + s(x)
+$$
+
+where $s(x)$ dan $g(x)$ are known functions.
+
+The Schroedinger equation has this form with:
+$$
+g(x) = \frac{2m}{\hbar^2}\left( E - V(x) \right)
+$$
+and $s(x) = 0$.
+
+
+Poisson equation:
+
+$$
+\frac{\mathrm{d}^2\phi}{\mathrm{d}x^2} = -4\pi\rho(x)
+$$
+
+also has this form, with $g(x) = 0$ and $s(x) = -4\pi\rho(x)$
+
+## Derivation
+
+$$
+y_{n-1} = y_{n} - y_{n}^{(1)} + \frac{1}{2} y_{n}^{(2)} (\Delta x)^2 -
+\frac{1}{6} y_{n}^{(3)} (\Delta x)^3 + \frac{1}{24}y_{n}^{(4)} (\Delta x)^4 -
+\frac{1}{120} y_{n}^{(5)} (\Delta x)^5 + \mathcal{O}[(\Delta x)^6]
+$$
+
+$$
+y_{n+1} = y_{n} + y_{n}^{(1)} + \frac{1}{2} y_{n}^{(2)} (\Delta x)^2 +
+\frac{1}{6} y_{n}^{(3)} (\Delta x)^3 + \frac{1}{24}y_{n}^{(4)} (\Delta x)^4 +
+\frac{1}{120} y_{n}^{(5)} (\Delta x)^5 + \mathcal{O}[(\Delta x)^6]
+$$
+
+
+Sum of these two equations:
+$$
+y_{n+1} + y_{n-1} = 2y_{n} + y_{n}^{(2)}(\Delta x)^2 + \frac{1}{12}y_{n}^{(4)}(\Delta x)^4 +
+\mathcal{O}[(\Delta x)^6]
+$$
+
+From equation:
+$$
+y_{n}^{(2)} = y''_{n} = -g_{n} y_{n} + s_{n} \equiv z_{n}
+$$
+Taylor expansion for $z_{n}$:
+$$
+z_{n+1} + z_{n-1} = 2z_{n} + z''_{n} (\Delta x)^2 + \mathcal{O}[(\Delta x)^4]
+$$
+Rearranging:
+$$
+y''''_{n} \equiv z''_{n} = \frac{z_{n+1} + z_{n-1} - 2z_{n}}{(\Delta x)^2} + \mathcal{O}[(\Delta x)^4]
+$$
+
+Inserting back:
+$$
+y_{n+1} = 2y_{n} - y_{n-1} + (-g_n y_n + s_n)\Delta x^2 +
+\frac{1}{12}\left(
+-g_{n+1} y_{n+1} + s_{n+1} - g_{n-1}y_{n-1} + s_{n-1} + 2g_{n} y_{n} - 2s_{n}
+\right) \Delta x^2 + \mathcal{O}[\Delta x^6]
+$$
+
+We obtain Numerov's formula:
+$$
+y_{n+1} \left[ 1 + g_{n+1} \frac{\Delta x^2}{12} \right] =
+2y_{n}\left[ 1 - 5g_{n} \frac{\Delta x^2}{12} \right]
+$$
+
+
+
 ## Schroedinger equation
 
 $$
