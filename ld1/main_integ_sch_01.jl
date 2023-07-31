@@ -87,6 +87,8 @@ function integ_numerov_sch_outward!(
     for i in 1:Nmesh
         f[i] = 1 + 2*( E - V[i] )*Δx^2/12
     end
+    # Probably it is better to precompute this and pass the array
+    # to the integ_numerov
 
     # Two possible starting points
     # Is this important (?)
@@ -136,7 +138,7 @@ function main()
     #title!("Harmonic Potential")
     #savefig("IMG_pot.png")
 
-    E = 0.1
+    E = 3.5
     psi = zeros(Float64, Npoints)
     icl = find_icl(E, Vpot)
     println("icl = ", icl)
