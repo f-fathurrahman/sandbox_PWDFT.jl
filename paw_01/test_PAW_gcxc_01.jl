@@ -116,6 +116,13 @@ function main(;filename=nothing)
 
         println("sum sx = ", sum(sx))
         println("sum sc = ", sum(sc))
+        #
+        println("sum v1x = ", sum(v1x))
+        println("sum v1c = ", sum(v1c))
+        #
+        println("sum v2x = ", sum(v2x))
+        println("sum v2c = ", sum(v2c))
+
 
         # radial stuffs
         for ir in 1:Nrmesh
@@ -130,6 +137,23 @@ function main(;filename=nothing)
     end
 
     println("energy for all ix = ", energy)
+
+
+
+    lmax_loc = Ham.pspots[isp].lmax_rho + 1
+    gc_lm = zeros(Float64, Nrmesh, l2, Nspin)
+    # convert the first part of the GC correction back to spherical harmonics
+    PAW_rad2lm!( ia, atoms, pspotNL, lmax_loc, gc_rad, gc_lm)
+
+    println("sum wwylm = ", sum(spheres[isp].wwylm))
+    println("lmax_loc = ", lmax_loc)
+    println("sum gc_rad = ", sum(gc_rad))
+    println("sum abs gc_lm = ", sum(abs.(gc_lm)))
+    println("size gc_lm = ", size(gc_lm))
+    #
+    println("gc_rad[1,1,1] = ", gc_rad[1,1,1])
+    println("gc_lm[1,1,1] = ", gc_lm[1,1,1])
+
 
 end
 
