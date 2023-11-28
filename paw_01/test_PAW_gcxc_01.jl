@@ -12,6 +12,34 @@ const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)), "..")
 include(joinpath(DIR_PWDFT, "utilities", "PWSCFInput.jl"))
 include(joinpath(DIR_PWDFT, "utilities", "init_Ham_from_pwinput.jl"))
 
+function PAW_rad2lm3!(
+    ia,
+    atoms, pspotNL,
+    lmax_loc::Int64,
+    F_rad, F_lm
+)
+    # 2nd dim is direction: (x,y,z) or (r,ϕ,θ)
+
+    Nspin = size(F_rad, 4)
+    Nrmesh = size(F_rad, 1)
+    isp = atoms.atm2species[ia]
+    sphere = pspotNL.paw.spheres[isp]
+
+    for ispin in 1:Nspin, lm in 1:lmax_loc^2
+        @views F_lm[:,:,lm,ispin] .= 0.0
+        for ix in 1:sphere.nx, j in 1:Nrmesh
+            F_lm[j,1,lm,ispin] += F_rad[j,1,ix,ispin] * sphere.wwylm[ix,lm]
+            F_lm[j,2,lm,ispin] += F_rad[j,2,ix,ispin] * sphere.wwylm[ix,lm]
+            F_lm[j,3,lm,ispin] += F_rad[j,3,ix,ispin] * sphere.wwylm[ix,lm]
+        end
+    end
+
+    return
+end
+
+
+
+
 function main(;filename=nothing)
     Ham, pwinput = init_Ham_from_pwinput(filename=filename)
 
@@ -87,10 +115,10 @@ function main(;filename=nothing)
             rho_lm, rho_rad, rho_core,
             grad2, grad
         )
-        @printf("sum grad2 = %18.10e\n", sum(grad2))
-        @printf("sum grad r     = %18.10e\n", sum(grad[:,1,:]))
-        @printf("sum grad phi   = %18.10e\n", sum(grad[:,2,:]))
-        @printf("sum grad theta = %18.10e\n", sum(grad[:,3,:]))
+        #@printf("sum grad2 = %18.10e\n", sum(grad2))
+        #@printf("sum grad r     = %18.10e\n", sum(grad[:,1,:]))
+        #@printf("sum grad phi   = %18.10e\n", sum(grad[:,2,:]))
+        #@printf("sum grad theta = %18.10e\n", sum(grad[:,3,:]))
 
         for ir in 1:Nrmesh
             arho[ir,1] = abs(rho_rad[ir,1]/r2[ir] + rho_core[ir])
@@ -98,8 +126,8 @@ function main(;filename=nothing)
             grhoe2[ir] = grad[ir,1]^2 + grad[ir,2]^2 + grad[ir,3]^2
         end
 
-        println("sum arho = ", sum(arho))
-        println("sum gradx = ", sum(gradx))
+        #println("sum arho = ", sum(arho))
+        #println("sum gradx = ", sum(gradx))
 
         # sx, sc, v1x, v2x, v1c, v2c
         for ir in 1:Nrmesh
@@ -145,15 +173,68 @@ function main(;filename=nothing)
     # convert the first part of the GC correction back to spherical harmonics
     PAW_rad2lm!( ia, atoms, pspotNL, lmax_loc, gc_rad, gc_lm)
 
-    println("sum wwylm = ", sum(spheres[isp].wwylm))
-    println("lmax_loc = ", lmax_loc)
+    #println("sum wwylm = ", sum(spheres[isp].wwylm))
+    #println("lmax_loc = ", lmax_loc)
     println("sum gc_rad = ", sum(gc_rad))
     println("sum abs gc_lm = ", sum(abs.(gc_lm)))
-    println("size gc_lm = ", size(gc_lm))
-    #
-    println("gc_rad[1,1,1] = ", gc_rad[1,1,1])
-    println("gc_lm[1,1,1] = ", gc_lm[1,1,1])
+    #println("size gc_lm = ", size(gc_lm))
+    ##
+    #println("gc_rad[1,1,1] = ", gc_rad[1,1,1])
+    #println("gc_lm[1,1,1] = ", gc_lm[1,1,1])
 
+    # trick to get faster convergence w.r.t to θ
+    for ix in 1:nx
+        @views h_rad[:,3,ix,1] = h_rad[:,3,ix,1]/ spheres[isp].sin_th[ix]
+    end
+
+    # We need the gradient of H to calculate the last part of the exchange
+    # and correlation potential. First we have to convert H to its Y_lm expansion
+    #PAW_rad2lm!( i, h_rad, h_lm, i%l+rad(i%t)%ladd, nspin_gga )
+    lmax_loc_add = lmax_loc + spheres[isp].ladd
+    h_lm = zeros(Float64, Nrmesh, 3, lmax_loc_add^2, Nspin)
+    
+    @views PAW_rad2lm!( ia, atoms, pspotNL, lmax_loc_add, h_rad[:,1,:,:], h_lm[:,1,:,:])
+    @views PAW_rad2lm!( ia, atoms, pspotNL, lmax_loc_add, h_rad[:,2,:,:], h_lm[:,2,:,:])
+    @views PAW_rad2lm!( ia, atoms, pspotNL, lmax_loc_add, h_rad[:,3,:,:], h_lm[:,3,:,:])
+
+    #PAW_rad2lm3!(ia, atoms, pspotNL, lmax_loc_add, h_rad, h_lm)
+
+    println("lmax_loc = ", lmax_loc)
+    println("ladd = ", spheres[isp].ladd)
+    println("lmax_loc_add = ", lmax_loc_add)
+    
+    println("sum abs h_rad = ", sum(abs.(h_rad)))
+    println("sum abs h_lm = ", sum(abs.(h_lm)))
+
+    println("h_lm 1 = ", h_lm[1,1,1,1])
+    println("h_lm 2 = ", h_lm[1,2,1,1])
+    println("h_lm 3 = ", h_lm[1,3,1,1])
+
+    println("max abs h_rad 1 = ", maximum(abs.(h_rad[:,1,:,:])))
+    println("max abs h_rad 2 = ", maximum(abs.(h_rad[:,2,:,:])))
+    println("max abs h_rad 3 = ", maximum(abs.(h_rad[:,3,:,:])))
+    println()
+    println("max abs h_lm 1 = ", maximum(abs.(h_lm[:,1,:,:])))
+    println("max abs h_lm 2 = ", maximum(abs.(h_lm[:,2,:,:])))
+    println("max abs h_lm 3 = ", maximum(abs.(h_lm[:,3,:,:])))
+
+    println("sum sin_th = ", sum(spheres[isp].sin_th))
+
+    div_h = zeros(Float64, Nrmesh, lmax_loc^2, Nspin)
+    PAW_divergence!(
+        ia, atoms, pspots, pspotNL,
+        h_lm, div_h, lmax_loc_add, lmax_loc
+    )
+    println("sum div_h = ", sum(div_h))
+
+    vout_lm = zeros(Float64, Nrmesh, l2, Nspin)
+    # Finally sum it back into v_xc
+    for ispin in 1:Nspin
+        for lm in 1:l2
+            @views vout_lm[1:Nrmesh,lm,ispin] .+= gc_lm[1:Nrmesh,lm,ispin] .- div_h[1:Nrmesh,lm,ispin]
+        end
+    end
+    println("sum abs vout_lm = ", sum(abs.(vout_lm)))
 
 end
 
