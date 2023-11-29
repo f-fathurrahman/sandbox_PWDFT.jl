@@ -130,7 +130,9 @@ function main(;filename=nothing)
     sx = zeros(Float64, Nrmesh)
     sc = zeros(Float64, Nrmesh)
 
+    # for energy, it will be summed over for all nx
     e_rad = zeros(Float64, Nrmesh)
+    # for potential, will be processed later, depend on nx
     gc_rad = zeros(Float64, Nrmesh, nx, Nspin)
     h_rad = zeros(Float64, Nrmesh, 3, nx, Nspin)
 
