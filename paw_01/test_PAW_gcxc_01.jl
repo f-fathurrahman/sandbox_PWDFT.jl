@@ -12,6 +12,66 @@ const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)), "..")
 include(joinpath(DIR_PWDFT, "utilities", "PWSCFInput.jl"))
 include(joinpath(DIR_PWDFT, "utilities", "init_Ham_from_pwinput.jl"))
 
+function calc_epsxc_Vxc_PBE!(
+    Rhoe::AbstractVector{Float64},
+    gRhoe2::AbstractVector{Float64},
+    epsxc::AbstractVector{Float64},
+    Vxc::AbstractVector{Float64}
+)
+
+    xc_calc = Ham.xc_calc
+
+    Npoints = size(Rhoe, 1)
+    Nspin = 1
+
+    eps_x = zeros(Float64,Npoints)
+    eps_c = zeros(Float64,Npoints)
+
+    V_x = zeros(Float64,Npoints)
+    V_c = zeros(Float64,Npoints)
+ 
+    Vg_x = zeros(Float64,Npoints)
+    Vg_c = zeros(Float64,Npoints)
+ 
+    ptr = Libxc_xc_func_alloc()
+    # exchange part
+    Libxc_xc_func_init(ptr, 101, Nspin)
+    Libxc_xc_gga_exc_vxc!(ptr, Npoints, Rhoe, gRhoe2, eps_x, V_x, Vg_x)
+    Libxc_xc_func_end(ptr)
+
+    #
+    # correlation part
+    Libxc_xc_func_init(ptr, 130, Nspin)
+    Libxc_xc_gga_exc_vxc!(ptr, Npoints, Rhoe, gRhoe2, eps_c, V_c, Vg_c)
+    Libxc_xc_func_end(ptr)
+
+    #
+    Libxc_xc_func_free(ptr)
+
+    @views epsxc[:] .= eps_x[:] .+ eps_c[:]
+
+    @views Vxc[:] .= V_x[:] .+ V_c[:] # update V_xc (the output)
+
+    # gradient correction
+    Vg_xc = Vg_x + Vg_c
+    hx = zeros(ComplexF64, pw.Ns)
+    hy = zeros(ComplexF64, pw.Ns)
+    hz = zeros(ComplexF64, pw.Ns)
+    for ip in 1:Npoints # using linear indexing
+        hx[ip] = Vg_xc[ip] * gRhoe[1,ip]
+        hy[ip] = Vg_xc[ip] * gRhoe[2,ip]
+        hz[ip] = Vg_xc[ip] * gRhoe[3,ip]
+    end
+    # div ( vgrho * gRhoe )
+    divh = op_nabla_dot( pw, hx, hy, hz )
+    #
+    for ip in 1:Npoints
+        Vxc[ip] = Vxc[ip] - 2.0*divh[ip]
+    end
+
+    return
+end
+
 
 function main(;filename=nothing)
     Ham, pwinput = init_Ham_from_pwinput(filename=filename)
@@ -58,7 +118,6 @@ function main(;filename=nothing)
     r2 = r.^2
 
     arho = zeros(Float64, Nrmesh) # 2nd dim removed 
-    gradx = zeros(Float64, 3, Nrmesh) # 3rd dim removed
     grhoe2 = zeros(Float64, Nrmesh)
 
 
@@ -95,12 +154,10 @@ function main(;filename=nothing)
 
         for ir in 1:Nrmesh
             arho[ir,1] = abs(rho_rad[ir,1]/r2[ir] + rho_core[ir])
-            @views gradx[1:3,ir] .= grad[ir,1:3] # transposed?
             grhoe2[ir] = grad[ir,1]^2 + grad[ir,2]^2 + grad[ir,3]^2
         end
 
         #println("sum arho = ", sum(arho))
-        #println("sum gradx = ", sum(gradx))
 
         # sx, sc, v1x, v2x, v1c, v2c
         for ir in 1:Nrmesh
