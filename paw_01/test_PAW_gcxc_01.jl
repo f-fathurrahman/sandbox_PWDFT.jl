@@ -12,6 +12,7 @@ const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)), "..")
 include(joinpath(DIR_PWDFT, "utilities", "PWSCFInput.jl"))
 include(joinpath(DIR_PWDFT, "utilities", "init_Ham_from_pwinput.jl"))
 
+#=
 function calc_epsxc_Vxc_PBE!(
     Rhoe::AbstractVector{Float64},
     gRhoe2::AbstractVector{Float64},
@@ -71,7 +72,23 @@ function calc_epsxc_Vxc_PBE!(
 
     return
 end
+=#
 
+function _driver_gga!(arho, grhoe2, sxc, v1xc, v2xc)
+    Nrmesh = size(arho, 1)
+    for ir in 1:Nrmesh
+        eex, vvx = PWDFT.XC_x_slater( arho[ir,1] )
+        eec, vvc = PWDFT.XC_c_pw( arho[ir,1] )
+        #
+        sx, v1x, v2x = PWDFT.XC_x_pbe( arho[ir,1], grhoe2[ir] )
+        sc, v1c, v2c = PWDFT.XC_c_pbe( arho[ir,1], grhoe2[ir] )
+        #
+        sxc[ir] = sx + sc + (eex + eec)*arho[ir,1]
+        v1xc[ir,1] = v1x + v1c + (vvx + vvc)
+        v2xc[ir,1] = v2x + v2c
+    end
+    return
+end
 
 function main(;filename=nothing)
     Ham, pwinput = init_Ham_from_pwinput(filename=filename)
@@ -122,13 +139,10 @@ function main(;filename=nothing)
 
 
     # These arrays should depend on spin
-    v1x = zeros(Float64, Nrmesh, Nspin)
-    v2x = zeros(Float64, Nrmesh, Nspin)
-    v1c = zeros(Float64, Nrmesh, Nspin)
-    v2c = zeros(Float64, Nrmesh, Nspin) 
+    v1xc = zeros(Float64, Nrmesh, Nspin)
+    v2xc = zeros(Float64, Nrmesh, Nspin)
     # These arrays don't depend on spin
-    sx = zeros(Float64, Nrmesh)
-    sc = zeros(Float64, Nrmesh)
+    sxc = zeros(Float64, Nrmesh)
 
     # for energy, it will be summed over for all nx
     e_rad = zeros(Float64, Nrmesh)
@@ -149,46 +163,19 @@ function main(;filename=nothing)
             rho_lm, rho_rad, rho_core,
             grad2, grad
         )
-        #@printf("sum grad2 = %18.10e\n", sum(grad2))
-        #@printf("sum grad r     = %18.10e\n", sum(grad[:,1,:]))
-        #@printf("sum grad phi   = %18.10e\n", sum(grad[:,2,:]))
-        #@printf("sum grad theta = %18.10e\n", sum(grad[:,3,:]))
 
         for ir in 1:Nrmesh
             arho[ir,1] = abs(rho_rad[ir,1]/r2[ir] + rho_core[ir])
             grhoe2[ir] = grad[ir,1]^2 + grad[ir,2]^2 + grad[ir,3]^2
         end
 
-        #println("sum arho = ", sum(arho))
-
-        # sx, sc, v1x, v2x, v1c, v2c
-        for ir in 1:Nrmesh
-            sx[ir], v1x[ir,1], v2x[ir,1] = PWDFT.XC_x_pbe( arho[ir,1], grhoe2[ir] )
-            sc[ir], v1c[ir,1], v2c[ir,1] = PWDFT.XC_c_pbe( arho[ir,1], grhoe2[ir] )
-            #println("$ir $(arho[ir]) $(sx[ir])")
-            # # This is needed in case of QE using Libxc
-            # eex, vvx = PWDFT.XC_x_slater( arho[ir,1] )
-            # eec, vvc = PWDFT.XC_c_pw( arho[ir,1] )
-            # sx[ir] += eex*arho
-            # sc[ir] += eec*arho
-            # # Not yet for vvx and vvc
-        end
-
-        println("sum sx = ", sum(sx))
-        println("sum sc = ", sum(sc))
-        #
-        println("sum v1x = ", sum(v1x))
-        println("sum v1c = ", sum(v1c))
-        #
-        println("sum v2x = ", sum(v2x))
-        println("sum v2c = ", sum(v2c))
-
+        _driver_gga!(arho, grhoe2, sxc, v1xc, v2xc)
 
         # radial stuffs
         for ir in 1:Nrmesh
-            e_rad[ir] = (sx[ir] + sc[ir]) * r2[ir]
-            gc_rad[ir,ix,1]  = ( v1x[ir,1] + v1c[ir,1] )
-            @views h_rad[ir,1:3,ix,1] = ( v2x[ir,1] + v2c[ir,1] )*grad[ir,1:3,1]*r2[ir]
+            e_rad[ir] = sxc[ir] * r2[ir]
+            gc_rad[ir,ix,1]  = v1xc[ir,1]
+            @views h_rad[ir,1:3,ix,1] = v2xc[ir,1]*grad[ir,1:3,1]*r2[ir]
         end
     
         # integrate to obtain the energy
@@ -204,15 +191,6 @@ function main(;filename=nothing)
     gc_lm = zeros(Float64, Nrmesh, l2, Nspin)
     # convert the first part of the GC correction back to spherical harmonics
     PAW_rad2lm!( ia, atoms, pspotNL, lmax_loc, gc_rad, gc_lm)
-
-    #println("sum wwylm = ", sum(spheres[isp].wwylm))
-    #println("lmax_loc = ", lmax_loc)
-    println("sum gc_rad = ", sum(gc_rad))
-    println("sum abs gc_lm = ", sum(abs.(gc_lm)))
-    #println("size gc_lm = ", size(gc_lm))
-    ##
-    #println("gc_rad[1,1,1] = ", gc_rad[1,1,1])
-    #println("gc_lm[1,1,1] = ", gc_lm[1,1,1])
 
     # trick to get faster convergence w.r.t to θ
     for ix in 1:nx
