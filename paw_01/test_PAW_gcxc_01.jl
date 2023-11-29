@@ -86,39 +86,26 @@ function _driver_xc_PBE!(
     return
 end
 
-function main(;filename=nothing)
-    Ham, pwinput = init_Ham_from_pwinput(filename=filename)
 
-    Nspecies = Ham.atoms.Nspecies
-    for isp in 1:Nspecies
-        println(Ham.pspots[isp])
-    end
+# Use the density produced by sum_rad_rho to compute xc potential
+# and energy, as xc functional is not diagonal on angular momentum
+# numerical integration is performed.
+function PAW_xc_potential_GGA!(
+    AE::Bool, ia,
+    atoms, pspots, pspotNL,
+    xc_calc,
+    rho_lm, v_lm
+)
 
-    becsum = PAW_atomic_becsum(Ham.atoms, Ham.pspots, Ham.pspotNL, Nspin=1)
-    
-    println("sum becsum before PAW_symmetrize: ", sum(becsum))
-    PAW_symmetrize!(Ham, becsum)
-    println("sum becsum after PAW_symmetrize: ", sum(becsum))
-
-    Nspin = 1
-    ia = 1 # atom index
-    isp = Ham.atoms.atm2species[ia] # species index
-    Nrmesh = Ham.pspots[isp].Nr
-    l2 = (Ham.pspots[isp].lmax_rho + 1)^2
-
-    # Calculate rho_lm
-    rho_lm = zeros(Float64, Nrmesh, l2, Nspin)
-    AE = true
-    PAW_rho_lm!(AE, ia, Ham.atoms, Ham.pspots, Ham.pspotNL, becsum, rho_lm)
-    println("sum rho_lm = ", sum(rho_lm))
+    isp = atoms.atm2species[ia] # species index
+    Nrmesh = pspots[isp].Nr
+    l2 = (pspots[isp].lmax_rho + 1)^2
+    Nspin = size(rho_lm, 3)
 
     rho_rad = zeros(Float64, Nrmesh, Nspin)
     grad = zeros(Float64, Nrmesh, 3, Nspin) # gradient (r, ϕ, θ)
     grad2 = zeros(Float64, Nrmesh, Nspin) # square modulus of gradient
 
-    atoms = Ham.atoms
-    pspots = Ham.pspots
-    pspotNL = Ham.pspotNL
     nx = pspotNL.paw.spheres[isp].nx
 
     if AE
@@ -127,7 +114,7 @@ function main(;filename=nothing)
         rho_core = pspots[isp].rho_atc
     end
 
-    r = Ham.pspots[isp].r
+    r = pspots[isp].r
     r2 = r.^2
 
     arho = zeros(Float64, Nrmesh) # 2nd dim removed 
@@ -149,9 +136,6 @@ function main(;filename=nothing)
     energy = 0.0 # This should be accumulated for all ix
     spheres = pspotNL.paw.spheres
 
-    #ix = 1
-    #@assert ix <= nx
-
     for ix in 1:nx
 
         PAW_lm2rad!(ia, ix, atoms, pspots, pspotNL, rho_lm, rho_rad)
@@ -165,9 +149,7 @@ function main(;filename=nothing)
             grhoe2[ir] = grad[ir,1]^2 + grad[ir,2]^2 + grad[ir,3]^2
         end
 
-        # Use internal XCCalculator
-        _driver_xc_PBE!(XCCalculator(), arho, grhoe2, sxc, v1xc, v2xc)
-        #_driver_xc_PBE!(LibxcXCCalculator(), arho, grhoe2, sxc, v1xc, v2xc)
+        _driver_xc_PBE!(xc_calc, arho, grhoe2, sxc, v1xc, v2xc)
 
         # radial stuffs
         # NOTE: We are using Libxc convention: e_rad is multiplied by arho and
@@ -184,10 +166,7 @@ function main(;filename=nothing)
 
     end
 
-    println("energy for all ix = ", energy)
-
-
-    lmax_loc = Ham.pspots[isp].lmax_rho + 1
+    lmax_loc = pspots[isp].lmax_rho + 1
     gc_lm = zeros(Float64, Nrmesh, l2, Nspin)
     # convert the first part of the GC correction back to spherical harmonics
     PAW_rad2lm!( ia, atoms, pspotNL, lmax_loc, gc_rad, gc_lm)
@@ -203,49 +182,72 @@ function main(;filename=nothing)
     lmax_loc_add = lmax_loc + spheres[isp].ladd
     h_lm = zeros(Float64, Nrmesh, 3, lmax_loc_add^2, Nspin)
     
-    @views PAW_rad2lm!( ia, atoms, pspotNL, lmax_loc_add, h_rad[:,1,:,:], h_lm[:,1,:,:])
-    @views PAW_rad2lm!( ia, atoms, pspotNL, lmax_loc_add, h_rad[:,2,:,:], h_lm[:,2,:,:])
-    @views PAW_rad2lm!( ia, atoms, pspotNL, lmax_loc_add, h_rad[:,3,:,:], h_lm[:,3,:,:])
+    #@views PAW_rad2lm!( ia, atoms, pspotNL, lmax_loc_add, h_rad[:,1,:,:], h_lm[:,1,:,:])
+    #@views PAW_rad2lm!( ia, atoms, pspotNL, lmax_loc_add, h_rad[:,2,:,:], h_lm[:,2,:,:])
+    #@views PAW_rad2lm!( ia, atoms, pspotNL, lmax_loc_add, h_rad[:,3,:,:], h_lm[:,3,:,:])
 
-    #PAW_rad2lm3!(ia, atoms, pspotNL, lmax_loc_add, h_rad, h_lm)
-
-    println("lmax_loc = ", lmax_loc)
-    println("ladd = ", spheres[isp].ladd)
-    println("lmax_loc_add = ", lmax_loc_add)
-    
-    println("sum abs h_rad = ", sum(abs.(h_rad)))
-    println("sum abs h_lm = ", sum(abs.(h_lm)))
-
-    println("h_lm 1 = ", h_lm[1,1,1,1])
-    println("h_lm 2 = ", h_lm[1,2,1,1])
-    println("h_lm 3 = ", h_lm[1,3,1,1])
-
-    println("max abs h_rad 1 = ", maximum(abs.(h_rad[:,1,:,:])))
-    println("max abs h_rad 2 = ", maximum(abs.(h_rad[:,2,:,:])))
-    println("max abs h_rad 3 = ", maximum(abs.(h_rad[:,3,:,:])))
-    println()
-    println("max abs h_lm 1 = ", maximum(abs.(h_lm[:,1,:,:])))
-    println("max abs h_lm 2 = ", maximum(abs.(h_lm[:,2,:,:])))
-    println("max abs h_lm 3 = ", maximum(abs.(h_lm[:,3,:,:])))
-
-    println("sum sin_th = ", sum(spheres[isp].sin_th))
+    PAW_rad2lm3!(ia, atoms, pspotNL, lmax_loc_add, h_rad, h_lm)
 
     div_h = zeros(Float64, Nrmesh, lmax_loc^2, Nspin)
     PAW_divergence!(
         ia, atoms, pspots, pspotNL,
         h_lm, div_h, lmax_loc_add, lmax_loc
     )
-    println("sum div_h = ", sum(div_h))
 
-    vout_lm = zeros(Float64, Nrmesh, l2, Nspin)
     # Finally sum it back into v_xc
     # Factor 2 of div_h because we are using Libxc convention
     for ispin in 1:Nspin
         for lm in 1:l2
-            @views vout_lm[1:Nrmesh,lm,ispin] .+= gc_lm[1:Nrmesh,lm,ispin] .- 2*div_h[1:Nrmesh,lm,ispin]
+            @views v_lm[1:Nrmesh,lm,ispin] .+= gc_lm[1:Nrmesh,lm,ispin] .- 2*div_h[1:Nrmesh,lm,ispin]
         end
     end
-    println("sum abs vout_lm = ", sum(abs.(vout_lm)))
+
+    # Energy is scalar, it is returned
+    return energy
+
+end
+
+function main(;filename=nothing)
+    Ham, pwinput = init_Ham_from_pwinput(filename=filename)
+
+    Nspecies = Ham.atoms.Nspecies
+    for isp in 1:Nspecies
+        println(Ham.pspots[isp])
+    end
+
+    becsum = PAW_atomic_becsum(Ham.atoms, Ham.pspots, Ham.pspotNL, Nspin=1)
+    
+    println("sum becsum before PAW_symmetrize: ", sum(becsum))
+    PAW_symmetrize!(Ham, becsum)
+    println("sum becsum after PAW_symmetrize: ", sum(becsum))
+
+    atoms = Ham.atoms
+    pspots = Ham.pspots
+    pspotNL = Ham.pspotNL
+    AE = true
+    ia = 1
+    isp = atoms.atm2species[ia]
+    Nrmesh = pspots[isp].Nr
+    l2 = (pspots[isp].lmax_rho + 1)^2
+    Nspin = 1
+    xc_calc = Ham.xc_calc
+
+    # Calculate rho_lm
+    rho_lm = zeros(Float64, Nrmesh, l2, Nspin)
+    PAW_rho_lm!(AE, ia, atoms, pspots, pspotNL, becsum, rho_lm)
+    println("sum rho_lm = ", sum(rho_lm))
+    v_lm = zeros(Float64, Nrmesh, l2, Nspin)
+
+    energy = PAW_xc_potential_GGA!( AE, ia,
+        atoms, pspots, pspotNL, xc_calc,
+        rho_lm, v_lm
+    )
+
+    println()
+    println("energy for all ix = ", energy)
+    println("sum abs vout_lm = ", sum(abs.(v_lm)))
+
+
 
 end
 
