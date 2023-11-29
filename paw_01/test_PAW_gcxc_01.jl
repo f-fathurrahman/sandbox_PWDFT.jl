@@ -12,16 +12,15 @@ const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)), "..")
 include(joinpath(DIR_PWDFT, "utilities", "PWSCFInput.jl"))
 include(joinpath(DIR_PWDFT, "utilities", "init_Ham_from_pwinput.jl"))
 
-#=
-function calc_epsxc_Vxc_PBE!(
-    Rhoe::AbstractVector{Float64},
-    gRhoe2::AbstractVector{Float64},
-    epsxc::AbstractVector{Float64},
-    Vxc::AbstractVector{Float64}
+
+function _driver_xc_PBE!(
+    xc_calc::LibxcXCCalculator,
+    Rhoe,
+    gRhoe2,
+    epsxc,
+    V_xc,
+    Vg_xc
 )
-
-    xc_calc = Ham.xc_calc
-
     Npoints = size(Rhoe, 1)
     Nspin = 1
 
@@ -34,47 +33,38 @@ function calc_epsxc_Vxc_PBE!(
     Vg_x = zeros(Float64,Npoints)
     Vg_c = zeros(Float64,Npoints)
  
-    ptr = Libxc_xc_func_alloc()
+    ptr = PWDFT.Libxc_xc_func_alloc()
     # exchange part
-    Libxc_xc_func_init(ptr, 101, Nspin)
-    Libxc_xc_gga_exc_vxc!(ptr, Npoints, Rhoe, gRhoe2, eps_x, V_x, Vg_x)
-    Libxc_xc_func_end(ptr)
+    PWDFT.Libxc_xc_func_init(ptr, 101, Nspin)
+    PWDFT.Libxc_xc_func_set_dens_threshold(ptr, 1e-10)
+    PWDFT.Libxc_xc_gga_exc_vxc!(ptr, Npoints, Rhoe, gRhoe2, eps_x, V_x, Vg_x)
+    PWDFT.Libxc_xc_func_end(ptr)
 
     #
     # correlation part
-    Libxc_xc_func_init(ptr, 130, Nspin)
-    Libxc_xc_gga_exc_vxc!(ptr, Npoints, Rhoe, gRhoe2, eps_c, V_c, Vg_c)
-    Libxc_xc_func_end(ptr)
+    PWDFT.Libxc_xc_func_init(ptr, 130, Nspin)
+    PWDFT.Libxc_xc_func_set_dens_threshold(ptr, 1e-10)
+    PWDFT.Libxc_xc_gga_exc_vxc!(ptr, Npoints, Rhoe, gRhoe2, eps_c, V_c, Vg_c)
+    PWDFT.Libxc_xc_func_end(ptr)
 
     #
-    Libxc_xc_func_free(ptr)
+    PWDFT.Libxc_xc_func_free(ptr)
 
+    # update the outputs:
     @views epsxc[:] .= eps_x[:] .+ eps_c[:]
+    @views V_xc[:,1] .= V_x[:] .+ V_c[:]
+    @views Vg_xc[:,1] = Vg_x[:] + Vg_c[:]  # for gradient correction
 
-    @views Vxc[:] .= V_x[:] .+ V_c[:] # update V_xc (the output)
-
-    # gradient correction
-    Vg_xc = Vg_x + Vg_c
-    hx = zeros(ComplexF64, pw.Ns)
-    hy = zeros(ComplexF64, pw.Ns)
-    hz = zeros(ComplexF64, pw.Ns)
-    for ip in 1:Npoints # using linear indexing
-        hx[ip] = Vg_xc[ip] * gRhoe[1,ip]
-        hy[ip] = Vg_xc[ip] * gRhoe[2,ip]
-        hz[ip] = Vg_xc[ip] * gRhoe[3,ip]
-    end
-    # div ( vgrho * gRhoe )
-    divh = op_nabla_dot( pw, hx, hy, hz )
-    #
-    for ip in 1:Npoints
-        Vxc[ip] = Vxc[ip] - 2.0*divh[ip]
-    end
-
+    # V_xc need to be corrected later using Vg_xc
     return
 end
-=#
 
-function _driver_gga!(arho, grhoe2, sxc, v1xc, v2xc)
+
+function _driver_xc_PBE!(
+    xc_calc::XCCalculator,
+    arho, grhoe2, sxc, v1xc, v2xc
+)
+    SMALL1 = 1e-6
     Nrmesh = size(arho, 1)
     for ir in 1:Nrmesh
         eex, vvx = PWDFT.XC_x_slater( arho[ir,1] )
@@ -83,9 +73,15 @@ function _driver_gga!(arho, grhoe2, sxc, v1xc, v2xc)
         sx, v1x, v2x = PWDFT.XC_x_pbe( arho[ir,1], grhoe2[ir] )
         sc, v1c, v2c = PWDFT.XC_c_pbe( arho[ir,1], grhoe2[ir] )
         #
-        sxc[ir] = sx + sc + (eex + eec)*arho[ir,1]
-        v1xc[ir,1] = v1x + v1c + (vvx + vvc)
-        v2xc[ir,1] = v2x + v2c
+        # NOTE: we are using Libxc convention
+        # FIXME: not sure where to put the guard against small rho
+        if arho[ir,1] > SMALL1
+            sxc[ir] = (sx + sc)/arho[ir,1] + eex + eec # Libxc convention
+        else
+            sxc[ir] = eex + eec
+        end
+        v1xc[ir,1] = v1x + v1c + (vvx + vvc) # already the same as Libxc convention
+        v2xc[ir,1] = (v2x + v2c)*0.5 # Libxc convention
     end
     return
 end
@@ -169,11 +165,16 @@ function main(;filename=nothing)
             grhoe2[ir] = grad[ir,1]^2 + grad[ir,2]^2 + grad[ir,3]^2
         end
 
-        _driver_gga!(arho, grhoe2, sxc, v1xc, v2xc)
+        # Use internal XCCalculator
+        _driver_xc_PBE!(XCCalculator(), arho, grhoe2, sxc, v1xc, v2xc)
+        #_driver_xc_PBE!(LibxcXCCalculator(), arho, grhoe2, sxc, v1xc, v2xc)
 
         # radial stuffs
+        # NOTE: We are using Libxc convention: e_rad is multiplied by arho and
+        # h_rad will be multiplied by 2 (here or later in div_h, for calculating the
+        # gradient correction to the potential)
         for ir in 1:Nrmesh
-            e_rad[ir] = sxc[ir] * r2[ir]
+            e_rad[ir] = sxc[ir] * r2[ir] * arho[ir]
             gc_rad[ir,ix,1]  = v1xc[ir,1]
             @views h_rad[ir,1:3,ix,1] = v2xc[ir,1]*grad[ir,1:3,1]*r2[ir]
         end
@@ -184,7 +185,6 @@ function main(;filename=nothing)
     end
 
     println("energy for all ix = ", energy)
-
 
 
     lmax_loc = Ham.pspots[isp].lmax_rho + 1
@@ -239,9 +239,10 @@ function main(;filename=nothing)
 
     vout_lm = zeros(Float64, Nrmesh, l2, Nspin)
     # Finally sum it back into v_xc
+    # Factor 2 of div_h because we are using Libxc convention
     for ispin in 1:Nspin
         for lm in 1:l2
-            @views vout_lm[1:Nrmesh,lm,ispin] .+= gc_lm[1:Nrmesh,lm,ispin] .- div_h[1:Nrmesh,lm,ispin]
+            @views vout_lm[1:Nrmesh,lm,ispin] .+= gc_lm[1:Nrmesh,lm,ispin] .- 2*div_h[1:Nrmesh,lm,ispin]
         end
     end
     println("sum abs vout_lm = ", sum(abs.(vout_lm)))
