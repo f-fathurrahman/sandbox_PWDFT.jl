@@ -62,7 +62,7 @@ function radial_gradient!(r, f, gf, ae_flag)
     for i in 2:Nr # LABEL points
         for j in (i+1):Nr
             if r[j] > (r[i] + Δ)
-                for k in range( i-1, 1, -1)
+                for k in range( i-1, stop=1, step=-1)
                     if r[k] < (r[i] - Δ)
                         num1 = (r[j] - r[i])^2 * (f[k] - f[i]) - (r[k] - r[i])^2*( f[j] - f[i] )
                         denum1 = (r[j] - r[i]) * (r[k] - r[i]) * (r[j] - r[k])
