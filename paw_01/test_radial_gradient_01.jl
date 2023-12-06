@@ -1,6 +1,7 @@
 using Printf
 using OffsetArrays
 using LinearAlgebra
+using Serialization: serialize
 
 using Random
 Random.seed!(1234)
@@ -24,6 +25,7 @@ function main(;filename=nothing)
     end
 
     becsum = PAW_atomic_becsum(Ham.atoms, Ham.pspots, Ham.pspotNL, Nspin=1)
+    becsum[:] .= 1.0
     println("sum becsum before PAW_symmetrize: ", sum(becsum))
     PAW_symmetrize!(Ham, becsum)
     println("sum becsum after PAW_symmetrize: ", sum(becsum))
@@ -71,18 +73,20 @@ function main(;filename=nothing)
     println("Nrmesh = ", Nrmesh)
   
     ispin = 1 # spin index
-    lm = 1  # max i%l**2
-  
-    @views radial_gradient_coarse!( r[1:kkbeta], rho_lm[1:kkbeta,lm,ispin], d1y )
-    @views radial_gradient_coarse!( r[1:kkbeta], d1y, d2y )
-  
-    first  = d1y[1] # first derivative in first point
-    second = d2y[1] # second derivative in first point
 
-    println("first = ", first)
-    println("second = ", second)
+    for lm in 1:l2
+        @views radial_gradient_coarse!( r[1:kkbeta], rho_lm[1:kkbeta,lm,ispin], d1y )
+        @views radial_gradient_coarse!( r[1:kkbeta], d1y, d2y )
+        first  = d1y[1] # first derivative in first point
+        second = d2y[1] # second derivative in first point
+        println("first = ", first)
+        println("second = ", second)
+        @views init_spline!( r, rho_lm[:,lm,ispin], first, second, wsp_lm[:,lm,ispin] )
+    end
 
-    @views init_spline!( r, rho_lm[:,lm,ispin], first, second, wsp_lm[:,lm,ispin] )
+    serialize("r.dat", r)
+    serialize("rho_lm.dat", rho_lm)
+    serialize("wsp_lm.dat", wsp_lm)
 
     return
 
