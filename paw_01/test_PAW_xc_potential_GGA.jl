@@ -12,10 +12,6 @@ const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)), "..")
 include(joinpath(DIR_PWDFT, "utilities", "PWSCFInput.jl"))
 include(joinpath(DIR_PWDFT, "utilities", "init_Ham_from_pwinput.jl"))
 
-include("v1_PAW_xc_potential_GGA.jl")
-
-
-
 function main(;filename=nothing)
     Ham, pwinput = init_Ham_from_pwinput(filename=filename)
 
@@ -34,7 +30,7 @@ function main(;filename=nothing)
     pspots = Ham.pspots
     pspotNL = Ham.pspotNL
     AE = true
-    ia = 1
+    ia = 2
     isp = atoms.atm2species[ia]
     Nrmesh = pspots[isp].Nr
     l2 = (pspots[isp].lmax_rho + 1)^2
@@ -47,7 +43,7 @@ function main(;filename=nothing)
     println("sum rho_lm = ", sum(rho_lm))
     v_lm = zeros(Float64, Nrmesh, l2, Nspin)
 
-    energy = v1_PAW_xc_potential_GGA!( AE, ia,
+    energy = PAW_xc_potential_GGA!( AE, ia,
         atoms, pspots, pspotNL, xc_calc,
         rho_lm, v_lm
     )
