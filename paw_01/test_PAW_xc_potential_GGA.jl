@@ -20,8 +20,11 @@ function main(;filename=nothing)
         println(Ham.pspots[isp])
     end
 
+    AE = false
+    ia = 2
+
     becsum = PAW_atomic_becsum(Ham.atoms, Ham.pspots, Ham.pspotNL, Nspin=1)
-    
+    becsum[:,ia,1] .= 0.5 
     println("sum becsum before PAW_symmetrize: ", sum(becsum))
     PAW_symmetrize!(Ham, becsum)
     println("sum becsum after PAW_symmetrize: ", sum(becsum))
@@ -29,8 +32,6 @@ function main(;filename=nothing)
     atoms = Ham.atoms
     pspots = Ham.pspots
     pspotNL = Ham.pspotNL
-    AE = true
-    ia = 2
     isp = atoms.atm2species[ia]
     Nrmesh = pspots[isp].Nr
     l2 = (pspots[isp].lmax_rho + 1)^2
