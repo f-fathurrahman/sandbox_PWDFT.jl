@@ -16,6 +16,14 @@ json_ylm = reshape(convert(Vector{Float64}, json_data["ylm"]), shape_ylm...)
 shape_wwylm = convert(Vector{Int64}, json_data["shape_wwylm"])
 json_wwylm = reshape(convert(Vector{Float64}, json_data["wwylm"]), shape_wwylm...)
 
+shape_dylmp = convert(Vector{Int64}, json_data["shape_dylmp"])
+json_dylmp = reshape(convert(Vector{Float64}, json_data["dylmp"]), shape_dylmp...)
+
+shape_dylmt = convert(Vector{Int64}, json_data["shape_dylmt"])
+json_dylmt = reshape(convert(Vector{Float64}, json_data["dylmt"]), shape_dylmt...)
+
+shape_cotg_th = convert(Vector{Int64}, json_data["shape_cotg_th"])
+json_cotg_th = reshape(convert(Vector{Float64}, json_data["cotg_th"]), shape_cotg_th...)
 
 # pseudo_upf or PsPot_UPF
 using JSON
