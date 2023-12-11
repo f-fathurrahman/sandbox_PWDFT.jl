@@ -50,8 +50,24 @@ function create_Ham_N2H4_gbrv()
     return Ham
 end
 
+function create_Ham_N2H4_paw_jth()
+    atoms = create_atoms_N2H4()
+    pspots = [
+        PsPot_UPF("N_lda.upf"),
+        PsPot_UPF("H_lda.upf")
+    ]
+    ecutwfc = 20.0 # or 40 Ry
+    ecutrho = 100.0 # or 200 Ry
+    options = HamiltonianOptions()
+    options.dual = ecutrho/ecutwfc
+    Ham = Hamiltonian( atoms, pspots, ecutwfc, options )
+    return Ham
+end
+
+
 function main()
-    Ham = create_Ham_N2H4_gbrv()
+    #Ham = create_Ham_N2H4_gbrv()
+    Ham = create_Ham_N2H4_paw_jth()
     psiks = rand_BlochWavefunc(Ham)
     KS_solve_Emin_PCG_01!(Ham, psiks)
     #electrons_scf!(Ham, psiks)
