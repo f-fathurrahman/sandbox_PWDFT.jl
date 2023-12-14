@@ -39,7 +39,10 @@ function spline_interp( xdata, ydata, d2y, x )
     xdim = size(xdata, 1)
     klo = 1
     khi = xdim
-    klo = max(min(_spline_point_locate(xdata, x), xdim - 1), 1)
+    iloc = _spline_point_locate(xdata, x)
+    println("iloc = ", iloc)
+    klo = max(min(iloc,xdim - 1), 1)
+    println("klo = ", klo)
     khi = klo + 1
     h = xdata[khi] - xdata[klo]
     a = ( xdata[khi] - x ) / h
@@ -49,14 +52,11 @@ function spline_interp( xdata, ydata, d2y, x )
 end
 
 function _spline_point_locate( xx::Vector{Float64}, x::Float64 )
-
-    # INTEGER :: locate
-    # INTEGER :: n, jl, jm, ju
-    # LOGICAL :: ascnd
     
     n = size(xx, 1)
     ascnd = xx[n] >= xx[1]
-    
+    #println("ascnd = ", ascnd)
+    #
     jl = 0
     ju = n + 1
 
@@ -65,14 +65,14 @@ function _spline_point_locate( xx::Vector{Float64}, x::Float64 )
         if (ju - jl) <= 1
             break
         end
-        jm = floor(Int, (ju + jl)/2)
+        jm = floor(Int64, (ju + jl)/2)
         if ascnd == (x >= xx[jm])
             jl = jm
         else
             ju = jm
         end
     end
-    # FIXME case jl falls outside valid range?
+    # FIXME case jl or ju falls outside valid range?
     
     SMALL = eps(Float64)
     idx_return = -1 # set to an invalid value
@@ -80,7 +80,7 @@ function _spline_point_locate( xx::Vector{Float64}, x::Float64 )
         #
         idx_return = 1
         #
-    elseif abs(x == xx[n]) <= SMALL
+    elseif abs(x - xx[n]) <= SMALL
         #
         idx_return = n - 1
         #

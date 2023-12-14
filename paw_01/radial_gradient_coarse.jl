@@ -57,8 +57,8 @@ function radial_gradient_coarse!(r, f, gf)
             gf[i] = 0.0
         end
     end # do points
-    println("Sum gf after loop = ", sum(gf))
-    println("imin = ", imin)
+    #println("Sum gf after loop = ", sum(gf))
+    #println("imin = ", imin)
 
     #
     # In the first imin points the previous formula cannot be
@@ -85,9 +85,9 @@ function radial_gradient_coarse!(r, f, gf)
         end #do
     end #do points_fit
 
-    println("Before fit_pol! b = ", b)    
+    #println("Before fit_pol! b = ", b)    
     _rgrad_fit_pol!(raux, faux, npoint, 3, b)
-    println("After fit_pol! b = ", b)
+    #println("After fit_pol! b = ", b)
 
     # evaluate the polynomial
     for i in 1:imin
