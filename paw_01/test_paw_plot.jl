@@ -1,7 +1,6 @@
 using Printf
 using OffsetArrays
 using LinearAlgebra
-using Serialization: serialize
 
 using Random
 Random.seed!(1234)
@@ -16,6 +15,8 @@ include(joinpath(DIR_PWDFT, "utilities", "init_Ham_from_pwinput.jl"))
 include("radial_gradient_coarse.jl")
 include("spline_stuffs.jl")
 
+
+# XXX: QE uses another algorithm that uses reciprocal lattice
 function _find_dist_periodic(x, atpos, LatVecs, posi_min)
     #
     @views L1 = LatVecs[:,1]
@@ -23,6 +24,8 @@ function _find_dist_periodic(x, atpos, LatVecs, posi_min)
     @views L3 = LatVecs[:,3]
     #
     posi_min[:] .= 1000*ones(Float64, 3)
+    # We use quite large number such that it will be likely to be replaced
+    # in the first try
     d_min = sum(posi_min.^2)
     posi = zeros(Float64, 3)
     for n1 in -1:1, n2 in -1:1, n3 in -1:1
