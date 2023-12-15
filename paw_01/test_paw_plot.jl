@@ -16,6 +16,27 @@ include(joinpath(DIR_PWDFT, "utilities", "init_Ham_from_pwinput.jl"))
 include("radial_gradient_coarse.jl")
 include("spline_stuffs.jl")
 
+function _find_dist_periodic(x, atpos, LatVecs, posi_min)
+    #
+    @views L1 = LatVecs[:,1]
+    @views L2 = LatVecs[:,2]
+    @views L3 = LatVecs[:,3]
+    #
+    posi_min[:] .= 1000*ones(Float64, 3)
+    d_min = sum(posi_min.^2)
+    posi = zeros(Float64, 3)
+    for n1 in -1:1, n2 in -1:1, n3 in -1:1
+        posi[:] .= x[:] .- atpos[:] .+ n1*L1 .+ n2*L2 .+ n3*L3
+        d = sum(posi.^2)
+        if d < d_min
+            posi_min[:] .= posi[:]
+            d_min = d
+        end
+    end
+    return d_min
+end
+
+
 function main(;filename=nothing)
     Ham, pwinput = init_Ham_from_pwinput(filename=filename)
 
@@ -41,7 +62,12 @@ function main(;filename=nothing)
 
     ispin = 1 # spin index
 
-    rho_R = zeros(Float64, size(grid_R,2))
+    Npoints = size(grid_R, 2)
+    rho_R = zeros(Float64, Npoints)
+    LatVecs = Ham.pw.LatVecs
+    @views L1 = LatVecs[:,1]
+    @views L2 = LatVecs[:,2]
+    @views L3 = LatVecs[:,3]
 
     for ia in 1:Natoms
 
@@ -94,27 +120,34 @@ function main(;filename=nothing)
             println("sum wsp_lm[:,lm,ispin] = ", sum(wsp_lm[:,lm,ispin]))
         end
 
-        ip = 1
-
-        @views posi[:] = grid_R[:,ip] - atoms.positions[:,ia]
-        # FIXME: need to account for periodicity
-        distsq = sum(posi.^2)
-        println("distsq = ", distsq)
-
         # prepare spherical harmonics
         ylm_posi = zeros(Float64, l2)
-        Ylm_real_qe!(lmax_rho, posi, ylm_posi)
 
-        # Loop over spin
-        rho_of_r = 0.0
-        for lm in 1:l2
-            # do interpolation - distsq depends upon ir
-            @views rho = spline_interp( r , rho_lm[:,lm,ispin], wsp_lm[:,lm,ispin], sqrt(distsq) )
-            println("rho = ", rho)
-            rho_of_r += ylm_posi[lm] * rho        
+        for ip in 1:Npoints
+            #@views posi[:] = grid_R[:,ip] - atoms.positions[:,ia]
+            # FIXME: need to account for periodicity
+            #distsq = sum(posi.^2)
+            #println("distsq = ", distsq)
+            
+            @views distsq = _find_dist_periodic(grid_R[:,ip], atoms.positions[:,ia], LatVecs, posi)
+
+            if distsq > r[kkbeta]^2
+                #println("distsq is too large")
+                continue
+            end
+
+            Ylm_real_qe!(lmax_rho, posi, ylm_posi)
+            # Loop over spin
+            rho_of_r = 0.0
+            for lm in 1:l2
+                # do interpolation - distsq depends upon ir
+                @views rho = spline_interp( r , rho_lm[:,lm,ispin], wsp_lm[:,lm,ispin], sqrt(distsq) )
+                #println("rho = ", rho)
+                rho_of_r += ylm_posi[lm] * rho        
+            end
+            #println("rho_of_r = ", rho_of_r)
+            rho_R[ip] += rho_of_r
         end
-        println("rho_of_r = ", rho_of_r)
-        rho_R[ip] += rho_of_r
     end
 
     println("sum rho_R = ", sum(rho_R))

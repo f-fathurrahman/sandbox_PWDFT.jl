@@ -40,9 +40,9 @@ function spline_interp( xdata, ydata, d2y, x )
     klo = 1
     khi = xdim
     iloc = _spline_point_locate(xdata, x)
-    println("iloc = ", iloc)
+    #println("iloc = ", iloc)
     klo = max(min(iloc,xdim - 1), 1)
-    println("klo = ", klo)
+    #println("klo = ", klo)
     khi = klo + 1
     h = xdata[khi] - xdata[klo]
     a = ( xdata[khi] - x ) / h
