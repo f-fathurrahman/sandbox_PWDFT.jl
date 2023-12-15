@@ -152,6 +152,10 @@ function main(;filename=nothing)
 
     println("sum rho_R = ", sum(rho_R))
 
+    filexsf = "TEMP_paw_rho.xsf"
+    write_xsf(filexsf , atoms, molecule=false) # set molecule to false to see the bounding box
+    write_xsf_data3d_crystal(filexsf, atoms, Ham.pw.Ns, rho_R)
+
 end
 
 
