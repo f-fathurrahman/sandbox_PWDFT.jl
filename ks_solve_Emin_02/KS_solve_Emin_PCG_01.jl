@@ -1,3 +1,4 @@
+# also include overlap operator
 function new_calc_grad( Ham::Hamiltonian, psi::Array{ComplexF64,2} )
     
     ik = Ham.ik
@@ -103,6 +104,8 @@ function KS_solve_Emin_PCG_01!(
     Ham.energies = energies
     Etot = sum(energies)
 
+    ok_paw = any(Ham.pspotNL.are_paw)
+
     Nconverges = 0
 
     if verbose
@@ -132,7 +135,7 @@ function KS_solve_Emin_PCG_01!(
                 β[i] = real( dot(g[i]-g_old[i], Kg[i]) )/real( dot(g_old[i],Kg_old[i]) )
             end
             if β[i] < 0.0 || isnan(β[i])
-                println("Resetting β")
+                #println("Resetting β")
                 β[i] = 0.0
             end
 
@@ -207,35 +210,13 @@ function KS_solve_Emin_PCG_01!(
         flush(stdout)
     end
 
-    # Calculate eigenvalues
-    evecs = zeros(ComplexF64,Nstates,Nstates)
-    for ispin in 1:Nspin, ik in 1:Nkpt
-        Ham.ik = ik
-        Ham.ispin = ispin
-        i = ik + (ispin - 1)*Nkpt
-        ortho_sqrt!(Ham, psiks[i])
-        Hr = Hermitian(psiks[i]' * op_H(Ham, psiks[i]))
-        evals, evecs = eigen(Hr)
-        Ham.electrons.ebands[:,i] .= evals[:]
-        psiks[i] *= evecs
-    end
-
-    if verbose && print_final_ebands
-        @printf("\n")
-        @printf("----------------------------\n")
-        @printf("Final Kohn-Sham eigenvalues:\n")
-        @printf("----------------------------\n")
-        @printf("\n")
-        print_ebands(Ham.electrons, Ham.pw.gvecw.kpoints, unit="eV")
-    end
-
     if verbose && print_final_energies
         @printf("\n")
         @printf("-------------------------\n")
         @printf("Final Kohn-Sham energies:\n")
         @printf("-------------------------\n")
         @printf("\n")
-        println(Ham.energies)
+        println(Ham.energies, is_paw=ok_paw)
     end
 
     return
