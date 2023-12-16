@@ -53,8 +53,8 @@ end
 function create_Ham_N2H4_paw_jth()
     atoms = create_atoms_N2H4()
     pspots = [
-        PsPot_UPF("/home/efefer/pseudo/PAW_JTH_LDA/N.upf"),
-        PsPot_UPF("/home/efefer/pseudo/PAW_JTH_LDA/H.upf")
+        PsPot_UPF(joinpath(DIR_PSP, "PAW_JTH_LDA", "N.upf")),
+        PsPot_UPF(joinpath(DIR_PSP, "PAW_JTH_LDA", "H.upf"))
     ]
     ecutwfc = 15.0
     ecutrho = 60.0
