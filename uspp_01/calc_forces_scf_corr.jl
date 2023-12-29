@@ -9,6 +9,7 @@ function my_calc_forces_scf_corr!(
     # Calculate difference in potential
     Vtot = potentials.Total
     VtotOld = potentials.TotalOld
+    #!!! Check whether VtotOld is properly saved in update_from_rhoe
     
     eps8 = 1e-8
     G2_shells = pw.gvec.G2_shells
@@ -35,7 +36,8 @@ function my_calc_forces_scf_corr!(
         ctmp[ip] += ( Vtot[ip,ispin] - VtotOld[ip,ispin] )
     end
 
-    println("avg ctmp (R space) = ", sum(abs.(ctmp))/Npoints)
+    # FIXME: probably need to calculate this only just after convergence is reached
+    println("avg Vtot - VtotOld (R space) = ", sum(abs.(ctmp))/Npoints)
 
     #R_to_G!(pw, ctmp)
     ff = reshape(ctmp, pw.Ns)
@@ -46,7 +48,6 @@ function my_calc_forces_scf_corr!(
     @views ctmp[:] /= Npoints # rescale
 
     println("sum ctmp after forward FFT = ", sum(ctmp))
-
     println("avg ctmp (G space) = ", sum(abs.(ctmp))/Npoints)
 
     # Determine maximum radial points for every atomic species
@@ -78,7 +79,7 @@ function my_calc_forces_scf_corr!(
 
         # sum over atoms
         for ia in 1:Natoms
-            if isp != atm2species[isp]
+            if isp != atm2species[ia]
                 continue
             end
             #

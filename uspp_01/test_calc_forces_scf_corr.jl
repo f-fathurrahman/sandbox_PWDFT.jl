@@ -24,8 +24,8 @@ function main()
 
     atsymbs = atoms.atsymbs
     Natoms = atoms.Natoms
-    F_scf_corr[:] .= F_scf_corr[:]*2.0 # convert to Ry/bohr
-    println("F_Ps_nloc: (in Ry/bohr)")
+    F_scf_corr[:] .*= 2.0 # convert to Ry/bohr
+    println("F_scf_corr: (in Ry/bohr)")
     for ia in 1:Natoms
         @printf("%s %18.10f %18.10f %18.10f\n", atsymbs[ia],
                 F_scf_corr[1,ia], F_scf_corr[2,ia], F_scf_corr[3,ia] )
