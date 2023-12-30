@@ -17,11 +17,9 @@ function main()
     pspots = Ham.pspots
     potentials = Ham.potentials
     F_scf_corr = zeros(Float64,3,atoms.Natoms)
-
     my_calc_forces_scf_corr!(
         atoms, pw, pspots, potentials, F_scf_corr
     )
-
     atsymbs = atoms.atsymbs
     Natoms = atoms.Natoms
     F_scf_corr[:] .*= 2.0 # convert to Ry/bohr
