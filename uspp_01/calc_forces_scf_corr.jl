@@ -88,7 +88,7 @@ function my_calc_forces_scf_corr!(
                 ip = idx_g2r[ig]
                 GX = G[1,ig]*X[1,ia] + G[2,ig]*X[2,ia] + G[3,ig]*X[3,ia]
                 Sf = sin(GX) + im*cos(GX)
-                @views F_scf_corr[:,ia] .+= rhocgnt[igl] * G[:,ig] * real(Sf*conj(ctmp[ip]))
+                @views F_scf_corr[:,ia] .+= pw.CellVolume * rhocgnt[igl] * G[:,ig] * real(Sf*conj(ctmp[ip]))
             end
         end
 
