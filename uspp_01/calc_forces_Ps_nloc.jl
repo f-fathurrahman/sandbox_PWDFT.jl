@@ -67,26 +67,28 @@ function _force_Ps_nloc_k!(ipol, ik, ispin,
     Natoms = atoms.Natoms
     Nspecies = atoms.Nspecies
 
+    ebands = electrons.ebands
     Nstates = electrons.Nstates
     Focc = electrons.Focc
-    ebands = electrons.ebands
 
     nh = pspotNL.nh
+    nhm = pspotNL.nhm
     Deeq = pspotNL.Deeq
     indv_ijkb0 = pspotNL.indv_ijkb0
 
     Nkpt = pw.gvecw.kpoints.Nkpt
     wk = pw.gvecw.kpoints.wk
 
+    Deff = zeros(Float64, nhm, nhm, Natoms)
 
     ikspin = ik + (ispin - 1)*Nkpt
-
+    #
     for ist in 1:Nstates
-        # CALL my_compute_deff( deff, et(ibnd,ik) )
-        @views Deff = Deeq[:,:,:,ispin] # FIXME
-
+        #
+        _calc_Deff!( ispin, atoms, pspotNL, ebands[ist,ik], Deff )
+        #
         fac = wk[ik] * Focc[ist,ikspin]
-        
+        #
         for isp in 1:Nspecies, ia in 1:Natoms
             
             if atm2species[ia] != isp
@@ -119,5 +121,38 @@ function _force_Ps_nloc_k!(ipol, ik, ispin,
         end
 
     end
+    return
+end
+
+
+
+
+
+
+function _calc_Deff!(
+    ispin::Int64, atoms, pspotNL, ebnd::Float64, Deff
+)
+    Natoms = atoms.Natoms
+    Nspecies = atoms.Nspecies
+    atm2species = atoms.atm2species
+    Deeq = pspotNL.Deeq
+    qq_at = pspotNL.qq_at
+    #
+    ok_uspp_or_paw = any(pspotNL.are_ultrasoft) || any(pspotNL.are_paw)
+    #
+    @views Deff[:,:,:] .= Deeq[:,:,:,ispin]
+    #println("ok_uspp_or_paw = ", ok_uspp_or_paw)
+    #
+    if ok_uspp_or_paw
+        for isp in 1:Nspecies, ia in 1:Natoms
+            if isp != atm2species[ia]
+                continue
+            end
+            Deff[:,:,ia] .-= ebnd * qq_at[:,:,ia]
+        end
+    end
+    #println("sum qq_at = ", sum(qq_at))
+    #println("sum Deeq = ", sum(Deeq))
+    println("sum Deff = ", sum(Deff))
     return
 end
