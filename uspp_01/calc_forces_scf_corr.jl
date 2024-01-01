@@ -44,26 +44,17 @@ function my_calc_forces_scf_corr!(
     # Use FFT again
     planfw = plan_fft!( zeros(ComplexF64,pw.Ns) ) # using default plan
     planfw*ff
-
     @views ctmp[:] /= Npoints # rescale
 
     println("sum ctmp after forward FFT = ", sum(ctmp))
     println("avg ctmp (G space) = ", sum(abs.(ctmp))/Npoints)
 
-    # Determine maximum radial points for every atomic species
-    NpointsMax = 0
-    for isp in 1:Nspecies
-        if NpointsMax < pspots[isp].Nr
-            NpointsMax = pspots[isp].Nr
-        end
-    end
-    aux = zeros(Float64, NpointsMax)
     rhocgnt = zeros(Float64, Ngl)
-
     fill!(F_scf_corr, 0.0)
 
     for isp in 1:Nspecies
         psp = pspots[isp]
+        aux = zeros(Float64, psp.Nr)
         # G != 0 terms
         for igl in 2:Ngl
             gx = sqrt(G2_shells[igl])
@@ -88,7 +79,8 @@ function my_calc_forces_scf_corr!(
                 ip = idx_g2r[ig]
                 GX = G[1,ig]*X[1,ia] + G[2,ig]*X[2,ia] + G[3,ig]*X[3,ia]
                 Sf = sin(GX) + im*cos(GX)
-                @views F_scf_corr[:,ia] .+= pw.CellVolume * rhocgnt[igl] * G[:,ig] * real(Sf*conj(ctmp[ip]))
+                Sfpsi = real(Sf*conj(ctmp[ip]))
+                @views F_scf_corr[:,ia] .+= rhocgnt[igl] * G[:,ig] * Sfpsi
             end
         end
 
