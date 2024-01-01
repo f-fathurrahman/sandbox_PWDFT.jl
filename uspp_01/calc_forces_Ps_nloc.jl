@@ -38,7 +38,7 @@ function my_calc_forces_Ps_nloc!(
         for ipol in 1:3
             for ibeta in 1:NbetaNL, igw in 1:Ngw_ik
                 ig = idx_gw2g[ik][igw]
-                dbetaNL[igw,ibeta] = -im * betaNL[ik][ig,ibeta] * G[ipol,ig]
+                dbetaNL[igw,ibeta] = -im * betaNL[ik][igw,ibeta] * G[ipol,ig]
             end
             # betaNL psi 
             @views dbetaNL_psi[:,:] .= dbetaNL[1:Ngw_ik,:]' * psi
