@@ -27,7 +27,7 @@ function main()
     F_Ps_nloc = zeros(Float64,3,atoms.Natoms)
     my_calc_forces_Ps_nloc!(
         atoms, pw, pspots,
-        electrons, pspotNL, psiks, F_Ps_nloc
+        electrons, pspotNL, potentials, psiks, F_Ps_nloc
     )
 
     F_Ps_nloc[:] .= F_Ps_nloc[:]*2.0

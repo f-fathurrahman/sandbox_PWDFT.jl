@@ -4,6 +4,7 @@ function my_calc_forces_Ps_nloc!(
     pspots::Vector{PsPot_UPF},
     electrons::Electrons,
     pspotNL::PsPotNL_UPF,
+    potentials::Potentials,
     psiks::BlochWavefunc,
     F_Ps_nloc::Matrix{Float64}
 )
@@ -47,6 +48,10 @@ function my_calc_forces_Ps_nloc!(
                 electrons, pspotNL, betaNL_psi, dbetaNL_psi, F_Ps_nloc)
         end
     end
+
+    # This does not depend on k-points
+    _add_F_uspp!(atoms, pw, pspots, pspotNL, potentials, F_Ps_nloc)
+
 
     return
 
@@ -119,7 +124,6 @@ function _force_Ps_nloc_k!(ipol, ik, ispin,
                 end
             #end # is_ultrasoft
         end
-
     end
     return
 end
@@ -153,7 +157,7 @@ function _calc_Deff!(
     end
     #println("sum qq_at = ", sum(qq_at))
     #println("sum Deeq = ", sum(Deeq))
-    println("sum Deff = ", sum(Deff))
+    #println("sum Deff = ", sum(Deff))
     return
 end
 
@@ -167,131 +171,124 @@ end
 # \[ \text{becsum}(lm,\text{at}) = \sum_i \langle \psi_i|\beta_l\rangle
 #    w_i\langle \beta_m|\psi_i\rangle \]
 # On output: the contribution is added to \(\text{forcenl}\).
+function _add_F_uspp!(atoms, pw::PWGrid, pspots, pspotNL, potentials, F_Ps_nloc)
 
+    Natoms = atoms.Natoms
+    Nspecies = atoms.Nspecies
+    atm2species = atoms.atm2species
+    atpos = atoms.positions
 
-function _add_F_uspp!(atoms, pspotNL, F_Ps_nloc)
-    # REAL(DP) :: fact
-    # COMPLEX(DP) :: cfac
-    # ! work space
-    # COMPLEX(DP), ALLOCATABLE :: aux(:), aux1(:,:,:), vg(:,:), qgm(:,:)
-    # REAL(DP),    ALLOCATABLE :: ddeeq(:,:,:,:), qmod(:), ylmk0(:,:), forceq(:,:)
+    Ng = pw.gvec.Ng
+    idx_g2r = pw.gvec.idx_g2r
+    Npoints = prod(pw.Ns)
+    G = pw.gvec.G
+    G2 = pw.gvec.G2
 
-    #
+    lmaxkb = pspotNL.lmaxkb
+    nh = pspotNL.nh
+    becsum = pspotNL.becsum
+
+    Nspin = size(potentials.Total, 2)
+
     ok_uspp_or_paw = any(pspotNL.are_ultrasoft) || any(pspotNL.are_paw)
-
     if !ok_uspp_or_paw
         return
     end
 
+    planfw = plan_fft!( zeros(ComplexF64,pw.Ns) ) # using default plan
+
     F_uspp = zeros(Float64, 3, Natoms)
+    fact = 1.0*pw.CellVolume # this is 2*pw.CellVolume if using gamma only
 
-    fact = 1.0 # this is 2 if using gamma only
-
-    #
-    # fourier transform of the total effective potential
-    #
-    vg = zeros(ComplexF64, Ng, Nspin)
+    # Fourier transform of the total effective potential
+    Vg = zeros(ComplexF64, Ng, Nspin)
     aux = zeros(ComplexF64, Npoints)
     for ispin in 1:Nspin
         aux[:] .= potentials.Total[:,ispin]
-        R_to_G!(pw, aux)
+        #R_to_G!(pw, aux) #XXX why this will segfault?
+        ff = reshape(aux, pw.Ns)
+        planfw*ff
+        @views aux[:] /= Npoints # rescale
         # Note the factors -i and 2pi/a *units of G) here in V(G)
         for ig in 1:Ng
             ip = idx_g2r[ig]
-            vg[:,ispin] = -im*aux[ip] # XXX need factor tpiba?
+            Vg[ig,ispin] = -im*aux[ip] # XXX need factor tpiba?
         end
     end
-    # Finish calculation -im*V_eff(G)
+    # Finished calculation -im*V_eff(G)
 
 
-    ylmk0 = zeros(Float64, lmaxq*lmaxq)
-    ALLOCATE( ylmk0(ngm, lmaxq*lmaxq) )
-    CALL ylmr2( lmaxq * lmaxq, ngm, g[:,1:ngm), gg(1:ngm), ylmk0 )
+    lmaxq = 2*lmaxkb + 1 # using 1-indexing
+    ylmk0 = zeros(Float64, Ng, lmaxq*lmaxq)
+    _lmax = lmaxq - 1 # or 2*lmaxkb
+    Ylm_real_qe!(_lmax, G, ylmk0) # Ylm_real_qe accept l value starting from 0
     
-    ALLOCATE( qmod(ngm) )
-    for ig in 1:ngm
-    qmod(ig) = SQRT( gg(ig) )*tpiba
-  ENDDO
-  !
-  DO nt = 1, ntyp
-    IF ( upf(nt)%tvanp ) THEN
-      !
-      ! nij = max number of (ih,jh) pairs per atom type nt
-      ! qgm contains the Q functions in G space
-      !
-      nij = nh(nt)*(nh(nt)+1)/2
-      ALLOCATE( qgm(ngm,nij) )
-      ijh = 0
-      DO ih = 1, nh(nt)
-        DO jh = ih, nh(nt)
-          ijh = ijh + 1
-          CALL qvan2( ngm, ih, jh, nt, qmod, qgm(:,ijh), ylmk0 )
-        ENDDO
-      ENDDO
-      !
-      ! nab = number of atoms of type nt
-      !
-      nab = 0
-      DO na = 1, nat
-        IF( ityp(na) == nt ) nab = nab + 1
-      ENDDO
-      ALLOCATE( aux1(ngm, nab, 3) )
-      ALLOCATE( ddeeq(nij, nab, 3, nspin_mag) )
-      !
-      DO is = 1, nspin_mag
-        nb = 0
-        DO na = 1, nat
-          IF (ityp(na) == nt) THEN
-            nb = nb + 1
-            !
-            ! aux1 = product of potential, structure factor and iG
-            !
-            DO ig = 1, ngm
-              cfac = vg(ig, is) * &
-                   CONJG(eigts1(mill(1,ig),na) * eigts2(mill(2,ig),na) * eigts3(mill(3,ig),na) )
-              aux1(ig,nb,1) = g(1,ig) * cfac
-              aux1(ig,nb,2) = g(2,ig) * cfac
-              aux1(ig,nb,3) = g(3,ig) * cfac
-            ENDDO
-            !
-          ENDIF
-        ENDDO
-        !
-        ! ddeeq = dot product of aux1 with the Q functions
-        ! No need for special treatment of the G=0 term (is zero)
-        !
-        DO ipol = 1, 3
-          CALL DGEMM( 'C', 'N', nij, nab, 2*ngm, fact, qgm, 2*ngm, &
-               aux1(1,1,ipol), 2*ngm, 0.0_dp, ddeeq(1,1,ipol,is), nij )
-        ENDDO
-        !
-      ENDDO
-      !
-      DEALLOCATE(aux1)
-      DEALLOCATE(qgm)
-      !
-      DO is = 1, nspin_mag
-        nb = 0
-        DO na = 1, nat
-          IF( ityp(na) == nt ) THEN
-            nb = nb + 1
-            DO ipol = 1, 3
-              DO ijh = 1, nij
-                 forceq(ipol,na) = forceq(ipol,na) + ddeeq(ijh,nb,ipol,is) * becsum(ijh,na,is)
-              ENDDO
-            ENDDO
-          ENDIF
-        ENDDO
-      ENDDO
-      DEALLOCATE( ddeeq )
-    ENDIF
-  ENDDO
-  !
-  10 CONTINUE
+    for isp in 1:Nspecies
 
+        psp = pspots[isp]
+        need_augmentation = psp.is_ultrasoft || psp.is_paw
+        if !need_augmentation
+            continue # skip for this species
+        end
 
-  F_nl[:,:] .+= F_uspp[:,:]
-
-  return
-
+        # nij = max number of (ih,jh) pairs per atom type nt
+        nij = Int64(nh[isp]*(nh[isp] + 1)/2)
+        Qgm = zeros(ComplexF64, Ng, nij)
+        ijh = 0
+        for ih in 1:nh[isp], jh in ih:nh[isp]
+            ijh = ijh + 1
+            @views qvan2!( pspotNL, ih, jh, isp, G2, ylmk0, Qgm[:,ijh] )
+            #println("ijh = ", ijh, " sum(Qgm) = ", sum(Qgm[:,ijh]))
+        end
+        #
+        # nab = number of atoms of type nt
+        nab = sum(atm2species .== isp)
+        #
+        aux1 = zeros(ComplexF64, Ng, nab, 3)
+        dDeeq = zeros(Float64, nij, nab, 3, Nspin)
+        #
+        for ispin in 1:Nspin
+            nb = 0
+            for ia in 1:Natoms
+                if atm2species[ia] != isp
+                    continue
+                end
+                nb = nb + 1
+                # aux1 = product of potential, structure factor and iG
+                for ig in 1:Ng
+                    GX = G[1,ig]*atpos[1,ia] + G[2,ig]*atpos[2,ia] + G[3,ig]*atpos[3,ia]
+                    Sf = cos(GX) + im*sin(GX)
+                    cfac = Vg[ig,ispin] * Sf
+                    aux1[ig,nb,1] = G[1,ig] * cfac
+                    aux1[ig,nb,2] = G[2,ig] * cfac
+                    aux1[ig,nb,3] = G[3,ig] * cfac
+                end
+            end
+            println("\nsum aux1 = ", sum(aux1))
+            println("sum Qgm = ", sum(Qgm))
+            # dDeeq = dot product of aux1 with the Q functions
+            # No need for special treatment of the G=0 term (is zero)
+            for ipol in 1:3
+                #CALL DGEMM( 'C', 'N', nij, nab, 2*ngm, fact, qgm, 2*ngm, &
+                #    aux1(1,1,ipol), 2*ngm, 0.0_dp, ddeeq(1,1,ipol,is), nij )
+                dDeeq[:,:,ipol,ispin] .= fact * real(Qgm' * aux1[:,:,ipol]) # XXX
+            end
+        end
+        #
+        for ispin in 1:Nspin
+            nb = 0
+            for ia in 1:Natoms
+                if atm2species[ia] != isp
+                    continue # skip
+                end
+                nb = nb + 1
+                for ipol in 1:3, ijh in 1:nij
+                    F_uspp[ipol,ia] += dDeeq[ijh,nb,ipol,ispin] * becsum[ijh,ia,ispin]
+                end
+            end
+        end
+    end
+    # Add F_uspp to the output array
+    F_Ps_nloc[:,:] .+= F_uspp[:,:]
+    return
 end
