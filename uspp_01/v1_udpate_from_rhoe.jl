@@ -24,10 +24,15 @@ end
 
 function update_from_rhoe!(Ham, Rhoe, RhoeG)
 
+    Nspin = Ham.electrons.Nspin
+    Npoints = size(Ham.rhoe, 1)
+
     Ham.rhoe[:,:] = Rhoe[:,:] # Need copy?
 
-    # Save old potential
-    Ham.potentials.TotalOld[:,:] .= Ham.potentials.Total[:,:]
+    # Save old potential (only Hartree and XC)
+    for ispin in 1:Nspin, ip in 1:Npoints
+        Ham.potentials.TotalOld[ip,ispin] = Ham.potentials.XC[ip,ispin] + Ham.potentials.Hartree[ip]
+    end
 
     # Reset total effective potential to zero
     fill!(Ham.potentials.Total, 0.0)
@@ -37,7 +42,6 @@ function update_from_rhoe!(Ham, Rhoe, RhoeG)
     Ehartree = _add_V_Hartree!( Ham, Rhoe, RhoeG )
 
     # Add V_Ps_loc contribution
-    Nspin = Ham.electrons.Nspin
     for ispin in 1:Nspin
         Ham.potentials.Total[:,ispin] .+= Ham.potentials.Ps_loc[:]
     end
@@ -77,6 +81,7 @@ function _add_V_xc!(Ham, Rhoe, RhoeG)
         epsxc[:], Vxc[:,1] = calc_epsxc_Vxc_VWN( Ham.xc_calc, Rhoe[:,1] + Ham.rhoe_core )
         Exc = sum(epsxc .* (Rhoe[:,1] + Ham.rhoe_core))*dVol
     end
+    # FIXME: add PBE
 
     # Also calculate Evtxc
     Evtxc = sum(Vxc[:,1] .* Rhoe)*dVol # Evtxc does not include rhoe_core

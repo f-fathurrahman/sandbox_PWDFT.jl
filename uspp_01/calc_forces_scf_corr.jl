@@ -6,9 +6,10 @@ function my_calc_forces_scf_corr!(
     F_scf_corr::Matrix{Float64}
 )
 
+    println("\nBegin calculating F_scf_corr")
+
     # Calculate difference in potential
-    Vtot = potentials.Total
-    VtotOld = potentials.TotalOld
+    VtotOld = potentials.TotalOld # actually Hartree and XC
     #!!! Check whether VtotOld is properly saved in update_from_rhoe
     
     eps8 = 1e-8
@@ -24,20 +25,24 @@ function my_calc_forces_scf_corr!(
     atm2species = atoms.atm2species
     X = atoms.positions
 
-    Nspin = size(Vtot,2)
-    Npoints = size(Vtot,1)
-
+    Nspin = size(VtotOld,2)
+    Npoints = size(VtotOld,1)
+    
+    println("Ng = ", Ng)
     println("Npoints = ", Npoints)
     println("pw.Ns = ", pw.Ns)
+
+    println("sum abs VHartree = ", sum(abs.(potentials.Hartree)))
+    println("sum XC = ", sum(potentials.XC))
 
     # Calculate difference between new and old potential
     ctmp = zeros(ComplexF64, Npoints)
     for ispin in 1:Nspin, ip in 1:Npoints
-        ctmp[ip] += ( Vtot[ip,ispin] - VtotOld[ip,ispin] )
+        ctmp[ip] += ( potentials.Hartree[ip] + potentials.XC[ip,ispin] - VtotOld[ip,ispin] )
     end
 
     # FIXME: probably need to calculate this only just after convergence is reached
-    println("avg Vtot - VtotOld (R space) = ", sum(abs.(ctmp))/Npoints)
+    println("sum ctmp before fwfft = ", sum(ctmp))
 
     #R_to_G!(pw, ctmp)
     ff = reshape(ctmp, pw.Ns)
@@ -47,7 +52,6 @@ function my_calc_forces_scf_corr!(
     @views ctmp[:] /= Npoints # rescale
 
     println("sum ctmp after forward FFT = ", sum(ctmp))
-    println("avg ctmp (G space) = ", sum(abs.(ctmp))/Npoints)
 
     rhocgnt = zeros(Float64, Ngl)
     fill!(F_scf_corr, 0.0)
@@ -67,7 +71,9 @@ function my_calc_forces_scf_corr!(
             end
             rhocgnt[igl] = PWDFT.integ_simpson( psp.Nr, aux, psp.rab )
         end
-
+        #
+        println("sum rhocgnt = ", sum(rhocgnt))
+        #
         # sum over atoms
         for ia in 1:Natoms
             if isp != atm2species[ia]
