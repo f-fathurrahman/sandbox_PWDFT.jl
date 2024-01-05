@@ -6,6 +6,7 @@ using PWDFT
 
 include("calc_forces_scf_corr.jl")
 include("calc_forces_Ps_nloc.jl")
+include("calc_forces_nlcc.jl")
 
 function main()
     
@@ -40,7 +41,7 @@ function main()
     #
     # SCF correction
     #
-    F_scf_corr = zeros(Float64,3,atoms.Natoms)
+    F_scf_corr = zeros(Float64, 3 ,atoms.Natoms)
     my_calc_forces_scf_corr!(
         atoms, pw, pspots, potentials, F_scf_corr
     )
@@ -49,6 +50,15 @@ function main()
     for ia in 1:Natoms
         @printf("%s %18.10f %18.10f %18.10f\n", atsymbs[ia],
                 F_scf_corr[1,ia], F_scf_corr[2,ia], F_scf_corr[3,ia] )
+    end
+
+    F_nlcc = zeros(Float64, 3, atoms.Natoms)
+    calc_forces_nlcc!( atoms, pspots, pw, Ham.xc_calc, Ham.xcfunc, Ham.rhoe, Ham.rhoe_core, F_nlcc )
+    F_nlcc[:] .*= 2.0 # convert to Ry/bohr
+    println("F_nlcc: (in Ry/bohr)")
+    for ia in 1:Natoms
+        @printf("%s %18.10f %18.10f %18.10f\n", atsymbs[ia],
+                F_nlcc[1,ia], F_nlcc[2,ia], F_nlcc[3,ia] )
     end
 
 end
