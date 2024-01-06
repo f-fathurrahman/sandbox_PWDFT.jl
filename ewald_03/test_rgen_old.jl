@@ -2,7 +2,7 @@ using Printf
 using LinearAlgebra
 using PWDFT
 
-function rgen( dtau, rmax, mxr, at, bg )
+function rgen!( dtau, rmax, mxr, at, bg )
     #
     #   generates neighbours shells (cartesian, in units of lattice parameter)
     #   with length < rmax,and returns them in order of increasing length:
