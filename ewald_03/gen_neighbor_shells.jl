@@ -2,7 +2,7 @@
 # adapted from rgen.f90 of QE-6.6
 #
 function gen_neighbor_shells!(
-    dtau_in, rmax_in::Float64, mxr::Int64,
+    dtau, rmax::Float64, mxr::Int64,
     LatVecs, RecVecs,
     r, r2
 )
@@ -16,34 +16,10 @@ function gen_neighbor_shells!(
     #   bg  = reciprocal lattice vectors ( b1=bg(:,1), b2=bg(:,2), b3=bg(:,3) )
     # Other output variables:
     #   nrm = the number of vectors with r^2 < rmax^2
-    #
-    # USE kinds, ONLY : DP
-    # !
-    # IMPLICIT NONE
-    # INTEGER, INTENT(in) :: mxr
-    # INTEGER, INTENT(out):: nrm
-    # REAL(DP), INTENT(in) :: at(3,3), bg(3,3), dtau(3), rmax
-    # REAL(DP), INTENT(out):: r(3,mxr), r2(mxr)
-
-#=
-    v1_nrm = norm(LatVecs[:,1])
-    v2_nrm = norm(LatVecs[:,2])
-    v3_nrm = norm(LatVecs[:,3])
-    alat = max(v1_nrm, v2_nrm, v3_nrm)
-
-    dtau = dtau_in ./ alat
-    at = LatVecs ./ alat
-    tpiba = 2π/alat
-    bg = RecVecs ./ tpiba
-    rmax = rmax_in / alat
-=#
 
     at = LatVecs
     bg = RecVecs
-    rmax = rmax_in
-    dtau = dtau_in
-
-    nrm = 0
+    nrm = 0 # counter of vectors that are searched
     SMALL = eps()
     if rmax <= SMALL
         return nrm
@@ -88,10 +64,11 @@ function gen_neighbor_shells!(
     # reorder the vectors in order of increasing magnitude
     if nrm > 1
         @views irr = sortperm(r2[1:nrm])
-        @views r2[1:nrm] = r2[irr]
+        @views r[1:3,1:nrm] .= r[1:3,irr]
+        @views r2[1:nrm] .= r2[irr]
+        # Set the remaning vectors to zeros (they should not be used)
+        @views r[1:3,nrm+1:end] .= 0.0
         @views r2[nrm+1:end] .= 0.0
-        @views r[:,1:nrm] = r[1:3,irr]
-        @views r[:,nrm+1:end] .= 0.0
     end
     return nrm
 end
