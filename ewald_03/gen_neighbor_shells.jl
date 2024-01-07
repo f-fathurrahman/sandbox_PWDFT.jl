@@ -2,7 +2,7 @@
 # adapted from rgen.f90 of QE-6.6
 #
 function gen_neighbor_shells!(
-    dtau, rmax::Float64, mxr::Int64,
+    dtau_in, rmax_in::Float64, mxr::Int64,
     LatVecs, RecVecs,
     r, r2
 )
@@ -25,6 +25,24 @@ function gen_neighbor_shells!(
     # REAL(DP), INTENT(in) :: at(3,3), bg(3,3), dtau(3), rmax
     # REAL(DP), INTENT(out):: r(3,mxr), r2(mxr)
 
+#=
+    v1_nrm = norm(LatVecs[:,1])
+    v2_nrm = norm(LatVecs[:,2])
+    v3_nrm = norm(LatVecs[:,3])
+    alat = max(v1_nrm, v2_nrm, v3_nrm)
+
+    dtau = dtau_in ./ alat
+    at = LatVecs ./ alat
+    tpiba = 2π/alat
+    bg = RecVecs ./ tpiba
+    rmax = rmax_in / alat
+=#
+
+    at = LatVecs
+    bg = RecVecs
+    rmax = rmax_in
+    dtau = dtau_in
+
     nrm = 0
     SMALL = eps()
     if rmax <= SMALL
@@ -33,30 +51,32 @@ function gen_neighbor_shells!(
   
     ds = zeros(Float64, 3)
     dtau0 = zeros(Float64, 3)
+    t = zeros(Float64, 3)
 
     # bring dtau into the unit cell centered on the origin - prevents trouble
     # if atomic positions are not centered around the origin but displaced
     # far away (remember that translational invariance allows this!)
-    #
-    ds[:] = RecVecs' * dtau
+    ds[:] = bg' * dtau
     ds[:] = ds[:] .- round.(ds)
-    dtau0[:] = LatVecs * ds
+    dtau0[:] = at * ds
 
     # these are estimates of the maximum values of needed integer indices
-    nm1 = floor(Int64, norm(bg[:,1]) * rmax ) + 2
-    nm2 = floor(Int64, norm(bg[:,2]) * rmax ) + 2
-    nm3 = floor(Int64, norm(bg[:,3]) * rmax ) + 2
+    nm1 = floor(Int64, norm(bg[:,1]) * rmax / (2*pi) ) + 2
+    nm2 = floor(Int64, norm(bg[:,2]) * rmax / (2*pi) ) + 2
+    nm3 = floor(Int64, norm(bg[:,3]) * rmax / (2*pi) ) + 2
+
+    @printf("nm1 = %5d, nm2 = %5d, nm3 = %5d\n", nm1, nm2, nm3)
 
     for i in -nm1:nm1, j in -nm2:nm2, k in -nm3:nm3
         tt = 0.0
         for ipol in 1:3
-            t[ipol] = i*LatVecs[ipol,1] + j*LatVecs[ipol,2] + k*LatVecs[ipol,3] - dtau0[ipol]
+            t[ipol] = i*at[ipol,1] + j*at[ipol,2] + k*at[ipol,3] - dtau0[ipol]
             tt = tt + t[ipol]^2
         end
         if (tt <= rmax^2) && (abs(tt) > 1.e-10)
             nrm = nrm + 1
             if nrm > mxr
-                error("too many r-vectors, nrm =$(nrm)")
+                error("too many r-vectors, nrm = $(nrm)")
             end
             for ipol in 1:3
                 r[ipol,nrm] = t[ipol]
@@ -66,7 +86,6 @@ function gen_neighbor_shells!(
     end
   
     # reorder the vectors in order of increasing magnitude
-
     if nrm > 1
         @views irr = sortperm(r2[1:nrm])
         @views r2[1:nrm] = r2[irr]
