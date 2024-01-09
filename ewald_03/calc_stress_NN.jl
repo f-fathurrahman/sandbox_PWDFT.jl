@@ -31,6 +31,7 @@ function calc_stress_NN!( atoms, pw, stress_NN )
             error("Optimal α is not found")
         end
         # convert tpiba2*gcutm = pw.ecutrho to Ry
+        # This calculation is done in Ry unit
         upperbound = 2 * charge^2 * sqrt(α/π) * erfc( sqrt(0.25*pw.ecutrho*2 / α) )
         println("α = ", α, " upperbound = ", upperbound)
     end
