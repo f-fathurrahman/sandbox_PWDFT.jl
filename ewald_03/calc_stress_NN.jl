@@ -18,7 +18,7 @@ function calc_stress_NN!( atoms, pw, stress_NN )
     charge = 0.0
     for ia in 1:Natoms
         isp = atm2species[ia]
-        charge += Zvals[ia]
+        charge += Zvals[isp]
     end
 
     # choose alpha in order to have convergence in the sum over G
