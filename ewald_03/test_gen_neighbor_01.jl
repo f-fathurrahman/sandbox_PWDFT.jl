@@ -20,7 +20,7 @@ function main()
     r = zeros(Float64, 3, mxr)
     r2 = zeros(Float64, mxr)
 
-    Nvecr = gen_neighbor_shells!( dtau, rmax, mxr, LatVecs, RecVecs, r, r2 )    
+    Nvecr = gen_neighbor_shells!( dtau, rmax, LatVecs, RecVecs, r, r2 )    
     println("Nvecr = ", Nvecr)
     for i in 1:Nvecr
         @printf("%5d %18.10f %18.10f %18.10f %18.10f\n", i, r[1,i], r[2,i], r[3,i], sqrt(r2[i]))
