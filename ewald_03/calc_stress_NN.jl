@@ -37,7 +37,7 @@ function calc_stress_NN!( atoms, pw, stress_NN )
     println("α = ", α)  
 
     # The diagonal term
-    sdewald = 2 * 2π/4/α * (charge/pw.CellVolume)^2 # to Ry
+    sdewald = 2π/4/α * (charge/pw.CellVolume)^2
     println("sdewald before subtracted = ", sdewald)
     fact = 1.0 # 2 if using gamma only
     for ig in 2:Ng
@@ -50,10 +50,10 @@ function calc_stress_NN!( atoms, pw, stress_NN )
         end
         rhostar /= pw.CellVolume
         G2a = 0.25 * G2[ig] / α
-        sewald = 2 * fact * 2π * exp(-G2a) / G2[ig] * abs(rhostar)^2 # in Ry
+        sewald = fact * 2π * exp(-G2a) / G2[ig] * abs(rhostar)^2
         sdewald -= sewald # subtract sewald from sdewald
         for l in 1:3, m in 1:l
-            stress_NN[l,m] += sewald * 2.0 * G[l,ig] * G[m,ig] / G2[ig] * ( G2a + 1 )
+            stress_NN[l,m] += 2.0 * sewald * G[l,ig] * G[m,ig] / G2[ig] * ( G2a + 1 )
         end
     end
     #
@@ -80,8 +80,8 @@ function calc_stress_NN!( atoms, pw, stress_NN )
         nrm = gen_neighbor_shells!( dX, rmax, pw.LatVecs, pw.RecVecs, r, r2 )
         for ir in 1:nrm
             rr = sqrt(r2[ir])
-            ff = -2 / 2.0 / pw.CellVolume * Zvals[isp] * Zvals[jsp] / rr^3 * ( 
-                erfc(sqrt(α)*rr) + rr*sqrt(8.0*α/(2π)) * exp( -α*rr^22)
+            ff = -1.0 / 2.0 / pw.CellVolume * Zvals[isp] * Zvals[jsp] / rr^3 * ( 
+                erfc(sqrt(α)*rr) + rr*sqrt(8.0*α/(2π)) * exp(-α*rr^2)
             ) # factor 2 because using Ry unit
             for l in 1:3, m in 1:l
                 stress_NN[l,m] += ff * r[l,ir] * r[m,ir]
@@ -93,7 +93,8 @@ function calc_stress_NN!( atoms, pw, stress_NN )
         stress_NN[m,l] = stress_NN[l,m]
     end
     # Change sign
-    stress_NN *= -1
+    stress_NN[:,:] *= -1.0
+
     return
 end
 
