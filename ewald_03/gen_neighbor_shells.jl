@@ -2,7 +2,7 @@
 # adapted from rgen.f90 of QE-6.6
 #
 function gen_neighbor_shells!(
-    dtau, rmax::Float64, mxr::Int64,
+    dtau, rmax::Float64,
     LatVecs, RecVecs,
     r, r2
 )
@@ -16,6 +16,8 @@ function gen_neighbor_shells!(
     #   bg  = reciprocal lattice vectors ( b1=bg(:,1), b2=bg(:,2), b3=bg(:,3) )
     # Other output variables:
     #   nrm = the number of vectors with r^2 < rmax^2
+
+    mxr = size(r2,1)
 
     at = LatVecs
     bg = RecVecs
@@ -41,7 +43,7 @@ function gen_neighbor_shells!(
     nm2 = floor(Int64, norm(bg[:,2]) * rmax / (2*pi) ) + 2
     nm3 = floor(Int64, norm(bg[:,3]) * rmax / (2*pi) ) + 2
 
-    @printf("nm1 = %5d, nm2 = %5d, nm3 = %5d\n", nm1, nm2, nm3)
+    #@printf("nm1 = %5d, nm2 = %5d, nm3 = %5d\n", nm1, nm2, nm3)
 
     for i in -nm1:nm1, j in -nm2:nm2, k in -nm3:nm3
         tt = 0.0
