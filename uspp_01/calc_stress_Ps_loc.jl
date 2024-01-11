@@ -32,7 +32,7 @@ function calc_stress_Ps_loc!( atoms, pw, pspots, Rhoe, stress_Ps_loc )
     for isp in 1:Nspecies
         eval_Vloc_G!( pspots[isp], G2_shells, Vgl )
         # G = 0 contribution
-        evloc += ctmp[1] * strf[1,isp] * Vgl[1] / CellVolume
+        evloc += real(ctmp[1] * strf[1,isp]) * Vgl[1] / CellVolume
         # G != 0 contribution
         for ig in 2:Ng
             ip = idx_g2r[ig]
