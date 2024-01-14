@@ -12,6 +12,7 @@ include("eval_dVloc_G.jl")
 include("calc_stress_Ps_loc.jl")
 include("calc_stress_xc.jl")
 include("calc_stress_nlcc.jl")
+include("calc_stress_kinetic.jl")
 
 function main()
     Ham = Serialization.deserialize("Hamiltonian.dat")
@@ -53,6 +54,15 @@ function main()
     println("\nstress_nlcc (in Ry/bohr^3) = ")
     for i in 1:3
         @printf("%18.10f %18.10f %18.10f\n", stress_nlcc[i,1], stress_nlcc[i,2], stress_nlcc[i,3])
+    end
+
+
+    stress_kin = zeros(Float64, 3, 3)
+    calc_stress_kinetic!( Ham.pw, Ham.electrons, psiks, stress_kin )
+    stress_kin *= 2.0 # convert to Ry
+    println("\nstress_kin (in Ry/bohr^3) = ")
+    for i in 1:3
+        @printf("%18.10f %18.10f %18.10f\n", stress_kin[i,1], stress_kin[i,2], stress_kin[i,3])
     end
 
     return
