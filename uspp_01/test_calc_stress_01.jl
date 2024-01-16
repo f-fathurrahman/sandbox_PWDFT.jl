@@ -13,11 +13,16 @@ include("calc_stress_Ps_loc.jl")
 include("calc_stress_xc.jl")
 include("calc_stress_nlcc.jl")
 include("calc_stress_kinetic.jl")
+include("calc_Deff.jl")
+include("gen_us_dj.jl")
+include("gen_us_dy.jl")
+include("calc_stress_Ps_nloc.jl")
 
 function main()
     Ham = Serialization.deserialize("Hamiltonian.dat")
     psiks = Serialization.deserialize("psiks.dat")
 
+#=
     println(Ham.energies)
 
     stress_hartree = zeros(Float64, 3, 3)
@@ -63,6 +68,16 @@ function main()
     println("\nstress_kin (in Ry/bohr^3) = ")
     for i in 1:3
         @printf("%18.10f %18.10f %18.10f\n", stress_kin[i,1], stress_kin[i,2], stress_kin[i,3])
+    end
+=#
+
+    stress_Ps_nloc = zeros(Float64, 3, 3)
+    calc_stress_Ps_nloc!( Ham.atoms, Ham.pw, Ham.pspots, Ham.pspotNL, Ham.electrons,
+        psiks, stress_Ps_nloc )
+    stress_Ps_nloc *= 2.0 # convert to Ry
+    println("\nstress_Ps_nloc (in Ry/bohr^3) = ")
+    for i in 1:3
+        @printf("%18.10f %18.10f %18.10f\n", stress_Ps_nloc[i,1], stress_Ps_nloc[i,2], stress_Ps_nloc[i,3])
     end
 
     return

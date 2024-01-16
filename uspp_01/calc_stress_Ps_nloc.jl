@@ -1,4 +1,4 @@
-function calc_stress_Ps_nloc!( pw, electrons, psiks, stress_Ps_nloc )
+function calc_stress_Ps_nloc!( atoms, pw, pspots, pspotNL, electrons, psiks, stress_Ps_nloc )
 
     G = pw.gvec.G
     idx_gw2g = pw.gvecw.idx_gw2g
@@ -6,6 +6,7 @@ function calc_stress_Ps_nloc!( pw, electrons, psiks, stress_Ps_nloc )
     Ngwx = maximum(Ngw)
     kfac = ones(Float64, Ngwx) # assume qcutz=0
     Gk = zeros(Float64, Ngwx, 3)
+    Gk_length_inv = zeros(Float64, Ngwx)
     #
     k = pw.gvecw.kpoints.k
     Nkpt = pw.gvecw.kpoints.Nkpt
@@ -15,11 +16,9 @@ function calc_stress_Ps_nloc!( pw, electrons, psiks, stress_Ps_nloc )
     Nspin = electrons.Nspin
     Focc = electrons.Focc
 
-    Deff = zeros(Float64, nhm, nhm, Natoms)
-
     fill!(stress_Ps_nloc, 0.0)
-    Gk_length_inv = zeros(Float64, Ngwx)
     for ispin in 1:Nspin, ik in 1:Nkpt
+        #
         ikspin = ik + (ispin - 1)*Nkpt
         #
         for igw in 1:Ngw[ik]
@@ -28,7 +27,7 @@ function calc_stress_Ps_nloc!( pw, electrons, psiks, stress_Ps_nloc )
                 Gk[igw,i] = G[i,ig] + k[i,ik]
             end
             # NOTE: reversed the usual dimension of Gk[1:3,1:Ngwx] to Gk[1:Ngwx,1:3]
-            q = ( Gk[igw,1]^2 + Gk[igw,2]^2 + Gk[igw,3]^2 )
+            q = sqrt( Gk[igw,1]^2 + Gk[igw,2]^2 + Gk[igw,3]^2 )
             if q > 1e-8
                 Gk_length_inv[igw] = 1.0 / q
             else
@@ -36,23 +35,59 @@ function calc_stress_Ps_nloc!( pw, electrons, psiks, stress_Ps_nloc )
             end
         end
 
-        _stress_Ps_nloc_k(ispin, ik, Gk, Gk_length_inv, psiks, stress_Ps_nloc)
+        _stress_Ps_nloc_k!(
+            ispin, ik,
+            atoms, pw, pspots, pspotNL, electrons,
+            Gk, Gk_length_inv,
+            psiks, stress_Ps_nloc)
 
     end
+
+
+    for l in 1:3, m in 1:(l-1)
+        stress_Ps_nloc[m,l] = stress_Ps_nloc[l,m]
+    end
+    # Scale by -1/pw.CellVolume
+    stress_Ps_nloc[:,:] .*= (-1/pw.CellVolume)
 
 
     return
 end
 
 
-function _stress_Ps_nloc_k!(ispin, ik, psiks, stress_Ps_nloc)
+function _stress_Ps_nloc_k!(
+    ispin::Int64, ik::Int64,
+    atoms, pw, pspots, pspotNL, electrons, 
+    Gk, Gk_length_inv,
+    psiks, stress_Ps_nloc
+)
 
+    Natoms = atoms.Natoms
+    Nspecies = atoms.Nspecies
+    atm2species = atoms.atm2species
+
+    Nstates = electrons.Nstates
+    ebands = electrons.ebands
+
+    nh = pspotNL.nh
+    nhm = pspotNL.nhm
+    Deeq = pspotNL.Deeq
+    indv_ijkb0 = pspotNL.indv_ijkb0
+    NbetaNL = pspotNL.NbetaNL
+
+    Nkpt = pw.gvecw.kpoints.Nkpt
+    wk = pw.gvecw.kpoints.wk
+    Ngwk = pw.gvecw.Ngw[ik]
+
+    ikspin = ik + (ispin - 1)*Nkpt
     psi = psiks[ikspin]
     Vnl_KB = pspotNL.betaNL[ik]
     betaNL_psi = Vnl_KB' * psi  # XXX precalculate this
 
     fac = wk[ik] # XXX: this is different from QE, it does not depend on ist
     # XXX Probably Focc also should be accounted for (also some normalization by Nstates)
+
+    Deff = zeros(Float64, nhm, nhm, Natoms)
 
     evps = 0.0
     for ist in 1:Nstates
@@ -62,7 +97,7 @@ function _stress_Ps_nloc_k!(ispin, ik, psiks, stress_Ps_nloc)
         _calc_Deff!( ispin, atoms, pspotNL, ebands[ist,ikspin], Deff )
         #
         ijkb0 = 0
-        for isp in 1:Nspecies, for ia in 1:Natoms
+        for isp in 1:Nspecies, ia in 1:Natoms
             #
             if atm2species[ia] != isp
                 continue
@@ -72,7 +107,7 @@ function _stress_Ps_nloc_k!(ispin, ik, psiks, stress_Ps_nloc)
             #
             for ih in 1:nh[isp]
                 ikb = ijkb0 + ih
-                evps += fac * Deff[ih,ih,ia] * abs(betaNL_psi)^2
+                evps += fac * Deff[ih,ih,ia] * abs(betaNL_psi[ikb,ist])^2
                 #
                 if psp.is_ultrasoft || (psp.Nproj > 1)
                     # only in the US case there is a contribution for jh != ih
@@ -80,7 +115,7 @@ function _stress_Ps_nloc_k!(ispin, ik, psiks, stress_Ps_nloc)
                     for jh in (ih + 1):nh[isp]
                         jkb = ijkb0 + jh
                         bibj = real( conj(betaNL_psi[ikb,ist]) * betaNL_psi[jkb,ist] )
-                        evps += Deff[ih,jh,ia] * fac * 2.0 * bibj
+                        evps += Deff[ih,jh,ia] * fac * bibj
                     end
                 end
             end
@@ -96,7 +131,7 @@ function _stress_Ps_nloc_k!(ispin, ik, psiks, stress_Ps_nloc)
     #
     # non diagonal contribution - derivative of the bessel function
     #
-    dvkb = zeros(ComplexF64, Ngw[ik], NbetaNL)
+    dvkb = zeros(ComplexF64, Ngwk, NbetaNL)
   
     _gen_us_dj!(ik, atoms, pw, pspots, pspotNL, dvkb)
     work2 = zeros(ComplexF64, Ngwk)
@@ -140,26 +175,20 @@ function _stress_Ps_nloc_k!(ispin, ik, psiks, stress_Ps_nloc)
         #
         for ipol in 1:3, jpol in 1:ipol
             for igw in 1:Ngwk
-                work1[i] = psi[igw,ist] * Gk[igw,ipol] * Gk[igw,jpol] * Gk_length_inv[igw]
+                work1[igw] = psi[igw,ist] * Gk[igw,ipol] * Gk[igw,jpol] * Gk_length_inv[igw]
             end
             dd = real(dot(work1, work2))
-            stress_Ps_nloc[ipol,jpol] -= 2.0 * wk[ik] * dd
+            stress_Ps_nloc[ipol,jpol] -= wk[ik] * dd
         end
     end # ist
 
 
-
-    return
-
-end
-
-
-function _stress_Ps_nloc_k_Ylm()
     #
     # non diagonal contribution - derivative of the spherical harmonics
     # (no contribution from l=0)
-    #
-    if lmaxkb == 0
+
+    # Immediate return
+    if pspotNL.lmaxkb == 0
         return
     end
 
@@ -206,12 +235,14 @@ function _stress_Ps_nloc_k_Ylm()
             end
             for jpol in 1:ipol
                 for igw in 1:Ngwk
-                    work1[igw] = psi[igw,ist] * Gk[i,jpol]
+                    work1[igw] = psi[igw,ist] * Gk[igw,jpol]
                 end
                 dd = real(dot(work1, work2))
-                stress_Ps_nloc[ipol,jpol] -=  2.0 * wk[ik] * dd
+                stress_Ps_nloc[ipol,jpol] -= wk[ik] * dd
             end
         end # ist
     end # ipol
+    #
     return
+
 end
