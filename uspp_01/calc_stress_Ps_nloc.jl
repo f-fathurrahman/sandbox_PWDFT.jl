@@ -84,8 +84,9 @@ function _stress_Ps_nloc_k!(
     Vnl_KB = pspotNL.betaNL[ik]
     betaNL_psi = Vnl_KB' * psi  # XXX precalculate this
 
-    fac = wk[ik] # XXX: this is different from QE, it does not depend on ist
+    fac = 2*wk[ik] # XXX: this is different from QE, it does not depend on ist
     # XXX Probably Focc also should be accounted for (also some normalization by Nstates)
+    println("fac = ", fac)
 
     Deff = zeros(Float64, nhm, nhm, Natoms)
 
@@ -95,6 +96,8 @@ function _stress_Ps_nloc_k!(
             continue
         end
         _calc_Deff!( ispin, atoms, pspotNL, ebands[ist,ikspin], Deff )
+        @printf("ist = %5d eband = %18.10f\n", ist, ebands[ist,ikspin]*2)
+        #println("sum Deff = ", sum(Deff))
         #
         ijkb0 = 0
         for isp in 1:Nspecies, ia in 1:Natoms
@@ -108,6 +111,7 @@ function _stress_Ps_nloc_k!(
             for ih in 1:nh[isp]
                 ikb = ijkb0 + ih
                 evps += fac * Deff[ih,ih,ia] * abs(betaNL_psi[ikb,ist])^2
+                #@printf("%5d %5d %18.10f\n", ia, ih, Deff[ih,ih,ia])
                 #
                 if psp.is_ultrasoft || (psp.Nproj > 1)
                     # only in the US case there is a contribution for jh != ih
@@ -123,17 +127,20 @@ function _stress_Ps_nloc_k!(
         end
     end # Nstates
     #    
+    println("evps = ", evps)
+    #
     for l in 1:3
         stress_Ps_nloc[l,l] -= evps
     end
 
-
     #
-    # non diagonal contribution - derivative of the bessel function
+    # non diagonal contribution - derivative of the bessel function (radial part?)
     #
     dvkb = zeros(ComplexF64, Ngwk, NbetaNL)
   
     _gen_us_dj!(ik, atoms, pw, pspots, pspotNL, dvkb)
+    @printf("ik, sum dvkb Bessel = %5d [%18.10f %18.10f]\n", ik, real(sum(dvkb)), imag(sum(dvkb)))
+
     work2 = zeros(ComplexF64, Ngwk)
     work1 = zeros(ComplexF64, Ngwk)
     #
@@ -178,9 +185,15 @@ function _stress_Ps_nloc_k!(
                 work1[igw] = psi[igw,ist] * Gk[igw,ipol] * Gk[igw,jpol] * Gk_length_inv[igw]
             end
             dd = real(dot(work1, work2))
-            stress_Ps_nloc[ipol,jpol] -= wk[ik] * dd
+            stress_Ps_nloc[ipol,jpol] -= 2 * (2 * wk[ik]) * dd # factor of two for spin degeneracy
+            # wk should be ist dependent
         end
     end # ist
+
+    println("\nstress_Ps_nloc after deriv Bessel contrib (in Ry/bohr^3) = ")
+    for i in 1:3
+        @printf("%18.10f %18.10f %18.10f\n", 2*stress_Ps_nloc[i,1], 2*stress_Ps_nloc[i,2], 2*stress_Ps_nloc[i,3])
+    end
 
 
     #
@@ -228,7 +241,7 @@ function _stress_Ps_nloc_k!(
                     end
                     #
                     for igw in 1:Ngwk
-                        work2[igw] = ps * dvkb[igw,ikb] + work2[igw]
+                        work2[igw] += ps * dvkb[igw,ikb]
                     end
                 end
                 ijkb0 += nh[isp]
@@ -238,10 +251,14 @@ function _stress_Ps_nloc_k!(
                     work1[igw] = psi[igw,ist] * Gk[igw,jpol]
                 end
                 dd = real(dot(work1, work2))
-                stress_Ps_nloc[ipol,jpol] -= wk[ik] * dd
+                stress_Ps_nloc[ipol,jpol] -= 2 * (2 * wk[ik]) * dd
             end
         end # ist
     end # ipol
+    println("\nstress_Ps_nloc after deriv YLm contrib (in Ry/bohr^3) = ")
+    for i in 1:3
+        @printf("%18.10f %18.10f %18.10f\n", 2*stress_Ps_nloc[i,1], 2*stress_Ps_nloc[i,2], 2*stress_Ps_nloc[i,3])
+    end
     #
     return
 
