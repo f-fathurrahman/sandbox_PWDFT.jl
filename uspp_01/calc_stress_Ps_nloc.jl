@@ -104,7 +104,7 @@ function _stress_Ps_nloc_k!(
             continue
         end
         _calc_Deff!( ispin, atoms, pspotNL, ebands[ist,ikspin], Deff )
-        @printf("ist = %5d eband = %18.10f\n", ist, ebands[ist,ikspin]*2)
+        @printf("ist = %5d eband = %18.10f, fac = %18.10f\n", ist, ebands[ist,ikspin], fac)
         #println("sum Deff = ", sum(Deff))
         #
         ijkb0 = 0
@@ -119,7 +119,8 @@ function _stress_Ps_nloc_k!(
             for ih in 1:nh[isp]
                 ikb = ijkb0 + ih
                 evps += fac * Deff[ih,ih,ia] * abs(betaNL_psi[ikb,ist])^2
-                #@printf("%5d %5d %18.10f\n", ia, ih, Deff[ih,ih,ia])
+                @printf("%5d %5d %18.10f\n", ia, ih, Deff[ih,ih,ia])
+                @printf("Current value of evps = %18.10f\n", evps)
                 #
                 if psp.is_ultrasoft || (psp.Nproj > 1)
                     # only in the US case there is a contribution for jh != ih
@@ -127,7 +128,8 @@ function _stress_Ps_nloc_k!(
                     for jh in (ih + 1):nh[isp]
                         jkb = ijkb0 + jh
                         bibj = real( conj(betaNL_psi[ikb,ist]) * betaNL_psi[jkb,ist] )
-                        evps += Deff[ih,jh,ia] * fac * bibj
+                        evps += Deff[ih,jh,ia] * fac * bibj * 2
+                        @printf("Nondiagonal: current value of evps = %18.10f, Deff = %18.10f\n", evps, Deff[ih,jh,ia])
                     end
                 end
             end
