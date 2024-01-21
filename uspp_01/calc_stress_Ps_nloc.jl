@@ -1,4 +1,7 @@
-function calc_stress_Ps_nloc!( atoms, pw, pspots, pspotNL, electrons, psiks, stress_Ps_nloc )
+function calc_stress_Ps_nloc!(
+    atoms, pw, pspots, pspotNL, electrons, potentials, psiks,
+    stress_Ps_nloc
+)
 
     G = pw.gvec.G
     idx_gw2g = pw.gvecw.idx_gw2g
@@ -42,6 +45,11 @@ function calc_stress_Ps_nloc!( atoms, pw, pspots, pspotNL, electrons, psiks, str
             psiks, stress_Ps_nloc)
 
     end
+
+
+    # Add USPP contribution
+    _add_stress_uspp!(atoms, pw, pspots, pspotNL, potentials, stress_Ps_nloc)
+
 
 
     for l in 1:3, m in 1:(l-1)
@@ -262,4 +270,118 @@ function _stress_Ps_nloc_k!(
     #
     return
 
+end
+
+
+function _add_stress_uspp!(atoms, pw::PWGrid, pspots, pspotNL, potentials, stress_Ps_nloc)
+
+    Natoms = atoms.Natoms
+    Nspecies = atoms.Nspecies
+    atm2species = atoms.atm2species
+    atpos = atoms.positions
+
+    Ng = pw.gvec.Ng
+    idx_g2r = pw.gvec.idx_g2r
+    Npoints = prod(pw.Ns)
+    G = pw.gvec.G
+    G2 = pw.gvec.G2
+
+    lmaxkb = pspotNL.lmaxkb
+    nh = pspotNL.nh
+    becsum = pspotNL.becsum
+
+    Nspin = size(potentials.Total, 2)
+
+    ok_uspp_or_paw = any(pspotNL.are_ultrasoft) || any(pspotNL.are_paw)
+    if !ok_uspp_or_paw
+        return
+    end
+    
+    # Fourier transform of the total effective potential
+    Vg = zeros(ComplexF64, Ng, Nspin)
+    aux = zeros(ComplexF64, Npoints)
+    planfw = plan_fft!( zeros(ComplexF64,pw.Ns) ) # using default plan
+    for ispin in 1:Nspin
+        aux[:] .= potentials.Total[:,ispin]
+        #R_to_G!(pw, aux) # This cannot be used because FFT plan is not read from serialization data
+        ff = reshape(aux, pw.Ns)
+        planfw*ff
+        @views aux[:] /= Npoints # rescale
+        #
+        for ig in 1:Ng
+            ip = idx_g2r[ig]
+            Vg[ig,ispin] = aux[ip]
+        end
+    end
+
+    aux1 = zeros(ComplexF64, Ng, 3)
+    aux2 = zeros(ComplexF64, Ng, Nspin)
+
+    lmaxq = 2*lmaxkb + 1 # using 1-indexing
+    _lmax = lmaxq - 1 # or 2*lmaxkb
+    ylmk0 = zeros(Float64, Ng, lmaxq*lmaxq)
+    Ylm_real_qe!(_lmax, G, ylmk0) # Ylm_real_qe accept l value starting from 0
+
+    dylmk0 = zeros(Float64, Ng, lmaxq*lmaxq)
+
+    fac = zeros(Float64, 3, Nspin)
+    s_us = zeros(Float64, 3, 3)
+    
+    # here we compute the integral Q*V for each atom,
+    #       I = sum_G i G_a exp(-iR.G) Q_nm v^*
+    # (no contribution from G=0)
+    #
+    for ipol in 1:3
+        dYlm_real_qe!(_lmax, G, dylmk0, ipol)
+        for isp in 1:Nspecies
+            #
+            psp = pspots[isp]
+            need_augmentation = psp.is_ultrasoft || psp.is_paw
+            if !need_augmentation
+                continue # skip for this species
+            end
+            #
+            nij = Int64(nh[isp]*(nh[isp] + 1)/2)
+            dQgm = zeros(ComplexF64, Ng, nij)
+            tbecsum = zeros(Float64, nij, Nspin)
+            ijh = 0
+            for ih in 1:nh[isp], jh in ih:nh[isp]
+                ijh = ijh + 1
+                @views dqvan2!( pspotNL, ipol, ih, jh, isp, G, G2, ylmk0, dylmk0, dQgm[:,ijh] )
+            end
+            #
+            for ia in 1:Natoms
+                if atm2species[ia] != isp
+                    continue
+                end
+                @views tbecsum[:,:] .= becsum[1:nij,ia,1:Nspin]
+                #CALL dgemm( 'N', 'N', 2*ngm_l, nspin, nij, 1.0_dp, &
+                # qgm, 2*ngm_l, tbecsum, nij, 0.0_dp, aux2, 2*ngm_l )
+                aux2[:,:] = dQgm * tbecsum
+                
+                for ispin in 1:Nspin, ig in 1:Ng
+                    aux2[ig,ispin] *= conj(Vg[ig,ispin])
+                end          
+                #
+                for ig in 1:Ng
+                    GX = G[1,ig]*atpos[1,ia] + G[2,ig]*atpos[2,ia] + G[3,ig]*atpos[3,ia]
+                    Sf = cos(GX) + im*sin(GX)
+                    aux1[ig,1] = Sf * G[1,ig]
+                    aux1[ig,2] = Sf * G[2,ig]
+                    aux1[ig,3] = Sf * G[3,ig]
+                end
+                #CALL DGEMM('T','N', 3, nspin, 2*ngm_l, 1.0_dp, aux1, 2*ngm_l, &
+                #       aux2, 2*ngm_l, 0.0_dp, fac, 3 )
+                fac[:,:] = real(aux1' * aux2)
+                for ispin in 1:Nspin, jpol in 1:3
+                    s_us[ipol,jpol] -= pw.CellVolume * fac[jpol,ispin]
+                end
+            end
+        end
+    end
+    # Add
+    stress_Ps_nloc[:,:] .+= s_us[:,:]
+    # factor of 2 if using gamma only
+    #
+    return
 end

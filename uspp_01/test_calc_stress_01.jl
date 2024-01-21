@@ -16,6 +16,7 @@ include("calc_stress_kinetic.jl")
 include("calc_Deff.jl")
 include("gen_us_dj.jl")
 include("gen_us_dy.jl")
+include("dqvan2.jl")
 include("calc_stress_Ps_nloc.jl")
 
 function main()
@@ -73,7 +74,7 @@ function main()
 
     stress_Ps_nloc = zeros(Float64, 3, 3)
     calc_stress_Ps_nloc!( Ham.atoms, Ham.pw, Ham.pspots, Ham.pspotNL, Ham.electrons,
-        psiks, stress_Ps_nloc )
+        Ham.potentials, psiks, stress_Ps_nloc )
     stress_Ps_nloc *= 2.0 # convert to Ry
     println("\nstress_Ps_nloc (in Ry/bohr^3) = ")
     for i in 1:3
