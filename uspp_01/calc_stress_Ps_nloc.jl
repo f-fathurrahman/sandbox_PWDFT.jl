@@ -119,8 +119,8 @@ function _stress_Ps_nloc_k!(
             for ih in 1:nh[isp]
                 ikb = ijkb0 + ih
                 evps += fac * Deff[ih,ih,ia] * abs(betaNL_psi[ikb,ist])^2
-                @printf("%5d %5d %18.10f\n", ia, ih, Deff[ih,ih,ia])
-                @printf("Current value of evps = %18.10f\n", evps)
+                #@printf("%5d %5d %18.10f\n", ia, ih, Deff[ih,ih,ia])
+                #@printf("Current value of evps = %18.10f\n", evps)
                 #
                 if psp.is_ultrasoft || (psp.Nproj > 1)
                     # only in the US case there is a contribution for jh != ih
@@ -129,7 +129,7 @@ function _stress_Ps_nloc_k!(
                         jkb = ijkb0 + jh
                         bibj = real( conj(betaNL_psi[ikb,ist]) * betaNL_psi[jkb,ist] )
                         evps += Deff[ih,jh,ia] * fac * bibj * 2
-                        @printf("Nondiagonal: current value of evps = %18.10f, Deff = %18.10f\n", evps, Deff[ih,jh,ia])
+                        #@printf("Nondiagonal: current value of evps = %18.10f, Deff = %18.10f\n", evps, Deff[ih,jh,ia])
                     end
                 end
             end

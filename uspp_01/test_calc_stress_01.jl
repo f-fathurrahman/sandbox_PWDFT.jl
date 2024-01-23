@@ -23,7 +23,6 @@ function main()
     Ham = Serialization.deserialize("Hamiltonian.dat")
     psiks = Serialization.deserialize("psiks.dat")
 
-#=
     println(Ham.energies)
 
     stress_hartree = zeros(Float64, 3, 3)
@@ -70,7 +69,6 @@ function main()
     for i in 1:3
         @printf("%18.10f %18.10f %18.10f\n", stress_kin[i,1], stress_kin[i,2], stress_kin[i,3])
     end
-=#
 
     stress_Ps_nloc = zeros(Float64, 3, 3)
     calc_stress_Ps_nloc!( Ham.atoms, Ham.pw, Ham.pspots, Ham.pspotNL, Ham.electrons,
