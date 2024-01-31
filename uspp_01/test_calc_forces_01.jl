@@ -4,9 +4,9 @@ using FFTW
 
 using PWDFT
 
-include("calc_forces_scf_corr.jl")
-include("calc_forces_Ps_nloc.jl")
-include("calc_forces_nlcc.jl")
+include("v1_calc_forces_scf_corr.jl")
+include("v1_calc_forces_Ps_nloc.jl")
+include("v1_calc_forces_nlcc.jl")
 
 function main()
     
