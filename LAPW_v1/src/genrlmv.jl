@@ -1,12 +1,13 @@
+# rlm: Rlm (real spherical harmonics) of size (lmax+1)^2
 function genrlmv!(lmax, v, rlm)
 
     @assert lmax >= 0
     @assert lmax <= 50
 
-    sqtwo=1.4142135623730950488  
-    ylm = zeros(ComplexF64, (lmax+1)^2)
+    sqtwo = 1.4142135623730950488
 
     # generate complex spherical harmonics
+    ylm = zeros(ComplexF64, (lmax+1)^2)
     genylmv!(lmax, v, ylm)
     
     # convert to real spherical harmonics

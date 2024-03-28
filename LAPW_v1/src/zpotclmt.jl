@@ -1,14 +1,18 @@
-# !INPUT/OUTPUT PARAMETERS:
-#   nr     : number of radial mesh points (in,integer)
-#   nri    : number of points on inner part of muffin-tin (in,integer)
-#   ld     : leading dimension (in,integer) REMOVED
-#   rl     : r^l on the radial mesh (in,real(ld,-lmaxo-1:lmaxo+2))
-#   wpr    : weights for partial integration on radial mesh (in,real(4,nr))
-#   zrhomt : muffin-tin charge density (in,complex(*))
-#   zvclmt : muffin-tin Coulomb potential (out,complex(*))
+# zpot: complex potential
+# cl: coulomb
+# mt: muffin tin
 #function zpotclmt!( mt_vars, nr, nri, rl, wpr, zrhomt, zvclmt )
 function zpotclmt!( mt_vars, isp, zrhomt, zvclmt )
-# Output: zvclmt for given index
+# Output: zvclmt for given species index
+
+    # !INPUT/OUTPUT PARAMETERS:
+    #   nr     : number of radial mesh points (in,integer)
+    #   nri    : number of points on inner part of muffin-tin (in,integer)
+    #   ld     : leading dimension (in,integer) REMOVED
+    #   rl     : r^l on the radial mesh (in,real(ld,-lmaxo-1:lmaxo+2))
+    #   wpr    : weights for partial integration on radial mesh (in,real(4,nr))
+    #   zrhomt : muffin-tin charge density (in,complex(*))
+    #   zvclmt : muffin-tin Coulomb potential (out,complex(*))
 
 
     lmaxo = mt_vars.lmaxo

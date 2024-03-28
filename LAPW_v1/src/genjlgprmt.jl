@@ -1,3 +1,7 @@
+# gen: generate
+# jl: Bessel functions Jl (spherical Bessel)
+# Gp: G+p vector (G+k) vector
+# rmt: radius muffin tin
 function genjlgprmt!(rmt, lmax, G2, jlgprmt)
     Ng = size(G2,1)
     Nspecies = size(rmt,1)

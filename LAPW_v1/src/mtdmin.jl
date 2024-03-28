@@ -1,3 +1,5 @@
+# mt: muffin tin
+# dmin: minimum distance
 function mtdmin( atoms::Atoms, rmt::Array{Float64,1} )
     v1 = zeros(Float64,3)
     v2 = zeros(Float64,3)

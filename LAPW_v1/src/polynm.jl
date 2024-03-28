@@ -1,7 +1,20 @@
+# !INPUT/OUTPUT PARAMETERS:
+#   m  : order of derivative (in,integer)
+#   np : number of points to fit (in,integer)
+#   xa : abscissa array (in,real(np))
+#   ya : ordinate array (in,real(np))
+#   x  : evaluation abscissa (in,real)
+# !DESCRIPTION:
+#   Fits a polynomial of order $n_p-1$ to a set of $n_p$ points. If $m\ge 0$ the
+#   function returns the $m$th derviative of the polynomial at $x$, while for
+#   $m < 0$ the integral of the polynomial from the first point in the array to
+#   $x$ is returned.
 function polynm(m::Int64, np::Int64, xa, ya, x::Float64)
 
     res = 0.0
     
+    # This is essential a switch case based on np (number of points)
+
     if np == 1
         if m < 0
             res = ya[1]*(x - xa[1])
