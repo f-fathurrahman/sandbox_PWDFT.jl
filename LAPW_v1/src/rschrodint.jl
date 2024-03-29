@@ -9,7 +9,9 @@
 # p1  : radial derivative of p0 (out,real(nr))
 # q0  : m th energy derivative of Q (out,real(nr))
 # q1  : radial derivative of q0 (out,real(nr))
-function rschrodint!(sol,l,e,nr,r,vr,nn, p0, p1, q0, q1)
+function rschrodint!(sol, l, e, nr, r, vr, nn, p0, p1, q0, q1)
+
+    # nn should be returned, it is an integer
 
     t1 = 1.0/sol^2
     t2 = l*(l+1)

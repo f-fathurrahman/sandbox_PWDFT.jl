@@ -150,7 +150,7 @@ function rhoinit!(
                     jl[l,irc] = sphericalbesselj(l, x)
                 end
             end
-            z1 = 4*pi*zfft[ip] * sfacg[ig,ia]
+            z1 = 4π * zfft[ip] * sfacg[ig,ia]
             lm = 0
             for l in 0:lmax
                 z2 = im^l * z1
@@ -207,7 +207,7 @@ function rhoinit!(
 
     # add the atomic charge density and the excess charge in each muffin-tin
     chgexs = 0.0  # FIXME
-    y00 = 0.28209479177387814347
+    y00 = 0.5*sqrt(1/π)
 
     t1 = chgexs/CellVolume
     for ia in 1:Natoms

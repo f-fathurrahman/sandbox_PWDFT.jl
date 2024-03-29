@@ -4,7 +4,7 @@ function genrlmv!(lmax, v, rlm)
     @assert lmax >= 0
     @assert lmax <= 50
 
-    sqtwo = 1.4142135623730950488
+    sqtwo = sqrt(2.0)
 
     # generate complex spherical harmonics
     ylm = zeros(ComplexF64, (lmax+1)^2)

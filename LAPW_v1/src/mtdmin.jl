@@ -10,7 +10,6 @@ function mtdmin( atoms::Atoms, rmt::Array{Float64,1} )
     LatVecs = atoms.LatVecs
     epslat = 1e-6
     atpos = atoms.positions
-    Nspecies = atoms.Nspecies
     Natoms = atoms.Natoms
     atm2species = atoms.atm2species
     
