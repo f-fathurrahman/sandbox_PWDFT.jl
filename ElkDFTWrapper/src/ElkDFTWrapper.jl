@@ -4,7 +4,7 @@ using OffsetArrays
 using Serialization: serialize
 
 # This is currently hardcoded
-const LIBLAPW = "/home/efefer/WORKS/my_github_repos/ffr-PWDFT/src_LAPW/liblapwdft.so"
+const LIBLAPW = "/home/efefer/WORKS/my_github_repos/ffr-PWDFT/LAPW/src/liblapwdft.so"
 
 const ELK_DATA_DIR = "./TEMP_datadir"
 
