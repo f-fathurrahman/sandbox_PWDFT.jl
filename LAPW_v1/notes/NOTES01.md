@@ -15,3 +15,9 @@ src/XCCalculator.jl:struct LibxcXCCalculator <: AbstractXCCalculator
 They are converted from global variables in Elk. Fortunately, Elk has
 grouped these global variables, so we converted them to `struct`s.
 
+
+# Radial functions
+
+Radial functions are lm-dependent
+
+They are defined within muffin tins.

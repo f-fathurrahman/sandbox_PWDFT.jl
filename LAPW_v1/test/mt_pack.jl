@@ -1,3 +1,4 @@
+# Based on rfmtpack in case tpack=.true.
 function mt_pack!(
   lmmaxo::Int64, lmmaxi::Int64,
   nr::Int64, nri::Int64,

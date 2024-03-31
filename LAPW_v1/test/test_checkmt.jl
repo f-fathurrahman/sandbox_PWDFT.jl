@@ -1,6 +1,7 @@
 using PWDFT
 using LAPWDFT
 
+# implement read_elk_input
 function main()
 
     LatVecs = zeros(3,3)
