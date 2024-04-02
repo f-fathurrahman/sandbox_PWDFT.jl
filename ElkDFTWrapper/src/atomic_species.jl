@@ -1,20 +1,20 @@
-function elk_write_atomic_species_scalars()
+function get_nspecies()
     nspecies = unsafe_load(cglobal((:__m_atoms_MOD_nspecies, LIBLAPW), Int32)) |> Int64
+    return nspecies
 end
 
-function elk_write_nrsp()
+function get_nrsp()
     nspecies = unsafe_load(cglobal((:__m_atoms_MOD_nspecies, LIBLAPW), Int32)) |> Int64
     nrsp = zeros(Int64,nspecies)
     ptr = cglobal((:__m_atomic_species_MOD_nrsp, LIBLAPW), Int32)
     for i in 1:nspecies
         nrsp[i] = unsafe_load(ptr,i)
     end
-    serialize(joinpath(ELK_DATA_DIR,"nrsp.dat"), nrsp)
-    return
+    return nrsp
 end
 
 # Radial grid for each species
-function elk_write_rsp()
+function get_rsp()
     #
     nrspmax  = unsafe_load(cglobal((:__m_atomic_species_MOD_nrspmax, LIBLAPW), Int32)) |> Int64
     nspecies = unsafe_load(cglobal((:__m_atoms_MOD_nspecies, LIBLAPW), Int32)) |> Int64
@@ -27,13 +27,12 @@ function elk_write_rsp()
         ip = ip + 1
     end
     rsp = reshape(rsp, (nrspmax,nspecies))
-    serialize(joinpath(ELK_DATA_DIR,"rsp.dat"), rsp)
-    return
+    return rsp
 end
 
 
 # Atomic rho
-function elk_write_rhosp()
+function write_rhosp()
     #
     nrspmax  = unsafe_load(cglobal((:__m_atomic_species_MOD_nrspmax, LIBLAPW), Int32)) |> Int64
     nspecies = unsafe_load(cglobal((:__m_atoms_MOD_nspecies, LIBLAPW), Int32)) |> Int64
@@ -46,6 +45,5 @@ function elk_write_rhosp()
         ip = ip + 1
     end
     rhosp = reshape(rhosp, (nrspmax,nspecies))
-    serialize(joinpath(ELK_DATA_DIR,"rhosp.dat"), rhosp)
-    return
+    return rhosp
 end

@@ -8,7 +8,7 @@ const LIBLAPW = "/home/efefer/WORKS/my_github_repos/ffr-PWDFT/LAPW/src/liblapwdf
 
 const ELK_DATA_DIR = "./TEMP_datadir"
 
-function elk_init_run()
+function init_run()
     ccall( (:read_input_, LIBLAPW), Cvoid, () )
     ccall( (:init0_, LIBLAPW), Cvoid, () )
     ccall( (:init1_, LIBLAPW), Cvoid, () )
@@ -21,10 +21,20 @@ function elk_init_run()
     return
 end
 
+function elk_rhoinit()
+    ccall( (:rhoinit_, LIBLAPW), Cvoid, () )
+    return
+end
+
 include("atomic_species.jl")
 include("muffin_tins.jl")
 
 include("atom.jl")
 export elk_solve_atom!
+
+include("density_pot_xc.jl")
+
+include("write_elk_variables.jl")
+export write_elk_variables
 
 end

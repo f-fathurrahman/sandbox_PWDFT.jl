@@ -1,5 +1,5 @@
 # this assumes that rhomt is already allocated or initialized, by calling rhoinit
-function elk_get_rhomt()
+function get_rhomt()
     # Dimensions
     nrmtmax = unsafe_load(cglobal( (:__m_muffin_tins_MOD_npmtmax, LIBLAPW), Int32 )) |> Int64
     natmtot = unsafe_load(cglobal( (:__m_atoms_MOD_natmtot, LIBLAPW), Int32 )) |> Int64
