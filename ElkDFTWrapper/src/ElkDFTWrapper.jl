@@ -8,13 +8,19 @@ const LIBLAPW = "/home/efefer/WORKS/my_github_repos/ffr-PWDFT/LAPW/src/liblapwdf
 
 const ELK_DATA_DIR = "./TEMP_datadir"
 
+"""
+This should be run first. This will call some Elk subroutines
+such as read_input, init0, init1 (and possibly others) such
+that the global variables are allocated and (some of them) initilized.
+This will also create ELK_DATA_DIR that will be used to save the
+global variables.
+
+NOTE: probably this must be called only once to avoid double allocations.
+"""
 function init_run()
     ccall( (:read_input_, LIBLAPW), Cvoid, () )
     ccall( (:init0_, LIBLAPW), Cvoid, () )
     ccall( (:init1_, LIBLAPW), Cvoid, () )
-    ccall( (:info_gvectors_, LIBLAPW), Cvoid, () )
-    ccall( (:info_muffin_tins_, LIBLAPW), Cvoid, () )
-    ccall( (:writesym_, LIBLAPW), Cvoid, () )
 
     # Create the directory to save variables here
     isdir(ELK_DATA_DIR) || mkdir(ELK_DATA_DIR)
