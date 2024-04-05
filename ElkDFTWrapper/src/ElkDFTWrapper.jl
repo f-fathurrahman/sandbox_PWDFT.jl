@@ -27,20 +27,19 @@ function init_run()
     return
 end
 
-function elk_rhoinit()
-    ccall( (:rhoinit_, LIBLAPW), Cvoid, () )
-    return
-end
-
 include("atomic_species.jl")
 include("muffin_tins.jl")
+include("gvectors.jl")
+include("atoms.jl")
 
-include("atom.jl")
-export elk_solve_atom!
 
 include("density_pot_xc.jl")
 
 include("write_elk_variables.jl")
 export write_elk_variables
+
+
+include("subroutines.jl")
+
 
 end

@@ -4,8 +4,14 @@ function get_nspecies()
     return nspecies
 end
 
+function get_nrspmax()
+    nrspmax = unsafe_load(cglobal((:__m_atomic_species_MOD_nrspmax, LIBLAPW), Int32)) |> Int64
+    return nrspmax
+end
+
+# nrsp is an automatic array (with preallocated size of maxspecies)
 function get_nrsp()
-    nspecies = unsafe_load(cglobal((:__m_atoms_MOD_nspecies, LIBLAPW), Int32)) |> Int64
+    nspecies = get_nspecies()
     nrsp = zeros(Int64,nspecies)
     ptr = cglobal((:__m_atomic_species_MOD_nrsp, LIBLAPW), Int32)
     for i in 1:nspecies
@@ -17,8 +23,8 @@ end
 # Radial grid for each species
 function get_rsp()
     #
-    nrspmax  = unsafe_load(cglobal((:__m_atomic_species_MOD_nrspmax, LIBLAPW), Int32)) |> Int64
-    nspecies = unsafe_load(cglobal((:__m_atoms_MOD_nspecies, LIBLAPW), Int32)) |> Int64
+    nrspmax  = get_nrspmax()
+    nspecies = get_nspecies()
     #
     ptr_rsp = cglobal( (:__m_atomic_species_MOD_rsp, LIBLAPW), Ptr{Float64} )
     rsp = zeros(Float64, nrspmax*nspecies)
@@ -33,7 +39,7 @@ end
 
 
 # Atomic rho
-function write_rhosp()
+function get_rhosp()
     #
     nrspmax  = unsafe_load(cglobal((:__m_atomic_species_MOD_nrspmax, LIBLAPW), Int32)) |> Int64
     nspecies = unsafe_load(cglobal((:__m_atoms_MOD_nspecies, LIBLAPW), Int32)) |> Int64
