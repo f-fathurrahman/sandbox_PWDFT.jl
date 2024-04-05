@@ -3,8 +3,8 @@ function call_rhoinit()
     return
 end
 
-function call_potks()
-    ccall( (:potks_, LIBLAPW), Cvoid, () )
+function call_potks(; txc=true)
+    ccall( (:potks_, LIBLAPW), Cvoid, (Ref{Bool},), true )
     return
 end
 
