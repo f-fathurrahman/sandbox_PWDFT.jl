@@ -30,6 +30,9 @@ export APWLOVars
 include("readspecies.jl")
 export readspecies!
 
+include("read_elk_input.jl")
+export read_elk_input
+
 include("mtdmin.jl")
 export mtdmin
 
