@@ -1,3 +1,10 @@
+struct ElkInput
+    LatVecs::Matrix{Float64}
+    species_files::Vector{String}
+    natoms_per_species::Vector{Int64}
+    atomic_positions::Vector{Matrix{Float64}}
+end
+
 function read_elk_input()
     f = open("elk.in", "r")
     lines = readlines(f)
@@ -6,6 +13,7 @@ function read_elk_input()
     LatVecs = zeros(Float64, 3, 3)
     species_files = Vector{String}()
     natoms_per_species = Vector{Int64}()
+    atomic_positions = Vector{Matrix{Float64}}()
     Nlines = length(lines)
     iline = 0
     while true
@@ -52,6 +60,8 @@ function read_elk_input()
             for isp in 1:Nspecies
                 iline += 1
                 sp_path = split(lines[iline], " ", keepempty=false)[1]
+                # Remove '
+                sp_path = replace(sp_path, "'" => "")
                 push!(species_files, sp_path)
                 #
                 iline += 1
@@ -59,15 +69,24 @@ function read_elk_input()
                 natmsp = parse(Int64, ll)
                 @info "natmsp = $(natmsp)"
                 push!(natoms_per_species, natmsp)
+                atpos_sp = zeros(Float64, 3, natmsp)
+                # Start reading atomic positions
                 for ia in natmsp
                     iline += 1
                     ll = split(lines[iline], " ", keepempty=false)
                     @info "ll = $(ll)"
+                    for i in 1:3
+                        atpos_sp[i,ia] = parse(Float64, ll[i])
+                    end
                 end
+                push!(atomic_positions, atpos_sp)
             end 
             @info "End of processing atoms"
         end
     end
 
-    return LatVecs
+    return ElkInput(
+        LatVecs, species_files,
+        natoms_per_species, atomic_positions
+    )
 end
