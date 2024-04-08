@@ -1,14 +1,16 @@
-# This is intended to be run on the director where elk.in and species files present.
-
 using Printf
 using LinearAlgebra
 using PWDFT
 using LAPWDFT
 
+include("create_atoms.jl")
+
 function main()
 
-    elk_input = read_elk_input()
-    atoms = create_atoms_from_elk_input(elk_input)
+    atoms = create_Si_fcc()
+    #atoms = create_SiPt_fcc()
+    #atoms = create_Si_atom()
+    #atoms = create_H2O()
 
     Nspecies = atoms.Nspecies
     spsymb = atoms.SpeciesSymbols
@@ -18,7 +20,7 @@ function main()
     apwlo_vars = APWLOVars(Nspecies, mt_vars.lmaxapw)
 
     for isp in 1:Nspecies
-        readspecies!(isp, spsymb[isp]*".in", atsp_vars, mt_vars, apwlo_vars)
+        readspecies!(isp, "DATA_species/"*spsymb[isp]*".in", atsp_vars, mt_vars, apwlo_vars)
     end
 
     init_zero!( mt_vars )
