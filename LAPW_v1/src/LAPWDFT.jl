@@ -32,6 +32,7 @@ export readspecies!
 
 include("read_elk_input.jl")
 export read_elk_input
+export create_atoms_from_elk_input
 
 include("mtdmin.jl")
 export mtdmin

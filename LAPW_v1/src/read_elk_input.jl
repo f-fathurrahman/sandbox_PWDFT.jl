@@ -1,9 +1,13 @@
 struct ElkInput
     LatVecs::Matrix{Float64}
+    Nspecies::Int64
     species_files::Vector{String}
     natoms_per_species::Vector{Int64}
     atomic_positions::Vector{Matrix{Float64}}
+    is_molecule::Bool
 end
+# NOTE: species_files are assumed to be located in the current directory
+
 
 function read_elk_input()
     f = open("elk.in", "r")
@@ -11,9 +15,12 @@ function read_elk_input()
     close(f)
 
     LatVecs = zeros(Float64, 3, 3)
+    Nspecies = 0
     species_files = Vector{String}()
     natoms_per_species = Vector{Int64}()
     atomic_positions = Vector{Matrix{Float64}}()
+    is_molecule = false
+
     Nlines = length(lines)
     iline = 0
     while true
@@ -71,7 +78,7 @@ function read_elk_input()
                 push!(natoms_per_species, natmsp)
                 atpos_sp = zeros(Float64, 3, natmsp)
                 # Start reading atomic positions
-                for ia in natmsp
+                for ia in 1:natmsp
                     iline += 1
                     ll = split(lines[iline], " ", keepempty=false)
                     @info "ll = $(ll)"
@@ -83,10 +90,44 @@ function read_elk_input()
             end 
             @info "End of processing atoms"
         end
+        #
+        if l == "molecule"
+            iline += 1
+            ll = split(lines[iline], " ", keepempty=false)[1]
+            if lowercase(ll) == ".true."
+                is_molecule = true
+            end
+        end
     end
 
     return ElkInput(
-        LatVecs, species_files,
-        natoms_per_species, atomic_positions
+        LatVecs, Nspecies, species_files,
+        natoms_per_species, atomic_positions,
+        is_molecule
     )
+end
+
+
+function create_atoms_from_elk_input(elk_input)
+    Natoms = sum(elk_input.natoms_per_species)
+    Nspecies = elk_input.Nspecies
+    # Build atoms string
+    atoms_string = "$Natoms\n\n"
+    for isp in 1:Nspecies
+        species_name = replace(elk_input.species_files[isp], ".in" => "")
+        if length(species_name) > 3
+            @warn "Too loop species_name: $(species_name)"
+        end
+        atpos = elk_input.atomic_positions[isp]
+        for ias in 1:elk_input.natoms_per_species[isp]
+            atoms_string *= "$species_name $(atpos[1,ias]) $(atpos[2,ias]) $(atpos[3,ias])\n"
+        end
+    end
+    print(atoms_string)
+    if elk_input.is_molecule
+        return Atoms(xyz_string=atoms_string, in_bohr=true, LatVecs=elk_input.LatVecs)
+    else
+        # The coordinates are fractional
+        return Atoms(xyz_string_frac=atoms_string, in_bohr=true, LatVecs=elk_input.LatVecs)
+    end
 end
