@@ -35,11 +35,18 @@ include("atoms.jl")
 
 include("density_pot_xc.jl")
 
-include("write_elk_variables.jl")
-export write_elk_variables
+include("serialize_variables.jl")
+export serialize_variables
 
 
 include("subroutines.jl")
 
+
+function init_debug_calc()
+    init_run()
+    call_rhoinit()
+    call_potks()
+end
+export init_debug_calc
 
 end

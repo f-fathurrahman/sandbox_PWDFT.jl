@@ -1,12 +1,12 @@
 # this assumes that rhomt is already allocated or initialized, by calling rhoinit
 function get_rhomt()
     # Dimensions
-    nrmtmax = get_nrmtmax()
+    npmtmax = get_npmtmax()
     natmtot = get_natmtot()
     # Read the array
     # rhomt is an allocatable array in Fortran
     ptr = cglobal( (:__m_density_pot_xc_MOD_rhomt, LIBLAPW), Ptr{Float64} )
-    Ndim1 = nrmtmax
+    Ndim1 = npmtmax
     Ndim2 = natmtot
     tmp = zeros(Float64,Ndim1*Ndim2)
     ip = 1
