@@ -31,9 +31,8 @@ include("atomic_species.jl")
 include("muffin_tins.jl")
 include("gvectors.jl")
 include("atoms.jl")
-
-
 include("density_pot_xc.jl")
+include("sht.jl")
 
 include("serialize_variables.jl")
 export serialize_variables
@@ -42,6 +41,7 @@ export serialize_variables
 include("subroutines.jl")
 
 
+# Put the workload that we want to investigate
 function init_debug_calc()
     init_run()
     call_rhoinit()
