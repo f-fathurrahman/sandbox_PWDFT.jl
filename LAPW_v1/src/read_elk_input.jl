@@ -5,6 +5,7 @@ struct ElkInput
     natoms_per_species::Vector{Int64}
     atomic_positions::Vector{Matrix{Float64}}
     is_molecule::Bool
+    ngridk::Vector{Int64}
 end
 # NOTE: species_files are assumed to be located in the current directory
 
@@ -20,6 +21,7 @@ function read_elk_input()
     natoms_per_species = Vector{Int64}()
     atomic_positions = Vector{Matrix{Float64}}()
     is_molecule = false
+    ngridk = ones(Int64, 3)
 
     Nlines = length(lines)
     iline = 0
@@ -98,12 +100,21 @@ function read_elk_input()
                 is_molecule = true
             end
         end
+        #
+        if l == "ngridk"
+            iline += 1
+            ll = split(lines[iline], " ", keepempty=false)
+            for i in 1:3
+                ngridk[i] = parse(Int64, ll[i])
+            end
+        end
     end
 
     return ElkInput(
         LatVecs, Nspecies, species_files,
         natoms_per_species, atomic_positions,
-        is_molecule
+        is_molecule,
+        ngridk
     )
 end
 
