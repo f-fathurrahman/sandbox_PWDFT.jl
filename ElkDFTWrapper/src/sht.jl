@@ -1,12 +1,3 @@
-function _load_allocatable_array(T, shape, symbol)
-    ptr = cglobal( (symbol, LIBLAPW), Ptr{T} )
-    tmp = zeros(T, prod(shape))
-    for ip in 1:prod(shape)
-        tmp[ip] = unsafe_load(unsafe_load(ptr,1),ip)
-    end
-    return reshape(tmp, shape)
-end
-
 const _SHT_arrays = [
     :rbshti, :rbshto, :rfshti, :rfshto,
     :zbshti, :zbshto, :zfshti, :zfshto
@@ -27,7 +18,7 @@ for (s,t,d) in zip(_SHT_arrays, _SHT_arrays_type, _SHT_arrays_dims)
     function get_$s()
         symbol = :__m_sht_MOD_$s
         $d = get_$d()
-        return _load_allocatable_array($t, ($d,$d), symbol)
+        return _load_allocatable_array(symbol, $t, ($d,$d))
     end
     """
     eval(Meta.parse(str_prog))

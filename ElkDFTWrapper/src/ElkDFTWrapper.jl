@@ -8,6 +8,9 @@ const LIBLAPW = "/home/efefer/WORKS/my_github_repos/ffr-PWDFT/LAPW/src/liblapwdf
 
 const ELK_DATA_DIR = "./TEMP_datadir"
 
+
+include("load_array.jl")
+
 """
 This should be run first. This will call some Elk subroutines
 such as read_input, init0, init1 (and possibly others) such

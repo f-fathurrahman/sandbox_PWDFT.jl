@@ -52,7 +52,9 @@ end
 
 
 # r^l on fine radial mesh (allocatable)
+# This will be an OffsetArray
 function get_rlmt()
+    symbol = :__m_muffin_tins_MOD_rlmt
     #
     lmaxo = get_lmaxo()
     nrmtmax = get_nrmtmax()
@@ -61,88 +63,63 @@ function get_rlmt()
     Ndim1 = nrmtmax
     Ndim2 = 2*(lmaxo+2)
     Ndim3 = nspecies
-    rlmt = zeros(Float64, Ndim1*Ndim2*Ndim3)
-    ptr_rlmt = cglobal( (:__m_muffin_tins_MOD_rlmt, LIBLAPW), Ptr{Float64} )
-    ip = 1
-    for k in 1:Ndim3, j in 1:Ndim2, i in 1:Ndim1
-        rlmt[ip] = unsafe_load(unsafe_load(ptr_rlmt,1),ip)
-        ip = ip + 1
-    end
-    rlmt = reshape(rlmt, (Ndim1, Ndim2, Ndim3))
+    rlmt = _load_allocatable_array(symbol, Float64, (Ndim1,Ndim2,Ndim3))
     # Finally, convert to OffsetArray
     rlmt = OffsetArray(rlmt, 1:nrmtmax, -lmaxo-1:lmaxo+2, 1:nspecies)
     return rlmt
+end
+
+function get_rmt()
+    symbol = :__m_muffin_tins_MOD_rmt
+    nspecies = get_nspecies()
+    return _load_automatic_array(symbol, Float64, (nspecies,))
 end
 
 
 # nrmt is an automatic array of size maxspecies
 # we don't load it as Ptr{Int32}, instead it is Int32
 function get_nrmt()
+    symbol = :__m_muffin_tins_MOD_nrmt
     nspecies = get_nspecies()
-    ptr = cglobal( (:__m_muffin_tins_MOD_nrmt, LIBLAPW), Int32 )
-    nrmt = zeros(Int64, nspecies)
-    for i in 1:nspecies
-        nrmt[i] = unsafe_load(ptr,i) |> Int64
-    end
-    return nrmt
+    return _load_automatic_array(symbol, Int64, (nspecies,))
 end
 
 # nrmti is an automatic array of size maxspecies
 function get_nrmti()
+    symbol = :__m_muffin_tins_MOD_nrmti
     nspecies = get_nspecies()
-    ptr = cglobal( (:__m_muffin_tins_MOD_nrmti, LIBLAPW), Int32 )
-    nrmti = zeros(Int64,nspecies)
-    for i in 1:nspecies
-        nrmti[i] = unsafe_load(ptr,i) |> Int64
-    end
-    return nrmti
+    return _load_automatic_array(symbol, Int64, (nspecies,))
 end
 
 
 # npmt is an automatic array of size maxspecies
 function get_npmt()
+    symbol = :__m_muffin_tins_MOD_npmt
     nspecies = get_nspecies()
-    ptr = cglobal( (:__m_muffin_tins_MOD_npmt, LIBLAPW), Int32 )
-    npmt = zeros(Int64,nspecies)
-    for i in 1:nspecies
-        npmt[i] = unsafe_load(ptr,i) |> Int64
-    end
-    return npmt
+    return _load_automatic_array(symbol, Int64, (nspecies,))
 end
 
 
 # npmt is an automatic array of size maxspecies
 function get_npmti()
+    symbol = :__m_muffin_tins_MOD_npmti
     nspecies = get_nspecies()
-    ptr = cglobal( (:__m_muffin_tins_MOD_npmti, LIBLAPW), Int32 )
-    npmti = zeros(Int64,nspecies)
-    for i in 1:nspecies
-        npmti[i] = unsafe_load(ptr,i) |> Int64
-    end
-    return npmti
+    return _load_automatic_array(symbol, Int64, (nspecies,))
 end
 
 
 # Coarse packed MT arrays
 # npcmt is an automatic array of size maxspecies
 function get_npcmt()
+    symbol = :__m_muffin_tins_MOD_npcmt
     nspecies = get_nspecies()
-    ptr = cglobal( (:__m_muffin_tins_MOD_npcmt, LIBLAPW), Int32 )
-    npcmt = zeros(Int64,nspecies)
-    for i in 1:nspecies
-        npcmt[i] = unsafe_load(ptr,i) |> Int64
-    end
-    return npcmt
+    return _load_automatic_array(symbol, Int64, (nspecies,))
 end
 
 
 # npcmti is an automatic array of size maxspecies
 function get_npcmti()
+    symbol = :__m_muffin_tins_MOD_npcmti
     nspecies = get_nspecies()
-    ptr = cglobal( (:__m_muffin_tins_MOD_npcmti, LIBLAPW), Int32 )
-    npcmti = zeros(Int64,nspecies)
-    for i in 1:nspecies
-        npcmti[i] = unsafe_load(ptr,i) |> Int64
-    end
-    return npcmti
+    return _load_automatic_array(symbol, Int64, (nspecies,))
 end
