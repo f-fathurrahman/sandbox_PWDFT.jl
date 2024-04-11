@@ -7,23 +7,11 @@ using SpecialFunctions: sphericalbesselj
 
 using PWDFT: Atoms, PWGrid, KPoints, LibxcXCCalculator,
              SymmetryInfo, R_to_G!, G_to_R!,
-             calc_epsxc_Vxc_VWN, calc_epsxc_Vxc_VWN!,
-             calc_Vxc_VWN, calc_Vxc_VWN!,
-             calc_epsxc_VWN, calc_epsxc_VWN!
+             calc_epsxc_Vxc_LDA, calc_epsxc_Vxc_LDA!,
+             calc_Vxc_LDA, calc_Vxc_LDA!,
+             calc_epsxc_LDA, calc_epsxc_LDA!
 
-# x_id and c_id of xc_calc are used now
-# so these functions are quite general (for LDA)
-const calc_epsxc_Vxc_LDA = calc_epsxc_Vxc_VWN
-const calc_epsxc_Vxc_LDA! = calc_epsxc_Vxc_VWN!
-const calc_Vxc_LDA = calc_Vxc_VWN
-const calc_Vxc_LDA! = calc_Vxc_VWN!
-const calc_epsxc_LDA = calc_epsxc_VWN
-const calc_epsxc_LDA! = calc_epsxc_VWN!
-
-export calc_epsxc_Vxc_LDA, calc_epsxc_Vxc_LDA!
-export calc_Vxc_LDA, calc_Vxc_LDA!
-export calc_epsxc_LDA, calc_epsxc_LDA!
-
+using Infiltrator
 
 include("r3frac.jl")
 include("r3mv.jl")
