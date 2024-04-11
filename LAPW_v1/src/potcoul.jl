@@ -74,7 +74,7 @@ function potcoul!(
     end
     #println("\nAfter adding vcln:")
     #println("sum(zvclmt)  = ", ss)
-    println(sum(sum.(zvclmt)))
+    #println(sum(sum.(zvclmt)))
 
     # store real interstitial charge density in complex array
     Npoints = prod(pw.Ns)

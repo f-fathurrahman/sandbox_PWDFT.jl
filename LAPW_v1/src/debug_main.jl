@@ -33,28 +33,28 @@ function debug_main()
     rsum = 0.0
     for ia in 1:Natoms
         isp = atm2species[ia]
-        rsum = rsum + mt_vars.rmt[isp]
+        rsum += mt_vars.rmt[isp]
     end
     rsum = rsum/Natoms
     gkmax = rgkmax/rsum
 
     if gmaxvr <= 2.0*gkmax
-        println("INFO gengvec: gmaxvr will be set to 2*gkmax")
+        # gmaxvr is too small, set it to the minimum value
+        @info "gengvec: gmaxvr will be set to 2*gkmax"
         gmaxvr = 2*gkmax
     end
 
     println("gmaxvr = ", gmaxvr)
     println("gkmax = ", gkmax)
-
+    # Compute ecutrho from gmaxvr
     ecutrho = 0.5*gmaxvr^2
+    # Compute ecutwfc from gkmax
     ecutwfc = 0.5*gkmax^2
-
+    # This is required in PWGrid constructor
     dual = ecutrho/ecutwfc
-    println("dual = ", dual)
-
     sym_info = SymmetryInfo(atoms)
-    println("sym_info.Nsyms = ", sym_info.Nsyms)
-    println("sym_info.Nrots = ", sym_info.Nrots)
+    @info "sym_info.Nsyms = $(sym_info.Nsyms)"
+    @info "sym_info.Nrots = $(sym_info.Nrots)"
 
     # FIXME: need to pass k-points infor from elk_input
     pw = PWGrid(
@@ -75,6 +75,7 @@ function debug_main()
     #
     rhoinit!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
 
+    # Solver Hartree equation (compute electrostatic Coulomb potential)
     vclmt = Vector{Vector{Float64}}(undef,Natoms)
     for ia in 1:Natoms
         isp = atm2species[ia]
@@ -84,11 +85,9 @@ function debug_main()
     potcoul!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir, vclmt, vclir )
 
     @printf("sum rhoir = %18.10f\n", sum(rhoir))
-    ss = 0.0
-    for ia in 1:Natoms
-        ss += sum(rhomt[ia])
-    end
-    @printf("sum rhomt = %18.10f\n", ss)
+    @printf("sum rhomt = %18.10f\n", sum(sum.(rhomt)))
+
+    @infiltrate
 
     return
 end
