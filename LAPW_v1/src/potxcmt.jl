@@ -1,39 +1,38 @@
+# In this function loop over atoms are done directly
 function potxcmt!(
-    ia,
-    atoms, atsp_vars,
-    mt_vars, 
-    rhomt, vxcmt
+    atoms, mt_vars, 
+    rhomt, epsxcmt, vxcmt
 )
 
-    isp = atoms.atm2species[ia]
-    n = mt_vars.npmt[isp]
+    # FIXME: make this an input argument
+    xc_calc = LibxcXCCalculator(x_id=1, c_id=12)
 
-    # allocate local arrays
-    rho = zeros(Float64, n)
-    ex = zeros(Float64, n)
-    ec = zeros(Float64, n)
-    vxc = zeros(Float16, n)
+    Nspecies = atoms.Nspecies
+    Natoms = atoms.Natoms
+    atm2species = atoms.atm2species
 
-    # Only for LDA, no spin
-    
-    nr = nrmt(is)
-    nri = nrmti(is)
+    for isp in 1:atoms.Nspecies
+        #
+        N = mt_vars.npmt[isp]
+        rho = zeros(Float64, N)
+        epsxc = zeros(Float64, N) # we combine x and c contrib to energy
+        vxc = zeros(Float64, N)
+        #
+        for ia in 1:Natoms
+            if atm2species[ia] != isp
+                continue
+            end
 
-    backward_SHT!(mt_vars, isp, rhomt, rho)
+            # Convert from Ylm to "real" space
+            backward_SHT!(mt_vars, isp, rhomt[ia], rho)
 
-    # LDA, spin-unpolarized case only
-    CALL xcifc(xctype_, n=n, tempa=swidth, rho=rho, ex=ex, ec=ec, vx=vx, vc=vc)
+            calc_epsxc_Vxc_LDA!(xc_calc, rho, epsxc, vxc)
 
-    ! convert exchange and correlation energy densities to spherical harmonics
-    CALL my_rfsht(nr, nri, ex, exmt_(:,ias))
-    CALL my_rfsht(nr, nri, ec, ecmt_(:,ias))
-    ! convert exchange-correlation potential to spherical harmonics
-    CALL my_rfsht(nr, nri, vxc, vxcmt_(:,ias))
-    write(*,*) 'my_potxcmt: shape(exmt)  = ', shape(exmt_)
-    write(*,*) 'my_potxcmt: shape(ecmt)  = ', shape(ecmt_)
-    write(*,*) 'my_potxcmt: shape(vxcmt) = ', shape(vxcmt_)
-  ELSE 
-    exmt_(1:n,ias) = ex(1:n)
-    ecmt_(1:n,ias) = ec(1:n)
-    vxcmt_(1:n,ias) = vxc(1:n)
-  ENDIF 
+            # convert from "real" to spherical harmonics (Ylm)
+            forward_SHT!(mt_vars, isp, epsxc, epsxcmt[ia])
+            forward_SHT!(mt_vars, isp, vxc, vxcmt[ia])
+        end
+    end
+
+    return
+end
