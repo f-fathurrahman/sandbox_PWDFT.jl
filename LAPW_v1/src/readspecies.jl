@@ -1,3 +1,16 @@
+#=
+NOTES:
+This needs overhaul.
+Currently several structs are involved in this function - ideally
+we should only involve atsp_vars here.
+
+- mt_vars.rmt and mt_vars.nrmt are set here
+
+- mt_vars.lmaxapw is used here. It is actually a parameter in
+  It can be passed as an optional argument with default value.  
+=#
+
+
 function readspecies!( isp::Int64, filename,
     atsp_vars::AtomicSpeciesVars,
     mt_vars::MuffinTins,
@@ -136,5 +149,5 @@ function readspecies!( isp::Int64, filename,
     end
 
     close(f)
-
+    return
 end

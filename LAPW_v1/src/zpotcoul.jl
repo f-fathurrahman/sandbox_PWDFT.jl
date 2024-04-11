@@ -6,8 +6,7 @@ function zpotcoul!(
     zvclir 
 )
 
-
-    println("enter zpotcoul")
+    #println("enter zpotcoul")
 
     Nspecies = atoms.Nspecies
     Natoms = atoms.Natoms
@@ -23,14 +22,12 @@ function zpotcoul!(
     else
         t1 = 0.25*gmaxvr*2.0  # FIXME: for which case is this useful?
     end
-    println("t1 = ", t1)
+    #println("t1 = ", t1)
     npsd = max(round(Int64,t1),1)
     lnpsd = lmaxo + npsd + 1
 
-    println("npsd = ", npsd)
-    println("lnpsd = ", lnpsd)
-
-
+    #println("npsd = ", npsd)
+    #println("lnpsd = ", lnpsd)
 
     # compute (R_mt)^l
     rmtl = OffsetArray( zeros(Float64, lmaxo+4, Nspecies),
@@ -42,9 +39,8 @@ function zpotcoul!(
         end
     end
 
-    println("rmtl = ")
-    display(rmtl); println()
-
+    #println("rmtl = ")
+    #display(rmtl); println()
 
     # compute the multipole moments from the muffin-tin potentials
     npmt = mt_vars.npmt
@@ -67,17 +63,17 @@ function zpotcoul!(
         end
     end
 
-    println("qlm = ")
-    display(qlm); println()
+    #println("qlm = ")
+    #display(qlm); println()
 
 
     # Fourier transform density to G-space and store in zvclir
     zvclir[:] .= zrhoir[:]
-    println("Before R_to_G! sum zvclir = ", sum(zvclir))
+    #println("Before R_to_G! sum zvclir = ", sum(zvclir))
     R_to_G!(pw, zvclir)
     # FIXME: scale zvclir with 1/Npoints?
     zvclir[:] = zvclir[:]/Npoints
-    println("After R_to_G! sum zvclir = ", sum(zvclir))
+    #println("After R_to_G! sum zvclir = ", sum(zvclir))
 
 
     # FIXME: need to precompute this?
@@ -122,8 +118,8 @@ function zpotcoul!(
         end
     end
 
-    println("qlm after subtracting multipole moments of zvclir = ")
-    display(qlm); println()
+    #println("qlm after subtracting multipole moments of zvclir = ")
+    #display(qlm); println()
 
 
     # find the smooth pseudocharge within the muffin-tin whose multipoles are the
@@ -169,7 +165,7 @@ function zpotcoul!(
             end
         end # loop over Ng
     end
-    println("sum zvclir after smooth multipole = ", sum(zvclir))
+    #println("sum zvclir after smooth multipole = ", sum(zvclir))
 
 
 
@@ -179,7 +175,7 @@ function zpotcoul!(
         ip = pw.gvec.idx_g2r[ig]
         zvclir[ip] = zvclir[ip]*(4π/G2[ig])
     end
-    println("sum zvclir after Poisson solve: ", sum(zvclir))
+    #println("sum zvclir after Poisson solve: ", sum(zvclir))
 
 
     #
@@ -248,7 +244,7 @@ function zpotcoul!(
 
         @views zvclmt[ia][1:npmt[isp]] = zvclmt[ia][1:npmt[isp]] + zhmt[1:npmt[isp]]
         ss = sum(zvclmt[ia])
-        @printf("sum zvclmt[ia] = (%18.10e,%18.10e)\n", real(ss), imag(ss))
+        #@printf("sum zvclmt[ia] = (%18.10e,%18.10e)\n", real(ss), imag(ss))
     end
 
 
@@ -257,10 +253,7 @@ function zpotcoul!(
     zvclir[:] = zvclir[:]*Npoints  # FIXME: remove Npoints factor (?)
 
     ss = sum(abs.(zvclir))
-    @printf("sum abs zvclir after G_to_R: (%18.10f,%18.10f)\n", real(ss), imag(ss))
-
-
-    println("Leaving zpotcoul")
+    #@printf("sum abs zvclir after G_to_R: (%18.10f,%18.10f)\n", real(ss), imag(ss))
 
     return
 end

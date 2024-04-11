@@ -2,9 +2,10 @@
 
 function allatoms!( atsp_vars::AtomicSpeciesVars )
 
+    # FIXME
     #xctsp = atsp_vars.xctsp
     xcgrad = false  # hardcoded for now
-    xc_calc = LibxcXCCalculator()
+    xc_calc = LibxcXCCalculator(x_id=1, c_id=12) # for LDA PW92
 
     spzn = atsp_vars.spzn
     nstsp = atsp_vars.nstsp
@@ -41,14 +42,6 @@ function allatoms!( atsp_vars::AtomicSpeciesVars )
             occsp[isp], xc_calc, xcgrad, nrsp[isp], rsp[isp], evalsp[isp], rhosp[isp],
             vrsp[isp], rwf[isp]
         )
-
-        #xctype = [3, 0, 0]
-        #elk_solve_atom!(
-        #    solsc, ptnucl, spzn[isp], nstsp[isp], nsp[isp], lsp[isp], ksp[isp],
-        #    occsp[isp], xctype, xcgrad, nrsp[isp], rsp[isp], evalsp[isp], rhosp[isp],
-        #    vrsp[isp], rwf[isp]
-        #)
-
 
         for ist in 1:nstsp[isp]
             @printf("%3d %18.10f\n", ist, evalsp[isp][ist])

@@ -1,3 +1,49 @@
+function calc_epsxc_Vxc_PW92!(
+    xc_calc::LibxcXCCalculator,
+    Rhoe::AbstractVector{Float64},
+    epsxc::AbstractVector{Float64},
+    Vxc::AbstractVector{Float64}
+)
+
+    Npoints = size(Rhoe, 1)
+    Nspin = 1
+    eps_x = zeros(Float64, Npoints)
+    eps_c = zeros(Float64, Npoints)
+    v_x = zeros(Float64, Npoints)
+    v_c = zeros(Float64, Npoints)
+
+    ptr = Libxc_xc_func_alloc()
+    # exchange part
+    Libxc_xc_func_init(ptr, 1, Nspin)
+    Libxc_xc_func_set_dens_threshold(ptr, 1e-10)
+    Libxc_xc_lda_exc_vxc!(ptr, Npoints, Rhoe, eps_x, v_x)
+    Libxc_xc_func_end(ptr)
+    #
+    # correlation part
+    Libxc_xc_func_init(ptr, 12, Nspin)
+    Libxc_xc_func_set_dens_threshold(ptr, 1e-10)
+    Libxc_xc_lda_exc_vxc!(ptr, Npoints, Rhoe, eps_c, v_c)
+    Libxc_xc_func_end(ptr)
+    #
+    Libxc_xc_func_free(ptr)
+
+    epsxc[:] .= eps_x[:] .+ eps_c[:]
+    Vxc[:] .= v_x[:] .+ v_c[:]
+
+    return
+end
+
+function calc_epsxc_Vxc_PW92(
+    xc_calc::LibxcXCCalculator,
+    Rhoe::AbstractVector{Float64},
+)
+    epsxc = zeros(Float64, size(Rhoe))
+    Vxc  = zeros(Float64, size(Rhoe))
+    calc_epsxc_Vxc_PW92!(xc_calc, Rhoe, epsxc, Vxc)
+    return epsxc, Vxc
+end
+
+
 function calc_epsxc_PW92( xc_calc::LibxcXCCalculator, Rhoe::Array{Float64,1} )
 
     Npoints = size(Rhoe)[1]

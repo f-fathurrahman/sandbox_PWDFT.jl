@@ -5,7 +5,25 @@ using LinearAlgebra
 using OffsetArrays
 using SpecialFunctions: sphericalbesselj
 
-using PWDFT
+using PWDFT: Atoms, PWGrid, KPoints, LibxcXCCalculator,
+             SymmetryInfo, R_to_G!, G_to_R!,
+             calc_epsxc_Vxc_VWN, calc_epsxc_Vxc_VWN!,
+             calc_Vxc_VWN, calc_Vxc_VWN!,
+             calc_epsxc_VWN, calc_epsxc_VWN!
+
+# x_id and c_id of xc_calc are used now
+# so these functions are quite general (for LDA)
+const calc_epsxc_Vxc_LDA = calc_epsxc_Vxc_VWN
+const calc_epsxc_Vxc_LDA! = calc_epsxc_Vxc_VWN!
+const calc_Vxc_LDA = calc_Vxc_VWN
+const calc_Vxc_LDA! = calc_Vxc_VWN!
+const calc_epsxc_LDA = calc_epsxc_VWN
+const calc_epsxc_LDA! = calc_epsxc_VWN!
+
+export calc_epsxc_Vxc_LDA, calc_epsxc_Vxc_LDA!
+export calc_Vxc_LDA, calc_Vxc_LDA!
+export calc_epsxc_LDA, calc_epsxc_LDA!
+
 
 include("r3frac.jl")
 include("r3mv.jl")
@@ -20,6 +38,9 @@ export AtomicVars
 
 include("AtomicSpeciesVars.jl")
 export AtomicSpeciesVars, init_nuclear_pot!
+
+include("SphericalHarmonicTransform.jl")
+export SphericalHarmonicTransform
 
 include("MuffinTins.jl")
 export MuffinTins, init_packed_mtr!
@@ -52,15 +73,16 @@ export potnucl!
 
 # FIXME: Move to PWDFT?
 include("Libxc_old.jl")
-include("XCCalculator.jl")
+#include("XCCalculator.jl")
 include("LDA_PW92.jl")
-export XCCalculator, LibxcXCCalculator
+#export XCCalculator, LibxcXCCalculator
 export calc_epsxc_PW92
 export calc_Vxc_PW92, calc_Vxc_PW92!
+export calc_epsxc_Vxc_PW92, calc_epsxc_Vxc_PW92!
 
-include("XC_funcs/XC_x_slater.jl")
-include("XC_funcs/XC_c_vwn.jl")
-include("XC_funcs/XC_c_pw.jl")
+#include("XC_funcs/XC_x_slater.jl")
+#include("XC_funcs/XC_c_vwn.jl")
+#include("XC_funcs/XC_c_pw.jl")
 
 include("polynm.jl")
 export polynm
@@ -136,9 +158,6 @@ include("sphcover.jl")
 include("sctovec.jl")
 export sphcover!, sctovec!
 
-include("SphericalHarmonicTransform.jl")
-export SphericalHarmonicTransform
-
 include("zpotclmt.jl")
 export zpotclmt!
 
@@ -147,6 +166,8 @@ export zpotcoul!
 
 include("potcoul.jl")
 export potcoul!
+
+include("debug_main.jl")
 
 end
 

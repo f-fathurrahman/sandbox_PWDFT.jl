@@ -23,9 +23,9 @@ function potcoul!(
         ss = ss + sum(rhomt[ia])
         ssz = ssz + sum(zrhomt[ia])
     end
-    println("After r_to_zf_mt:")
-    println("sum(rhomt)  = ", ss)
-    println("sum(zrhomt) = ", ssz)
+    #println("After r_to_zf_mt:")
+    #println("sum(rhomt)  = ", ss)
+    #println("sum(zrhomt) = ", ssz)
 
     # FIXME
     zvclmt = Vector{Vector{ComplexF64}}(undef,Natoms)
@@ -34,25 +34,25 @@ function potcoul!(
         isp = atm2species[ia]
         zvclmt[ia] = zeros(ComplexF64, npmt[isp])
         #
-        println("sum zrhomt[ia] before = ", sum(zrhomt[ia]))
-        println("sum zvclmt[ia] before = ", sum(zvclmt[ia]))
+        #println("sum zrhomt[ia] before = ", sum(zrhomt[ia]))
+        #println("sum zvclmt[ia] before = ", sum(zvclmt[ia]))
         #
         zpotclmt!( mt_vars, isp, zrhomt[ia], zvclmt[ia] )
         #
-        println("sum zrhomt[ia] after = ", sum(zrhomt[ia]))
-        println("sum zvclmt[ia] after = ", sum(zvclmt[ia]))
-        ss = ss + sum(zvclmt[ia])
+        #println("sum zrhomt[ia] after = ", sum(zrhomt[ia]))
+        #println("sum zvclmt[ia] after = ", sum(zvclmt[ia]))
+        ss += sum(zvclmt[ia])
     end
-    println("\nAfter zpotclmt:")
-    println("sum(zvclmt)  = ", ss)
+    #println("\nAfter zpotclmt:")
+    #println("sum(zvclmt)  = ", ss)
 
 
     # add the nuclear monopole potentials
     vcln = atsp_vars.vcln
     lmmaxi = mt_vars.lmmaxi
     lmmaxo = mt_vars.lmmaxo
-    println("typeof vcln: ", typeof(vcln))
-    println("size vcln = ", size(vcln))
+    #println("typeof vcln: ", typeof(vcln))
+    #println("size vcln = ", size(vcln))
     for ia in 1:Natoms
         isp = atm2species[ia]
         nr = nrmt[isp]
@@ -72,8 +72,8 @@ function potcoul!(
     for ia in 1:Natoms
         ss = ss + sum(zvclmt[ia])
     end
-    println("\nAfter adding vcln:")
-    println("sum(zvclmt)  = ", ss)
+    #println("\nAfter adding vcln:")
+    #println("sum(zvclmt)  = ", ss)
     println(sum(sum.(zvclmt)))
 
     # store real interstitial charge density in complex array
@@ -95,10 +95,8 @@ function potcoul!(
     # store complex interstitial potential in real array
     @views vclir[:] = real(zvclir[:])
 
-
-    println("sum vclmt = ", sum(sum.(vclmt)))
-    println("sum vclir = ", sum(abs.(vclir)))
-
+    #println("sum vclmt = ", sum(sum.(vclmt)))
+    #println("sum vclir = ", sum(abs.(vclir)))
 
     return
 end

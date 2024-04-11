@@ -1,3 +1,7 @@
+# NOTES:
+# Several variables are array of size Nspecies (specific for each species)
+# Other variables are common for both species
+
 mutable struct MuffinTins
     # scale factor for number of muffin-tin points
     nrmtscf::Float64
@@ -58,6 +62,8 @@ mutable struct MuffinTins
     npmt::Vector{Int64}
     npcmti::Vector{Int64}
     npcmt::Vector{Int64}
+    #
+    SHT::SphericalHarmonicTransform
 end
 
 function MuffinTins(Nspecies; lmaxi=1)
@@ -99,13 +105,11 @@ function MuffinTins(Nspecies; lmaxi=1)
     idxil = zeros(Int64, lmmaxapw)
     idxim = zeros(Int64, lmmaxapw)
     lm = 0
-    for l in 0:lmaxapw
-        for m in -l:l
-            lm = lm + 1
-            idxlm[l,m] = lm
-            idxil[lm] = l
-            idxim[lm] = m
-        end
+    for l in 0:lmaxapw, m in -l:l
+        lm = lm + 1
+        idxlm[l,m] = lm
+        idxil[lm] = l
+        idxim[lm] = m
     end
 
     npmti = zeros(Int64,Nspecies)
@@ -113,20 +117,23 @@ function MuffinTins(Nspecies; lmaxi=1)
     npcmti = zeros(Int64,Nspecies)
     npcmt = zeros(Int64,Nspecies)
 
+    SHT = SphericalHarmonicTransform(lmaxi, lmaxo)
+
     return MuffinTins(
         nrmtscf, nrmt, rmtall, rmtdelta, rmt, omegamt, lradstp,
         nrcmt, rcmt, rlmt, rlcmt, wrmt, wprmt, wrcmt, wprcmt,
         maxlapw, lmaxapw, lmmaxapw, lmaxo, lmmaxo, lmaxi, lmmaxi, fracinr,
-        nrmti, nrcmti, idxlm, idxil, idxim, npmti, npmt, npcmti, npcmt
+        nrmti, nrcmti, idxlm, idxil, idxim, npmti, npmt, npcmti, npcmt,
+        SHT
     )
 
 end
 
-
+# why need this separate step?
 function init_zero!( mt_vars::MuffinTins )
     
     nrmt = mt_vars.nrmt
-    Nspecies = size(nrmt)[1]
+    Nspecies = size(nrmt, 1)
 
     nrcmt = mt_vars.nrcmt
     lradstp = mt_vars.lradstp
@@ -134,7 +141,7 @@ function init_zero!( mt_vars::MuffinTins )
     # make the muffin-tin mesh commensurate with lradstp
     for is in 1:Nspecies
         nrmt[is] = nrmt[is] - (nrmt[is]-1)%lradstp
-        nrcmt[is] =( nrmt[is] - 1)/lradstp + 1
+        nrcmt[is] = (nrmt[is] - 1)/lradstp + 1
     end
 
     @assert mt_vars.lmaxo <= mt_vars.lmaxapw

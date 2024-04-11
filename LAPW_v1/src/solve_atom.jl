@@ -33,10 +33,7 @@ function solve_atom!(
     # allocate local arrays
     vn = zeros(Float64,nr)
     vh = zeros(Float64,nr)
-    ex = zeros(Float64,nr)
-    ec = zeros(Float64,nr)
-    vx = zeros(Float64,nr)
-    vc = zeros(Float64,nr)
+    vxc = zeros(Float64,nr)
     vrp = zeros(Float64,nr)
     
     ri = zeros(Float64,nr)
@@ -134,30 +131,12 @@ function solve_atom!(
             #xcifc(xctype,n=nr,rho=rho,grho=grho,g2rho=g2rho,g3rho=g3rho,ex=ex, ec=ec,vx=vx,vc=vc)
         else
             # LDA functional
-            #call xcifc(xctype,n=nr,rho=rho,ex=ex,ec=ec,vx=vx,vc=vc)
-            #for ir in 1:nr
-            #    if rho[ir] <= 10e-12
-            #        #@printf("small rho = %18.10e\n", rho[ir])
-            #        ex[ir] = 0.0
-            #        vx[ir] = 0.0
-            #        ec[ir] = 0.0
-            #        vc[ir] = 0.0
-            #    else
-            #        ex[ir], vx[ir] = XC_x_slater( rho[ir] )
-            #        #ec[ir], vc[ir] = XC_c_vwn( rho[ir] )
-            #        ec[ir], vc[ir] = XC_c_pw( rho[ir] )
-            #    end
-            #end
-            calc_Vxc_PW92!( xc_calc, rho, vx, vc )
+            calc_Vxc_LDA!( xc_calc, rho, vxc )
         end
-        
-        #println("sum(vx) = ", sum(vx))
-        #println("sum(vc) = ", sum(vc))
-        #exit()
     
         # self-consistent potential
         for ir in 1:nr
-            vr[ir] = vh[ir] + vx[ir] + vc[ir]
+            vr[ir] = vh[ir] + vxc[ir]
         end
     
         # determine change in potential

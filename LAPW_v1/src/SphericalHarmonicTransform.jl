@@ -7,7 +7,7 @@ struct SphericalHarmonicTransform
     rfshto::Matrix{Float64}
     zbshto::Matrix{ComplexF64}
     zfshto::Matrix{ComplexF64}
-    # fixed to false for the time bein
+    # fixed to false for the "normal" calculation
     # will be used in MAE (magnetic anisotropy energy) calculation
     trotsht::Bool
 end

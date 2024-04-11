@@ -113,7 +113,7 @@ function AtomicSpeciesVars( Nspecies::Int64 )
     rhosp = Vector{Vector{Float64}}(undef,Nspecies)
     vrsp = Vector{Vector{Float64}}(undef,Nspecies)
 
-    xctsp  = (3,0,0)
+    xctsp  = (3,0,0) # not used, always defaulting to this?
 
     return AtomicSpeciesVars(
         sppath, spfname, spname, spsymb, spzn,
@@ -128,7 +128,7 @@ end
 # Setting up vcln
 function init_nuclear_pot!( atsp_vars::AtomicSpeciesVars )
     # spherical harmonic for l=m=0
-    y00=0.28209479177387814347
+    y00 = 0.28209479177387814347
 
     rsp = atsp_vars.rsp
     nrsp = atsp_vars.nrsp

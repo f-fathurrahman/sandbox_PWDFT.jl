@@ -22,13 +22,13 @@ function rhoinit!(
     rhosp = atsp_vars.rhosp 
 
     # For debugging
-    println("Some rhosp: ")
-    for isp in 1:Nspecies
-        println("rhosp for isp = ", isp)
-        for ir in 1:10
-            @printf("%4d %18.10f\n", ir, rhosp[isp][ir])
-        end
-    end
+    #println("Some rhosp: ")
+    #for isp in 1:Nspecies
+    #    println("rhosp for isp = ", isp)
+    #    for ir in 1:10
+    #        @printf("%4d %18.10f\n", ir, rhosp[isp][ir])
+    #    end
+    #end
     #exit()
 
     lmmaxi = mt_vars.lmmaxi
@@ -112,20 +112,20 @@ function rhoinit!(
         end
     end
 
-    println("Some zfft")
-    for ig in 1:10
-        ip = pw.gvec.idx_g2r[ig]
-        @printf("%8d %18.10f %18.10f\n", ip, real(zfft[ip]), imag(zfft[ip]))
-    end
+    #println("Some zfft")
+    #for ig in 1:10
+    #    ip = pw.gvec.idx_g2r[ig]
+    #    @printf("%8d %18.10f %18.10f\n", ip, real(zfft[ip]), imag(zfft[ip]))
+    #end
     #exit()
 
-    println("sum sfacg = ", sum(sfacg))
-    s = 0.0
-    for isp in 1:Nspecies
-        s = s + sum(rhosp[isp])
-    end
-    println("sum rhosp = ", s)
-    println("sum zfft  = ", sum(zfft))
+    #println("sum sfacg = ", sum(sfacg))
+    #s = 0.0
+    #for isp in 1:Nspecies
+    #    s = s + sum(rhosp[isp])
+    #end
+    #println("sum rhosp = ", s)
+    #println("sum zfft  = ", sum(zfft))
 
     nrcmtmax = maximum(nrcmt)
     npcmtmax = maximum(npcmt)
@@ -140,8 +140,8 @@ function rhoinit!(
         nrci = nrcmti[isp]
         irco = nrci + 1
         zfmt[1:npcmt[isp]] .= 0.0
-        println("nrci = ", nrci)
-        println("nrc  = ", nrc)
+        #println("nrci = ", nrci)
+        #println("nrc  = ", nrc)
         for ig in 1:Ng
             ip = idx_g2r[ig]
             for irc in 1:nrc
@@ -171,39 +171,39 @@ function rhoinit!(
         end
 #        println("Finish loop over G")
 
-        println("Some zfmt")
-        for i in 1:10
-            @printf("%8d %18.10f %18.10f\n", i, real(zfmt[i]), imag(zfmt[i]))
-        end
+        #println("Some zfmt")
+        #for i in 1:10
+        #    @printf("%8d %18.10f %18.10f\n", i, real(zfmt[i]), imag(zfmt[i]))
+        #end
 
         z_to_rf_mt!( mt_vars, nrc, nrci, zfmt, rhomt[ia] )
 
-        println("Some rhomt after z_to_rf_mt")
-        println("inner")
-        for i in 1:10
-            @printf("%8d %18.10f\n", i, rhomt[ia][i])
-        end
-        println("outer")
-        for i in nrmti[isp]+1:nrmti[isp]+lmmaxo
-            @printf("%8d %18.10f\n", i, rhomt[ia][i])
-        end
+        #println("Some rhomt after z_to_rf_mt")
+        #println("inner")
+        #for i in 1:10
+        #    @printf("%8d %18.10f\n", i, rhomt[ia][i])
+        #end
+        #println("outer")
+        #for i in nrmti[isp]+1:nrmti[isp]+lmmaxo
+        #    @printf("%8d %18.10f\n", i, rhomt[ia][i])
+        #end
 
     end
 
     # convert the density from a coarse to a fine radial mesh
     rf_mt_c_to_f!( atoms, atsp_vars, mt_vars, rhomt )
 
-    isp = 1
-    ia = 1
-    println("Some rhomt after rf_mt_c_to_f")
-    println("inner")
-    for i in 1:10
-        @printf("%8d %18.10f\n", i, rhomt[ia][i])
-    end
-    println("outer")
-    for i in nrmti[isp]+1:nrmti[isp]+lmmaxo
-        @printf("%8d %18.10f\n", i, rhomt[ia][i])
-    end
+    #isp = 1
+    #ia = 1
+    #println("Some rhomt after rf_mt_c_to_f")
+    #println("inner")
+    #for i in 1:10
+    #    @printf("%8d %18.10f\n", i, rhomt[ia][i])
+    #end
+    #println("outer")
+    #for i in nrmti[isp]+1:nrmti[isp]+lmmaxo
+    #    @printf("%8d %18.10f\n", i, rhomt[ia][i])
+    #end
 
     # add the atomic charge density and the excess charge in each muffin-tin
     chgexs = 0.0  # FIXME
@@ -227,17 +227,17 @@ function rhoinit!(
         end
     end
 
-    isp = 1
-    ia = 1
-    println("Some rhomt after adding rhosp")
-    println("inner")
-    for i in 1:10
-        @printf("%8d %18.10f\n", i, rhomt[ia][i])
-    end
-    println("outer")
-    for i in nrmti[isp]+1:nrmti[isp]+lmmaxo
-        @printf("%8d %18.10f\n", i, rhomt[ia][i])
-    end
+    #isp = 1
+    #ia = 1
+    #println("Some rhomt after adding rhosp")
+    #println("inner")
+    #for i in 1:10
+    #    @printf("%8d %18.10f\n", i, rhomt[ia][i])
+    #end
+    #println("outer")
+    #for i in nrmti[isp]+1:nrmti[isp]+lmmaxo
+    #    @printf("%8d %18.10f\n", i, rhomt[ia][i])
+    #end
 
     #exit()
 
@@ -251,14 +251,5 @@ function rhoinit!(
             rhoir[ip] = 1.e-10
         end
     end
-
-    @printf("sum rhoir = %18.10f\n", sum(rhoir))
-    ss = 0.0
-    for ia in 1:Natoms
-        ss = ss + sum(rhomt[ia])
-    end
-    @printf("sum rhomt = %18.10f\n", ss)
-    @printf("Total = %18.10f\n", ss + sum(rhoir))
-
     return
 end

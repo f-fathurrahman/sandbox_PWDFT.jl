@@ -25,10 +25,10 @@ function zpotclmt!( mt_vars, isp, zrhomt, zvclmt )
     rl = mt_vars.rlmt[isp]
     wpr = mt_vars.wprmt[isp]
 
-    println("my_zpotclmt: nr = ", nr)
-    println("my_zpotclmt: nri = ", nri)
-    println("my_zpotclmt: sum(wpr) = ", sum(wpr))
-    println("my_zpotclmt: sum(rl)  = ", sum(rl))
+    #println("my_zpotclmt: nr = ", nr)
+    #println("my_zpotclmt: nri = ", nri)
+    #println("my_zpotclmt: sum(wpr) = ", sum(wpr))
+    #println("my_zpotclmt: sum(rl)  = ", sum(rl))
 
     nro = nr - nri
     iro = nri + 1
@@ -41,12 +41,12 @@ function zpotclmt!( mt_vars, isp, zrhomt, zvclmt )
     f4 = zeros(Float64,nr)
     f5 = zeros(Float64,nr)
 
-    @printf("lmaxi = %4d\n", lmaxi)
+    #@printf("lmaxi = %4d\n", lmaxi)
     for l in 0:lmaxi
         l1 = l + 2
         l2 = -l + 1
         l3 = -l - 1
-        @printf("l1 l2 l3 = %4d %4d %4d\n", l1, l2, l3)
+        #@printf("l1 l2 l3 = %4d %4d %4d\n", l1, l2, l3)
         t0 = 4*pi/(2*l + 1)
         for m in -l:l
             lm = lm + 1
@@ -102,17 +102,17 @@ function zpotclmt!( mt_vars, isp, zrhomt, zvclmt )
             end 
         end
     end
-    println("After lmaxi sum zvclmt = ", sum(zvclmt))
+    #println("After lmaxi sum zvclmt = ", sum(zvclmt))
     #exit(99) # debug
 
 
-    @printf("lmaxo = %4d\n", lmaxo)
+    #@printf("lmaxo = %4d\n", lmaxo)
     for l in lmaxi+1:lmaxo
         l1 = l + 2
         l2 = -l + 1
         l3 = -l - 1
         t0 = 4*pi/(2*l+1)
-        @printf("l1 l2 l3 = %4d %4d %4d\n", l1, l2, l3)
+        #@printf("l1 l2 l3 = %4d %4d %4d\n", l1, l2, l3)
         for m in -l:l
             lm = lm + 1
             i = npi + lm
@@ -145,7 +145,7 @@ function zpotclmt!( mt_vars, isp, zrhomt, zvclmt )
             end
         end
     end
-    println("After lmaxo sum zvclmt = ", sum(zvclmt))
+    #println("After lmaxo sum zvclmt = ", sum(zvclmt))
 
     return
 end
