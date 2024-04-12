@@ -34,6 +34,11 @@ include("backward_SHT.jl")
 include("forward_SHT.jl")
 export backward_SHT!, forward_SHT!
 
+include("SymmetryVars.jl")
+export SymmetryVars
+include("findsymlat.jl")
+export findsymlat
+
 include("MuffinTins.jl")
 export MuffinTins, init_packed_mtr!
 
