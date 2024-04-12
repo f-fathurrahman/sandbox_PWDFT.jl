@@ -32,6 +32,7 @@ function get_vtcsymc()
     return _load_automatic_array(symbol, Float64, (3,maxsymcrys))
 end
 
+# XXX: symlat matrices are transpose of PWDFT.SymmetryInfo (?)
 function get_symlat()
     symbol = :__m_symmetry_MOD_symlat
     return _load_automatic_array(symbol, Int64, (3,3,48))
