@@ -87,6 +87,16 @@ function debug_main()
     @printf("sum rhoir = %18.10f\n", sum(rhoir))
     @printf("sum rhomt = %18.10f\n", sum(sum.(rhomt)))
 
+    epsxcmt = Vector{Vector{Float64}}(undef,Natoms)
+    vxcmt = Vector{Vector{Float64}}(undef,Natoms)
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        epsxcmt[ia] = zeros(Float64, npmt[isp])
+        vxcmt[ia] = zeros(Float64, npmt[isp])
+    end
+
+    potxcmt!(atoms, mt_vars, rhomt, epsxcmt, vxcmt)
+
     @infiltrate
 
     return

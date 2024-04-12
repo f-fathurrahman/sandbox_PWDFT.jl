@@ -30,6 +30,10 @@ export AtomicSpeciesVars, init_nuclear_pot!
 include("SphericalHarmonicTransform.jl")
 export SphericalHarmonicTransform
 
+include("backward_SHT.jl")
+include("forward_SHT.jl")
+export backward_SHT!, forward_SHT!
+
 include("MuffinTins.jl")
 export MuffinTins, init_packed_mtr!
 
@@ -154,6 +158,9 @@ export zpotcoul!
 
 include("potcoul.jl")
 export potcoul!
+
+include("potxcmt.jl")
+export potxcmt!
 
 include("debug_main.jl")
 

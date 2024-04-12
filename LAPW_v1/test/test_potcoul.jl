@@ -25,6 +25,7 @@ function main()
     checkmt!( atoms, mt_vars )
     genrmesh!( atoms, atsp_vars, mt_vars )
     init_packed_mtr!( mt_vars )
+
     init_nuclear_pot!( atsp_vars )
     allatoms!(atsp_vars)
 
@@ -62,6 +63,7 @@ function main()
     println("sym_info.Nsyms = ", sym_info.Nsyms)
     println("sym_info.Nrots = ", sym_info.Nrots)
 
+    # FIXME: need to pass k-points infor from elk_input
     pw = PWGrid( ecutwfc, atoms.LatVecs, dual=dual,
         kpoints=KPoints(atoms, [2,2,2], [0,0,0], sym_info.s)
         #Ns_=(32,32,32), kpoints=KPoints(atoms, [1,1,1], [0,0,0], sym_info.s) # for molecules

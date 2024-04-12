@@ -1,6 +1,6 @@
 using LAPWDFT
 
-const LIBLAPW = "/home/efefer/WORKS/my_github_repos/ffr-PWDFT/src_LAPW/liblapwdft.so"
+const LIBLAPW = "/home/efefer/WORKS/my_github_repos/ffr-PWDFT/LAPW/src/liblapwdft.so"
 
 function get_elk_arrays(lmaxi::Int64, lmaxo::Int64)
 
