@@ -30,10 +30,12 @@ function init_run()
     return
 end
 
+include("lattice.jl")
 include("atomic_species.jl")
 include("muffin_tins.jl")
 include("gvectors.jl")
 include("atoms.jl")
+include("symmetry.jl")
 include("density_pot_xc.jl")
 include("sht.jl")
 
