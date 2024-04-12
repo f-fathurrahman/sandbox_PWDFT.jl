@@ -5,7 +5,9 @@ function serialize_variables()
 
     var_list = [
         :rhomt, :rhoir, :rhosp,
-        :vclmt, :vclir
+        :vclmt, :vclir,
+        :exmt, :ecmt, :vxcmt,
+        :exir, :ecir, :vxcir
     ]
 
     for v in var_list
