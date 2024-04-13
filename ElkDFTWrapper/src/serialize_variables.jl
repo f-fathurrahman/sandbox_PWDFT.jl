@@ -4,6 +4,7 @@ Serialize some Elk's global variables using Julia's `serialize`.
 function serialize_variables()
 
     var_list = [
+        :atposl, :atposc,
         :rhomt, :rhoir, :rhosp,
         :vclmt, :vclir,
         :exmt, :ecmt, :vxcmt,
