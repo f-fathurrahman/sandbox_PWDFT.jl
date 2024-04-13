@@ -1,4 +1,4 @@
-function r3frac!(epslat::Float64, v)
+function r3frac!(v; epslat=1e-6)
     for i in 1:3
         v[i] = v[i] - round(Int64, v[i])
         if v[i] < 0.0
