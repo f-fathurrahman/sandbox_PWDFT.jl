@@ -39,6 +39,9 @@ export SymmetryVars
 include("findsymlat.jl")
 export findsymlat
 
+include("findsymcrys.jl")
+export findsymcrys!
+
 include("MuffinTins.jl")
 export MuffinTins, init_packed_mtr!
 
