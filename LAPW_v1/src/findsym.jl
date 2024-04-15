@@ -35,7 +35,7 @@ function findsym!(atoms, apl1, apl2, nsym, lspl, lspn, iea; epslat=1e-6)
                     @goto LABEL10 # continue ?
                 end
                 # not invariant so try new spatial rotation
-                @goto LABEL40
+                @goto LABEL40 # jump to the end of loop over symlat
                 @label LABEL10 #10 CONTINUE
             end
         end
