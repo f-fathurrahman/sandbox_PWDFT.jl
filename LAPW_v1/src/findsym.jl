@@ -1,4 +1,4 @@
-function findsym!(atoms, apl1, apl2, nsym, lspl, lspn, iea; epslat=1e-6)
+function findsym!(atoms, apl1, apl2, lspl, lspn, iea; epslat=1e-6)
 
     Natoms = atoms.Natoms
     atm2species = atoms.atm2species
@@ -58,6 +58,9 @@ function findsym!(atoms, apl1, apl2, nsym, lspl, lspn, iea; epslat=1e-6)
         @label LABEL40 # continue
     
     end # ! end loop over spatial rotations 
+
+    @info "nsym = $nsym"
+    return nsym
 
     return
 end

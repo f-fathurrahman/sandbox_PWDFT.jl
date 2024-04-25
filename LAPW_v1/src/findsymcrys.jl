@@ -122,62 +122,50 @@ function findsymcrys!(
             apl[:,ia] = atposl + vtl[:,i]
         end
         # find the symmetries for current translation
-        findsym!(atposl, apl, nsym, lspl, lspn, iea)
-    DO isym = 1,nsym
-      nsymcrys = nsymcrys + 1
-      IF(nsymcrys > maxsymcrys) THEN 
-        WRITE(*,*)
-        WRITE(*,'("Error(findsymcrys): too many crystal symmetries")')
-        WRITE(*,'(" Adjust maxsymcrys in modmain and recompile code")')
-        WRITE(*,*)
-        stop
-      ENDIF 
-      vtlsymc(:,nsymcrys) = vtl(:,i)
-      lsplsymc(nsymcrys) = lspl(isym)
-      lspnsymc(nsymcrys) = lspn(isym)
-      DO is = 1,nspecies
-        DO ia = 1,natoms(is)
-          ja = iea(ia, is, isym)
-          ieqatom(ia, is, nsymcrys) = ja
-          eqatoms(ia,ja,is) = .true.
-          eqatoms(ja,ia,is) = .true.
-        ENDDO 
-      ENDDO 
-    ENDDO 
-  ENDDO 
+        nsym = findsym!(atposl, apl, nsym, lspl, lspn, iea)
+        for isym in 1:nsym
+            nsymcrys = nsymcrys + 1
+            if nsymcrys > MAX_SYM_CRYS 
+                error("Too many nsymcrys = $(nsymcrys)")
+            end
+            @views vtlsymc[:,nsymcrys] = vtl[:,i]
+            lsplsymc[nsymcrys] = lspl[isym]
+            lspnsymc[nsymcrys] = lspn[isym]
+            for ia in 1:Natoms
+                ja = iea[ia,isym]
+                ieqatom[ia,nsymcrys] = ja
+                eqatoms[ia,ja] = true
+                eqatoms[ja,ia] = true
+            end 
+        end
+    end
 
-    #=
+    tsyminv = false
+    for isym in 1:nsymcrys
+        i = lsplsymc[isym]
+        # check if inversion symmetry is present
+        if symlat[i] == -symlat[1]
+            tsyminv = true
+            # make inversion the second symmetry element (the identity is the first)
+            v1[:] = vtlsymc[:,isym]; vtlsymc[:,isym] = vtlsymc[:,2]; vtlsymc[:,2] = v1(:)
+            i = lsplsymc[isym]; lsplsymc[isym] = lsplsymc[2]; lsplsymc[2] = i
+            i = lspnsymc[isym]; lspnsymc[isym] = lspnsymc[2]; lspnsymc[2] = i
+            for ia in 1:Natoms
+                i = ieqatom[ia,isym]
+                ieqatom[ia,isym] = ieqatom[ia,2]
+                ieqatom[ia,2] = i
+            end
+            break
+        end
+    end
 
-  tsyminv=.false.
 
-  DO isym=1,nsymcrys
-  ! check if inversion symmetry is present
-    i = lsplsymc(isym)
-    IF( all(symlat(:,:,i) == -symlat(:,:,1)) ) THEN 
-      tsyminv = .true.
-      ! make inversion the second symmetry element (the identity is the first)
-      v1(:) = vtlsymc(:,isym); vtlsymc(:,isym) = vtlsymc(:,2); vtlsymc(:,2) = v1(:)
-      i = lsplsymc(isym); lsplsymc(isym) = lsplsymc(2); lsplsymc(2) = i
-      i = lspnsymc(isym); lspnsymc(isym) = lspnsymc(2); lspnsymc(2) = i
-      DO is = 1,nspecies
-        DO ia = 1,natoms(is)
-          i = ieqatom(ia,is,isym)
-          ieqatom(ia,is,isym) = ieqatom(ia,is,2)
-          ieqatom(ia,is,2) = i
-        ENDDO 
-      ENDDO 
-      goto 20
-    ENDIF 
-  ENDDO 
-  20 continue
-
-  ! if inversion exists THEN  shift basis so that inversion center is at origin
-  IF(tsyminv .and. tshift) THEN 
-    v1(:) = v1(:)/2.d0
-    DO is = 1,nspecies
-      DO ia = 1,natoms(is)
-        ! shift atom
-        atposl(:,ia,is) = atposl(:,ia,is) + v1(:)
+    # if inversion exists THEN  shift basis so that inversion center is at origin
+    if tsyminv && tshift 
+        v1[:] = v1[:]/2.0
+        for ia in 1:Natoms
+            # shift atom
+            atposl(:,ia,is) = atposl(:,ia,is) + v1(:)
         ! map lattice coordinates back to [0,1)
         CALL r3frac(epslat,atposl(:,ia,is))
         ! map lattice coordinates to [-0.5,0.5)
@@ -229,6 +217,8 @@ function findsymcrys!(
   ENDIF 
 
     return
+
+#=
 =#
 
 
