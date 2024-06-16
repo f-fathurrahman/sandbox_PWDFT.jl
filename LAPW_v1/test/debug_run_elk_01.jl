@@ -3,7 +3,7 @@ using Serialization: serialize
 
 # import PyPlot as plt
 
-const LIBLAPW = "/home/efefer/WORKS/my_github_repos/ffr-PWDFT/src_LAPW/liblapwdft.so"
+const LIBLAPW = "/home/efefer/WORKS/my_github_repos/ffr-PWDFT/LAPW/src/liblapwdft.so"
 
 ccall( (:read_input_, LIBLAPW), Cvoid, () )
 ccall( (:init0_, LIBLAPW), Cvoid, () )
