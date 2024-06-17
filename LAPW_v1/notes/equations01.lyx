@@ -1,0 +1,558 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+\usepackage{braket}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip smallskip
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Subsection*
+hmlrad.f90
+\end_layout
+
+\begin_layout Standard
+Calculates the radial Hamiltonian integrals of the APW and local-orbital
+ basis functions.
+ In other words, for atom 
+\begin_inset Formula $\alpha$
+\end_inset
+
+, it computes integrals of the form 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+h_{qq';ll'l''m''}^{\alpha}=\begin{cases}
+\int_{0}^{R_{i}}u_{q;l}^{\alpha}(r)Hu_{q';l'}^{\alpha}(r)r^{2}dr & l''=0\\
+\int_{0}^{R_{i}}u_{q;l}^{\alpha}(r)V_{l''m''}^{\alpha}(r)u_{q';l'}^{\alpha}(r)r^{2}dr & l''>0
+\end{cases},
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $u_{q;l}^{\alpha}$
+\end_inset
+
+ is the 
+\begin_inset Formula $q$
+\end_inset
+
+th APW radial function for angular momentum 
+\begin_inset Formula $l$
+\end_inset
+
+; 
+\begin_inset Formula $H$
+\end_inset
+
+ is the Hamiltonian of the radial Schroedinger equation; and 
+\begin_inset Formula $V_{l''m''}^{\alpha}$
+\end_inset
+
+ is the muffin-tin Kohn-Sham potential.
+ Similar integrals are calculated for APW-local-orbital and local-orbital-local-
+orbital contributions.
+\end_layout
+
+\begin_layout Subsection*
+zpotcoul.f90
+\end_layout
+
+\begin_layout Standard
+Calculates the Coulomb potential of a complex charge density by solving
+ Poisson's equation using the method of M.
+ Weinert, 
+\emph on
+J.
+ Math.
+ Phys.
+
+\emph default
+ 
+\series bold
+22
+\series default
+, 2433 (1981).
+\end_layout
+
+\begin_layout Standard
+First, the multipole momesnts of the muffin-tin charge are determined for
+ the 
+\begin_inset Formula $j$
+\end_inset
+
+ atom of the 
+\begin_inset Formula $i$
+\end_inset
+
+th species by
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+q_{ij;lm}^{{\rm MT}}=\int_{0}^{R_{i}}r^{l+2}\rho_{ij;lm}(r)dr+z_{ij}Y_{00}\,\delta_{l,0}\;,
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $R_{i}$
+\end_inset
+
+ is the muffin-tin radius and 
+\begin_inset Formula $z_{ij}$
+\end_inset
+
+ is a point charge located at the atom center (usually the nuclear charge,
+ which should be taken as 
+\series bold
+negative
+\series default
+).
+\end_layout
+
+\begin_layout Standard
+Next, the multipole moments of the continuation of the interstitial density,
+ 
+\begin_inset Formula $\rho^{{\rm I}}$
+\end_inset
+
+, into the muffin-tin are found with
+\begin_inset Formula 
+\[
+q_{ij;lm}^{{\rm I}}=4\pi i^{l}R_{i}^{l+3}\sum_{{\bf G}}\frac{j_{l+1}(GR_{i})}{GR_{i}}\rho^{{\rm I}}({\bf G})\exp(i{\bf G}\cdot{\bf r}_{ij})Y_{lm}^{*}(\hat{{\bf G}}),
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+remembering that
+\begin_inset Formula 
+\[
+\lim_{x\rightarrow0}\frac{j_{l+n}(x)}{x^{n}}=\frac{1}{(2n+1)!!}\delta_{l,0}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+should be used for the case 
+\begin_inset Formula ${\bf G}=0$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+A pseudocharge is now constructed which is equal to the real density in
+ the interstitial region and whose multipoles are the difference between
+ the real and interstitial muffin-tin multipoles.
+\end_layout
+
+\begin_layout Standard
+This pseudocharge density is smooth in the sense that it can be expanded
+ in terms of the finite set of 
+\begin_inset Formula ${\bf G}$
+\end_inset
+
+-vectors.
+\end_layout
+
+\begin_layout Standard
+In each muffin-tin the pseudocharge has the form
+\begin_inset Formula 
+\[
+\rho_{ij}^{{\rm P}}({\bf r})=\rho^{{\rm I}}({\bf r}-{\bf r}_{ij})+\sum_{lm}\rho_{ij;lm}^{{\rm P}}\frac{1}{R_{i}^{l+3}}\left(\frac{r}{R_{i}}\right)^{l}\left(1-\frac{r^{2}}{R_{i}^{2}}\right)^{N_{i}}Y_{lm(\hat{{\bf r}})}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where
+\begin_inset Formula 
+\[
+\rho_{ij;lm}^{{\rm P}}=\frac{(2l+2N_{i}+3)!!}{2_{i}^{N}N_{i}!(2l+1)!!}\left(q_{ij;lm}^{{\rm MT}}-q_{ij;lm}^{{\rm I}}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and
+\begin_inset Formula 
+\[
+N_{i}\approx\frac{1}{4}R_{i}G_{{\rm max}}
+\]
+
+\end_inset
+
+is generally a good choice.
+\end_layout
+
+\begin_layout Standard
+The pseudocharge in reciprocal space is given by
+\begin_inset Formula 
+\[
+\rho^{{\rm P}}({\bf G})=\rho^{{\rm I}}({\bf G})+\sum_{ij;lm}2^{N_{i}}N_{i}\frac{4\pi(-i)^{l}}{\Omega R_{i}^{l}}\frac{j_{l+N_{i}+1}(GR_{i})}{(GR_{i})^{N_{i}+1}}\rho_{ij;lm}^{{\rm P}}\exp(-i{\bf G}\cdot{\bf r}_{ij})Y_{lm}(\hat{{\bf G}})
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+which may be used for solving Poisson's equation directly
+\begin_inset Formula 
+\[
+V^{{\rm P}}({\bf G})=\begin{cases}
+4\pi\frac{\rho^{{\rm P}}({\bf G})}{G^{2}} & G>0\\
+0 & G=0
+\end{cases}\;.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The usual Green's function approach is then employed to determine the potential
+ in the muffin-tin sphere due to charge in the sphere.
+ In other words
+\begin_inset Formula 
+\[
+V_{ij;lm}^{{\rm MT}}(r)=\frac{4\pi}{2l+1}\left(\frac{1}{r^{l+1}}\int_{0}^{r}\rho_{ij;lm}^{{\rm MT}}(r'){r'}^{l+2}dr'+r^{l}\int_{r}^{R_{i}}\frac{\rho_{ij;lm}^{{\rm MT}}(r')}{{r'}^{l-1}}dr'\right)+\frac{1}{Y_{00}}\frac{z_{ij}}{r}\delta_{l,0}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where the last term is the monopole arising from the point charge.
+ All that remains is to add the homogenous solution of Poisson's equation,
+\begin_inset Formula 
+\[
+V_{ij}^{{\rm H}}({\bf r})=\sum_{lm}V_{ij;lm}^{{\rm H}}\left(\frac{r}{R_{i}}\right)^{l}Y_{lm}(\hat{{\bf r}}),
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+to the muffin-tin potential so that it is continuous at the muffin-tin boundary.
+ Therefore the coefficients, 
+\begin_inset Formula $\rho_{ij;lm}^{{\rm H}}$
+\end_inset
+
+, are given by
+\begin_inset Formula 
+\[
+V_{ij;lm}^{{\rm H}}=4\pi i^{l}\sum_{{\bf G}}j_{l}(Gr)V^{{\rm P}}({\bf G})\exp(i{\bf G}\cdot{\bf r}_{ij})Y_{lm}^{*}(\hat{{\bf G}})-V_{ij;lm}^{{\rm MT}}(R_{i}).
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Finally note that the 
+\begin_inset Formula ${\bf G}$
+\end_inset
+
+-vectors passed to the routine can represent vectors with a non-zero offset,
+ 
+\begin_inset Formula ${\bf G}+{\bf p}$
+\end_inset
+
+ say, which is required for calculating Coulomb matrix elements.
+ 
+\end_layout
+
+\begin_layout Subsection*
+rdiracint.f90
+\end_layout
+
+\begin_layout Standard
+Integrates the radial Dirac equation from 
+\begin_inset Formula $r=0$
+\end_inset
+
+ outwards.
+\end_layout
+
+\begin_layout Standard
+This involves using the predictor-corrector method to solve the coupled
+ first-order equations (in atomic units)
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\left(\frac{\mathrm{d}}{\mathrm{d}r}+\frac{\kappa}{r}\right)G_{\kappa} & =\frac{1}{c}\{2E_{0}+E-V\}F_{\kappa}\\
+\left(\frac{\mathrm{d}}{\mathrm{d}r}-\frac{\kappa}{r}\right)F_{\kappa} & =-\frac{1}{c}\{E-V\}G_{\kappa}
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $G_{\kappa}=rg_{\kappa}$
+\end_inset
+
+ and 
+\begin_inset Formula $F_{\kappa}=rf_{\kappa}$
+\end_inset
+
+are the major and minor components multiplied by 
+\begin_inset Formula $r$
+\end_inset
+
+, respectively;
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $V$
+\end_inset
+
+ is the external potential;
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $E_{0}$
+\end_inset
+
+ is the electron rest energy;
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $E$
+\end_inset
+
+ is the eigen energy (excluding 
+\begin_inset Formula $E_{0}$
+\end_inset
+
+); and
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\kappa=l$
+\end_inset
+
+ for 
+\begin_inset Formula $j=l-\frac{1}{2}$
+\end_inset
+
+ or 
+\begin_inset Formula $\kappa=-(l+1)$
+\end_inset
+
+ for 
+\begin_inset Formula $j=l+\frac{1}{2}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection*
+rschrodint.f90
+\end_layout
+
+\begin_layout Standard
+Integrates the scalar relativistic radial Schroedinger equation from 
+\begin_inset Formula $r=0$
+\end_inset
+
+ outwards.
+\end_layout
+
+\begin_layout Standard
+This involves using the predictor-corrector method to solve the coupled
+ first-order equations (in atomic units)
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\begin{align*}\frac{d}{dr}P_{l} & =2MQ_{l}+\frac{1}{r}P_{l}\\
+\frac{d}{dr}Q_{l} & =-\frac{1}{r}Q_{l}+\left[\frac{l(l+1)}{2Mr^{2}}+(V-E)\right]P_{l}
+\end{align*}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $V$
+\end_inset
+
+ is the external potential
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $E$
+\end_inset
+
+ is the eigen energy and
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $M=1+(E-V)/2c^{2}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Following the convention of Koelling and Harmon, 
+\emph on
+J.
+ Phys.
+ C: Solid State Phys.
+
+\emph default
+ 
+\series bold
+10
+\series default
+ 3107 (1977), the functions
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $P_{l}$
+\end_inset
+
+ and 
+\begin_inset Formula $Q_{l}$
+\end_inset
+
+ are defined by
+\begin_inset Formula 
+\[
+\begin{align*}P_{l} & =rg_{l}\\
+Q_{l} & =\frac{r}{2M}\frac{dg_{l}}{dr}
+\end{align*}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $g_{l}$
+\end_inset
+
+ is the major component of the Dirac equation (see the routine rdiracint).
+\end_layout
+
+\end_body
+\end_document
