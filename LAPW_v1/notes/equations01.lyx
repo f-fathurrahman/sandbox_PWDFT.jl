@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.4 created this file. For more info see https://www.lyx.org/
+\lyxformat 620
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -7,13 +7,16 @@
 \textclass article
 \begin_preamble
 \usepackage{braket}
+% Added by lyx2lyx
+\setlength{\parskip}{\smallskipamount}
+\setlength{\parindent}{0pt}
 \end_preamble
 \use_default_options true
-\maintain_unincluded_children false
+\maintain_unincluded_children no
 \language english
 \language_package default
-\inputencoding auto
-\fontencoding global
+\inputencoding auto-legacy
+\fontencoding auto
 \font_roman "default" "default"
 \font_sans "default" "default"
 \font_typewriter "default" "default"
@@ -21,7 +24,9 @@
 \font_default_family default
 \use_non_tex_fonts false
 \font_sc false
-\font_osf false
+\font_roman_osf false
+\font_sans_osf false
+\font_typewriter_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
 \use_microtype false
@@ -31,6 +36,8 @@
 \output_sync 0
 \bibtex_command default
 \index_command default
+\float_placement class
+\float_alignment class
 \paperfontsize default
 \spacing single
 \use_hyperref false
@@ -53,9 +60,11 @@
 \use_indices false
 \paperorientation portrait
 \suppress_date false
-\justification true
+\justification false
 \use_refstyle 1
+\use_formatted_ref 0
 \use_minted 0
+\use_lineno 0
 \index Index
 \shortcut idx
 \color #008000
@@ -63,7 +72,7 @@
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation skip
-\defskip smallskip
+\defskip halfline
 \is_math_indent 0
 \math_numbering_side default
 \quotes_style english
@@ -71,11 +80,16 @@
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
+\tablestyle default
 \tracking_changes false
 \output_changes false
+\change_bars false
+\postpone_fragile_content false
 \html_math_output 0
 \html_css_as_file 0
 \html_be_strict false
+\docbook_table_output 0
+\docbook_mathml_prefix 1
 \end_header
 
 \begin_body
@@ -85,13 +99,14 @@ hmlrad.f90
 \end_layout
 
 \begin_layout Standard
-Calculates the radial Hamiltonian integrals of the APW and local-orbital
- basis functions.
- In other words, for atom 
+Calculates the radial Hamiltonian integrals of the APW and local-orbital basis functions.
+ In other words,
+ for atom 
 \begin_inset Formula $\alpha$
 \end_inset
 
-, it computes integrals of the form 
+,
+ it computes integrals of the form 
 \end_layout
 
 \begin_layout Standard
@@ -121,17 +136,18 @@ th APW radial function for angular momentum
 \begin_inset Formula $l$
 \end_inset
 
-; 
+;
+ 
 \begin_inset Formula $H$
 \end_inset
 
- is the Hamiltonian of the radial Schroedinger equation; and 
+ is the Hamiltonian of the radial Schroedinger equation;
+ and 
 \begin_inset Formula $V_{l''m''}^{\alpha}$
 \end_inset
 
  is the muffin-tin Kohn-Sham potential.
- Similar integrals are calculated for APW-local-orbital and local-orbital-local-
-orbital contributions.
+ Similar integrals are calculated for APW-local-orbital and local-orbital-local-orbital contributions.
 \end_layout
 
 \begin_layout Subsection*
@@ -139,9 +155,9 @@ zpotcoul.f90
 \end_layout
 
 \begin_layout Standard
-Calculates the Coulomb potential of a complex charge density by solving
- Poisson's equation using the method of M.
- Weinert, 
+Calculates the Coulomb potential of a complex charge density by solving Poisson's equation using the method of M.
+ Weinert,
+ 
 \emph on
 J.
  Math.
@@ -152,12 +168,13 @@ J.
 \series bold
 22
 \series default
-, 2433 (1981).
+,
+ 2433 (1981).
 \end_layout
 
 \begin_layout Standard
-First, the multipole momesnts of the muffin-tin charge are determined for
- the 
+First,
+ the multipole momesnts of the muffin-tin charge are determined for the 
 \begin_inset Formula $j$
 \end_inset
 
@@ -197,12 +214,14 @@ negative
 \end_layout
 
 \begin_layout Standard
-Next, the multipole moments of the continuation of the interstitial density,
+Next,
+ the multipole moments of the continuation of the interstitial density,
  
 \begin_inset Formula $\rho^{{\rm I}}$
 \end_inset
 
-, into the muffin-tin are found with
+,
+ into the muffin-tin are found with
 \begin_inset Formula 
 \[
 q_{ij;lm}^{{\rm I}}=4\pi i^{l}R_{i}^{l+3}\sum_{{\bf G}}\frac{j_{l+1}(GR_{i})}{GR_{i}}\rho^{{\rm I}}({\bf G})\exp(i{\bf G}\cdot{\bf r}_{ij})Y_{lm}^{*}(\hat{{\bf G}}),
@@ -234,14 +253,11 @@ should be used for the case
 \end_layout
 
 \begin_layout Standard
-A pseudocharge is now constructed which is equal to the real density in
- the interstitial region and whose multipoles are the difference between
- the real and interstitial muffin-tin multipoles.
+A pseudocharge is now constructed which is equal to the real density in the interstitial region and whose multipoles are the difference between the real and interstitial muffin-tin multipoles.
 \end_layout
 
 \begin_layout Standard
-This pseudocharge density is smooth in the sense that it can be expanded
- in terms of the finite set of 
+This pseudocharge density is smooth in the sense that it can be expanded in terms of the finite set of 
 \begin_inset Formula ${\bf G}$
 \end_inset
 
@@ -312,8 +328,7 @@ V^{{\rm P}}({\bf G})=\begin{cases}
 \end_layout
 
 \begin_layout Standard
-The usual Green's function approach is then employed to determine the potential
- in the muffin-tin sphere due to charge in the sphere.
+The usual Green's function approach is then employed to determine the potential in the muffin-tin sphere due to charge in the sphere.
  In other words
 \begin_inset Formula 
 \[
@@ -340,11 +355,13 @@ V_{ij}^{{\rm H}}({\bf r})=\sum_{lm}V_{ij;lm}^{{\rm H}}\left(\frac{r}{R_{i}}\righ
 
 \begin_layout Standard
 to the muffin-tin potential so that it is continuous at the muffin-tin boundary.
- Therefore the coefficients, 
+ Therefore the coefficients,
+ 
 \begin_inset Formula $\rho_{ij;lm}^{{\rm H}}$
 \end_inset
 
-, are given by
+,
+ are given by
 \begin_inset Formula 
 \[
 V_{ij;lm}^{{\rm H}}=4\pi i^{l}\sum_{{\bf G}}j_{l}(Gr)V^{{\rm P}}({\bf G})\exp(i{\bf G}\cdot{\bf r}_{ij})Y_{lm}^{*}(\hat{{\bf G}})-V_{ij;lm}^{{\rm MT}}(R_{i}).
@@ -365,7 +382,8 @@ Finally note that the
 \begin_inset Formula ${\bf G}+{\bf p}$
 \end_inset
 
- say, which is required for calculating Coulomb matrix elements.
+ say,
+ which is required for calculating Coulomb matrix elements.
  
 \end_layout
 
@@ -382,8 +400,7 @@ Integrates the radial Dirac equation from
 \end_layout
 
 \begin_layout Standard
-This involves using the predictor-corrector method to solve the coupled
- first-order equations (in atomic units)
+This involves using the predictor-corrector method to solve the coupled first-order equations (in atomic units)
 \end_layout
 
 \begin_layout Standard
@@ -411,7 +428,8 @@ are the major and minor components multiplied by
 \begin_inset Formula $r$
 \end_inset
 
-, respectively;
+,
+ respectively;
 \end_layout
 
 \begin_layout Standard
@@ -436,7 +454,8 @@ are the major and minor components multiplied by
 \begin_inset Formula $E_{0}$
 \end_inset
 
-); and
+);
+ and
 \end_layout
 
 \begin_layout Standard
@@ -471,8 +490,7 @@ Integrates the scalar relativistic radial Schroedinger equation from
 \end_layout
 
 \begin_layout Standard
-This involves using the predictor-corrector method to solve the coupled
- first-order equations (in atomic units)
+This involves using the predictor-corrector method to solve the coupled first-order equations (in atomic units)
 \end_layout
 
 \begin_layout Standard
@@ -493,17 +511,12 @@ where
 \begin_inset Formula $V$
 \end_inset
 
- is the external potential
-\end_layout
-
-\begin_layout Standard
+ is the external potential,
+ 
 \begin_inset Formula $E$
 \end_inset
 
- is the eigen energy and
-\end_layout
-
-\begin_layout Standard
+ is the eigen energy and 
 \begin_inset Formula $M=1+(E-V)/2c^{2}$
 \end_inset
 
@@ -511,18 +524,21 @@ where
 \end_layout
 
 \begin_layout Standard
-Following the convention of Koelling and Harmon, 
+Following the convention of Koelling and Harmon,
+ 
 \emph on
 J.
  Phys.
- C: Solid State Phys.
+ C:
+ Solid State Phys.
 
 \emph default
  
 \series bold
 10
 \series default
- 3107 (1977), the functions
+ 3107 (1977),
+ the functions
 \end_layout
 
 \begin_layout Standard
