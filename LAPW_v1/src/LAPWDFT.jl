@@ -36,8 +36,12 @@ export backward_SHT!, forward_SHT!
 
 include("SymmetryVars.jl")
 export SymmetryVars
+
 include("findsymlat.jl")
-export findsymlat
+export findsymlat, findsymlat!
+
+include("findsym.jl")
+export findsym!
 
 include("findsymcrys.jl")
 export findsymcrys!

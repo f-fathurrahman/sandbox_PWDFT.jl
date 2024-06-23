@@ -119,10 +119,10 @@ function findsymcrys!(
     for i in 1:n
         # construct new array with translated positions
         for ia in 1:Nspecies
-            apl[:,ia] = atposl + vtl[:,i]
+            apl[:,ia] = atposl[:,ia] + vtl[:,i]
         end
         # find the symmetries for current translation
-        nsym = findsym!(atposl, apl, nsym, lspl, lspn, iea)
+        nsym = findsym!(atoms, atposl, apl, lspl, lspn, iea)
         for isym in 1:nsym
             nsymcrys = nsymcrys + 1
             if nsymcrys > MAX_SYM_CRYS 
@@ -147,7 +147,7 @@ function findsymcrys!(
         if symlat[i] == -symlat[1]
             tsyminv = true
             # make inversion the second symmetry element (the identity is the first)
-            v1[:] = vtlsymc[:,isym]; vtlsymc[:,isym] = vtlsymc[:,2]; vtlsymc[:,2] = v1(:)
+            v1[:] = vtlsymc[:,isym]; vtlsymc[:,isym] = vtlsymc[:,2]; vtlsymc[:,2] = v1[:]
             i = lsplsymc[isym]; lsplsymc[isym] = lsplsymc[2]; lsplsymc[2] = i
             i = lspnsymc[isym]; lspnsymc[isym] = lspnsymc[2]; lspnsymc[2] = i
             for ia in 1:Natoms
@@ -164,62 +164,63 @@ function findsymcrys!(
     if tsyminv && tshift 
         v1[:] = v1[:]/2.0
         for ia in 1:Natoms
+            isp = atm2species[ia] # XXX not used
             # shift atom
-            atposl(:,ia,is) = atposl(:,ia,is) + v1(:)
-        ! map lattice coordinates back to [0,1)
-        CALL r3frac(epslat,atposl(:,ia,is))
-        ! map lattice coordinates to [-0.5,0.5)
-        DO i = 1,3
-          IF( atposl(i,ia,is) > 0.5d0 ) atposl(i,ia,is) = atposl(i,ia,is) - 1.d0
-        ENDDO 
-        ! determine the new Cartesian coordinates
-        CALL r3mv(avec, atposl(:,ia,is), atposc(:,ia,is))
-      ENDDO 
-    ENDDO 
-    ! recalculate crystal symmetry translation vectors
-    DO isym = 1,nsymcrys
-      ilspl = isymlat(lsplsymc(isym))
-      v2(:) = symlat(:,1,ilspl)*v1(1) + symlat(:,2,ilspl)*v1(2) + symlat(:,3,ilspl)*v1(3)
-      vtlsymc(:,isym) = vtlsymc(:,isym) - v1(:) + v2(:)
-      CALL r3frac(epslat, vtlsymc(:,isym))
-    ENDDO 
-  ENDIF 
+            atposl[:,ia] = atposl[:,ia] + v1[:]
+            # map lattice coordinates back to [0,1)
+            @views r3frac!(atposl[:,ia], epslat=epslat)
+            # map lattice coordinates to [-0.5,0.5)
+            for i in 1:3
+                if atposl[i,ia] > 0.5
+                    atposl[i,ia] = atposl[i,ia] - 1.0
+                end
+            end
+            # determine the new Cartesian coordinates
+            @views r3mv!(avec, atposl[:,ia], atposc[:,ia])
+            # @views atposc[:,ia] = avec * atposl[:,ia]
+        end # ia
+        #
+        # recalculate crystal symmetry translation vectors
+        for isym in 1:nsymcrys
+            ilspl = isymlat[lsplsymc[isym]]
+            ss = symlat[ilspl] # shorthand
+            v2[:] = ss[:,1]*v1[1] + ss[:,2]*v1[2] + ss[:,3]*v1[3]
+            vtlsymc[:,isym] = vtlsymc[:,isym] - v1[:] + v2[:]
+            @views r3frac!(vtlsymc[:,isym], epslat=epslat)
+        end
+    end # if
 
-  ! translation vector in Cartesian coordinates
-  DO isym = 1,nsymcrys
-    CALL r3mv(avec, vtlsymc(:,isym), vtcsymc(:,isym))
-  ENDDO 
+    # translation vector in Cartesian coordinates
+    for isym in 1:nsymcrys
+        @views r3mv!(avec, vtlsymc[:,isym], vtcsymc[:,isym])
+    end
 
-  ! set flag for zero translation vector
-  DO isym = 1,nsymcrys
-    t1 = abs(vtlsymc(1,isym)) + abs(vtlsymc(2,isym)) + abs(vtlsymc(3,isym))
-    IF(t1 < epslat) THEN 
-      tv0symc(isym) = .true.
-    else
-      tv0symc(isym) = .false.
-    ENDIF 
-  ENDDO 
+    # set flag for zero translation vector
+    for isym in 1:nsymcrys
+        t1 = abs(vtlsymc[1,isym]) + abs(vtlsymc[2,isym]) + abs(vtlsymc[3,isym])
+        if t1 < epslat 
+            tv0symc[isym] = true
+        else
+            tv0symc[isym] = false
+        end 
+    end
 
-  ! check inversion does not include a translation
-  IF(tsyminv) THEN 
-    IF(.not. tv0symc(2) ) tsyminv = .false.
-  ENDIF 
+    # check inversion does not include a translation
+    if tsyminv 
+        if !tv0symc[2]
+            tsyminv = false
+        end
+    end 
 
-  IF( natmtot > 0 ) THEN 
-    v1(:) = atposl(:,1,1) - v0(:)
-    t1 = abs(v1(1)) + abs(v1(2)) + abs(v1(3))
-    if( t1 > epslat ) THEN 
-      WRITE(*,*)
-      WRITE(*,'("Info(findsymcrys): atomic basis shift (lattice) :")')
-      WRITE(*,'(3G18.10)') v1(:)
-      WRITE(*,'("See GEOMETRY.OUT for new atomic positions")')
-    ENDIF 
-  ENDIF 
+    if Natoms > 0 
+        v1[:] = atposl[:,1] - v0[:]
+        t1 = abs(v1[1]) + abs(v1[2]) + abs(v1[3])
+        if t1 > epslat
+            println("INFO: atomic basis shift (latttice)")
+            println(v1)
+        end
+    end
 
     return
-
-#=
-=#
-
 
 end
