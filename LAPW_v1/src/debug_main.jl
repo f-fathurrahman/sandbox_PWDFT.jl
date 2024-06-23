@@ -1,3 +1,6 @@
+# This is currently the entry point
+# We may call @infiltrate within this function and investigate various variables
+
 function debug_main()
 
     elk_input = read_elk_input()
@@ -98,6 +101,7 @@ function debug_main()
     potxcmt!(atoms, mt_vars, rhomt, epsxcmt, vxcmt)
 
     @infiltrate
+    # open REPL and investigate the variables
 
     return
 end
