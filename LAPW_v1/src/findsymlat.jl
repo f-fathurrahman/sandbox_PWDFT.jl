@@ -1,3 +1,16 @@
+# XXX implement findsymlat here directly
+function findsymlat!(atoms, sym_vars)
+    nsymlat, symlat, symlatc, symlatd, isymlat = findsymlat(atoms)
+    sym_vars.nsymlat = nsymlat
+    sym_vars.symlat = symlat
+    sym_vars.symlatc = symlatc
+    sym_vars.symlatd = symlatd
+    sym_vars.isymlat = isymlat
+    return
+end
+
+
+
 #  Finds the point group symmetries which leave the Bravais lattice invariant.
 #  Let $A$ be the matrix consisting of the lattice vectors in columns, THEN 
 #  $$ g=A^{\rm T}A $$
@@ -6,7 +19,8 @@
 #  $$ S^{\rm T}gS=g. $$
 #  The first matrix in the set RETURN ed is the identity.
 function findsymlat(atoms; epslat=1e-6)
-    
+    # XXX: only pass LatVecs instead of atoms
+
     LatVecs = atoms.LatVecs
     # Metric tensor
     g = LatVecs' * LatVecs
@@ -113,7 +127,7 @@ function findsymlat(atoms; epslat=1e-6)
     end
     ainv = inv(LatVecs)
     for i in 1:nsymlat
-        symlatc[i] = LatVecs * ( symlatc[i] * ainv )
+        symlatc[i] = LatVecs * ( symlat[i] * ainv )
     end
     return nsymlat, symlat[1:nsymlat], symlatc, symlatd[1:nsymlat], isymlat[1:nsymlat]
 end
