@@ -46,6 +46,9 @@ export findsym!
 include("findsymcrys.jl")
 export findsymcrys!
 
+include("findsymsite.jl")
+export findsymsite!
+
 include("MuffinTins.jl")
 export MuffinTins, init_packed_mtr!
 

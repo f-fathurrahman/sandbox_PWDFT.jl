@@ -244,6 +244,9 @@ function findsymcrys!(
         end
     end
 
+    sym_vars.ieqatom = ieqatom
+    sym_vars.eqatoms = eqatoms
+
     return
 
 end

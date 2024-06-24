@@ -6,6 +6,11 @@ function debug_main()
     elk_input = read_elk_input()
     atoms = create_atoms_from_elk_input(elk_input)
 
+    sym_vars = SymmetryVars()
+    findsymlat!(sym_vars, atoms)
+    findsymcrys!(sym_vars, atoms)
+    findsymsite!(sym_vars, atoms)
+
     Nspecies = atoms.Nspecies
     spsymb = atoms.SpeciesSymbols
 
