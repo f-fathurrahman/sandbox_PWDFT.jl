@@ -7,25 +7,21 @@ function findsymcrys!(
     symtype=1
 )
 
-    #=
-    IMPLICIT NONE 
-    ! local variables
-    INTEGER :: ia,ja,is,js
-    INTEGER :: isym,nsym,i,n
-    INTEGER :: lspl(48),lspn(48),ilspl
-    REAL(8) :: v0(3),v1(3),v2(3),t1
-    REAL(8) :: apl(3,maxatoms,maxspecies)
-    ! ALLOCATABLE arrays
-    INTEGER, ALLOCATABLE :: iea(:,:,:)
-    REAL(8), ALLOCATABLE :: vtl(:,:)
-    =#
-
     Natoms = atoms.Natoms
     Nspecies = atoms.Nspecies
     LatVecs = atoms.LatVecs
     atm2species = atoms.atm2species
     atposc = atoms.positions
     atposl = inv(atoms.LatVecs)*atposc
+
+    vtlsymc = sym_vars.vtlsymc
+    lsplsymc = sym_vars.lsplsymc
+    lspnsymc = sym_vars.lspnsymc
+    vtcsymc = sym_vars.vtcsymc
+    tv0symc = sym_vars.tv0symc
+
+    symlat = sym_vars.symlat
+    isymlat = sym_vars.isymlat
 
     MAX_SYM_CRYS = 172
 
@@ -52,18 +48,25 @@ function findsymcrys!(
     end
 
     v1 = zeros(Float64, 3)
-    # atomis.positions will be shifted
+    v2 = zeros(Float64, 3)
+
+    # atoms.positions will be shifted
     if tshift
+        println("Unshifted atomic positions (before shifting)")
+        for ia in 1:Natoms
+            @printf("%18.10f %18.10f %18.10f\n", atposl[1,ia], atposl[2,ia], atposl[3,ia])
+        end
         # shift basis so that the first atom in the smallest atom set is at the origin
         #
         # find the first atom with the species of smallest number of atoms
-        for ia in Natoms
+        for ia in 1:Natoms
             isp = atm2species[ia]
             if isp == isp_smallest
                 v1[:] = atposl[:,ia]
                 break
             end
         end
+        println("v1 = ", v1)
         #
         for ia in 1:Natoms
             # shift atom
@@ -73,7 +76,12 @@ function findsymcrys!(
             # determine the new Cartesian coordinates
             atposc[:,ia] = LatVecs * atposl[:,ia]
         end 
+        println("Shifted atomic positions")
+        for ia in 1:Natoms
+            @printf("%18.10f %18.10f %18.10f\n", atposl[1,ia], atposl[2,ia], atposl[3,ia])
+        end
     end
+
 
     # determine possible translation vectors from smallest set of atoms
 
@@ -105,15 +113,21 @@ function findsymcrys!(
         end
     end
 
-    println("vtl = ")
-    display(vtl[:,1:n]); println()
+    println()
+    println("Translation vectors:")
+    println("--------------------")
+    for i in 1:n
+        @printf("%18.10f %18.10f %18.10f\n", vtl[1,i], vtl[2,i], vtl[3,i])
+    end
 
     # no translations required when symtype=0,2 (F. Cricchio)
     if symtype != 1
+        @info "No translations are required for this symtype=$symtype"
         n = 1
     end
 
-    println("n = ", n)  # change to Ntranslations
+    println("n = ", n)  # XXX: change to Ntranslations
+
     eqatoms = zeros(Bool, Natoms, Natoms)
     apl = zeros(Float64, 3, Natoms)
     nsymcrys = 0
@@ -129,6 +143,7 @@ function findsymcrys!(
         end
         # find the symmetries for current translation
         nsym = findsym!(sym_vars, atoms, atposl, apl, lspl, lspn, iea)
+        #
         for isym in 1:nsym
             nsymcrys = nsymcrys + 1
             if nsymcrys > MAX_SYM_CRYS 
@@ -184,7 +199,7 @@ function findsymcrys!(
                 end
             end
             # determine the new Cartesian coordinates
-            @views r3mv!(avec, atposl[:,ia], atposc[:,ia])
+            @views r3mv!(LatVecs, atposl[:,ia], atposc[:,ia])
             # @views atposc[:,ia] = avec * atposl[:,ia]
         end # ia
         #
@@ -200,7 +215,7 @@ function findsymcrys!(
 
     # translation vector in Cartesian coordinates
     for isym in 1:nsymcrys
-        @views r3mv!(avec, vtlsymc[:,isym], vtcsymc[:,isym])
+        @views r3mv!(LatVecs, vtlsymc[:,isym], vtcsymc[:,isym])
     end
 
     # set flag for zero translation vector

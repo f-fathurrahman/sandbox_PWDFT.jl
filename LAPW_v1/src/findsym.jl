@@ -1,7 +1,8 @@
 function findsym!(
     sym_vars::SymmetryVars,
     atoms::Atoms,
-    apl1, apl2, lspl, lspn, iea;
+    apl1, apl2,
+    lspl, lspn, iea;
     epslat=1e-6
 )
 
@@ -9,6 +10,24 @@ function findsym!(
     atm2species = atoms.atm2species
     nsymlat = sym_vars.nsymlat
     symlat = sym_vars.symlat
+
+    println()
+    println("--- ENTER findsym ---")
+    println()
+
+    println()
+    println("First positions")
+    for ia in 1:Natoms
+        @printf("%18.10f %18.10f %18.10f\n", apl1[1,ia], apl1[2,ia], apl1[3,ia])
+    end
+
+    println()
+    println("Second positions")
+    for ia in 1:Natoms
+        @printf("%18.10f %18.10f %18.10f\n", apl2[1,ia], apl2[2,ia], apl2[3,ia])
+    end
+
+    println()
 
     jea = zeros(Int64, Natoms)
     sl = zeros(Float64, 3, 3)
@@ -19,19 +38,19 @@ function findsym!(
     sl = zeros(Float64, 3, 3)
     # loop over lattice symmetries (spatial rotations)
     for isym in 1:nsymlat
-        #@info "Try isym = $isym"
-
+        #
+        println("\nisym = ", isym)
+        #
         # make real copy of lattice rotation symmetry
         @views sl[:,:] = Float64.(symlat[isym][:,:])
         # loop over species
         for ia in 1:Natoms
             isp = atm2species[ia]
             # map apl1 coordinates to [0,1) and store in apl3
-            apl3[:,ia] = apl1[:,ia]
+            @views apl3[:,ia] = apl1[:,ia]
             @views r3frac!(apl3[:,ia], epslat=epslat)
             #
             for ja in 1:Natoms
-                print("Loop ia=$ia ja=$ja isym=$isym")
                 if atm2species[ja] != isp
                     @info "Skipping this atom index"
                     continue
@@ -43,17 +62,18 @@ function findsym!(
                 # check if atomic positions are invariant
                 t1 = abs(apl3[1,ia]-v[1]) + abs(apl3[2,ia]-v[2]) + abs(apl3[3,ia]-v[3])
                 #@info "t1 = $t1"
+                println("Checking isp=$isp ia=$ia ja=$ja")
                 if t1 < epslat 
-                    println("*** Equivalent atoms: ia=$ia ja=$ja isym=$isym")
+                    println(" *** Equivalent atoms: ia=$ia ja=$ja isym=$isym")
                     # equivalent atom index
                     jea[ia] = ja
                     @goto LABEL10 # continue ?
                 end
-                # not invariant so try new spatial rotation
-                println(" - Not invariant, trying new spatial rotation")
-                @goto LABEL40 # jump to the end of loop over symlat
-                @label LABEL10 #10 CONTINUE
             end
+            # not invariant so try new spatial rotation
+            println(" - Not invariant, trying new spatial rotation")
+            @goto LABEL40 # jump to the end of loop over symlat
+            @label LABEL10 #10 CONTINUE
         end
     
         # all atomic positions invariant at this point
@@ -77,7 +97,12 @@ function findsym!(
     
     end # ! end loop over spatial rotations 
 
-    @info "nsym = $nsym"
+    println("nsym = ", nsym)
+
+    println()
+    println("--- EXIT findsym ---")
+    println()
+
     return nsym
 
     return
