@@ -1,3 +1,8 @@
+function call_symmetry()
+    ccall( (:symmetry_, LIBLAPW), Cvoid, () )
+    return
+end
+
 function call_rhoinit()
     ccall( (:rhoinit_, LIBLAPW), Cvoid, () )
     return
