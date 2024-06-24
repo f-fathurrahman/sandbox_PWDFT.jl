@@ -1,5 +1,6 @@
 # will modify some fields of atoms
 function findsymcrys!(
+    sym_vars::SymmetryVars,
     atoms;
     tshift=true,
     epslat=1e-6,
@@ -77,6 +78,9 @@ function findsymcrys!(
     # determine possible translation vectors from smallest set of atoms
 
     #n = max( natoms(is)*natoms(is), 1 )
+    @info "Natoms_per_species = $Natoms_per_species"
+    @info "isp_smallest = $isp_smallest"
+
     vtl = zeros(Float64, 3, Natoms_per_species[isp_smallest]*Natoms_per_species[isp_smallest])
     n = 1
     vtl[:,1] .= 0.0 # not really needed
@@ -101,13 +105,15 @@ function findsymcrys!(
         end
     end
 
+    println("vtl = ")
+    display(vtl[:,1:n]); println()
 
     # no translations required when symtype=0,2 (F. Cricchio)
     if symtype != 1
         n = 1
     end
 
-    println("n = ", n)
+    println("n = ", n)  # change to Ntranslations
     eqatoms = zeros(Bool, Natoms, Natoms)
     apl = zeros(Float64, 3, Natoms)
     nsymcrys = 0
@@ -118,11 +124,11 @@ function findsymcrys!(
     # loop over all possible translations
     for i in 1:n
         # construct new array with translated positions
-        for ia in 1:Nspecies
+        for ia in 1:Natoms
             apl[:,ia] = atposl[:,ia] + vtl[:,i]
         end
         # find the symmetries for current translation
-        nsym = findsym!(atoms, atposl, apl, lspl, lspn, iea)
+        nsym = findsym!(sym_vars, atoms, atposl, apl, lspl, lspn, iea)
         for isym in 1:nsym
             nsymcrys = nsymcrys + 1
             if nsymcrys > MAX_SYM_CRYS 
@@ -139,6 +145,8 @@ function findsymcrys!(
             end 
         end
     end
+
+    @info "nsymcrys = $nsymcrys"
 
     tsyminv = false
     for isym in 1:nsymcrys

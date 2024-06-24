@@ -1,5 +1,5 @@
 # XXX implement findsymlat here directly
-function findsymlat!(atoms, sym_vars)
+function findsymlat!(sym_vars::SymmetryVars, atoms)
     nsymlat, symlat, symlatc, symlatd, isymlat = findsymlat(atoms)
     sym_vars.nsymlat = nsymlat
     sym_vars.symlat = symlat
