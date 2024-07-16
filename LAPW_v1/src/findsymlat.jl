@@ -24,16 +24,6 @@ function findsymlat(atoms; epslat=1e-6)
     LatVecs = atoms.LatVecs
     # Metric tensor
     g = LatVecs' * LatVecs
-    
-    #=
-    INTEGER :: md, sym(3,3), i, j
-    INTEGER :: i11, i12, i13, i21, i22, i23, i31, i32, i33
-    REAL(8) :: s(3,3), g(3,3), sgs(3,3)
-    REAL(8) :: c(3,3), v(3), t1
-    ! external functions
-    INTEGER :: i3mdet
-    external i3mdet
-    =#
 
     MAX_SYM_LATT = 48
 
