@@ -1,9 +1,23 @@
+# nstsp is an automatic array (with preallocated size of maxspecies)
+# only load nspecies data
+function get_nstsp()
+    symbol = :__m_atomic_species_MOD_nstsp
+    nspecies = get_nspecies()
+    return _load_automatic_array(symbol, Int64, (nspecies,))
+end
+
+function get_nstspmax()
+    nstspmax = unsafe_load(cglobal((:__m_atomic_species_MOD_nstspmax, LIBLAPW), Int32)) |> Int64
+    return nstspmax
+end
+
 function get_nrspmax()
     nrspmax = unsafe_load(cglobal((:__m_atomic_species_MOD_nrspmax, LIBLAPW), Int32)) |> Int64
     return nrspmax
 end
 
 # nrsp is an automatic array (with preallocated size of maxspecies)
+# XXX: We only load 1:nspecies data
 function get_nrsp()
     symbol = :__m_atomic_species_MOD_nrsp
     nspecies = get_nspecies()
