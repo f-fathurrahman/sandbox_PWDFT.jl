@@ -1,3 +1,30 @@
+#=
+Finds the complete set of symmetries which leave the crystal structure invariant.
+A crystal symmetry is of the form
+{ α_S | α_R | t }
+where t is a translation vector,
+α_R is a spatial rotation operation and
+α_S is a global spin
+rotation.
+
+Note that the order of operations is important and defined to be
+from right to left, i.e. translation followed by spatial rotation followed
+by spin rotation.
+
+In the case of spin-orbit coupling α_R = α_S.
+
+In order to determine the translation vectors, the entire atomic basis is
+shifted so that the first atom in the smallest set of atoms of the same
+species is at the origin. Then all displacement vectors between atoms in
+this set are checked as possible symmetry translations.
+
+If the global variable tshift is set to false then the shift is not
+performed.
+
+See L. M. Sandratskii and P. G. Guletskii,
+J. Phys. F: Met. Phys. 16, L43 (1986) and the routine findsym.
+=#
+
 # will modify some fields of atoms
 function findsymcrys!(
     sym_vars::SymmetryVars,
@@ -14,6 +41,8 @@ function findsymcrys!(
     atposc = atoms.positions
     atposl = inv(atoms.LatVecs)*atposc
 
+    # Input/output
+    # XXX: These arrays are may be oversized
     vtlsymc = sym_vars.vtlsymc
     lsplsymc = sym_vars.lsplsymc
     lspnsymc = sym_vars.lspnsymc
@@ -244,6 +273,7 @@ function findsymcrys!(
         end
     end
 
+    # Set outputs
     sym_vars.nsymcrys = nsymcrys
     sym_vars.ieqatom = ieqatom
     sym_vars.eqatoms = eqatoms

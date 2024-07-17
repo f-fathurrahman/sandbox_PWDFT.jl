@@ -11,13 +11,15 @@ end
 
 
 
-#  Finds the point group symmetries which leave the Bravais lattice invariant.
-#  Let $A$ be the matrix consisting of the lattice vectors in columns, THEN 
-#  $$ g=A^{\rm T}A $$
-#  is the metric tensor. Any $3\times 3$ matrix $S$ with elements $-1$, 0 or 1
-#  is a point group symmetry of the lattice if $\det(S)$ is $-1$ or 1, and
-#  $$ S^{\rm T}gS=g. $$
-#  The first matrix in the set RETURN ed is the identity.
+#=
+Finds the point group symmetries which leave the Bravais lattice invariant.
+Let $A$ be the matrix consisting of the lattice vectors in columns, then
+$$ g=A^{\rm T}A $$
+is the metric tensor. Any $3\times 3$ matrix $S$ with elements $-1$, 0 or 1
+is a point group symmetry of the lattice if $\det(S)$ is $-1$ or 1, and
+$$ S^{\rm T}gS=g. $$
+The first matrix in the set returned is the identity.
+=#
 function findsymlat(atoms; epslat=1e-6)
     # XXX: only pass LatVecs instead of atoms
 

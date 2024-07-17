@@ -1,3 +1,13 @@
+#=
+Finds the symmetries which rotate one set of atomic positions into another.
+Both sets of positions differ only by a translation vector and have the same
+muffin-tin magnetic fields (stored in the global array {\tt bfcmt}). Any
+symmetry element consists of a spatial rotation of the atomic position
+vectors followed by a global magnetic rotation: $\{\alpha_S|\alpha_R\}$. In
+the case of spin-orbit coupling $\alpha_S=\alpha_R$. The symmetries are
+returned as indices of elements in the Bravais lattice point group. An
+index to equivalent atoms is stored in the array {\tt iea}.
+=#
 function findsym!(
     sym_vars::SymmetryVars,
     atoms::Atoms,
