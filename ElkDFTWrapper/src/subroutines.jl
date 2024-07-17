@@ -24,6 +24,11 @@ function call_potxc()
     return
 end
 
+function call_gencore()
+    ccall( (:gencore_, LIBLAPW), Cvoid, () )
+    return
+end
+
 
 # TODO: make a better interface for this
 function call_atom!(

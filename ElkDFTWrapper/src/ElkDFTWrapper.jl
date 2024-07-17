@@ -38,6 +38,7 @@ include("atoms.jl")
 include("symmetry.jl")
 include("density_pot_xc.jl")
 include("sht.jl")
+include("core_states.jl")
 
 include("serialize_variables.jl")
 export serialize_variables
