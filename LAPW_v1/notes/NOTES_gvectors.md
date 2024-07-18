@@ -46,21 +46,4 @@ cfunir will be used in moment.f90.
 
 Generates the smooth characteristic function. This is the function which is 0 within the muffin-tins and 1 in the intersitial region and is constructed from radial step function form factors with $G<G_{{\rm max}}$.
 
-The form factors are given by
-$$
-\tilde{\Theta}_{i}(G)=\begin{cases}
-\dfrac{4\pi R_{i}^{3}}{3\Omega} & G=0\\
-\dfrac{4\pi R_{i}^{3}}{\Omega}\dfrac{j_{1}(GR_{i})}{GR_{i}} & 0<G\le G_{{\rm max}}\\
-0 & G>G_{{\rm max}}
-\end{cases}
-$$
-where $R_{i}$ is the muffin-tin radius of the $i$-th species and
-$\Omega$ is the unit cell volume. Therefore the characteristic function
-in $G$-space is
-$$
-\tilde{\Theta}({\bf G})=\delta_{G,0}-\sum_{ij}\exp(-i{\bf G}\cdot{\bf r}_{ij})\tilde{\Theta}_{i}(G)
-$$
-where ${\bf r}_{ij}$ is the position of the $j$-th atom of the $i$-ths pecies.
-
-Related genffacgp(): generate the smooth step function form factors. the variable is ffacg(ngtot,nspecies).
 

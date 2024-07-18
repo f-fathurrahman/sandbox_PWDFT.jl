@@ -8,6 +8,12 @@ Find symmetries of Bravais lattice. In this case the input is only Bravais
 lattice defined by `LatVecs`.
 
 Important variables:
+- nsymlat
+- symlat
+- symlatc
+- symlatd
+- isymlat
+
 
 ## Step 2: `findsymcrys`
 
