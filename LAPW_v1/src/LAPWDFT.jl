@@ -133,6 +133,15 @@ export allatoms!
 include("calc_sfacg.jl")
 export calc_sfacg
 
+include("gensfacgp.jl")
+export gensfacgp!
+
+include("genffacgp.jl")
+export genffacgp!
+
+include("gencfun.jl")
+export gencfun
+
 include("rhoinit.jl")
 export rhoinit!
 
@@ -165,6 +174,18 @@ include("sphcover.jl")
 include("sctovec.jl")
 export sphcover!, sctovec!
 
+include("roteuler.jl")
+export roteuler!
+
+include("ylmroty.jl")
+export ylmroty!
+
+include("rlmrot.jl")
+export rlmrot!
+
+include("rotrflm.jl")
+export rotrflm!
+
 include("zpotclmt.jl")
 export zpotclmt!
 
@@ -176,6 +197,10 @@ export potcoul!
 
 include("potxcmt.jl")
 export potxcmt!
+
+include("potxcir.jl")
+export potxcir!
+
 
 include("debug_main.jl")
 

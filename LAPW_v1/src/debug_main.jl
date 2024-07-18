@@ -3,9 +3,13 @@
 
 function debug_main()
 
+    # Read the input file
     elk_input = read_elk_input()
+    
+    # Initialize Atoms
     atoms = create_atoms_from_elk_input(elk_input)
 
+    # Setup symmetry variables
     sym_vars = SymmetryVars()
     findsymlat!(sym_vars, atoms)
     findsymcrys!(sym_vars, atoms)
@@ -104,6 +108,10 @@ function debug_main()
     end
 
     potxcmt!(atoms, mt_vars, rhomt, epsxcmt, vxcmt)
+
+    epsxcir = zeros(Float64, Npoints)
+    vxcir = zeros(Float64, Npoints)
+    potxcir!(rhoir, epsxcir, vxcir)
 
     @infiltrate
     # open REPL and investigate the variables
