@@ -1,17 +1,4 @@
-# Copyright (C) 2002-2005 J. K. Dewhurst, S. Sharma and C. Ambrosch-Draxl.
-# This file is distributed under the terms of the GNU Lesser General Public
-# License. See the file COPYING for license details.
-# !REVISION HISTORY:
-#   Created January 2003 (JKD)
-
-# !INPUT/OUTPUT PARAMETERS:
-#   n : input (in,integer)
-#   m : order of multifactorial (in,integer)
-# !DESCRIPTION:
 #   Returns the multifactorial
-#   $$ n\underbrace{!!\,\cdots\,!}_{m\,{\rm times}}=
-#    \prod_{\substack{i\ge 0\\ n-im>0}}(n-im) $$
-#   for $n,\,m \ge 0$. $n$ should be less than 150.
 
 function factnm(n, m)
     f1 = [
