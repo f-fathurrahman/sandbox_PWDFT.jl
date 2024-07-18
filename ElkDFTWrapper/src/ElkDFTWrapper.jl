@@ -51,7 +51,8 @@ include("subroutines.jl")
 function init_debug_calc()
     init_run()
     call_rhoinit()
-    call_potks()
+    #call_potks()
+    call_potks_no_symm() # only for debugging
 end
 export init_debug_calc
 

@@ -1,3 +1,8 @@
+function get_xctype()
+    symbol = :__m_density_pot_xc_MOD_xctype
+    return _load_automatic_array(symbol, Int64, (3,))    
+end
+
 # this assumes that rhomt is already allocated or initialized, by calling rhoinit
 function get_rhomt()
     symbol = :__m_density_pot_xc_MOD_rhomt

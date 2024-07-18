@@ -13,6 +13,12 @@ function call_potks(; txc=true)
     return
 end
 
+function call_potks_no_symm(; txc=true)
+    # The version called here has my_ as prefix
+    ccall( (:my_potks_no_symm_, LIBLAPW), Cvoid, (Ref{Bool},), true )
+    return
+end
+
 function call_potcoul()
     ccall( (:potcoul_, LIBLAPW), Cvoid, () )
     return
