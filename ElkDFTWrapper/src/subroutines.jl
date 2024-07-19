@@ -1,3 +1,16 @@
+function call_symrf!(vxcmt, vxcir)
+    nrmt = get_nrmt()
+    nrmti = get_nrmti()
+    npmt = get_npmt()
+    npmtmax = get_npmtmax()
+    # call the my_* version of symrf (debug)
+    # CALL my_symrf(nrmt, nrmti, npmt, npmtmax, vxcmt_, vxcir_)
+    ccall( (:my_symrf_, LIBLAPW), Cvoid,
+        (Ptr{Int32}, Ptr{Int32}, Ptr{Int32}, Ref{Int32}, Ptr{Float64}, Ptr{Float64}),
+        Int32.(nrmt), Int32.(nrmti), Int32.(npmt), Int32(npmtmax), vxcmt, vxcir
+    )
+end
+
 function call_symmetry()
     ccall( (:symmetry_, LIBLAPW), Cvoid, () )
     return
@@ -8,6 +21,7 @@ function call_rhoinit()
     return
 end
 
+# FIXME: pass txc?
 function call_potks(; txc=true)
     ccall( (:potks_, LIBLAPW), Cvoid, (Ref{Bool},), true )
     return
