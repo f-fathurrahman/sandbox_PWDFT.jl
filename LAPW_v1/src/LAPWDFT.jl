@@ -78,6 +78,11 @@ include("potnucl.jl")
 export potnucl!
 
 
+# Symmetrization
+include("symrfir.jl")
+export symrfir!
+
+
 # FIXME: Move to PWDFT?
 include("Libxc_old.jl")
 #include("XCCalculator.jl")
