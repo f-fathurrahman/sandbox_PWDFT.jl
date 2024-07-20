@@ -1,3 +1,7 @@
+function get_lnpsd()
+    return unsafe_load(cglobal((:__m_density_pot_xc_MOD_lnpsd, LIBLAPW), Int32)) |> Int64
+end
+
 function get_xctype()
     symbol = :__m_density_pot_xc_MOD_xctype
     return _load_automatic_array(symbol, Int64, (3,))    
