@@ -56,6 +56,7 @@ mutable struct SymmetryVars
     #
     # site symmetry spatial rotation element in lattice point group
     lsplsyms::Array{Int64,2} #(:,:)
+    # XXX: used in genlmirep which will be used in DOS calculation
     #
     # site symmetry global spin rotation element in lattice point group
     lspnsyms::Array{Int64,2} #(:,:)
