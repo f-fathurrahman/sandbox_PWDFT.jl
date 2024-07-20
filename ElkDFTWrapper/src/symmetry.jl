@@ -5,6 +5,16 @@ function get_maxsymcrys()
     return 192
 end
 
+# tv0symc is .true. if the translation vector is zero
+function get_tv0symc()
+    symbol = :__m_symmetry_MOD_tv0symc
+    maxsymcrys = get_maxsymcrys()
+    tv0symc = _load_automatic_array(symbol, Int32, (maxsymcrys,))
+    return convert(Vector{Bool}, tv0symc)
+    # XXX: use Int32 instead of Bool?
+    # XXX: the effective is nsymcrys
+end
+
 # type of symmetry allowed for the crystal
 #  0 : only the identity element is used
 #  1 : full symmetry group is used
@@ -66,7 +76,9 @@ function get_eqatoms()
     symbol = :__m_symmetry_MOD_eqatoms
     natmmax = get_natmmax()
     nspecies = get_nspecies()
-    return _load_allocatable_array(symbol, Bool, (natmmax,natmmax,nspecies))
+    eqatoms = _load_allocatable_array(symbol, Int32, (natmmax,natmmax,nspecies))
+    # XXX: use Int32 instead of Bool?
+    return convert(Array{Bool,3}, eqatoms)
 end
 
 # equivalent atom index for each crystal symmetry
@@ -81,8 +93,8 @@ end
 # number of site symmetries
 function get_nsymsite()
     symbol = :__m_symmetry_MOD_nsymsite
-    natmmax = get_natmtot()
-    return _load_allocatable_array(symbol, Int64, (natmmax,))
+    natmtot = get_natmtot()
+    return _load_allocatable_array(symbol, Int64, (natmtom,))
 end
 
 # site symmetry spatial rotation element in lattice point group
