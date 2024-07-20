@@ -97,6 +97,23 @@ function get_nsymsite()
     return _load_allocatable_array(symbol, Int64, (natmtom,))
 end
 
+
+# spatial rotation element in lattice point group for each crystal symmetry
+function get_lsplsymc()
+    symbol = :__m_symmetry_MOD_lsplsymc
+    maxsymcrys = get_maxsymcrys()
+    return _load_automatic_array(symbol, Int64, (maxsymcrys,))
+end
+
+
+# global spin rotation element in lattice point group for each crystal symmetry
+function get_lspnsymc()
+    symbol = :__m_symmetry_MOD_lspnsymc
+    maxsymcrys = get_maxsymcrys()
+    return _load_automatic_array(symbol, Int64, (maxsymcrys,))
+end
+
+
 # site symmetry spatial rotation element in lattice point group
 function get_lsplsyms() 
     symbol = :__m_symmetry_MOD_lsplsyms
