@@ -46,7 +46,7 @@ mutable struct SymmetryVars
     lspnsymc::Vector{Int64} #(maxsymcrys)
     #
     # equivalent atom index for each crystal symmetry
-    ieqatom::Array{Float64,2}
+    ieqatom::Array{Int64,2}
     #
     # eqatoms(ia,ja,is) is .true. if atoms ia and ja are equivalent
     eqatoms::Array{Bool,2}
@@ -93,7 +93,7 @@ function SymmetryVars()
     lspnsymc = zeros(Int64,maxsymcrys)
     
     # must be properly initialized later
-    ieqatom = zeros(Float64,1,1)
+    ieqatom = zeros(Int64,1,1)
     eqatoms = zeros(Bool,1,1)
 
     # must be properly initialized later
