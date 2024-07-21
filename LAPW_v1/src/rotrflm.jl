@@ -30,7 +30,7 @@ function rotrflm!(R, lmax, n, ld, rflm1_, rflm2_)
         return
     end
 
-    println("ld = ", ld)
+    #println("ld = ", ld)
 
     rflm1 = reshape(rflm1_, ld, :)
     rflm2 = reshape(rflm2_, ld, :)
@@ -64,10 +64,10 @@ function rotrflm!(R, lmax, n, ld, rflm1_, rflm2_)
         idx1 = lm:(lm+nm-1)
         idx2 = 1:n
         idx3 = lm:(lm+nm-1)
-        @info "nm = $nm lm = $lm"
-        @info "idx1 = $(idx1)"
-        @info "idx2 = $(idx2)"
-        @info "idx3 = $(idx3)"
+        #@info "nm = $nm lm = $lm"
+        #@info "idx1 = $(idx1)"
+        #@info "idx2 = $(idx2)"
+        #@info "idx3 = $(idx3)"
         #=
         C <- A * B
         On entry,  M  specifies  the number  of rows  of the  matrix

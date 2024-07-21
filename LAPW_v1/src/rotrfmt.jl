@@ -1,4 +1,5 @@
 function rotrfmt!(mt_vars, isp::Int64, R, rfmt1, rfmt2)
+    # XXX It seems that `isp` can be mistaken as `ia` (?)
     nr = mt_vars.nrmt[isp]
     nri = mt_vars.nrmti[isp]
     nro = nr - nri
