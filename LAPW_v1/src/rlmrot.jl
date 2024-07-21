@@ -1,5 +1,5 @@
 # Use boolean p?
-function rlmrot!( p::Int64, ang::Vector{Float64}, lmax::Int64, d )
+function rlmrot!( p::Int64, ang::Vector{Float64}, lmax::Int64, D )
     #=
 ! !INPUT/OUTPUT PARAMETERS:
 !   p    : if p=-1 then the rotation matrix is improper (in,integer)
@@ -21,13 +21,13 @@ function rlmrot!( p::Int64, ang::Vector{Float64}, lmax::Int64, d )
     cg = zeros(Float64, lmax)
     sg = zeros(Float64, lmax)
     
-    d = size(d,1)
-    dy = zeros(Float64, ld, ld)
+    ld = size(D, 1)
+    dY = zeros(Float64, ld, ld)
     
     @assert lmax >= 0
 
     # generate the complex spherical harmonic rotation matrix about the y-axis
-    ylmroty!( ang[2], lmax, ld, dy)
+    ylmroty!( ang[2], lmax, dY)
     for m1 in 1:lmax
         ca[m1] = cos(m1*ang[1])
         sa[m1] = sin(m1*ang[1])
@@ -41,19 +41,22 @@ function rlmrot!( p::Int64, ang::Vector{Float64}, lmax::Int64, d )
             lmi[m1] = lm1
         end
         lm0 = lmi[0]
-        d[lm0,lm0] = dy[lm0,lm0]
+        #println("lm0 = ", lm0)
+        #@info "typeof(lm0) = $(typeof(lm0))"
+        D[lm0,lm0] = dY[lm0,lm0]
+        #@info "Pass here 46"
         for m1 in 1:l
             if mod(m1,2) == 0
                 s1 = 1.0
             else
                 s1 = -1.0
             end
-            t1 = SQTWO*dy[lm0,lmi[m1]]
-            t2 = SQTWO*dy[lmi[m1],lm0]
-            d[lmi[m1], lm0] = s1*t1*ca[m1]
-            d[lm0, lmi[m1]] = s1*t2*cg[m1]
-            d[lmi[-m1], lm0] = -t1*sa[m1]
-            d[lm0, lmi[-m1]] =  t2*sg[m1]
+            t1 = SQTWO * dY[lm0,lmi[m1]]
+            t2 = SQTWO * dY[lmi[m1],lm0]
+            D[lmi[m1], lm0] = s1*t1*ca[m1]
+            D[lm0, lmi[m1]] = s1*t2*cg[m1]
+            D[lmi[-m1], lm0] = -t1*sa[m1]
+            D[lm0, lmi[-m1]] = t2*sg[m1]
             for m2 in 1:l
                 if mod(m2,2) == 0
                     s2 = 1.0
@@ -64,14 +67,14 @@ function rlmrot!( p::Int64, ang::Vector{Float64}, lmax::Int64, d )
                 t2 = sa[m1]*sg[m2]
                 t3 = sa[m1]*cg[m2]
                 t4 = ca[m1]*sg[m2]
-                t5 = dy[lmi[-m1], lmi[-m2]]
-                t6 = s1*dy[lmi[m1], lmi[-m2]]
+                t5 = dY[lmi[-m1], lmi[-m2]]
+                t6 = s1*dY[lmi[m1], lmi[-m2]]
                 t7 = t5 + t6
                 t8 = t5 - t6
-                d[lmi[m1], lmi[m2]] = s1*s2*(t1*t7 - t2*t8)
-                d[lmi[m1], lmi[-m2]] = s1*(t3*t8 + t4*t7)
-                d[lmi[-m1], lmi[m2]]=-s2*(t3*t7 + t4*t8)
-                d[lmi[-m1], lmi[-m2]] = t1*t8 - t2*t7
+                D[lmi[ m1], lmi[ m2]] = s1*s2*(t1*t7 - t2*t8)
+                D[lmi[ m1], lmi[-m2]] = s1*(t3*t8 + t4*t7)
+                D[lmi[-m1], lmi[ m2]] = -s2*(t3*t7 + t4*t8)
+                D[lmi[-m1], lmi[-m2]] = t1*t8 - t2*t7
             end
         end
     end
@@ -81,7 +84,7 @@ function rlmrot!( p::Int64, ang::Vector{Float64}, lmax::Int64, d )
         for l in range(1, lmax, step=2)
             lm1 = l^2 + 1
             lm2 = lm1 + 2*l
-            d[lm1:lm2,lm1:lm2] = -d[lm1:lm2,lm1:lm2]
+            D[lm1:lm2,lm1:lm2] = -D[lm1:lm2,lm1:lm2]
         end
     end
 

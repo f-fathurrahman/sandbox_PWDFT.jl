@@ -1,4 +1,4 @@
-function rotrflm!(R, lmax, n, ld, rflm1, rflm2)
+function rotrflm!(R, lmax, n, ld, rflm1_, rflm2_)
     #=
     ! !INPUT/OUTPUT PARAMETERS:
 !   rot   : rotation matrix (in,real(3,3))
@@ -30,10 +30,13 @@ function rotrflm!(R, lmax, n, ld, rflm1, rflm2)
         return
     end
 
-    ld = size(rflm1, 1)
+    println("ld = ", ld)
 
-    ang = zeros(Float64, 3, 3)
-    angi = zeros(Float64, 3, 3)
+    rflm1 = reshape(rflm1_, ld, :)
+    rflm2 = reshape(rflm2_, ld, :)
+
+    ang = zeros(Float64, 3)
+    angi = zeros(Float64, 3)
     d = zeros(Float64, ld, ld)
 
     detR = det(R)
@@ -58,8 +61,26 @@ function rotrflm!(R, lmax, n, ld, rflm1, rflm2)
     for l in 0:lmax
         nm = 2*l + 1
         lm = l^2 + 1
+        idx1 = lm:(lm+nm-1)
+        idx2 = 1:n
+        idx3 = lm:(lm+nm-1)
+        @info "nm = $nm lm = $lm"
+        @info "idx1 = $(idx1)"
+        @info "idx2 = $(idx2)"
+        @info "idx3 = $(idx3)"
+        #=
+        C <- A * B
+        On entry,  M  specifies  the number  of rows  of the  matrix
+        op( A )  and of the  matrix  C.  M  must  be at least  zero.
+        On entry,  N  specifies the number  of columns of the matrix
+        op( B ) and the number of columns of the matrix C. N must be
+        at least zero.
+        On entry,  K  specifies  the number of columns of the matrix
+        op( A ) and the number of rows of the matrix op( B ). K must
+        be at least  zero.
+        =#
         #CALL dgemm('N', 'N', nm, n, nm, 1.0, d(lm,lm), ld, rflm1(lm,1), ld, 0.d0, rflm2(lm,1), ld)
-        rflm2[lm:(lm+nm-1), 1:nm] = d[lm:(lm+nm-1), lm:(lm+n-1)] * rflm1[lm:(lm+n-1), 1:nm]
+        rflm2[idx1, idx2] = d[idx1, idx3] * rflm1[idx3, idx2]
         # (nm x n) (n x nm) -> (nm,nm) 
         #
     end

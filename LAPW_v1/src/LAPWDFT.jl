@@ -191,6 +191,9 @@ export rlmrot!
 include("rotrflm.jl")
 export rotrflm!
 
+include("rotrfmt.jl")
+export rotrfmt!
+
 include("zpotclmt.jl")
 export zpotclmt!
 
