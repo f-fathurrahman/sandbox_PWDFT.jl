@@ -1,3 +1,12 @@
+function call_rotrfmt!(rot, nr, nri, rfmt1, rfmt2)
+    #CALL my_rotrfmt(symlatc(:,:,lspl), nr(is), nri(is), rfmt1(:,ja), rfmt2)
+    # SUBROUTINE my_rotrfmt(rot, nr, nri, rfmt1, rfmt2)
+    ccall( (:my_rotrfmt_, LIBLAPW), Cvoid,
+        (Ptr{Float64}, Ref{Int32}, Ref{Int32}, Ptr{Float64}, Ptr{Float64}),
+        rot, Int32(nr), Int32(nri), rfmt1, rfmt2
+    )
+end
+
 function call_symrf!(vxcmt, vxcir)
     nrmt = get_nrmt()
     nrmti = get_nrmti()
