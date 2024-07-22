@@ -96,9 +96,6 @@ function debug_main()
     vclir = zeros(Float64, Npoints)
     potcoul!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir, vclmt, vclir )
 
-    @printf("sum rhoir = %18.10f\n", sum(rhoir))
-    @printf("sum rhomt = %18.10f\n", sum(sum.(rhomt)))
-
     epsxcmt = Vector{Vector{Float64}}(undef,Natoms)
     vxcmt = Vector{Vector{Float64}}(undef,Natoms)
     for ia in 1:Natoms
@@ -112,6 +109,31 @@ function debug_main()
     epsxcir = zeros(Float64, Npoints)
     vxcir = zeros(Float64, Npoints)
     potxcir!(rhoir, epsxcir, vxcir)
+
+    # Symmetrize
+    symrfmt!(atoms, mt_vars, sym_vars, vxcmt)
+    symrfir!(pw, sym_vars, vxcir)
+
+    # effective potential from sum of Coulomb and exchange-correlation potentials
+    vsmt = Vector{Vector{Float64}}(undef, Natoms)
+    vsir = zeros(Float64, Npoints)
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        vsmt[ia] = zeros(Float64, npmt[isp])
+    end
+    for ia in 1:Natoms
+        @views vsmt[ia][:] .= vclmt[ia][:] .+ vxcmt[ia][:]
+    end
+    vsir[:] = vclir[:] + vxcir[:]
+
+    # smoothing vsir is skipped (default is zero)
+    
+    # generating the effective magnetic fields is skipped
+
+    # generating the tau-DFT effective potential is skipped
+  
+
+
 
     @infiltrate
     # open REPL and investigate the variables
