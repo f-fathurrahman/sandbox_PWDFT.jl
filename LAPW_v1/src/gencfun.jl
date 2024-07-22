@@ -2,6 +2,8 @@ function gencfun(pw, atoms, ffacg)
     
     Ng = pw.gvec.Ng
     G = pw.gvec.G
+    Npoints = prod(pw.Ns)
+
     Natoms = atoms.Natoms
     atpos = atoms.positions
     atm2species = atoms.atm2species
@@ -17,6 +19,7 @@ function gencfun(pw, atoms, ffacg)
         v2 = atpos[2,ia]
         v3 = atpos[3,ia]
         for ig in 1:Ng
+            # XXX: Elk uses more G-vectors for cfunig and ffacg
             # structure factor
             t1 = G[1,ig]*v1 + G[2,ig]*v2 + G[3,ig]*v3
             z1 = cos(t1) - im*sin(t1)
@@ -32,7 +35,7 @@ function gencfun(pw, atoms, ffacg)
     end
     # Fourier transform to real-space
     G_to_R!(pw, ctmp)
-    cfunir .= real.(ctmp)
+    cfunir = real.(ctmp)*Npoints # scale
 
     return return cfunig, cfunir
 end
