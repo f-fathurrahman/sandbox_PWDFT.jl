@@ -1,9 +1,10 @@
 function get_spincore()
     return unsafe_load(cglobal((:__m_core_states_MOD_spincore, LIBLAPW), Bool ))
+    # Use Int32 ?
 end
 
 function get_nspncr()
-    nspncr = unsafe_load(cglobal((:__m_core_states_MOD_nspncr, LIBLAPW), Int32 )) |> Int64
+    return unsafe_load(cglobal((:__m_core_states_MOD_nspncr, LIBLAPW), Int32 )) |> Int64
 end
 
 # occupancies for core states

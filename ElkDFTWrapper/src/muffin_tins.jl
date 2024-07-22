@@ -123,3 +123,57 @@ function get_npcmti()
     nspecies = get_nspecies()
     return _load_automatic_array(symbol, Int64, (nspecies,))
 end
+
+# total muffin-tin volume
+function get_omegamt()
+    return unsafe_load(cglobal( (:__m_muffin_tins_MOD_omegamt, LIBLAPW), Float64 ))
+end
+
+# radial step length for coarse mesh
+function get_lradstp()
+    return unsafe_load(cglobal( (:__m_muffin_tins_MOD_lradstp, LIBLAPW), Int32 )) |> Int64
+end
+
+function get_nrcmtmax()
+    return unsafe_load(cglobal( (:__m_muffin_tins_MOD_nrcmtmax, LIBLAPW), Int32 )) |> Int64
+end
+
+# number of coarse radial mesh points
+function get_nrcmt()
+    symbol = :__m_muffin_tins_MOD_nrcmt
+    nspecies = get_nspecies()
+    return _load_automatic_array(symbol, Int64, (nspecies,))
+    # XXX We only load nspecies data
+end
+
+# coarse muffin-tin radial mesh
+function get_rcmt()
+    symbol = :__m_muffin_tins_MOD_rcmt
+    nspecies = get_nspecies()
+    nrcmtmax = get_nrcmtmax()
+    return _load_automatic_array(symbol, Float64, (nrcmtmax, nspecies))
+end
+
+# r^l on coarse radial mesh
+function get_rlcmt()
+    symbol = :__m_muffin_tins_MOD_rlcmt
+    #
+    lmaxo = get_lmaxo()
+    nrcmtmax = get_nrcmtmax()
+    nspecies = get_nspecies()
+    #
+    Ndim1 = nrcmtmax
+    Ndim2 = 2*(lmaxo+2)
+    Ndim3 = nspecies
+    rlcmt = _load_allocatable_array(symbol, Float64, (Ndim1,Ndim2,Ndim3))
+    return OffsetArray(rlcmt, 1:nrcmtmax, -lmaxo-1:lmaxo+2, 1:nspecies)
+end
+
+#=
+! weights for spline partial integration on fine radial mesh
+REAL(8), ALLOCATABLE :: wprmt(:,:,:)
+! weights for spline integration on coarse radial mesh
+REAL(8), ALLOCATABLE :: wrcmt(:,:)
+! weights for spline partial integration on coarse radial mesh
+REAL(8), ALLOCATABLE :: wprcmt(:,:,:)
+=#

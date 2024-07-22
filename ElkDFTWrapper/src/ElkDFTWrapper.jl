@@ -39,6 +39,8 @@ include("symmetry.jl")
 include("density_pot_xc.jl")
 include("sht.jl")
 include("core_states.jl")
+include("apwlo.jl")
+
 
 include("serialize_variables.jl")
 export serialize_variables
@@ -50,9 +52,10 @@ include("subroutines.jl")
 # Put the workload that we want to investigate
 function init_debug_calc()
     init_run()
-    call_rhoinit()
+    #call_rhoinit()
     #call_potks()
-    call_potks_no_symm() # only for debugging
+    #call_potks_no_symm() # only for debugging
+    call_my_gndstate(1)
 end
 export init_debug_calc
 

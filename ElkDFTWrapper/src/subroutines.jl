@@ -1,3 +1,10 @@
+function call_my_gndstate(maxscl)
+    ccall( (:my_gndstate_, LIBLAPW), Cvoid, 
+        (Ref{Int32}, ),
+        Int32(maxscl)
+    )
+end
+
 function call_rotrfmt!(rot, nr, nri, rfmt1, rfmt2)
     #CALL my_rotrfmt(symlatc(:,:,lspl), nr(is), nri(is), rfmt1(:,ja), rfmt2)
     # SUBROUTINE my_rotrfmt(rot, nr, nri, rfmt1, rfmt2)
@@ -18,6 +25,11 @@ function call_symrf!(vxcmt, vxcir)
         (Ptr{Int32}, Ptr{Int32}, Ptr{Int32}, Ref{Int32}, Ptr{Float64}, Ptr{Float64}),
         Int32.(nrmt), Int32.(nrmti), Int32.(npmt), Int32(npmtmax), vxcmt, vxcir
     )
+end
+
+function call_genvsig()
+    ccall( (:genvsig_, LIBLAPW), Cvoid, () )
+    return
 end
 
 function call_symmetry()
