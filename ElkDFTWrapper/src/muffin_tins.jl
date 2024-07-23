@@ -1,48 +1,62 @@
 #
 # Muffin tins radial grid and angular momentum variables
 #
+
+# maximum allowable angular momentum for augmented plane waves
+function get_maxlapw()
+    return 50 # hardcoded
+end
+
+# maximum angular momentum for augmented plane waves
+# XXX: difference with maxlapw?
 function get_lmaxapw()
     lmaxapw = unsafe_load(cglobal( (:__m_muffin_tins_MOD_lmaxapw, LIBLAPW), Int32 )) |> Int64
     return lmaxapw
 end
 
+# (lmaxapw+1)^2
 function get_lmmaxapw()
     lmmaxapw = unsafe_load(cglobal( (:__m_muffin_tins_MOD_lmmaxapw, LIBLAPW), Int32 )) |> Int64
     return lmmaxapw
 end
 
+# maximum angular momentum on the outer part of the muffin-tin
 function get_lmaxo()
     lmaxo = unsafe_load(cglobal( (:__m_muffin_tins_MOD_lmaxo, LIBLAPW), Int32 )) |> Int64
     return lmaxo
 end
 
+# (lmaxo+1)^2
 function get_lmmaxo()
     lmmaxo = unsafe_load(cglobal( (:__m_muffin_tins_MOD_lmmaxo, LIBLAPW), Int32 )) |> Int64
     return lmmaxo
 end
 
-
-function get_lmaxi()
+# maximum angular momentum on the inner part of the muffin-tin
+ function get_lmaxi()
     lmaxi = unsafe_load(cglobal( (:__m_muffin_tins_MOD_lmaxi, LIBLAPW), Int32 )) |> Int64
     return lmaxi
 end
 
+# (lmaxi+1)^2
 function get_lmmaxi()
     lmmaxi = unsafe_load(cglobal( (:__m_muffin_tins_MOD_lmmaxi, LIBLAPW), Int32 )) |> Int64
     return lmmaxi
 end
 
-
+# maximum nrmt over all the species
 function get_nrmtmax()
     nrmtmax = unsafe_load(cglobal( (:__m_muffin_tins_MOD_nrmtmax, LIBLAPW), Int32 )) |> Int64
     return nrmtmax
 end
 
+# maximum number of points over all packed muffin-tins (fine)
 function get_npmtmax()
     npmtmax = unsafe_load(cglobal( (:__m_muffin_tins_MOD_npmtmax, LIBLAPW), Int32 )) |> Int64
     return npmtmax
 end
 
+# maximum number of points over all packed muffin-tins (coarse)
 function get_npcmtmax()
     npcmtmax = unsafe_load(cglobal( (:__m_muffin_tins_MOD_npcmtmax, LIBLAPW), Int32 )) |> Int64
     return npcmtmax
