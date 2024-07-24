@@ -44,7 +44,7 @@ include("apwlo.jl")
 include("spin.jl")
 include("kpoints.jl")
 include("hamiltonian.jl")
-
+include("energy.jl")
 
 include("serialize_variables.jl")
 export serialize_variables
