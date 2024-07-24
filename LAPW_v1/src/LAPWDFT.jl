@@ -212,6 +212,8 @@ export potxcmt!
 include("potxcir.jl")
 export potxcir!
 
+include("genvsig.jl")
+export genvsig!
 
 include("debug_main.jl")
 

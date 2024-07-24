@@ -87,6 +87,9 @@ function debug_main()
     #
     rhoinit!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
 
+    # .... This is starting point of potks
+    # XXX Need to wrap into functions, preallocate all arrays
+
     # Solver Hartree equation (compute electrostatic Coulomb potential)
     vclmt = Vector{Vector{Float64}}(undef,Natoms)
     for ia in 1:Natoms
@@ -131,9 +134,17 @@ function debug_main()
     # generating the effective magnetic fields is skipped
 
     # generating the tau-DFT effective potential is skipped
-  
+    
+    # .... This is the end of potks
 
 
+    # Create a version for full GVectors, where Ng=Npoints
+
+    ffacg = genffacgp(pw, mt_vars.rmt)
+    cfunig, cfunir = gencfun(pw, atoms, ffacg)
+    vsig = zeros(ComplexF64, pw.gvec.Ng)
+    genvsig!(pw, vsir, cfunir, vsig)
+    # XXX vsig will be different from Elk result because Elk uses more G-vectors
 
     @infiltrate
     # open REPL and investigate the variables

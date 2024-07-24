@@ -98,3 +98,9 @@ function get_vsir()
     ngtot = get_ngtot()
     return _load_allocatable_array(symbol, Float64, (ngtot,))
 end
+
+function get_vsig()
+    symbol = :__m_density_pot_xc_MOD_vsig
+    ngvec = get_ngvec()
+    return _load_allocatable_array(symbol, ComplexF64, (ngvec,))
+end

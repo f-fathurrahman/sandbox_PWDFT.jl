@@ -1,11 +1,15 @@
-function genffacgp!(pw::PWGrid, rmt::Vector{Float64}, ffacgp)
-    # Only G2 is considered, so gpc => pw.gvec.G2
+function genffacgp(pw, rmt)
+    Nspecies = size(rmt, 1)
+    ffacgp = zeros(Float64, pw.gvec.Ng, Nspecies)
+    genffacgp!(pw, rmt, ffacgp)
+    return ffacgp
+end
 
+function genffacgp!(pw::PWGrid, rmt::Vector{Float64}, ffacgp)
     G2 = pw.gvec.G2
     Ng = pw.gvec.Ng
     CellVolume = pw.CellVolume
     t1 = 4π / CellVolume
-    
     Nspecies = size(rmt, 1)
     for isp in 1:Nspecies
         # First G-vector is 0

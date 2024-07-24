@@ -56,10 +56,11 @@ include("subroutines.jl")
 # Put the workload that we want to investigate
 function init_debug_calc()
     init_run()
-    #call_rhoinit()
-    #call_potks()
+    call_rhoinit()
+    call_potks()
     #call_potks_no_symm() # only for debugging
-    call_my_gndstate(1)
+    call_genvsig()
+    #call_my_gndstate(1)
 end
 export init_debug_calc
 
