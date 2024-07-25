@@ -29,19 +29,19 @@ function symrfmt!(atoms, mt_vars, sym_vars, rfmt)
         done[:] .= false
         # loop over atoms
         for ia in 1:Natoms
-            @info "Begin isp=$isp ia=$ia"
+            #@info "Begin isp=$isp ia=$ia"
             #
             if isp != atm2species[ia]
                 continue
             end
             #
             if done[ia]
-                @info "This ia=$ia is done, skipping"
+                #@info "This ia=$ia is done, skipping"
                 continue
             end
             # zero out the output
             rfmt[ia][1:npmt[isp]] .= 0.0
-            println("CHECK1: sum abs rfmt[ia] = ", sum(abs.(rfmt[ia])))
+            #println("CHECK1: sum abs rfmt[ia] = ", sum(abs.(rfmt[ia])))
             # loop over crystal symmetries
             for isym in 1:nsymcrys
                 #
@@ -61,12 +61,12 @@ function symrfmt!(atoms, mt_vars, sym_vars, rfmt)
             # normalize by 1/nsymcrys
             rfmt[ia][1:npmt[isp]] .*= t0
             done[ia] = true # This atom has been processed
-            println("CHECK2: sum abs rfmt[ia] = ", sum(abs.(rfmt[ia])))
+            #println("CHECK2: sum abs rfmt[ia] = ", sum(abs.(rfmt[ia])))
             # rotate into equivalent atoms
             for isym in 1:nsymcrys
                 ja = ieqatom[ia,isym]
                 if done[ja]
-                    println("This ja=$ja is done, skipping")
+                    #println("This ja=$ja is done, skipping")
                     continue
                 end
                 #
@@ -75,7 +75,7 @@ function symrfmt!(atoms, mt_vars, sym_vars, rfmt)
                 #
                 # rotate symmetrized function into equivalent muffin-tin
                 rotrfmt!(mt_vars, isp, symlatc[lspl], rfmt[ia], rfmt[ja])
-                println("CHECK3: sum abs rfmt[ja] = ", sum(abs.(rfmt[ja])))
+                #println("CHECK3: sum abs rfmt[ja] = ", sum(abs.(rfmt[ja])))
                 done[ja] = true
             end
         end 
