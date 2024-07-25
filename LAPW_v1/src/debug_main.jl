@@ -140,8 +140,10 @@ function debug_main()
 
     # Create a version for full GVectors, where Ng=Npoints
 
-    ffacg = genffacgp(pw, mt_vars.rmt)
-    cfunig, cfunir = gencfun(pw, atoms, ffacg)
+    gvec_full = GVectorsFull(pw.Ns, pw.RecVecs)
+
+    ffacg = genffacgp(pw, mt_vars.rmt, gvec_full=gvec_full)
+    cfunig, cfunir = gencfun(pw, atoms, ffacg, gvec_full=gvec_full)
     vsig = zeros(ComplexF64, pw.gvec.Ng)
     genvsig!(pw, vsir, cfunir, vsig)
     # XXX vsig will be different from Elk result because Elk uses more G-vectors

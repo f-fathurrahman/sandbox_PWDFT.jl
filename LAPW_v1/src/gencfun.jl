@@ -1,8 +1,16 @@
-function gencfun(pw, atoms, ffacg)
+function gencfun(pw, atoms, ffacg; gvec_full=nothing)
+
+    if isnothing(gvec_full)
+        gvec = pw.gvec
+    else
+        gvec = gvec_full
+    end
     
-    Ng = pw.gvec.Ng
-    G = pw.gvec.G
-    Npoints = prod(pw.Ns)
+    Ng = gvec.Ng
+    G = gvec.G
+
+    # This should the same as prod(gvec_full.Ng) in case gvec_full is used
+    Npoints = prod( Ns)
 
     Natoms = atoms.Natoms
     atpos = atoms.positions
@@ -30,7 +38,7 @@ function gencfun(pw, atoms, ffacg)
 
     ctmp = zeros(ComplexF64, Npoints)
     for ig in 1:Ng
-        ip = pw.gvec.idx_g2r[ig]
+        ip = gvec.idx_g2r[ig]
         ctmp[ip] = cfunig[ig]
     end
     # Fourier transform to real-space

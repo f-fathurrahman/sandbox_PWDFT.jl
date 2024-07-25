@@ -5,6 +5,7 @@ using LinearAlgebra
 using OffsetArrays
 using SpecialFunctions: sphericalbesselj
 
+import PWDFT
 using PWDFT: Atoms, PWGrid, KPoints, LibxcXCCalculator,
              SymmetryInfo, R_to_G!, G_to_R!,
              calc_epsxc_Vxc_LDA, calc_epsxc_Vxc_LDA!,
@@ -137,6 +138,11 @@ export allatoms!
 
 include("calc_sfacg.jl")
 export calc_sfacg
+
+# This is maybe required to get similar result with Elk
+# In some subroutines, Elk uses full G-vectors (which are not constrained with G2max)
+include("GVectorsFull.jl")
+export GVectorsFull
 
 include("gensfacgp.jl")
 export gensfacgp!

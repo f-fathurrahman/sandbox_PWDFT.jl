@@ -8,7 +8,7 @@ struct GVectorsFull
     idx_g2miller::Vector{Tuple{Int64,Int64,Int64}}
 end
 
-function init_gvec_full( Ns, RecVecs )
+function GVectorsFull( Ns::Tuple{Int64,Int64,Int64}, RecVecs::Matrix{Float64} )
 
     Ng = prod(Ns) # only for full gvectors
 
