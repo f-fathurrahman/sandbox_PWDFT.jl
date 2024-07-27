@@ -56,6 +56,9 @@ export MuffinTins, init_packed_mtr!
 include("APWLOVars.jl")
 export APWLOVars
 
+include("CoreStatesVars.jl")
+export CoreStatesVars
+
 include("readspecies.jl")
 export readspecies!
 
