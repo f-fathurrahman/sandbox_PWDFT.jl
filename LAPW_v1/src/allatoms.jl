@@ -29,20 +29,13 @@ function allatoms!( atsp_vars::AtomicSpeciesVars )
     for isp in 1:Nspecies
         rwf[isp] = zeros(Float64,nrsp[isp],2,nstsp[isp])
     end
-    
-    # speed of light in atomic units (=1/alpha) (CODATA 2018)
-    sol = 137.035999084
-    # scaled speed of light
-    solsc = sol
-
+    #
     for isp in 1:Nspecies
-
         solve_atom!(
-            solsc, ptnucl, spzn[isp], nstsp[isp], nsp[isp], lsp[isp], ksp[isp],
-            occsp[isp], xc_calc, xcgrad, nrsp[isp], rsp[isp], evalsp[isp], rhosp[isp],
+            ptnucl, spzn[isp], nstsp[isp], nsp[isp], lsp[isp], ksp[isp],
+            occsp[isp], xc_calc, xcgrad, rsp[isp], evalsp[isp], rhosp[isp],
             vrsp[isp], rwf[isp]
         )
-
         for ist in 1:nstsp[isp]
             @printf("%3d %18.10f\n", ist, evalsp[isp][ist])
         end

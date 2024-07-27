@@ -1,34 +1,15 @@
-# !INPUT/OUTPUT PARAMETERS:
-#   sol    : speed of light in atomic units (in,real)
-#   ptnucl : .true. if the nucleus is a point particle (in,logical)
-#   zn     : nuclear charge (in,real)
-#   nst    : number of states to solve for (in,integer)
-#   n      : priciple quantum number of each state (in,integer(nst))
-#   l      : quantum number l of each state (in,integer(nst))
-#   k      : quantum number k (l or l+1) of each state (in,integer(nst))
-#   occ    : occupancy of each state (inout,real(nst))
-#   xctype : exchange-correlation type (in,integer(3))
-#   xcgrad : 1 for GGA functional, 0 otherwise (in,integer)
-#   nr     : number of radial mesh points (in,integer)
-#   r      : radial mesh (in,real(nr))
-#   eval   : eigenvalue without rest-mass energy for each state (out,real(nst))
-#   rho    : charge density (out,real(nr))
-#   vr     : self-constistent potential (out,real(nr))
-#   rwf    : major and minor components of radial wavefunctions for each state
-#            (out,real(nr,2,nst))
 function solve_atom!(
-    sol, ptnucl, zn, nst, n, l, k, occ,
-    xc_calc, xcgrad, nr, r, evals, rho, vr, rwf
+    ptnucl::Bool, zn, nst, n, l, k, occ,
+    xc_calc, xcgrad, r, evals, rho, vr, rwf;
+    sol=137.035999084, maxscl=200
 )
-
-  
-    #local variables
-    maxscl = 200
 
     # potential convergence tolerance
     SMALL = 1.0e-6
 
     @assert nst > 0
+
+    nr = size(r, 1)
 
     # allocate local arrays
     vn = zeros(Float64,nr)
@@ -84,8 +65,8 @@ function solve_atom!(
 
         # solve the Dirac equation for each state
         for ist in 1:nst
-            @views evals[ist] = rdirac!( sol, n[ist], l[ist], k[ist], nr, r, vr, evals[ist],
-                rwf[:,1,ist], rwf[:,2,ist] )
+            @views evals[ist] = rdirac!( n[ist], l[ist], k[ist], r, vr, evals[ist],
+                rwf[:,1,ist], rwf[:,2,ist]; sol=sol )
         end
     
         # compute the charge density

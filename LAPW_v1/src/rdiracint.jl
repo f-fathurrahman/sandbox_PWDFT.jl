@@ -1,18 +1,25 @@
 # !INPUT/OUTPUT PARAMETERS:
 #   sol  : speed of light in atomic units (in,real)
-#   kpa  : quantum number kappa (in,integer)
+#   κ  : quantum number kappa (in,integer)
 #   e    : energy (in,real)
 #   nr   : number of radial mesh points (in,integer)
 #   r    : radial mesh (in,real(nr))
 #   vr   : potential on radial mesh (in,real(nr))
 #   nn   : number of nodes (out,integer)
-#   g0   : m th energy derivative of the major component multiplied by r
+#   G₀   : m th energy derivative of the major component multiplied by r
 #          (out,real(nr))
-#   g1   : radial derivative of g0 (out,real(nr))
-#   f0   : m th energy derivative of the minor component multiplied by r
+#   G₁   : radial derivative of G₀ (out,real(nr))
+#   F₀   : m th energy derivative of the minor component multiplied by r
 #          (out,real(nr))
-#   f1   : radial derivative of f0 (out,real(nr))
-function rdiracint!(sol, kpa, e, nr, r, vr, g0, g1, f0, f1)
+#   F₁   : radial derivative of F₀ (out,real(nr))
+function rdiracint!(
+    κ::Int64, E::Float64,
+    r, Vr,
+    G₀, G₁, F₀, F₁;
+    sol=137.035999084
+)
+
+    nr = size(r, 1)
 
     # rescaling limit
     rsc = 1.0e100
@@ -24,58 +31,59 @@ function rdiracint!(sol, kpa, e, nr, r, vr, g0, g1, f0, f1)
     
     # electron rest energy
     e0 = sol^2
-    t1 = 2.0*e0 + e
+    t1 = 2*e0 + E
     
     # determine the r -> 0 boundary values of F and G
-    t2 = kpa/r[1]
-    t3 = ci*(t1 - vr[1])
-    t4 = ci*(vr[1] - e)
-    f0[1] = 1.0
-    f1[1] = 0.0
-    g0[1] = (f1[1] - t2*f0[1])/t4
-    g1[1] = t3*f0[1] - t2*g0[1]
+    t2 = κ/r[1]
+    t3 = ci*( t1 - Vr[1] )
+    t4 = ci*( Vr[1] - E )
+    F₀[1] = 1.0
+    F₁[1] = 0.0
+    G₀[1] = ( F₁[1] - t2*F₀[1] )/t4
+    G₁[1] = t3*F₀[1] - t2*G₀[1]
 
     # extrapolate to the first four points
-    @views g1[2:4] .= g1[1]
-    @views f1[2:4] .= f1[1]
+    @views G₁[2:4] .= G₁[1]
+    @views F₁[2:4] .= F₁[1]
     
     nn = 0 # number of nodes
     for ir in 2:nr
-        t2 = kpa/r[ir]
-        t3 = ci*(t1 - vr[ir])
-        t4 = ci*(vr[ir] - e)
+        t2 = κ/r[ir]
+        t3 = ci*(t1 - Vr[ir])
+        t4 = ci*(Vr[ir] - E)
         ir0 = ir - 3
         if ir0 < 1
             ir0 = 1
         end
-        @views g1[ir] = poly3(r[ir0:ir0+2], g1[ir0:ir0+2], r[ir])
-        @views f1[ir] = poly3(r[ir0:ir0+2], f1[ir0:ir0+2], r[ir])
+        @views G₁[ir] = poly3(r[ir0:ir0+2], G₁[ir0:ir0+2], r[ir])
+        @views F₁[ir] = poly3(r[ir0:ir0+2], F₁[ir0:ir0+2], r[ir])
         # integrate to find wavefunction
-        @views g0[ir] = poly4i( r[ir0:ir0+3], g1[ir0:ir0+3], r[ir]) + g0[ir0]
-        @views f0[ir] = poly4i( r[ir0:ir0+3], f1[ir0:ir0+3], r[ir]) + f0[ir0]
+        @views G₀[ir] = poly4i(r[ir0:ir0+3], G₁[ir0:ir0+3], r[ir]) + G₀[ir0]
+        @views F₀[ir] = poly4i(r[ir0:ir0+3], F₁[ir0:ir0+3], r[ir]) + F₀[ir0]
         # compute the derivatives
-        g1[ir] = t3*f0[ir] - t2*g0[ir]
-        f1[ir] = t4*g0[ir] + t2*f0[ir]
+        G₁[ir] = t3*F₀[ir] - t2*G₀[ir]
+        F₁[ir] = t4*G₀[ir] + t2*F₀[ir]
         # integrate for correction
-        @views g0[ir] = poly4i(r[ir0:ir0+3], g1[ir0:ir0+3], r[ir]) + g0[ir0]
-        @views f0[ir] = poly4i(r[ir0:ir0+3], f1[ir0:ir0+3], r[ir]) + f0[ir0]
+        @views G₀[ir] = poly4i(r[ir0:ir0+3], G₁[ir0:ir0+3], r[ir]) + G₀[ir0]
+        @views F₀[ir] = poly4i(r[ir0:ir0+3], F₁[ir0:ir0+3], r[ir]) + F₀[ir0]
         # compute the derivatives again
-        g1[ir] = t3*f0[ir] - t2*g0[ir]
-        f1[ir] = t4*g0[ir] + t2*f0[ir]
+        G₁[ir] = t3*F₀[ir] - t2*G₀[ir]
+        F₁[ir] = t4*G₀[ir] + t2*F₀[ir]
         # check for overflow
-        if ( (abs(g0[ir]) > rsc) || (abs(g1[ir]) > rsc) ||
-             (abs(f0[ir]) > rsc) || (abs(f1[ir]) > rsc) )
+        if (abs(G₀[ir]) > rsc) || (abs(G₁[ir]) > rsc) ||
+           (abs(F₀[ir]) > rsc) || (abs(F₁[ir]) > rsc)
             # set the remaining points and return
-            @views g0[ir:nr] .= g0[ir]
-            @views g1[ir:nr] .= g1[ir]
-            @views f0[ir:nr] .= f0[ir]
-            @views f1[ir:nr] .= f1[ir]
-            return nn, e
+            @views G₀[ir:nr] .= G₀[ir]
+            @views G₁[ir:nr] .= G₁[ir]
+            #
+            @views F₀[ir:nr] .= F₀[ir]
+            @views F₁[ir:nr] .= F₁[ir]
+            return nn, E
         end
         # check for node
-        if g0[ir-1]*g0[ir] < 0.0
-            nn = nn + 1
+        if G₀[ir-1]*G₀[ir] < 0.0
+            nn += 1
         end
     end
-    return nn, e
+    return nn, E
 end

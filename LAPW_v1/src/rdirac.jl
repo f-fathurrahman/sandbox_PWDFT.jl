@@ -1,23 +1,8 @@
-# !INPUT/OUTPUT PARAMETERS:
-#   sol  : speed of light in atomic units (in,real)
-#   n    : principal quantum number (in,integer)
-#   l    : quantum number l (in,integer)
-#   k    : quantum number k (l or l+1) (in,integer)
-#   nr   : number of radial mesh points (in,integer)
-#   r    : radial mesh (in,real(nr))
-#   vr   : potential on radial mesh (in,real(nr))
-#   evals : eigenvalue without rest-mass energy (inout,real)
-#   g0   : major component of the radial wavefunction (out,real(nr))
-#   f0   : minor component of the radial wavefunction (out,real(nr))
-# !DESCRIPTION:
-#   Finds the solution to the radial Dirac equation for a given potential $v(r)$
-#   and quantum numbers $n$, $k$ and $l$. The method involves integrating the
-#   equation using the predictor-corrector method and adjusting $E$ until the
-#   number of nodes in the wavefunction equals $n-l-1$. The calling routine must
-#   provide an initial estimate for the eigenvalue. Note that the arrays
-#   {\tt g0} and {\tt f0} represent the radial functions multiplied by $r$.
-
-function rdirac!(sol, n, l, k, nr, r, vr, evals, g0, f0)
+function rdirac!(
+    n::Int64, l::Int64, k::Int64,
+    r, vr, evals, g0, f0;
+    sol=137.035999084, max_iter=2000, tol=1e-12
+)
 
     # ! arguments
     # real(8), intent(in) :: sol
@@ -26,29 +11,18 @@ function rdirac!(sol, n, l, k, nr, r, vr, evals, g0, f0)
     # real(8), intent(inout) :: evals
     # real(8), intent(out) :: g0(nr),f0(nr)
 
+    nr = size(vr,1)
+    @assert nr == size(vr,1)
+
     @assert k > 0
     @assert nr >= 4
 
-    # local variables
-    maxit = 2000
-    # energy convergence tolerance
-    SMALL = 1.e-12
-    # automatic arrays
-    g1 = zeros(Float64,nr)
-    f1 = zeros(Float64,nr)
-    fr = zeros(Float64,nr)
-
     if k > n
-        println("n = ", n)
-        println("k = ", k)
-        error("Error incompatible n and k")
+        error("Error incompatible n=$n and k=$k")
     end
 
-    if ( (k == n) && (l != k-1) )
-        println("n = ", n)
-        println("k = ", k)
-        println("l = ", k)
-        error("Incompatible n, k and l")
+    if (k == n) && (l != k-1)
+        error("Incompatible n=$n, k=$k and l=$l")
     end
 
     if k == l
@@ -56,31 +30,29 @@ function rdirac!(sol, n, l, k, nr, r, vr, evals, g0, f0)
     elseif k == (l+1)
         kpa = -k
     else
-        println("l = ", l)
-        println("k = ", k)
-        println("Error: incompatible l and k")
+        println("Error: incompatible l=$l and k=$l")
     end
 
-    #println("n   = ", n)
-    #println("l   = ", l)
-    #println("k   = ", k)
-    #println("kpa = ", kpa)
+    # automatic arrays
+    g1 = zeros(Float64, nr)
+    f1 = zeros(Float64, nr)
+    fr = zeros(Float64, nr)
 
     de = 1.0
     nndp = 0
-    it = 0
+    iiter = 0
     #
     while true
         #
-        it = it + 1
-        if it > maxit
+        iiter = iiter + 1
+        if iiter > max_iter
             break
         end 
         # integrate the Dirac equation
         #println("calling rdiracint")
         #println("kpa = ", kpa)
         #println("nr  = ", nr)
-        nn, evals = rdiracint!(sol, kpa, evals, nr, r, vr, g0, g1, f0, f1)
+        nn, evals = rdiracint!(kpa, evals, r, vr, g0, g1, f0, f1, sol=sol)
         # check the number of nodes
         nnd = nn - (n-l-1)
         if nnd > 0
@@ -89,7 +61,7 @@ function rdirac!(sol, n, l, k, nr, r, vr, evals, g0, f0)
             evals = evals + de
         end
         #
-        if it > 1
+        if iiter > 1
             if ( (nnd != 0) || ( nndp != 0) )
                 if nnd*nndp <= 0
                     de = de*0.5
@@ -100,12 +72,12 @@ function rdirac!(sol, n, l, k, nr, r, vr, evals, g0, f0)
         end
         #
         nndp = nnd
-        if de < SMALL*(abs(evals) + 1.0)
+        if de < tol*(abs(evals) + 1.0)
             break
         end
     end
 
-    if it > maxit
+    if iiter > max_iter
         println("Warning(rdirac): maximum iterations exceeded")
     end
 
@@ -113,7 +85,7 @@ function rdirac!(sol, n, l, k, nr, r, vr, evals, g0, f0)
     # major component
     irm = nr
     for ir in 2:nr
-        if ( (g0[ir-1]*g0[ir] < 0.0) || (g1[ir-1]*g1[ir] < 0.0) )
+        if (g0[ir-1]*g0[ir] < 0.0) || (g1[ir-1]*g1[ir] < 0.0)
             irm = ir
         end
     end
@@ -121,7 +93,7 @@ function rdirac!(sol, n, l, k, nr, r, vr, evals, g0, f0)
     # minor component
     irm = nr
     for ir in 2:nr
-        if ( (f0[ir-1]*f0[ir] < 0.0) || (f1[ir-1]*f1[ir] < 0.0) )
+        if (f0[ir-1]*f0[ir] < 0.0) || (f1[ir-1]*f1[ir] < 0.0)
             irm = ir
         end
     end
