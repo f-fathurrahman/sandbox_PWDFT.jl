@@ -41,3 +41,15 @@ function get_rhosp()
     nspecies = get_nspecies()
     return _load_allocatable_array(symbol, Float64, (nrspmax,nspecies))
 end
+
+# maximum allowed states for each species
+function get_maxstsp()
+    return 40 # hardcoded parameter
+end
+
+function get_evalsp()
+    symbol = :__m_atomic_species_MOD_evalsp
+    maxstsp = get_maxstsp()
+    maxspecies = get_maxspecies()
+    return _load_automatic_array(symbol, Float64, (maxstsp,maxspecies))
+end
