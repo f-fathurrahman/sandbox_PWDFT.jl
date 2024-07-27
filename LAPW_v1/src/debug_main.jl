@@ -147,6 +147,9 @@ function debug_main()
     vsig = zeros(ComplexF64, pw.gvec.Ng)
     genvsig!(pw, vsir, cfunir, vsig)
     # XXX vsig will be different from Elk result because Elk uses more G-vectors
+    
+    core_states = CoreStatesVars(atoms, atsp_vars, mt_vars)
+    gencore!(atoms, sym_vars.eqatoms, atsp_vars, mt_vars, vsmt, core_states)
 
     @infiltrate
     # open REPL and investigate the variables

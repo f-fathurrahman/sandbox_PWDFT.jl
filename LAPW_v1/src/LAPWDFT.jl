@@ -224,6 +224,12 @@ export potxcir!
 include("genvsig.jl")
 export genvsig!
 
+include("rf_mt_lm.jl")
+export rf_mt_lm!
+
+include("gencore.jl")
+export gencore!
+
 include("debug_main.jl")
 
 end
