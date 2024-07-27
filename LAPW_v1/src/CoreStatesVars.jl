@@ -27,6 +27,12 @@ function CoreStatesVars(atoms, atsp_vars, mt_vars; spincore=false)
         occcr[ia] = zeros(Float64, nstsp[isp])
         evalcr[ia] = zeros(Float64, nstsp[isp])
     end
+    # Copy some data from atsp_vars
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        occcr[ia][:] = atsp_vars.occsp[isp][:]
+        evalcr[ia][:] = atsp_vars.evalsp[isp][:]
+    end
     #
     rhocr = Matrix{Vector{Float64}}(undef,Natoms,nspncr)
     for ispin_core in 1:nspncr, ia in 1:Natoms
