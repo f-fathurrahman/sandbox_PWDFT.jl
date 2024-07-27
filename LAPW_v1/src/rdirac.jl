@@ -11,8 +11,8 @@ function rdirac!(
     # real(8), intent(inout) :: evals
     # real(8), intent(out) :: g0(nr),f0(nr)
 
-    nr = size(vr,1)
-    @assert nr == size(vr,1)
+    nr = size(r,1)
+    @assert size(vr,1) >= nr  # vr can be larger than r
 
     @assert k > 0
     @assert nr >= 4
