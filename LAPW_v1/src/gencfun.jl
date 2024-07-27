@@ -10,7 +10,7 @@ function gencfun(pw, atoms, ffacg; gvec_full=nothing)
     G = gvec.G
 
     # This should the same as prod(gvec_full.Ng) in case gvec_full is used
-    Npoints = prod( Ns)
+    Npoints = prod(pw.Ns)
 
     Natoms = atoms.Natoms
     atpos = atoms.positions
