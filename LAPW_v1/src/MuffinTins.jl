@@ -66,7 +66,191 @@ mutable struct MuffinTins
     SHT::SphericalHarmonicTransform
 end
 
-function MuffinTins(Nspecies; lmaxi=1)
+
+function MuffinTins(
+    specs_info::Vector{SpeciesInfo}, atsp_vars;
+    lmaxi=1,
+    rmtdelta=0.05,
+    lradstp=4,
+    maxlapw=50,
+    lmaxapw=8,
+    lmaxo=6,
+    fracinr=0.01
+)
+    @assert lmaxo <= lmaxapw
+
+    Nspecies = length(specs_info)
+
+    nrmt = zeros(Int64, Nspecies)
+    nrcmt = zeros(Int64, Nspecies)
+    rmt = zeros(Float64, Nspecies)
+    for isp in 1:Nspecies
+        nrmt[isp] = specs_info[isp].nrmt
+        @assert mod(nrmt[isp]-1, lradstp) == 0 # should be commensurate
+        #
+        nrcmt[isp] = (nrmt[isp] - 1)/lradstp + 1
+        #
+        rmt[isp] = specs_info[isp].rmt
+    end
+
+    lmmaxapw = (lmaxapw+1)^2
+    lmmaxo = (lmaxo+1)^2
+    lmaxi  = min(lmaxi,lmaxo)
+    lmmaxi = (lmaxi+1)^2
+    # index to (l,m) pairs
+    idxlm = OffsetArray( zeros(Int64,lmaxapw+1,2*lmaxapw+1), 0:lmaxapw, -lmaxapw:lmaxapw)
+    idxil = zeros(Int64, lmmaxapw)
+    idxim = zeros(Int64, lmmaxapw)
+    lm = 0
+    for l in 0:lmaxapw, m in -l:l
+        lm = lm + 1
+        idxlm[l,m] = lm
+        idxil[lm] = l
+        idxim[lm] = m
+    end
+
+
+    rlmt = Vector{OffsetMatrix{Float64, Matrix{Float64}}}(undef,Nspecies)
+    wrmt = Vector{Vector{Float64}}(undef,Nspecies)
+    wprmt = Vector{Matrix{Float64}}(undef,Nspecies)
+    for isp in 1:Nspecies
+        rlmt[isp] = OffsetArray(
+            zeros(Float64, nrmt[isp], 2*(lmaxo+2)),
+            1:nrmt[isp], -lmaxo-1:lmaxo+2
+        )
+        wrmt[isp] = zeros(Float64, nrmt[isp])
+        wprmt[isp] = zeros(Float64, 4, nrmt[isp])
+    end
+    # Now fill in the values
+    rsp = atsp_vars.rsp
+    #
+    for isp in 1:Nspecies
+        #
+        # calculate r^l on the fine radial mesh
+        nr = nrmt[isp]
+        @assert nr <= atsp_vars.nrsp[isp] # XXX Need this?
+        #
+        for ir in 1:nr
+            rlmt[isp][ir,-1] = 1.0/rsp[isp][ir]
+            rlmt[isp][ir,0] = 1.0
+            rlmt[isp][ir,1] = rsp[isp][ir]
+        end
+        #
+        for l in range(-2,stop=-lmaxo-1,step=-1)
+            for ir in 1:nr
+                rlmt[isp][ir,l] = rlmt[isp][ir,l+1]/rsp[isp][ir]
+            end
+        end
+        #
+        for l in 2:lmaxo+2            
+            for ir in 1:nr
+                rlmt[isp][ir,l] = rlmt[isp][ir,l-1] * rsp[isp][ir]
+            end
+        end
+        # determine the weights for spline integration on the fine radial mesh
+        wsplint!(nr, rsp[isp], wrmt[isp])
+        # multiply by r^2
+        for ir in 1:nr
+            wrmt[isp][ir] = wrmt[isp][ir]*rlmt[isp][ir,2]
+        end
+        # determine the weights for partial integration on fine radial mesh
+        wsplintp!(nr, rsp[isp], wprmt[isp])
+    end
+
+
+    # determine the fraction of the muffin-tin radius which defines the inner part
+    if fracinr < 0.0
+        # be explicit about conversion to Float64 (not really needed actually for Julia)
+        fracinr = sqrt( Float64(lmmaxi) / Float64(lmmaxo) )
+    end
+
+
+    nrmtscf = 0
+    rmtall = 0
+    omegamt = 0.0
+
+    # Coarse mesh
+    rcmt = Vector{Vector{Float64}}(undef,Nspecies)
+    rlcmt = Vector{OffsetArray{Float64,2,Array{Float64,2}}}(undef,Nspecies)
+    wrcmt = Vector{Vector{Float64}}(undef,Nspecies)
+    wprcmt = Vector{Matrix{Float64}}(undef,Nspecies)
+    # set up the coarse radial meshes and find the inner part of the muffin-tin
+    # where rho is calculated with lmaxi
+    for isp in 1:Nspecies
+        rcmt[isp] = zeros(Float64, nrcmt[isp])
+        rlcmt[isp] = OffsetArray(
+            zeros(Float64, nrcmt[isp], 2*(lmaxo+2)),
+            1:nrcmt[isp], -lmaxo-1:lmaxo+2
+        )
+        wrcmt[isp] = zeros(Float64, nrcmt[isp])
+        wprcmt[isp] = zeros(Float64, 4, nrcmt[isp])
+    end
+    #
+    # Inner radial grid
+    nrmti = zeros(Int64, Nspecies)
+    nrcmti = zeros(Int64, Nspecies)
+    #
+    for isp in 1:Nspecies
+        t1 = fracinr*rmt[isp]
+        nrmti[isp] = 1
+        nrcmti[isp] = 1 # need this?
+        irc = 0
+        for ir in range(1,stop=nrmt[isp],step=lradstp)
+            irc = irc + 1
+            rcmt[isp][irc] = rsp[isp][ir]
+            if rsp[isp][ir] < t1
+                nrmti[isp] = ir
+                nrcmti[isp] = irc
+            end
+        end
+        # store r^l on the coarse radial mesh
+        for l in range(-lmaxo-1, stop=lmaxo+2)
+            irc = 0
+            for ir in range(1,stop=nrmt[isp],step=lradstp)
+                irc = irc + 1
+                rlcmt[isp][irc,l] = rlmt[isp][ir,l]
+            end
+        end
+        # determine the weights for spline integration on the coarse radial mesh
+        nrc = nrcmt[isp]
+        wsplint!(nrc, rcmt[isp], wrcmt[isp])
+        # multiply by r^2
+        for ir in 1:nrc
+            wrcmt[isp][ir] = wrcmt[isp][ir] * rlcmt[isp][ir,2]
+        end
+        # determine the weights for partial integration on coarse radial mesh
+        wsplintp!(nrc, rcmt[isp], wprcmt[isp])
+    end
+
+
+    # packed MT
+    npmti = zeros(Int64, Nspecies)
+    npmt = zeros(Int64, Nspecies)
+    npcmti = zeros(Int64, Nspecies)
+    npcmt = zeros(Int64, Nspecies)
+    for isp in 1:Nspecies
+        #
+        npmti[isp] = lmmaxi*nrmti[isp]
+        npmt[isp] = npmti[isp] + lmmaxo*(nrmt[isp] - nrmti[isp])
+        #
+        npcmti[isp] = lmmaxi*nrcmti[isp]
+        npcmt[isp] = npcmti[isp] + lmmaxo*(nrcmt[isp] - nrcmti[isp])
+    end
+
+
+    SHT = SphericalHarmonicTransform(lmaxi, lmaxo)
+
+    return MuffinTins(
+        nrmtscf, nrmt, rmtall, rmtdelta, rmt, omegamt, lradstp,
+        nrcmt, rcmt, rlmt, rlcmt, wrmt, wprmt, wrcmt, wprcmt,
+        maxlapw, lmaxapw, lmmaxapw, lmaxo, lmmaxo, lmaxi, lmmaxi, fracinr,
+        nrmti, nrcmti, idxlm, idxil, idxim, npmti, npmt, npcmti, npcmt,
+        SHT
+    )
+
+end
+
+function MuffinTins(Nspecies::Int64; lmaxi=1)
 
     nrmtscf = 0
     nrmt = zeros(Int64,Nspecies)

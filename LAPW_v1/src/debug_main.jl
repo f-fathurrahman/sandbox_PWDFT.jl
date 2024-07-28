@@ -28,6 +28,9 @@ function debug_main01()
     end
 
     atsp_vars = AtomicSpeciesVars(atoms, specs_info)
+    mt_vars = MuffinTins(specs_info, atsp_vars)
+
+    allatoms!(atsp_vars)
 
     @infiltrate
 
