@@ -59,6 +59,9 @@ export APWLOVars
 include("CoreStatesVars.jl")
 export CoreStatesVars
 
+include("SpeciesInfo.jl")
+export SpeciesInfo
+
 include("readspecies.jl")
 export readspecies!
 
