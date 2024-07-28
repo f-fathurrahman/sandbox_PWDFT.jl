@@ -66,7 +66,7 @@ function call_potxc()
 end
 
 function call_gencore()
-    ccall( (:gencore_, LIBLAPW), Cvoid, () )
+    ccall( (:my_gencore_, LIBLAPW), Cvoid, () )
     return
 end
 

@@ -59,16 +59,18 @@ function init_debug_calc()
     init_run()
     
     # Only call after init_run
-    call_my_gndstate(1)
+    #call_my_gndstate(1)
     # Otherwise call other debug subroutines below
 
-    #call_rhoinit()
+    call_rhoinit()
     
     # potks or potks_no_symm
-    #call_potks()
+    call_potks()
     #call_potks_no_symm() # only for debugging
     
-    #call_genvsig()
+    call_genvsig()
+
+    #call_gencore()
 
 end
 export init_debug_calc
