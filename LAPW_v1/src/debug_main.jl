@@ -1,3 +1,40 @@
+function debug_main01()
+
+    # Read the input file
+    elk_input = read_elk_input()
+    
+    # Initialize Atoms
+    atoms = create_atoms_from_elk_input(elk_input)
+
+    # Setup symmetry variables
+    sym_vars = SymmetryVars()
+    findsymlat!(sym_vars, atoms)
+    findsymcrys!(sym_vars, atoms)
+    findsymsite!(sym_vars, atoms)
+
+    Nspecies = atoms.Nspecies
+    spsymb = atoms.SpeciesSymbols
+    specs_info = Vector{SpeciesInfo}(undef,Nspecies)
+    for isp in 1:Nspecies
+        specs_info[isp] = SpeciesInfo(spsymb[isp]*".in")
+    end
+    checkmt!(atoms, specs_info)
+    # make the muffin-tin mesh commensurate with lradstp
+    lradstp = 4 # in muffin tin
+    for isp in 1:Nspecies
+        nrmt = specs_info[isp].nrmt
+        specs_info[isp].nrmt -= (nrmt-1)%lradstp
+        #nrcmt[is] = (nrmt[is] - 1)/lradstp + 1
+    end
+
+    atsp_vars = AtomicSpeciesVars(atoms, specs_info)
+
+    @infiltrate
+
+    return
+end
+
+
 # This is currently the entry point
 # We may call @infiltrate within this function and investigate various variables
 

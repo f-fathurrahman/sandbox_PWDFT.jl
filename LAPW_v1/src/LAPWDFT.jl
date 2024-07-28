@@ -25,6 +25,9 @@ export LatticeVars
 include("AtomicVars.jl")
 export AtomicVars
 
+include("SpeciesInfo.jl")
+export SpeciesInfo
+
 include("AtomicSpeciesVars.jl")
 export AtomicSpeciesVars, init_nuclear_pot!
 
@@ -58,9 +61,6 @@ export APWLOVars
 
 include("CoreStatesVars.jl")
 export CoreStatesVars
-
-include("SpeciesInfo.jl")
-export SpeciesInfo
 
 include("readspecies.jl")
 export readspecies!

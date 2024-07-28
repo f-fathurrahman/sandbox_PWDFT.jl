@@ -1,8 +1,8 @@
 mutable struct SpeciesInfo
     #
-    filename::String
-    spsymb::String
-    spname::String
+    filename::String # usually contains .in prefix
+    spsymb::String # the actual symbol, e.g. spsymb
+    spname::String # full name, e.g. silicon, platinum, etc
     spzn::Float64
     spmass::Float64
     rminsp::Float64

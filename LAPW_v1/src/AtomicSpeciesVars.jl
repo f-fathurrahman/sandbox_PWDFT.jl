@@ -12,14 +12,6 @@ mutable struct AtomicSpeciesVars
     # ptnucl is .true. if the nuclei are to be treated as point charges, if .false.
     # the nuclei have a finite spherical distribution
     ptnucl::Bool
-    # nuclear radius
-    rnucl::Vector{Float64}
-    # nuclear volume
-    volnucl::Vector{Float64}
-    # number of radial mesh points to nuclear radius
-    nrnucl::Vector{Int64}
-    # number of coarse radial mesh points to nuclear radius
-    nrcnucl::Vector{Int64}
     # nuclear Coulomb potential
     vcln::Vector{Vector{Float64}}
     # species electronic charge
@@ -36,10 +28,6 @@ mutable struct AtomicSpeciesVars
     maxstsp::Int64 # parameter: 40
     # number of states for each species
     nstsp::Vector{Int64}
-    # core-valence cut-off energy for species file generation
-    ecvcut::Float64
-    # semi-core-valence cut-off energy for species file generation
-    esccut::Float64
     # state principle quantum number for each species
     nsp::Vector{Vector{Int64}} # (maxstsp,maxspecies)
     # state l value for each species
@@ -64,8 +52,106 @@ mutable struct AtomicSpeciesVars
     # the crystal does not depend on this choice)
     xctsp::Tuple{Int64,Int64,Int64}
 end
-
 # rlsp is not used. It is also removed in the future version of Elk
+# Some variables are removed: nucl variables and cutoff energies for species generation
+
+function AtomicSpeciesVars( atoms::Atoms, specs_info::Vector{SpeciesInfo} )
+    
+    Natoms = atoms.Natoms
+    atm2species = atoms.atm2species
+    Nspecies = length(specs_info)
+
+    sppath = "" # This is not really used for now
+
+    # Copy information from specs_info
+    spfname = Vector{String}(undef, Nspecies)
+    spname = Vector{String}(undef, Nspecies)
+    spsymb = Vector{String}(undef, Nspecies)
+    spzn = zeros(Float64, Nspecies)
+    spmass = zeros(Float64, Nspecies)
+    rminsp = zeros(Float64, Nspecies)
+    rmaxsp = zeros(Float64, Nspecies)
+    nstsp = zeros(Int64, Nspecies)
+    nsp = Vector{Vector{Int64}}(undef,Nspecies)
+    lsp = Vector{Vector{Int64}}(undef,Nspecies)
+    ksp = Vector{Vector{Int64}}(undef,Nspecies)
+    spcore = Vector{Vector{Bool}}(undef,Nspecies)
+    evalsp = Vector{Vector{Float64}}(undef,Nspecies)
+    occsp  = Vector{Vector{Float64}}(undef,Nspecies)
+    for isp in 1:Nspecies
+        spfname[isp] = specs_info[isp].filename
+        spname[isp] = specs_info[isp].spname
+        spsymb[isp] = specs_info[isp].spsymb
+        spzn[isp] = specs_info[isp].spzn
+        spmass[isp] = specs_info[isp].spmass
+        rminsp[isp] = specs_info[isp].rminsp
+        rmaxsp[isp] = specs_info[isp].rmaxsp
+        nstsp[isp] = specs_info[isp].nstsp
+        nsp[isp] = specs_info[isp].nsp
+        lsp[isp] = specs_info[isp].lsp
+        ksp[isp] = specs_info[isp].ksp
+        spcore[isp] = specs_info[isp].spcore
+        evalsp[isp] = specs_info[isp].evalsp
+        occsp[isp] = specs_info[isp].occsp
+    end
+
+    nstcr = 0
+    spze = zeros(Float64, Nspecies)
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        # valence charge
+        for ist in 1:nstsp[isp]
+            spze[isp] += occsp[isp][ist]
+            if spcore[isp][ist] 
+                nstcr += 2*ksp[isp][ist]
+            end 
+        end
+    end
+
+    nrsp = zeros(Int64, Nspecies)
+    # estimate the number of radial mesh points to infinity
+    for isp in 1:Nspecies
+        rmt = specs_info[isp].rmt
+        nrmt = specs_info[isp].nrmt    
+        # logarithmic mesh
+        t1 = log(rmaxsp[isp]/rminsp[isp])/log(rmt/rminsp[isp])
+        t2 = (nrmt - 1)*t1
+        nrsp[isp] = round(Int64,t2) + 1 # XXX compare with nint
+    end
+
+    rsp = Vector{Vector{Float64}}(undef, Nspecies)
+    rhosp = Vector{Vector{Float64}}(undef, Nspecies)
+    vrsp = Vector{Vector{Float64}}(undef, Nspecies)
+    for isp in 1:Nspecies
+        rsp[isp] = zeros(Float64, nrsp[isp])
+        rhosp[isp] = zeros(Float64, nrsp[isp])
+        vrsp[isp] = zeros(Float64, nrsp[isp])
+    end
+
+    for isp in 1:Nspecies
+        nrmt = specs_info[isp].nrmt
+        rmt = specs_info[isp].rmt
+        t1 = 1.0/(nrmt - 1)
+        # logarithmic mesh
+        t2 = log(rmt/rminsp[isp])
+        for ir in 1:nrsp[isp]
+            rsp[isp][ir] = rminsp[isp]*exp( (ir-1) * t1 * t2)
+        end
+    end
+
+    ptnucl = true
+    vcln = Vector{Vector{Float64}}(undef,Nspecies)
+    maxstsp = 40 # parameter, not used?
+    xctsp  = (3,0,0) # not used, always defaulting to this?
+
+    return AtomicSpeciesVars(
+        sppath, spfname, spname, spsymb, spzn,
+        ptnucl, vcln, spze, spmass, rminsp, rmaxsp, nrsp,
+        maxstsp, nstsp,
+        nsp, lsp, ksp, spcore, nstcr, evalsp, occsp, rsp, rhosp, vrsp, xctsp
+    )
+end
+
 
 function AtomicSpeciesVars( Nspecies::Int64 )
     
@@ -77,13 +163,6 @@ function AtomicSpeciesVars( Nspecies::Int64 )
     spzn = zeros(Float64, Nspecies)    
 
     ptnucl = true
-
-    rnucl = zeros(Float64, Nspecies)
-
-    volnucl = zeros(Float64, Nspecies)
-
-    nrnucl = zeros(Int64, Nspecies)
-    nrcnucl = zeros(Int64, Nspecies)
     
     vcln = Vector{Vector{Float64}}(undef,Nspecies)
     
@@ -95,9 +174,6 @@ function AtomicSpeciesVars( Nspecies::Int64 )
     nrsp = zeros(Int64, Nspecies)
     maxstsp = 40
     nstsp = zeros(Int64, Nspecies)
-    
-    ecvcut = 0.0
-    esccut = 0.0
 
     nsp = Vector{Vector{Int64}}(undef,Nspecies)
     lsp = Vector{Vector{Int64}}(undef,Nspecies)
@@ -106,7 +182,7 @@ function AtomicSpeciesVars( Nspecies::Int64 )
 
     nstcr = 0
     evalsp = Vector{Vector{Float64}}(undef,Nspecies)
-    occsp  = Vector{Vector{Float64}}(undef,Nspecies)
+    occsp = Vector{Vector{Float64}}(undef,Nspecies)
 
     # XXX Will be setup properly later
     rsp = Vector{Vector{Float64}}(undef,Nspecies)
@@ -117,9 +193,9 @@ function AtomicSpeciesVars( Nspecies::Int64 )
 
     return AtomicSpeciesVars(
         sppath, spfname, spname, spsymb, spzn,
-        ptnucl, rnucl, volnucl, nrnucl, nrcnucl,
+        ptnucl,
         vcln, spze, spmass, rminsp, rmaxsp, nrsp,
-        maxstsp, nstsp, ecvcut, esccut,
+        maxstsp, nstsp,
         nsp, lsp, ksp, spcore, nstcr, evalsp, occsp, rsp, rhosp, vrsp, xctsp
     )
 end
