@@ -127,7 +127,9 @@ function AtomicSpeciesVars( atoms::Atoms, specs_info::Vector{SpeciesInfo} )
         rhosp[isp] = zeros(Float64, nrsp[isp])
         vrsp[isp] = zeros(Float64, nrsp[isp])
     end
-
+    # rhosp and vrsp will be given after in allatoms
+    #
+    # Setup radial mesh
     for isp in 1:Nspecies
         nrmt = specs_info[isp].nrmt
         rmt = specs_info[isp].rmt
@@ -138,9 +140,24 @@ function AtomicSpeciesVars( atoms::Atoms, specs_info::Vector{SpeciesInfo} )
             rsp[isp][ir] = rminsp[isp]*exp( (ir-1) * t1 * t2)
         end
     end
-
+    #
+    # determine the nuclear Coulomb potential
     ptnucl = true
+    # spherical harmonic for l=m=0
+    y00 = 0.28209479177387814347
+    t1 = 1.0/y00
+    #
     vcln = Vector{Vector{Float64}}(undef,Nspecies)
+    for isp in 1:Nspecies
+        nr = nrsp[isp]
+        vcln[isp] = zeros(Float64,nr)
+        potnucl!( ptnucl, rsp[isp], spzn[isp], vcln[isp] )
+        # scale with 1/y00
+        for ir in 1:nr
+            vcln[isp][ir] = t1*vcln[isp][ir]
+        end
+    end
+
     maxstsp = 40 # parameter, not used?
     xctsp  = (3,0,0) # not used, always defaulting to this?
 
