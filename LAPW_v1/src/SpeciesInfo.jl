@@ -44,7 +44,6 @@ function SpeciesInfo(
     filename::String;
     verbose=true,
     maxlapw=50,
-    maxapword=4,
     maxlorb=200,
     maxlorbord=5
 )
@@ -126,6 +125,11 @@ function SpeciesInfo(
     apword[0] = parse(Int64, split(line)[1])
     # set the APW orders for > 0
     apword[1:maxlapw] .= apword[0]
+    #
+    maxapword = maximum(apword)
+    MAX_APW_ORD = 4 # Hardcoded, probably not needed
+    @assert maxapword <= MAX_APW_ORD
+    #
     # XXX Generally, apword will depend on l ? Here, the order is the same for all l.
     #
     e0min = 0.0

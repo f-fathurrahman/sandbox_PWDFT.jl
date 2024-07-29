@@ -30,9 +30,11 @@ function debug_main01()
     atsp_vars = AtomicSpeciesVars(atoms, specs_info)
     mt_vars = MuffinTins(specs_info, atsp_vars)
 
-    allatoms!(atsp_vars)
+    apwlo_vars = debug_apwlo(atoms, specs_info, mt_vars)
 
-    @infiltrate
+    #allatoms!(atsp_vars)
+
+    #@infiltrate
 
     return
 end

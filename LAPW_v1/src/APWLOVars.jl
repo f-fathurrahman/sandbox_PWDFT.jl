@@ -77,6 +77,128 @@ mutable struct APWLOVars
     nxlo::Int64
 end
 
+function debug_apwlo(
+    atoms, specs_info::Vector{SpeciesInfo}, mt_vars::MuffinTins
+)
+    Natoms = atoms.Natoms
+    Nspecies = atoms.Nspecies
+    atm2species = atoms.atm2species
+
+    # The actual lmax used in APW
+    lmaxapw = mt_vars.lmaxapw
+
+    # copy from specs_info
+    #
+    #
+    # This array depend on angular momentum (?)
+    apword = Vector{OffsetVector{Int64,Vector{Int64}}}(undef, Nspecies)
+    for isp in 1:Nspecies
+        apword[isp] = OffsetArray(zeros(Int64,lmaxapw+1), 0:lmaxapw) # allocate
+        apword[isp][:] = specs_info[isp].apword[0:lmaxapw] # copy
+    end
+    #
+    # These arrays depend on order and angular momentum index (?)
+    #
+    apwe0 = Vector{OffsetMatrix{Float64,Matrix{Float64}}}(undef, Nspecies)
+    for isp in 1:Nspecies
+        maxapword = specs_info[isp].maxapword
+        apwe0[isp] = OffsetArray(zeros(Float64, maxapword, lmaxapw+1), 1:maxapword, 0:lmaxapw)
+        apwe0[isp][:] = specs_info[isp].apwe0[1:maxapword,0:lmaxapw]
+    end
+    #
+    apwdm = Vector{OffsetMatrix{Int64,Matrix{Int64}}}(undef, Nspecies)
+    for isp in 1:Nspecies
+        maxapword = specs_info[isp].maxapword
+        apwdm[isp] = OffsetArray(zeros(Int64, maxapword, lmaxapw+1), 1:maxapword, 0:lmaxapw)
+        apwdm[isp][:] = specs_info[isp].apwdm[1:maxapword,0:lmaxapw]
+    end
+    apwve = Vector{OffsetMatrix{Bool,Matrix{Bool}}}(undef, Nspecies)
+    for isp in 1:Nspecies
+        maxapword = specs_info[isp].maxapword
+        apwve[isp] = OffsetArray(zeros(Bool, maxapword, lmaxapw+1), 1:maxapword, 0:lmaxapw)
+        apwve[isp][:] = specs_info[isp].apwve[1:maxapword,0:lmaxapw]
+    end
+    #
+    nlorb = zeros(Int64, Nspecies)
+    for isp in 1:Nspecies
+        nlorb[isp] = specs_info[isp].nlorb
+    end
+    #
+    lorbl = Vector{Vector{Int64}}(undef, Nspecies)
+    lorbord = Vector{Vector{Int64}}(undef, Nspecies)
+    for isp in 1:Nspecies
+        # Preallocate arrays?
+        lorbl[isp] = deepcopy(specs_info[isp].lorbl)
+        lorbord[isp] = deepcopy(specs_info[isp].lorbord)
+    end
+    #
+    lorbe0 = Vector{Vector{Vector{Float64}}}(undef, Nspecies)
+    lorbdm = Vector{Vector{Vector{Int64}}}(undef, Nspecies)
+    lorbve = Vector{Vector{Vector{Bool}}}(undef, Nspecies)
+    for isp in 1:Nspecies
+        # XXX explicit copy?
+        lorbe0[isp] = deepcopy(specs_info[isp].lorbe0)
+        lorbdm[isp] = deepcopy(specs_info[isp].lorbdm)
+        lorbve[isp] = deepcopy(specs_info[isp].lorbve)
+    end
+
+    lmoapw = zeros(Int, Nspecies)
+    apwordmax = 0
+    lorbordmax = 0
+    nlomax = 0
+    lolmax = 0
+    for isp in 1:Nspecies
+        lmoapw[isp] = 0
+        for l1 in 0:lmaxapw
+            # find the maximum APW order
+            apwordmax = max(apwordmax, apword[isp][l1])
+            # find total number of APW coefficients (l, m and order)
+            lmoapw[isp] += (2*l1 + 1)*apword[isp][l1]
+        end
+        # find the maximum number of local-orbitals
+        nlomax = max(nlomax, nlorb[isp])
+        # find the maximum local-orbital order and angular momentum
+        for ilo in 1:nlorb[isp]
+            lolmax = max( lolmax, lorbl[isp][ilo] )
+            lorbordmax = max( lorbordmax, lorbord[isp][ilo] )
+        end
+    end
+    lolmmax = (lolmax + 1)^2
+
+    # polynomial order used for APW and local-orbital radial derivatives
+    npapw = max(apwordmax+1, 4)
+    nplorb = max(lorbordmax+1, 4)
+
+    # set the APW and local-orbital linearisation energies to the default
+    apwe = Vector{OffsetMatrix{Float64,Matrix{Float64}}}(undef,Natoms)
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        maxapword = specs_info[isp].maxapword
+        apwe[ia] = OffsetArray(zeros(Float64, maxapword, lmaxapw+1), 1:maxapword, 0:lmaxapw)
+        for l1 in 0:lmaxapw, io in 1:apword[isp][l1]
+            apwe[ia][io,l1] = apwe0[isp][io,l1]
+        end
+    end
+
+    lorbe = Vector{Vector{Vector{Float64}}}(undef, Natoms)
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        lorbe[ia] = similar.(lorbe0[isp]) # should be safe for Vector
+        for ilo in 1:nlorb[isp], io in 1:lorbord[isp][ilo]
+            lorbe[ia][ilo][io] = lorbe0[isp][ilo][io]
+        end
+    end
+
+    # wavefunctions ....
+
+
+    @infiltrate
+
+    return
+end
+
+
+
 # effective size for 0:maxlapw -> 0:lmaxapw
 # Using indices starting from 1
 function APWLOVars(Nspecies::Int64, maxlapw::Int64)
