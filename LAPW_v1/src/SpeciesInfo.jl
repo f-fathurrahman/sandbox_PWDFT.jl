@@ -204,10 +204,15 @@ function SpeciesInfo(
             else
                 error("Unable to parse lorbve")
             end
+            #
+            e0min = min(e0min, lorbe0[iorb][i])
         end
     end
 
     close(f)
+
+    # subtract 2 Hartree from the minimum energy
+    e0min = e0min - 2.0
 
     return SpeciesInfo(
         filename, spsymb, spname, spzn, spmass,

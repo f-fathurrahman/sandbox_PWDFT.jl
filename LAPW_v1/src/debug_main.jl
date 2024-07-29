@@ -1,4 +1,7 @@
-function debug_main01()
+# This is currently the entry point
+# We may call @infiltrate within this function and investigate various variables
+
+function debug_main()
 
     # Read the input file
     elk_input = read_elk_input()
@@ -29,51 +32,8 @@ function debug_main01()
 
     atsp_vars = AtomicSpeciesVars(atoms, specs_info)
     mt_vars = MuffinTins(specs_info, atsp_vars)
+    apwlo_vars = APWLOVars(atoms, specs_info, mt_vars)
 
-    apwlo_vars = debug_apwlo(atoms, specs_info, mt_vars)
-
-    #allatoms!(atsp_vars)
-
-    #@infiltrate
-
-    return
-end
-
-
-# This is currently the entry point
-# We may call @infiltrate within this function and investigate various variables
-
-function debug_main()
-
-    # Read the input file
-    elk_input = read_elk_input()
-    
-    # Initialize Atoms
-    atoms = create_atoms_from_elk_input(elk_input)
-
-    # Setup symmetry variables
-    sym_vars = SymmetryVars()
-    findsymlat!(sym_vars, atoms)
-    findsymcrys!(sym_vars, atoms)
-    findsymsite!(sym_vars, atoms)
-
-    Nspecies = atoms.Nspecies
-    spsymb = atoms.SpeciesSymbols
-
-    atsp_vars = AtomicSpeciesVars(Nspecies)
-    mt_vars = MuffinTins(Nspecies)
-    apwlo_vars = APWLOVars(Nspecies, mt_vars.lmaxapw)
-
-    for isp in 1:Nspecies
-        readspecies!(isp, spsymb[isp]*".in", atsp_vars, mt_vars, apwlo_vars)
-    end
-
-    init_zero!( mt_vars )
-    checkmt!( atoms, mt_vars )
-    genrmesh!( atoms, atsp_vars, mt_vars )
-    init_packed_mtr!( mt_vars )
-
-    init_nuclear_pot!( atsp_vars )
     allatoms!(atsp_vars)
 
     Natoms = atoms.Natoms
@@ -197,5 +157,6 @@ function debug_main()
     # open REPL and investigate the variables
 
     return
+
 end
 

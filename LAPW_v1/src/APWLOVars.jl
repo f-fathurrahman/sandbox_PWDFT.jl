@@ -1,84 +1,127 @@
 mutable struct APWLOVars
+    #
     # energy step used for numerical calculation of energy derivatives
     deapwlo::Float64
-    # maximum allowable APW order
-    maxapword::Int64 # parameter=4
+    #
     # APW order
-    apword::Array{Int64,2} #(0:maxlapw,maxspecies)
+    apword::Vector{OffsetVector{Int64, Vector{Int64}}}
+    #
     # maximum of apword over all angular momenta and species
     apwordmax::Int64
+    #
     # total number of APW coefficients (l, m and order) for each species
-    lmoapw::Vector{Int64} # (maxspecies)
+    lmoapw::Vector{Int64}
+    #
     # polynomial order used for APW radial derivatives
     npapw::Int64
+    #
     # APW initial linearisation energies
-    apwe0::Array{Float64,3} #(maxapword,0:maxlapw,maxspecies)
+    apwe0::Vector{OffsetMatrix{Float64, Matrix{Float64}}}
+    #
     # APW linearisation energies
-    apwe::Array{Float64,3} # (:,:,:)
+    apwe::Vector{OffsetMatrix{Float64, Matrix{Float64}}}
+    #
     # APW derivative order
-    apwdm::Array{Int64,3} # (maxapword,0:maxlapw,maxspecies)
+    apwdm::Vector{OffsetMatrix{Int64, Matrix{Int64}}}
+    #
     # apwve is .true. if the linearisation energies are allowed to vary
-    apwve::Array{Bool,3} # (maxapword,0:maxlapw,maxspecies)
+    apwve::Vector{OffsetMatrix{Bool, Matrix{Bool}}}
+    #
     # APW radial functions
-    apwfr::Array{Float64,5}
+    apwfr::Vector{OffsetMatrix{Matrix{Float64}, Matrix{Matrix{Float64}}}}
+    #
     # derivate of radial functions at the muffin-tin surface
-    apwdfr::Array{Float64,3}
+    apwdfr::Vector{OffsetMatrix{Float64, Matrix{Float64}}}
+    #
     # maximum number of local-orbitals
     maxlorb::Int64 # parameter=200
+    #
     # maximum allowable local-orbital order
     maxlorbord::Int64 # parameter=5
+    #
     # number of local-orbitals
     nlorb::Vector{Int64} #(maxspecies)
+    #
     # maximum nlorb over all species
     nlomax::Int64
+    #
     # total number of local-orbitals
     nlotot::Int64
     # local-orbital order
-    lorbord::Array{Int64,2} #(maxlorb,maxspecies)
+    lorbord::Vector{Vector{Int64}}
+    #
     # maximum lorbord over all species
     lorbordmax::Int64
+    #
     # polynomial order used for local-orbital radial derivatives
     nplorb::Int64
+    #
     # local-orbital angular momentum
-    lorbl::Array{Float64,2} #(maxlorb,maxspecies)
+    lorbl::Vector{Vector{Int64}}
+    #
     # maximum lorbl over all species
     lolmax::Int64
+    #
     # (lolmax+1)^2
     lolmmax::Int64
     # local-orbital initial energies
-    lorbe0::Array{Float64,3} # (maxlorbord,maxlorb,maxspecies)
+    lorbe0::Vector{Vector{Vector{Float64}}}
+    #
     # local-orbital energies
-    lorbe::Array{Float64,3} #(:,:,:)
+    lorbe::Vector{Vector{Vector{Float64}}}
+    #
     # local-orbital derivative order
-    lorbdm::Array{Int64,3} #(maxlorbord,maxlorb,maxspecies)
-    # lorbve is .true. if the linearisation energies are allowed to vary
-    lorbve::Array{Bool,3} # (maxlorbord,maxlorb,maxspecies)
+    lorbdm::Vector{Vector{Vector{Int64}}}
+    #
+    # lorbve is .true. if the linearization energies are allowed to vary
+    lorbve::Vector{Vector{Vector{Bool}}}
+    #
     # local-orbital radial functions
-    lofr::Array{Float64,4} # (:,:,:,:)
+    lofr::Vector{Vector{Matrix{Float64}}}
+    #
     # band energy search tolerance
     epsband::Float64
+    #
     # maximum allowed change in energy during band energy search; enforced only if
     # default energy is less than zero
     demaxbnd::Float64
+    #
     # minimum default linearisation energy over all APWs and local-orbitals
     e0min::Float64
+    #
     # if autolinengy is .true. then the fixed linearisation energies are set to the
     # Fermi energy minus dlefe
     autolinengy::Bool
+    #
     # difference between linearisation and Fermi energies when autolinengy is .true.
     dlefe::Float64
+    #
     # lorbcnd is .true. if conduction state local-orbitals should be added
     lorbcnd::Bool
+    #
     # conduction state local-orbital order
-    lorbordc::Bool
+    lorbordc::Int64
+    #
     # excess order of the APW and local-orbital functions
     nxoapwlo::Int64
+    #
     # excess local orbitals
     nxlo::Int64
 end
 
-function debug_apwlo(
-    atoms, specs_info::Vector{SpeciesInfo}, mt_vars::MuffinTins
+function APWLOVars(
+    atoms, specs_info::Vector{SpeciesInfo}, mt_vars::MuffinTins;
+    deapwlo = 0.05,
+    maxlorb = 200,
+    maxlorbord = 5,
+    epsband = 1e-12,
+    demaxbnd = 2.5,
+    autolinengy = false,
+    dlefe = -0.1,
+    lorbcnd = false,
+    lorbordc = 3,
+    nxoapwlo = 0,
+    nxlo = 0
 )
     Natoms = atoms.Natoms
     Nspecies = atoms.Nspecies
@@ -179,7 +222,7 @@ function debug_apwlo(
             apwe[ia][io,l1] = apwe0[isp][io,l1]
         end
     end
-
+    #
     lorbe = Vector{Vector{Vector{Float64}}}(undef, Natoms)
     for ia in 1:Natoms
         isp = atm2species[ia]
@@ -187,66 +230,75 @@ function debug_apwlo(
         for ilo in 1:nlorb[isp], io in 1:lorbord[isp][ilo]
             lorbe[ia][ilo][io] = lorbe0[isp][ilo][io]
         end
+        # ilo: local orbital index
+        # io: order index
     end
 
-    # wavefunctions ....
+    #
+    # allocate radial function arrays
+    #
+    #XXX Ugh... This type is complicated
+    #XXX Probably better use simple multidimensional array
+    APW_RADIAL_TYPE = OffsetMatrix{Matrix{Float64}, Matrix{Matrix{Float64}}}
+    # An OffsetMatrix whose element is a matrix
+    #
+    apwfr = Vector{APW_RADIAL_TYPE}(undef,Natoms)
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        nr = mt_vars.nrmt[isp]
+        maxapword = specs_info[isp].maxapword
+        apwfr[ia] = OffsetArray(
+            Array{Matrix{Float64}}(undef, maxapword, lmaxapw+1), 1:maxapword, 0:lmaxapw
+        )
+        for l1 in 0:lmaxapw, io in 1:apword[isp][l1]
+            apwfr[ia][io,l1] = zeros(Float64, nr, 2)
+        end
+    end
+    # apwfr[atom index][order index, ang mom index][radial mt index,major-minor?]
+    # XXX: order index is singleton anyway
+    apwdfr = Vector{OffsetMatrix{Float64, Matrix{Float64}}}(undef,Natoms)
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        maxapword = specs_info[isp].maxapword
+        apwdfr[ia] = OffsetArray(zeros(Float64, maxapword, lmaxapw+1), 1:maxapword, 0:lmaxapw)
+    end
 
+    lofr = Vector{Vector{Matrix{Float64}}}(undef, Natoms)
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        nr = mt_vars.nrmt[isp]
+        lofr[ia] = Vector{Matrix{Float64}}(undef,nlorb[isp])
+        for ilo in 1:nlorb[isp]
+            lofr[ia][ilo] = zeros(Float64,nr,2)
+        end
+    end
 
-    @infiltrate
-
-    return
-end
-
-
-
-# effective size for 0:maxlapw -> 0:lmaxapw
-# Using indices starting from 1
-function APWLOVars(Nspecies::Int64, maxlapw::Int64)
-
-    deapwlo = 0
-    maxapword = 4
-    apword = zeros(Int64,maxlapw+1,Nspecies)
-    apwordmax = 0
-    lmoapw = zeros(Int64,Nspecies)
-    npapw = 0
-    
-    apwe0 = zeros(Float64, maxapword, maxlapw+1, Nspecies)
-    apwe = zeros(Float64, 1, 1, 1)
-    apwdm = zeros(Int64,maxapword, maxlapw+1, Nspecies)
-    
-    apwve = zeros(Bool, maxapword, maxlapw+1, Nspecies)
-    apwfr = zeros(Float64,1,1,1,1,1)
-    apwdfr = zeros(Float64,1,1,1)
-
-    maxlorb = 200
-    maxlorbord = 5
-    nlorb = zeros(Int64,Nspecies)
-    nlomax = 0
     nlotot = 0
-    lorbord = zeros(Int64,maxlorb,Nspecies)
-    lorbordmax = 0
-    nplorb = 0
+    for ia in 1:Natoms
+        isp = atm2species[ia]
+        for ilo in 1:nlorb[isp]
+            l = lorbl[isp][ilo]
+            for m in -l:l
+                nlotot += 1
+                #lm = mt_vars.idxlm[l,m]
+                #idxlo[lm,ilo,ias] = nlotot
+            end
+        end
+    end
+    @info "nlotot = $(nlotot)"
 
-    lorbl = zeros(Float64,maxlorb,Nspecies)
-    lolmax = 0
-    lolmmax = 0
-    lorbe0 = zeros(Float64,maxlorbord,maxlorb,Nspecies)
-    lorbe = zeros(Float64,1,1,1)
-    lorbdm = zeros(Int64,maxlorbord,maxlorb,Nspecies)
-    lorbve = zeros(Bool,maxlorbord,maxlorb,Nspecies)
-    lofr = zeros(Float64,1,1,1,1)
-    epsband = 0.0
-    demaxbnd = 0.0
     e0min = 0.0
-    autolinengy = false 
-    dlefe = 0.0
-    lorbcnd = false
-    lorbordc = 0
-    nxoapwlo = 0
-    nxlo = 0
+    for isp in 1:Nspecies
+        if specs_info[isp].e0min < e0min
+            e0min = specs_info[isp].e0min
+        end
+    end
+    @info "e0min = $(e0min)"
+
+    #@infiltrate
 
     return APWLOVars(
-        deapwlo, maxapword, apword, apwordmax,
+        deapwlo, apword, apwordmax,
         lmoapw, npapw, apwe0, apwe, apwdm, apwve, apwfr, apwdfr,
         maxlorb, maxlorbord, nlorb, nlomax, nlotot, lorbord,
         lorbordmax, nplorb, lorbl, lolmax,
@@ -254,14 +306,5 @@ function APWLOVars(Nspecies::Int64, maxlapw::Int64)
         lofr, epsband, demaxbnd, e0min, autolinengy,
         dlefe, lorbcnd, lorbordc, nxoapwlo, nxlo
     )
-
 end
 
-#apwlo_vars = APWLOVars(2,50)
-
-# indexing for array allocated with lmaxo
-# allocate array((-lmaxo-1:lmaxo+2))
-# from lmaxo idx to the usual 1-based indexing
-function lmaxo2idx(idx, lmaxo)
-    return idx + lmaxo + 2
-end
