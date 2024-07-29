@@ -830,8 +830,8 @@ This involves using the predictor-corrector method to solve the coupled first-or
 \begin_layout Standard
 \begin_inset Formula 
 \begin{align*}
-\left(\frac{\mathrm{d}}{\mathrm{d}r}+\frac{\kappa}{r}\right)G_{\kappa} & =\frac{1}{c}\{2E_{0}+E-V\}F_{\kappa}\\
-\left(\frac{\mathrm{d}}{\mathrm{d}r}-\frac{\kappa}{r}\right)F_{\kappa} & =-\frac{1}{c}\{E-V\}G_{\kappa}
+\left(\frac{\mathrm{d}}{\mathrm{d}r}+\frac{\kappa}{r}\right)G_{\kappa} & =\frac{1}{c}\left(2E_{0}+E-V\right)F_{\kappa}\\
+\left(\frac{\mathrm{d}}{\mathrm{d}r}-\frac{\kappa}{r}\right)F_{\kappa} & =-\frac{1}{c}\left(E-V\right)G_{\kappa}
 \end{align*}
 
 \end_inset
