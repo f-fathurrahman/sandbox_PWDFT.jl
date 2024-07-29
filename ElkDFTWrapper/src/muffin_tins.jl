@@ -7,6 +7,11 @@ function get_maxlapw()
     return 50 # hardcoded
 end
 
+# fraction of muffin-tin radius which constitutes the inner part
+function get_fracinr()
+    return unsafe_load(cglobal( (:__m_muffin_tins_MOD_fracinr, LIBLAPW), Float64 ))
+end
+
 # maximum angular momentum for augmented plane waves
 # XXX: difference with maxlapw?
 function get_lmaxapw()
@@ -105,6 +110,12 @@ function get_nrmti()
     return _load_automatic_array(symbol, Int64, (nspecies,))
 end
 
+function get_nrcmti()
+    symbol = :__m_muffin_tins_MOD_nrcmti
+    nspecies = get_nspecies()
+    return _load_automatic_array(symbol, Int64, (nspecies,))
+end
+
 
 # npmt is an automatic array of size maxspecies
 function get_npmt()
@@ -183,11 +194,27 @@ function get_rlcmt()
     return OffsetArray(rlcmt, 1:nrcmtmax, -lmaxo-1:lmaxo+2, 1:nspecies)
 end
 
-#=
-! weights for spline partial integration on fine radial mesh
-REAL(8), ALLOCATABLE :: wprmt(:,:,:)
-! weights for spline integration on coarse radial mesh
-REAL(8), ALLOCATABLE :: wrcmt(:,:)
-! weights for spline partial integration on coarse radial mesh
-REAL(8), ALLOCATABLE :: wprcmt(:,:,:)
-=#
+
+# weights for spline partial integration on fine radial mesh
+function get_wprmt()
+    symbol = :__m_muffin_tins_MOD_wprmt
+    nrmtmax = get_nrmtmax()
+    nspecies = get_nspecies()
+    return _load_allocatable_array(symbol, Float64, (4,nrmtmax,nspecies))
+end
+
+# weights for spline partial integration on coarse radial mesh
+function get_wprcmt()
+    symbol = :__m_muffin_tins_MOD_wprcmt
+    nrcmtmax = get_nrcmtmax()
+    nspecies = get_nspecies()
+    return _load_allocatable_array(symbol, Float64, (4,nrcmtmax,nspecies))
+end
+
+# weights for spline integration on coarse radial mesh
+function get_wrcmt()
+    symbol = :__m_muffin_tins_MOD_wrcmt
+    nrcmtmax = get_nrcmtmax()
+    nspecies = get_nspecies()
+    return _load_allocatable_array(symbol, Float64, (nrcmtmax,nspecies))
+end
