@@ -994,5 +994,634 @@ where
  is the major component of the Dirac equation (see the routine rdiracint).
 \end_layout
 
+\begin_layout Subsection*
+genapwfr
+\end_layout
+
+\begin_layout Standard
+Generates the APW radial functions.
+ This is done by integrating the scalar relativistic Schroedinger equation (or its energy deriatives) at the current linearisation energies using the spherical part of the Kohn-Sham potential.
+ The number of radial functions at each $l$-value is given by the variable 
+\begin_inset Formula ${\tt apword}$
+\end_inset
+
+ (at the muffin-tin boundary,
+ the APW functions have continuous derivatives up to order 
+\begin_inset Formula ${\tt apword}-1$
+\end_inset
+
+.
+ Within each 
+\begin_inset Formula $l$
+\end_inset
+
+,
+ these functions are orthonormalized with the Gram-Schmidt method.
+ The radial Hamiltonian is applied to the orthonormalized functions and the results are stored in the global array 
+\begin_inset Formula ${\tt apwfr}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+genlofr
+\end_layout
+
+\begin_layout Standard
+!
+ Generates the local-orbital radial functions.
+ This is done by integrating
+\end_layout
+
+\begin_layout Standard
+!
+ the scalar relativistic Schr
+\backslash
+"{o}dinger equation (or its energy deriatives)
+\end_layout
+
+\begin_layout Standard
+!
+ at the current linearisation energies using the spherical part of the
+\end_layout
+
+\begin_layout Standard
+!
+ Kohn-Sham potential.
+ For each local-orbital,
+ a linear combination of
+\end_layout
+
+\begin_layout Standard
+!
+ {
+\backslash
+tt lorbord} radial functions is constructed such that its radial
+\end_layout
+
+\begin_layout Standard
+!
+ derivatives up to order ${
+\backslash
+tt lorbord}-1$ are zero at the muffin-tin radius.
+\end_layout
+
+\begin_layout Standard
+!
+ This function is normalised and the radial Hamiltonian applied to it.
+ The
+\end_layout
+
+\begin_layout Standard
+!
+ results are stored in the global array {
+\backslash
+tt lofr}.
+\end_layout
+
+\begin_layout Subsection*
+hmlrad
+\end_layout
+
+\begin_layout Standard
+Calculates the radial Hamiltonian integrals of the APW and local-orbital basis functions.
+ In other words,
+ for atom 
+\begin_inset Formula $\alpha$
+\end_inset
+
+,
+ it computes integrals of the form
+\begin_inset Formula 
+\[
+h_{qq';ll'l''m''}^{\alpha}=\begin{cases}
+\int_{0}^{R_{i}}u_{q;l}^{\alpha}(r)Hu_{q';l'}^{\alpha}(r)r^{2}dr & l''=0\\
+\int_{0}^{R_{i}}u_{q;l}^{\alpha}(r)V_{l''m''}^{\alpha}(r)u_{q';l'}^{\alpha}(r)r^{2}dr & l''>0
+\end{cases},
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $u_{q;l}^{\alpha}$
+\end_inset
+
+ is the 
+\begin_inset Formula $q$
+\end_inset
+
+-th APW radial function for angular momentum 
+\begin_inset Formula $l$
+\end_inset
+
+;
+ 
+\begin_inset Formula $H$
+\end_inset
+
+ is the Hamiltonian of the radial Schroedinger equation;
+ and 
+\begin_inset Formula $V_{l''m''}^{\alpha}$
+\end_inset
+
+ is the muffin-tin Kohn-Sham potential.
+ Similar integrals are calculated for APW-local-orbital and local-orbital-local-orbital contributions.
+\end_layout
+
+\begin_layout Subsection*
+olprad
+\end_layout
+
+\begin_layout Standard
+Calculates the radial overlap integrals of the APW and local-orbital basis functions.
+ In other words,
+ for atom 
+\begin_inset Formula $\alpha$
+\end_inset
+
+,
+ it computes integrals of the form
+\begin_inset Formula 
+\[
+o_{qp}^{\alpha}=\int_{0}^{R_{i}}u_{q;l_{p}}^{\alpha}(r)v_{p}^{\alpha}(r)r^{2}\,\mathrm{d}r
+\]
+
+\end_inset
+
+and
+\begin_inset Formula 
+\[
+o_{pp'}^{\alpha}=\int_{0}^{R_{i}}v_{p}^{\alpha}(r)v_{p'}^{\alpha}(r)r^{2}\,\mathrm{d}r,\quad l_{p}=l_{p'}
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $u_{q;l}^{\alpha}$
+\end_inset
+
+ is the 
+\begin_inset Formula $q$
+\end_inset
+
+-th APW radial function for angular momentum 
+\begin_inset Formula $l$
+\end_inset
+
+;
+ and 
+\begin_inset Formula $v_{p}^{\alpha}$
+\end_inset
+
+ is the 
+\begin_inset Formula $p$
+\end_inset
+
+-th local-orbital radial function and has angular momentum 
+\begin_inset Formula $l_{p}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection*
+match
+\end_layout
+
+\begin_layout Standard
+!
+ Computes the $({
+\backslash
+bf G+p})$-dependent matching coefficients for the APW basis
+\end_layout
+
+\begin_layout Standard
+!
+ functions.
+ Inside muffin-tin $
+\backslash
+alpha$,
+ the APW functions are given by
+\end_layout
+
+\begin_layout Standard
+!
+ $$ 
+\backslash
+phi^{
+\backslash
+alpha}_{
+\backslash
+bf G+p}({
+\backslash
+bf r})=
+\backslash
+sum_{l=0}^{l_{
+\backslash
+rm max}}
+\end_layout
+
+\begin_layout Standard
+!
+ 
+\backslash
+sum_{m=-l}^{l}
+\backslash
+sum_{j=1}^{M^{
+\backslash
+alpha}_l}A^{
+\backslash
+alpha}_{jlm}({
+\backslash
+bf G+p})
+\end_layout
+
+\begin_layout Standard
+!
+ u^{
+\backslash
+alpha}_{jl}(r)Y_{lm}(
+\backslash
+hat{{
+\backslash
+bf r}}),
+ $$
+\end_layout
+
+\begin_layout Standard
+!
+ where $A^{
+\backslash
+alpha}_{jlm}({
+\backslash
+bf G+p})$ is the matching coefficient,
+\end_layout
+
+\begin_layout Standard
+!
+ $M^{
+\backslash
+alpha}_l$ is the order of the APW and $u^{
+\backslash
+alpha}_{jl}$ is the radial
+\end_layout
+
+\begin_layout Standard
+!
+ function.
+ In the interstitial region,
+ an APW function is a plane wave,
+\end_layout
+
+\begin_layout Standard
+!
+ $
+\backslash
+exp(i({
+\backslash
+bf G+p})
+\backslash
+cdot{
+\backslash
+bf r})/
+\backslash
+sqrt{
+\backslash
+Omega}$,
+ where $
+\backslash
+Omega$ is the unit
+\end_layout
+
+\begin_layout Standard
+!
+ cell volume.
+ Ensuring continuity up to the $(M^{
+\backslash
+alpha}_l-1)$th derivative
+\end_layout
+
+\begin_layout Standard
+!
+ across the muffin-tin boundary therefore requires that the matching
+\end_layout
+
+\begin_layout Standard
+!
+ coefficients satisfy
+\end_layout
+
+\begin_layout Standard
+!
+ $$ 
+\backslash
+sum_{j=1}^{M^{
+\backslash
+alpha}_l}D_{ij}A^{
+\backslash
+alpha}_{jlm}({
+\backslash
+bf G+p})=b_i
+\backslash
+;,
+ $$
+\end_layout
+
+\begin_layout Standard
+!
+ where
+\end_layout
+
+\begin_layout Standard
+!
+ $$ D_{ij}=
+\backslash
+left.
+\backslash
+frac{d^{i-1}u^{
+\backslash
+alpha}_{jl}(r)}{dr^{i-1}}
+\end_layout
+
+\begin_layout Standard
+!
+ 
+\backslash
+right|_{r=R_{
+\backslash
+alpha}} $$
+\end_layout
+
+\begin_layout Standard
+!
+ and
+\end_layout
+
+\begin_layout Standard
+!
+ $$ b_i=
+\backslash
+frac{4
+\backslash
+pi i^l}{
+\backslash
+sqrt{
+\backslash
+Omega}}|{
+\backslash
+bf G+p}|^{i-1}j^{(i-1)}_l
+\end_layout
+
+\begin_layout Standard
+!
+ (|{
+\backslash
+bf G+p}|R_{
+\backslash
+alpha})
+\backslash
+exp(i({
+\backslash
+bf G+p})
+\backslash
+cdot{
+\backslash
+bf r}_{
+\backslash
+alpha})Y^*_{lm}
+\end_layout
+
+\begin_layout Standard
+!
+ (
+\backslash
+widehat{{
+\backslash
+bf G+p}}),
+ $$
+\end_layout
+
+\begin_layout Standard
+!
+ with ${
+\backslash
+bf r}_{
+\backslash
+alpha}$ the atomic position and $R_{
+\backslash
+alpha}$ the muffin-tin
+\end_layout
+
+\begin_layout Standard
+!
+ radius.
+ See routine {
+\backslash
+tt wavefmt}.
+\end_layout
+
+\begin_layout Subsection*
+wavemt
+\end_layout
+
+\begin_layout Standard
+!
+ Calculates the first-variational wavefunction in the muffin-tin in terms of
+\end_layout
+
+\begin_layout Standard
+!
+ a spherical harmonic expansion.
+ For atom $
+\backslash
+alpha$ and a particular $k$-point
+\end_layout
+
+\begin_layout Standard
+!
+ ${
+\backslash
+bf p}$,
+ the $r$-dependent $(l,m)$-coefficients of the wavefunction for
+\end_layout
+
+\begin_layout Standard
+!
+ the $i$th state are given by
+\end_layout
+
+\begin_layout Standard
+!
+ $$ 
+\backslash
+Phi^{i{
+\backslash
+bf p}}_{
+\backslash
+alpha lm}(r)=
+\backslash
+sum_{
+\backslash
+bf G}b^{i{
+\backslash
+bf p}}_{
+\backslash
+bf G}
+\end_layout
+
+\begin_layout Standard
+!
+ 
+\backslash
+sum_{j=1}^{M^{
+\backslash
+alpha}_l}A^{
+\backslash
+alpha}_{jlm}({
+\backslash
+bf G+p})u^{
+\backslash
+alpha}_{jl}(r)
+\end_layout
+
+\begin_layout Standard
+!
+ +
+\backslash
+sum_{j=1}^{N^{
+\backslash
+alpha}}b^{i{
+\backslash
+bf p}}_{(
+\backslash
+alpha,j,m)}v^{
+\backslash
+alpha}_j(r)
+\end_layout
+
+\begin_layout Standard
+!
+ 
+\backslash
+delta_{l,l_j},
+ $$
+\end_layout
+
+\begin_layout Standard
+!
+ where $b^{i{
+\backslash
+bf p}}$ is the $i$th eigenvector returned from routine
+\end_layout
+
+\begin_layout Standard
+!
+ {
+\backslash
+tt eveqn};
+ $A^{
+\backslash
+alpha}_{jlm}({
+\backslash
+bf G+p})$ is the matching coefficient;
+\end_layout
+
+\begin_layout Standard
+!
+ $M^{
+\backslash
+alpha}_l$ is the order of the APW;
+ $u^{
+\backslash
+alpha}_{jl}$ is the APW radial
+\end_layout
+
+\begin_layout Standard
+!
+ function;
+ $N^{
+\backslash
+alpha}$ is the number of local-orbitals;
+ $v^{
+\backslash
+alpha}_j$ is
+\end_layout
+
+\begin_layout Standard
+!
+ the $j$th local-orbital radial function;
+ and $(
+\backslash
+alpha,j,m)$ is a compound
+\end_layout
+
+\begin_layout Standard
+!
+ index for the location of the local-orbital in the eigenvector.
+ See routines
+\end_layout
+
+\begin_layout Standard
+!
+ {
+\backslash
+tt genapwfr},
+ {
+\backslash
+tt genlofr},
+ {
+\backslash
+tt match} and {
+\backslash
+tt eveqn}.
+\end_layout
+
+\begin_layout Subsection*
+findband
+\end_layout
+
+\begin_layout Standard
+Finds the band energies for a given radial potential and angular momentum.
+ This is done by first searching upwards in energy,
+ starting from the input energy plus the offset energy,
+ until the radial wavefunction at the muffin-tin radius is zero.
+ This is the energy at the top of the band,
+ denoted 
+\begin_inset Formula $E_{{\rm t}}$
+\end_inset
+
+.
+ A downward search is now performed from 
+\begin_inset Formula $E_{{\rm t}}$
+\end_inset
+
+ until the slope of the radial wavefunction at the muffin-tin radius is zero.
+ This energy,
+ 
+\begin_inset Formula $\ensuremath{E_{{\rm b}}}$
+\end_inset
+
+,
+ is at the bottom of the band.
+ The band energy is taken as
+\begin_inset Formula 
+\[
+(E_{{\rm t}}+E_{{\rm b}})/2
+\]
+
+\end_inset
+
+If either 
+\begin_inset Formula $E_{{\rm t}}$
+\end_inset
+
+ or 
+\begin_inset Formula $E_{{\rm b}}$
+\end_inset
+
+ cannot be found then the band energy is set to the input value.
+\end_layout
+
 \end_body
 \end_document
