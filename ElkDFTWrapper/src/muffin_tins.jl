@@ -14,6 +14,7 @@ end
 
 # maximum angular momentum for augmented plane waves
 # XXX: difference with maxlapw?
+# This is the actual lmax used in APW basis expansion
 function get_lmaxapw()
     lmaxapw = unsafe_load(cglobal( (:__m_muffin_tins_MOD_lmaxapw, LIBLAPW), Int32 )) |> Int64
     return lmaxapw
