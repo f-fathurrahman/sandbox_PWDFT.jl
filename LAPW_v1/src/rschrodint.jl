@@ -44,8 +44,9 @@ function rschrodint!(
     P₀[1] = ( Q₁[1] + Q₀[1]*ri)/t4
     P₁[1] = t3*Q₀[1] + P₀[1]*ri
     # extrapolate to the first four points
-    P₁[2:4] = P₁[1]
-    Q₁[2:4] = Q₁[1]
+    P₁[2:4] .= P₁[1]
+    Q₁[2:4] .= Q₁[1]
+    #
     nn = 0
     nr = size(r, 1)
     for ir in 2:nr
@@ -56,8 +57,8 @@ function rschrodint!(
         if ir0 < 1
             ir0 = 1
         end
-        @views P₁[ir] = poly3( r[ir0:ir0+2], P₁(ir0:ir0+2), r[ir] )
-        @views Q₁[ir] = poly3( r[ir0:ir0+2], Q₁(ir0:ir0+2), r[ir] )
+        @views P₁[ir] = poly3( r[ir0:ir0+2], P₁[ir0:ir0+2], r[ir] )
+        @views Q₁[ir] = poly3( r[ir0:ir0+2], Q₁[ir0:ir0+2], r[ir] )
         # integrate to find wavefunction
         @views P₀[ir] = poly4i( r[ir0:ir0+3], P₁[ir0:ir0+3], r[ir] ) + P₀[ir0]
         @views Q₀[ir] = poly4i( r[ir0:ir0+3], Q₁[ir0:ir0+3], r[ir] ) + Q₀[ir0]

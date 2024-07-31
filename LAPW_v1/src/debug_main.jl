@@ -153,7 +153,11 @@ function debug_main()
     core_states = CoreStatesVars(atoms, atsp_vars, mt_vars)
     gencore!(atoms, sym_vars.eqatoms, atsp_vars, mt_vars, vsmt, core_states)
 
+    efermi = 0.0
     @infiltrate
+    linengy!(atoms, mt_vars, vsmt, efermi, apwlo_vars)
+
+    #@infiltrate
     # open REPL and investigate the variables
 
     return

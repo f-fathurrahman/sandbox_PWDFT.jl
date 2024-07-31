@@ -1,4 +1,6 @@
-function findband(l, r, Vr, E; epsband=1e-12, demax=2.5)
+function findband!(l, r, Vr, E;
+    epsband=1e-12, demax=2.5, de0=0.001, maxstp=250
+)
 
 #=
   IMPLICIT NONE
@@ -26,6 +28,8 @@ function findband(l, r, Vr, E; epsband=1e-12, demax=2.5)
     fnd = false
     et = E
     eb = E
+
+    nr = size(Vr, 1)
     p0 = zeros(Float64, nr)
     p1 = zeros(Float64, nr)
     q0 = zeros(Float64, nr)
@@ -42,11 +46,11 @@ function findband(l, r, Vr, E; epsband=1e-12, demax=2.5)
                     break
                 end
             end
-            nn, et = rschrodint!(sol, l, et, r, vr, p0, p1, q0, q1)
+            nn, et = rschrodint!(l, et, r, Vr, p0, p1, q0, q1)
             t = p0[nr]
             if ie > 1
                 if t*tp <= 0.0
-                    if abs(de) < EPS_SMALL
+                    if abs(de) < epsband
                         if fb
                             @goto LABEL10
                         end
@@ -73,11 +77,11 @@ function findband(l, r, Vr, E; epsband=1e-12, demax=2.5)
             if eb < E-demax
                 return fnd, E
             end
-            nn, eb = rschrodint!(l, eb, r, vr, p0, p1, q0, q1)
+            nn, eb = rschrodint!(l, eb, r, Vr, p0, p1, q0, q1)
             t = p1[nr]
             if ie > 1
                 if t*tp <= 0.0
-                    if abs(de) < EPS_SMALL
+                    if abs(de) < epsband
                         if ft
                             @goto LABEL10
                         end

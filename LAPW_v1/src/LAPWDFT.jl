@@ -233,6 +233,15 @@ export rf_mt_lm!
 include("gencore.jl")
 export gencore!
 
+include("rschrodint.jl")
+export rschrodint!
+
+include("findband.jl")
+export findband!
+
+include("linengy.jl")
+export linengy!
+
 include("debug_main.jl")
 
 end
