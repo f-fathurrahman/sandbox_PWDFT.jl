@@ -32,6 +32,11 @@ function call_genvsig()
     return
 end
 
+function call_linengy()
+    ccall( (:my_linengy_, LIBLAPW), Cvoid, () )
+    return
+end
+
 function call_symmetry()
     ccall( (:symmetry_, LIBLAPW), Cvoid, () )
     return
@@ -67,6 +72,11 @@ end
 
 function call_gencore()
     ccall( (:my_gencore_, LIBLAPW), Cvoid, () )
+    return
+end
+
+function call_info_apwlo()
+    ccall( (:info_apwlo_, LIBLAPW), Cvoid, () )
     return
 end
 

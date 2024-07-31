@@ -41,10 +41,12 @@ include("density_pot_xc.jl")
 include("sht.jl")
 include("core_states.jl")
 include("apwlo.jl")
+include("info_apwlo.jl")
 include("spin.jl")
 include("kpoints.jl")
 include("hamiltonian.jl")
 include("energy.jl")
+include("states.jl")
 
 include("serialize_variables.jl")
 export serialize_variables
@@ -70,7 +72,9 @@ function init_debug_calc()
     
     call_genvsig()
 
-    #call_gencore()
+    call_gencore()
+
+    call_linengy()
 
 end
 export init_debug_calc
