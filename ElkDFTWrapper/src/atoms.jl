@@ -22,6 +22,13 @@ function get_maxspecies()
     return 8
 end
 
+function get_idxas()
+    symbol = :__m_atoms_MOD_idxas
+    maxatoms = get_maxatoms()
+    maxspecies = get_maxspecies()
+    return _load_automatic_array(symbol, Int64, (maxatoms,maxspecies))
+end
+
 function get_natoms()
     symbol = :__m_atoms_MOD_natoms
     maxspecies = get_maxspecies()
