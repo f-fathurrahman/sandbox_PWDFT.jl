@@ -13,7 +13,7 @@ function polynm(m::Int64, np::Int64, xa, ya, x::Float64)
 
     res = 0.0
     
-    # This is essential a switch case based on np (number of points)
+    # This is essentially a switch case based on np (number of points)
 
     if np == 1
         if m < 0
