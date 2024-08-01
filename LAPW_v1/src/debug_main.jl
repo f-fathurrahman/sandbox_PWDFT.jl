@@ -21,6 +21,7 @@ function debug_main()
     for isp in 1:Nspecies
         specs_info[isp] = SpeciesInfo(spsymb[isp]*".in")
     end
+
     checkmt!(atoms, specs_info)
     # make the muffin-tin mesh commensurate with lradstp
     lradstp = 4 # in muffin tin
@@ -154,8 +155,7 @@ function debug_main()
     gencore!(atoms, sym_vars.eqatoms, atsp_vars, mt_vars, vsmt, core_states)
 
     efermi = 0.0
-    @infiltrate
-    linengy!(atoms, mt_vars, vsmt, efermi, apwlo_vars)
+    linengy!(atoms, sym_vars.eqatoms, mt_vars, vsmt, efermi, apwlo_vars)
 
     #@infiltrate
     # open REPL and investigate the variables
