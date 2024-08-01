@@ -47,6 +47,7 @@ include("kpoints.jl")
 include("hamiltonian.jl")
 include("energy.jl")
 include("states.jl")
+include("convergence.jl")
 
 include("serialize_variables.jl")
 export serialize_variables
