@@ -65,11 +65,11 @@ function linengy!(atoms, eqatoms, mt_vars, vsmt, efermi::Float64, apwlo_vars)
         @info "lmaxapw = $lmaxapw"
         for l in 0:lmaxapw
             for io in 1:apword[isp][l]
-                if apwve[isp][io,l]
+                if apwve[isp][l][io]
                     @info "Enter here 69"
                     # check if previous radial functions have same default energies
                     for jo in 1:(io-1)
-                        if apwve[isp][jo,l] 
+                        if apwve[isp][l][jo] 
                             if abs(apwe0[isp][l][io] - apwe0[isp][l][jo]) < 1.e-4
                                 @info "Same default energies for apw"
                                 apwe[ia][l][io] = apwe[ia][l][jo]

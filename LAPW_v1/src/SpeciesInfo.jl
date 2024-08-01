@@ -26,9 +26,9 @@ mutable struct SpeciesInfo
     #
     e0min::Float64
     apword::OffsetVector{Int64,Vector{Int64}}
-    apwe0::OffsetMatrix{Float64,Matrix{Float64}}
-    apwdm::OffsetMatrix{Int64,Matrix{Int64}}
-    apwve::OffsetMatrix{Bool,Matrix{Bool}}
+    apwe0::OffsetVector{Vector{Float64}, Vector{Vector{Float64}}}
+    apwdm::OffsetVector{Vector{Int64}, Vector{Vector{Int64}}}
+    apwve::OffsetVector{Vector{Bool}, Vector{Vector{Bool}}}
     nlx::Int64
     nlorb::Int64
     lorbl::Vector{Int64}
@@ -41,12 +41,13 @@ end
 
 
 function SpeciesInfo(
-    filename::String;
+    filename;
     verbose=true,
     maxlapw=50,
     maxlorb=200,
     maxlorbord=5
 )
+
     f = open(filename, "r")
     
     # species symbol
@@ -124,7 +125,7 @@ function SpeciesInfo(
     apword = OffsetArray( zeros(Int64, maxlapw+1), 0:maxlapw )
     apword[0] = parse(Int64, split(line)[1])
     # set the APW orders for > 0
-    apword[1:maxlapw] .= apword[0]
+    apword[1:maxlapw] .= apword[0] # XXX apword are the same for all l ?
     #
     maxapword = maximum(apword)
     MAX_APW_ORD = 4 # Hardcoded, probably not needed
@@ -133,30 +134,36 @@ function SpeciesInfo(
     # XXX Generally, apword will depend on l ? Here, the order is the same for all l.
     #
     e0min = 0.0
-    apwe0 = OffsetArray( zeros(Float64, maxapword, maxlapw+1), 1:maxapword, 0:maxlapw )
-    apwdm = OffsetArray( zeros(Int64, maxapword, maxlapw+1), 1:maxapword, 0:maxlapw )
-    apwve = OffsetArray( zeros(Bool, maxapword, maxlapw+1), 1:maxapword, 0:maxlapw )
+    apwe0 = OffsetArray( Vector{Vector{Float64}}(undef, maxlapw+1), 0:maxlapw )
+    apwdm = OffsetArray( Vector{Vector{Int64}}(undef, maxlapw+1), 0:maxlapw )
+    apwve = OffsetArray( Vector{Vector{Bool}}(undef, maxlapw+1), 0:maxlapw )
     # apwe0, apwdm, apwve
+    for l in 0:maxlapw
+        apwe0[l] = zeros(Float64, apword[l])
+        apwdm[l] = zeros(Int64, apword[l])
+        apwve[l] = zeros(Bool, apword[l])
+    end
     #XXX In all species files considered this is only one line
-    for iord in 1:apword[0]
+    for iord in 1:apword[0] # only apword[0] ?
         line = readline(f)
         ll = split(line)
-        apwe0[iord,0] = parse(Float64, ll[1])
-        apwdm[iord,0] = parse(Int64, ll[2])
+        apwe0[0][iord] = parse(Float64, ll[1])
+        apwdm[0][iord] = parse(Int64, ll[2])
         if ll[3] == "T"
-            apwve[iord,0] = true
+            apwve[0][iord] = true
         elseif ll[3] == "F"
-            apwve[iord,0] = false
+            apwve[0][iord] = false
         else
             error("Unable to parse apwve")
         end
         # 
         # set the APW linearisation energies, derivative orders and variability for l > 0
-        apwe0[iord,1:maxlapw] .= apwe0[iord,0]
-        apwdm[iord,1:maxlapw] .= apwdm[iord,0]
-        apwve[iord,1:maxlapw] .= apwve[iord,0]
-        #
-        e0min = min( e0min, apwe0[iord,0] )
+        for l in 1:maxlapw
+            apwdm[l][iord] = apwdm[0][iord]
+            apwe0[l][iord] = apwe0[0][iord]
+            apwve[l][iord] = apwve[0][iord]
+        end
+        e0min = min( e0min, apwe0[0][iord] )
     end
 
     # nlx (skipped?)
@@ -224,4 +231,5 @@ function SpeciesInfo(
         nlx, nlorb,
         lorbl, lorbord, lorbe0, lorbdm, lorbve
     )
+
 end

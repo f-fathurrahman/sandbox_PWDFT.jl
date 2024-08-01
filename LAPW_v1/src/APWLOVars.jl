@@ -16,16 +16,16 @@ mutable struct APWLOVars
     npapw::Int64
     #
     # APW initial linearisation energies
-    apwe0::Vector{OffsetMatrix{Float64, Matrix{Float64}}}
+    apwe0::Vector{OffsetVector{Vector{Float64}, Vector{Vector{Float64}}}}
     #
     # APW linearisation energies
-    apwe::Vector{OffsetMatrix{Float64, Matrix{Float64}}}
+    apwe::Vector{OffsetVector{Vector{Float64}, Vector{Vector{Float64}}}}
     #
     # APW derivative order
-    apwdm::Vector{OffsetMatrix{Int64, Matrix{Int64}}}
+    apwdm::Vector{OffsetVector{Vector{Int64}, Vector{Vector{Int64}}}}
     #
     # apwve is .true. if the linearisation energies are allowed to vary
-    apwve::Vector{OffsetMatrix{Bool, Matrix{Bool}}}
+    apwve::Vector{OffsetVector{Vector{Bool}, Vector{Vector{Bool}}}}
     #
     # APW radial functions
     apwfr::Vector{OffsetMatrix{Matrix{Float64}, Matrix{Matrix{Float64}}}}
@@ -142,24 +142,39 @@ function APWLOVars(
     #
     # These arrays depend on order and angular momentum index (?)
     #
-    apwe0 = Vector{OffsetMatrix{Float64,Matrix{Float64}}}(undef, Nspecies)
+    APWE0_ELTYPE = typeof(specs_info[1].apwe0)
+    apwe0 = Vector{APWE0_ELTYPE}(undef, Nspecies)
     for isp in 1:Nspecies
-        maxapword = specs_info[isp].maxapword
-        apwe0[isp] = OffsetArray(zeros(Float64, maxapword, lmaxapw+1), 1:maxapword, 0:lmaxapw)
-        apwe0[isp][:] = specs_info[isp].apwe0[1:maxapword,0:lmaxapw]
+        apwe0[isp] = OffsetArray( Vector{Vector{Float64}}(undef, lmaxapw+1), 0:lmaxapw )
+        for l in 0:lmaxapw
+            apwe0[isp][l] = zeros(Float64, apword[isp][l])
+            for io in 1:apword[isp][l]
+                apwe0[isp][l][io] = specs_info[isp].apwe0[l][io]
+            end
+        end
     end
     #
-    apwdm = Vector{OffsetMatrix{Int64,Matrix{Int64}}}(undef, Nspecies)
+    APWDM_ELTYPE = typeof(specs_info[1].apwdm)
+    apwdm = Vector{APWDM_ELTYPE}(undef, Nspecies)
     for isp in 1:Nspecies
-        maxapword = specs_info[isp].maxapword
-        apwdm[isp] = OffsetArray(zeros(Int64, maxapword, lmaxapw+1), 1:maxapword, 0:lmaxapw)
-        apwdm[isp][:] = specs_info[isp].apwdm[1:maxapword,0:lmaxapw]
+        apwdm[isp] = OffsetArray( Vector{Vector{Int64}}(undef, lmaxapw+1), 0:lmaxapw )
+        for l in 0:lmaxapw
+            apwdm[isp][l] = zeros(Float64, apword[isp][l])
+            for io in 1:apword[isp][l]
+                apwdm[isp][l][io] = specs_info[isp].apwdm[l][io]
+            end
+        end
     end
-    apwve = Vector{OffsetMatrix{Bool,Matrix{Bool}}}(undef, Nspecies)
+    APWVE_ELTYPE = typeof(specs_info[1].apwve)
+    apwve = Vector{APWVE_ELTYPE}(undef, Nspecies)
     for isp in 1:Nspecies
-        maxapword = specs_info[isp].maxapword
-        apwve[isp] = OffsetArray(zeros(Bool, maxapword, lmaxapw+1), 1:maxapword, 0:lmaxapw)
-        apwve[isp][:] = specs_info[isp].apwve[1:maxapword,0:lmaxapw]
+        apwve[isp] = OffsetArray( Vector{Vector{Bool}}(undef, lmaxapw+1), 0:lmaxapw )
+        for l in 0:lmaxapw
+            apwve[isp][l] = zeros(Float64, apword[isp][l])
+            for io in 1:apword[isp][l]
+                apwve[isp][l][io] = specs_info[isp].apwve[l][io]
+            end
+        end
     end
     #
     nlorb = zeros(Int64, Nspecies)
@@ -213,13 +228,16 @@ function APWLOVars(
     nplorb = max(lorbordmax+1, 4)
 
     # set the APW and local-orbital linearisation energies to the default
-    apwe = Vector{OffsetMatrix{Float64,Matrix{Float64}}}(undef,Natoms)
+    APWE_ELTYPE = eltype(apwe0)
+    apwe = Vector{APWE_ELTYPE}(undef,Natoms)
     for ia in 1:Natoms
         isp = atm2species[ia]
-        maxapword = specs_info[isp].maxapword
-        apwe[ia] = OffsetArray(zeros(Float64, maxapword, lmaxapw+1), 1:maxapword, 0:lmaxapw)
-        for l1 in 0:lmaxapw, io in 1:apword[isp][l1]
-            apwe[ia][io,l1] = apwe0[isp][io,l1]
+        apwe[isp] = OffsetArray( Vector{Vector{Float64}}(undef, lmaxapw+1), 0:lmaxapw )
+        for l in 0:lmaxapw
+            apwe[ia][l] = zeros(Float64, apword[isp][l])
+            for io in 1:apword[isp][l]
+                apwe[ia][l][io] = apwe0[isp][l][io]
+            end
         end
     end
     #
