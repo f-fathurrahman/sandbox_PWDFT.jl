@@ -74,6 +74,7 @@ function genapwfr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
             vr[ir] = vsmt[ia][i]*y00
             i = i + lmmaxo
         end
+        @views rgrid = rlmt[isp][:,1]
         #
         for l in 0:lmaxapw
             for io in 1:apword[isp][l]
@@ -81,8 +82,7 @@ function genapwfr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
                 # XXX FIXME apwdm indexing apwdm[is][l][io]
                 E = apwe[ia][l][io] + apwdm[isp][l][io]*deapwlo
                 # integrate the radial Schrodinger equation
-                @views rgrid = rlmt[isp][:,1]
-                @views p0view = p0[:,io]
+                @views p0view = p0[1:nr,io]
                 nn, E = rschrodint!(l, E, rgrid, vr, p0view, p1, q0, q1)
                 # multiply by the linearisation energy
                 ep0[1:nr,io] .= E*p0[1:nr,io]
