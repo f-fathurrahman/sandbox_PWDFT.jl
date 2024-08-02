@@ -77,6 +77,8 @@ function init_debug_calc()
 
     call_linengy()
 
+    call_genapwfr()
+
 end
 export init_debug_calc
 

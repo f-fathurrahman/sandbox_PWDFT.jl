@@ -37,6 +37,11 @@ function call_linengy()
     return
 end
 
+function call_genapwfr()
+    ccall( (:my_genapwfr_, LIBLAPW), Cvoid, () )
+    return
+end
+
 function call_symmetry()
     ccall( (:symmetry_, LIBLAPW), Cvoid, () )
     return
