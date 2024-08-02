@@ -157,7 +157,7 @@ function debug_main()
     efermi = 0.0
     linengy!(atoms, sym_vars.eqatoms, mt_vars, vsmt, efermi, apwlo_vars)
 
-    #@infiltrate
+    @infiltrate
     # open REPL and investigate the variables
 
     return

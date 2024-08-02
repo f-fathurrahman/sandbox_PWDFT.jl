@@ -1,4 +1,5 @@
-function genapwfr!(atoms, mt_vars, apwlo_vars)
+# This will modify some fields of apwlo_vars
+function genapwfr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
     #=
   USE m_atoms, ONLY: natmmax, natoms, idxas, nspecies
   USE m_symmetry, ONLY: eqatoms
@@ -21,6 +22,35 @@ function genapwfr!(atoms, mt_vars, apwlo_vars)
   REAL(8) splint
   EXTERNAL splint
     =#
+
+    Natoms = atoms.Natoms
+    atm2species = atoms.atm2species
+
+    nrmt = mt_vars.nrmt
+    nrmti = mt_vars.nrmti
+    nrmtmax = maximum(nrmt)
+    lmmaxi = mt_vars.lmmaxi
+    lmmaxo = mt_vars.lmmaxo
+    lmaxapw = mt_vars.lmaxapw
+    rlmt = mt_vars.rlmt
+
+    apword = apwlo_vars.apword
+    apwordmax = apwlo_vars.apwordmax
+    apwe = apwlo_vars.apwe
+    apwdm = apwlo_vars.apwdm
+    deapwlo = apwlo_vars.deapwlo
+    apwfr = apwlo_vars.apwfr
+    apwdfr = apwlo_vars.apwdfr
+
+    p0 = zeros(Float64, nrmtmax, apwordmax)
+    p1 = zeros(Float64, nrmtmax)
+    p1s= zeros(Float64, apwordmax)
+    q0 = zeros(Float64, nrmtmax)
+    q1 = zeros(Float64, nrmtmax)
+    ep0 = zeros(Float64, nrmtmax, apwordmax)
+    vr = zeros(Float64, nrmtmax)
+    fr = zeros(Float64, nrmtmax)
+
 
     y00 = 0.5/sqrt(pi)
 
@@ -49,15 +79,15 @@ function genapwfr!(atoms, mt_vars, apwlo_vars)
             for io in 1:apword[isp][l]
                 # linearisation energy accounting for energy derivative
                 # XXX FIXME apwdm indexing apwdm[is][l][io]
-                E = apwe[ia][l][io] + apwdm[is][io,l]*deapwlo
+                E = apwe[ia][l][io] + apwdm[isp][l][io]*deapwlo
                 # integrate the radial Schrodinger equation
                 @views rgrid = rlmt[isp][:,1]
                 @views p0view = p0[:,io]
-                nn, E = rschrodint!(l, E, nr, grid, vr, p0view, p1, q0, q1)
+                nn, E = rschrodint!(l, E, rgrid, vr, p0view, p1, q0, q1)
                 # multiply by the linearisation energy
                 ep0[1:nr,io] .= E*p0[1:nr,io]
                 # normalize radial functions
-                fr[1:nr] = p0[1:nr,io]^2
+                fr[1:nr] .= p0[1:nr,io].^2
                 t1 = splint(nr, rgrid, fr)
                 t1 = 1.0/sqrt(abs(t1))
                 #CALL dscal(nr,t1,p0(:,io),1)
@@ -98,11 +128,11 @@ function genapwfr!(atoms, mt_vars, apwlo_vars)
                 # divide by r and store in global array
                 for ir in 1:nr
                     t1 = rlmt[isp][ir,-1]
-                    apwfr[ia][l][io][ir,1] = t1*p0[ir,io]
-                    apwfr[ia][l][io][ir,2] = t1*ep0[ir,io]
+                    apwfr[ia][io,l][ir,1] = t1*p0[ir,io]
+                    apwfr[ia][io,l][ir,2] = t1*ep0[ir,io]
                 end
                 # derivative at the muffin-tin surface
-                apwdfr[ia][l][io] = ( p1s[io] - p0[nr,io]*t1 )*t1
+                apwdfr[ia][io,l] = ( p1s[io] - p0[nr,io]*t1 )*t1
             end
         end
         done[ia] = true

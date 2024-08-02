@@ -242,6 +242,9 @@ export findband!
 include("linengy.jl")
 export linengy!
 
+include("genapwfr.jl")
+export genapwfr!
+
 include("debug_main.jl")
 
 end
