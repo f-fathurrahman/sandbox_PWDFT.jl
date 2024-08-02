@@ -42,6 +42,11 @@ function call_genapwfr()
     return
 end
 
+function call_genlofr()
+    ccall( (:my_genlofr_, LIBLAPW), Cvoid, () )
+    return
+end
+
 function call_symmetry()
     ccall( (:symmetry_, LIBLAPW), Cvoid, () )
     return
