@@ -28,10 +28,10 @@ mutable struct APWLOVars
     apwve::Vector{OffsetVector{Vector{Bool}, Vector{Vector{Bool}}}}
     #
     # APW radial functions
-    apwfr::Vector{OffsetMatrix{Matrix{Float64}, Matrix{Matrix{Float64}}}}
+    apwfr::Vector{OffsetVector{Vector{Matrix{Float64}}, Vector{Vector{Matrix{Float64}}}}} 
     #
     # derivate of radial functions at the muffin-tin surface
-    apwdfr::Vector{OffsetMatrix{Float64, Matrix{Float64}}}
+    apwdfr::Vector{OffsetVector{Vector{Float64}, Vector{Vector{Float64}}}}
     #
     # maximum number of local-orbitals
     maxlorb::Int64 # parameter=200
@@ -232,7 +232,7 @@ function APWLOVars(
     apwe = Vector{APWE_ELTYPE}(undef,Natoms)
     for ia in 1:Natoms
         isp = atm2species[ia]
-        apwe[isp] = OffsetArray( Vector{Vector{Float64}}(undef, lmaxapw+1), 0:lmaxapw )
+        apwe[ia] = OffsetArray( Vector{Vector{Float64}}(undef, lmaxapw+1), 0:lmaxapw )
         for l in 0:lmaxapw
             apwe[ia][l] = zeros(Float64, apword[isp][l])
             for io in 1:apword[isp][l]
@@ -257,30 +257,34 @@ function APWLOVars(
     #
     #XXX Ugh... This type is complicated
     #XXX Probably better use simple multidimensional array
-    APW_RADIAL_TYPE = OffsetMatrix{Matrix{Float64}, Matrix{Matrix{Float64}}}
-    # An OffsetMatrix whose element is a matrix
-    #
-    apwfr = Vector{APW_RADIAL_TYPE}(undef,Natoms)
+    APWFR_ELTYPE = OffsetVector{Vector{Matrix{Float64}}, Vector{Vector{Matrix{Float64}}}}
+    apwfr = Vector{APWFR_ELTYPE}(undef,Natoms)
     for ia in 1:Natoms
         isp = atm2species[ia]
         nr = mt_vars.nrmt[isp]
-        maxapword = specs_info[isp].maxapword
-        apwfr[ia] = OffsetArray(
-            Array{Matrix{Float64}}(undef, maxapword, lmaxapw+1), 1:maxapword, 0:lmaxapw
-        )
-        for l1 in 0:lmaxapw, io in 1:apword[isp][l1]
-            apwfr[ia][io,l1] = zeros(Float64, nr, 2)
+        apwfr[ia] = OffsetArray( Vector{Vector{Matrix{Float64}}}(undef, lmaxapw+1), 0:lmaxapw )
+        for l in 0:lmaxapw
+            apwfr[ia][l] = Vector{Matrix{Float64}}(undef, apword[isp][l])
+            for io in 1:apword[isp][l]
+                apwfr[ia][l][io] = zeros(Float64, nr, 2)
+            end
         end
     end
+  
     # apwfr[atom index][order index, ang mom index][radial mt index,major-minor?]
     # XXX: order index is singleton anyway
-    apwdfr = Vector{OffsetMatrix{Float64, Matrix{Float64}}}(undef,Natoms)
+    APWDFR_ELTYPE = OffsetVector{Vector{Float64}, Vector{Vector{Float64}}}
+    apwdfr = Vector{APWDFR_ELTYPE}(undef,Natoms)
     for ia in 1:Natoms
         isp = atm2species[ia]
-        maxapword = specs_info[isp].maxapword
-        apwdfr[ia] = OffsetArray(zeros(Float64, maxapword, lmaxapw+1), 1:maxapword, 0:lmaxapw)
+        apwdfr[ia] = OffsetArray(
+            Vector{Vector{Float64}}(undef,lmaxapw+1), 0:lmaxapw
+        )
+        for l in 0:lmaxapw
+            apwdfr[ia][l] = zeros(Float64, apword[isp][l])
+        end
     end
-
+    
     lofr = Vector{Vector{Matrix{Float64}}}(undef, Natoms)
     for ia in 1:Natoms
         isp = atm2species[ia]

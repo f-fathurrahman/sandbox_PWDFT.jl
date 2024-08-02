@@ -128,11 +128,11 @@ function genapwfr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
                 # divide by r and store in global array
                 for ir in 1:nr
                     t1 = rlmt[isp][ir,-1]
-                    apwfr[ia][io,l][ir,1] = t1*p0[ir,io]
-                    apwfr[ia][io,l][ir,2] = t1*ep0[ir,io]
+                    apwfr[ia][l][io][ir,1] = t1*p0[ir,io]
+                    apwfr[ia][l][io][ir,2] = t1*ep0[ir,io]
                 end
                 # derivative at the muffin-tin surface
-                apwdfr[ia][io,l] = ( p1s[io] - p0[nr,io]*t1 )*t1
+                apwdfr[ia][l][io] = ( p1s[io] - p0[nr,io]*t1 )*t1
             end
         end
         done[ia] = true
