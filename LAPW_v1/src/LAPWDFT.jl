@@ -245,6 +245,9 @@ export linengy!
 include("genapwfr.jl")
 export genapwfr!
 
+include("genlofr.jl")
+export genlofr!
+
 include("debug_main.jl")
 
 end

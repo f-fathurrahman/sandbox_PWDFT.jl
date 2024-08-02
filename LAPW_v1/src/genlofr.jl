@@ -1,20 +1,6 @@
-function genlofr!(atoms, eqatoms, mt_vars, apwlo_vars)
+function genlofr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
 
     #=
-    USE m_atoms, ONLY: natmmax, natoms, nspecies, idxas
-  USE m_symmetry, ONLY: eqatoms
-  USE m_apwlo, ONLY: nplorb, nlorb, lorbordmax, nlomax, lofr, lorbl, &
-               lorbord, deapwlo, lorbdm, lorbe
-  USE m_muffin_tins, ONLY: nrmtmax, nrmt, nrmti, rlmt, rmt, lmmaxo, lmmaxi
-  USE m_constants, ONLY: y00, solsc
-  USE m_density_pot_xc, ONLY: vsmt
-  IMPLICIT NONE 
-  ! local variables
-  INTEGER :: is,ia,ja,ias,jas
-  INTEGER :: nr,nri,ir,i
-  INTEGER :: ilo,jlo,io,jo
-  INTEGER :: nn,l,info
-  REAL(8) :: e,t1
   ! automatic arrays
   LOGICAL :: done(natmmax)
   INTEGER :: ipiv(nplorb)
@@ -24,14 +10,48 @@ function genlofr!(atoms, eqatoms, mt_vars, apwlo_vars)
   REAL(8) :: p0s(nrmtmax,nlomax), ep0s(nrmtmax,nlomax)
   REAL(8) :: xa(nplorb), ya(nplorb)
   REAL(8) :: a(nplorb,nplorb), b(nplorb)
-  ! external functions
-  REAL(8) splint, polynm
-  external splint, polynm
     =#
 
     y00 = 0.5/sqrt(pi)
 
+    Natoms = atoms.Natoms
     done = zeros(Bool, Natoms)
+    Natoms = atoms.Natoms
+    atm2species = atoms.atm2species
+
+    nrmt = mt_vars.nrmt
+    nrmti = mt_vars.nrmti
+    nrmtmax = maximum(nrmt)
+    lmmaxi = mt_vars.lmmaxi
+    lmmaxo = mt_vars.lmmaxo
+    rlmt = mt_vars.rlmt
+    rmt = mt_vars.rmt
+
+    lorbordmax = apwlo_vars.lorbordmax
+    deapwlo = apwlo_vars.deapwlo
+    lorbord = apwlo_vars.lorbord
+    lorbe = apwlo_vars.lorbe
+    lorbdm = apwlo_vars.lorbdm
+    nlorb = apwlo_vars.nlorb
+    lorbl = apwlo_vars.lorbl
+    nplorb = apwlo_vars.nplorb
+    nlomax = apwlo_vars.nlomax
+    lofr = apwlo_vars.lofr
+
+    p0 = zeros(Float64, nrmtmax, lorbordmax)
+    p1 = zeros(Float64, nrmtmax)
+    q0 = zeros(Float64, nrmtmax)
+    q1 = zeros(Float64, nrmtmax)
+    ep0 = zeros(Float64, nrmtmax, lorbordmax)
+    p0s = zeros(Float64, nrmtmax, nlomax)
+    ep0s = zeros(Float64, nrmtmax, nlomax)
+    vr = zeros(Float64, nrmtmax)
+    fr = zeros(Float64, nrmtmax)
+
+    xa = zeros(Float64, nplorb)
+    ya = zeros(Float64, nplorb)
+    A = zeros(Float64, nplorb, nplorb)
+    b = zeros(Float64, nplorb)
 
     for ia in 1:Natoms
         isp = atm2species[ia]
@@ -50,6 +70,7 @@ function genlofr!(atoms, eqatoms, mt_vars, apwlo_vars)
             vr[ir] = vsmt[ia][i]*y00
             i = i + lmmaxo
         end
+        @views rgrid = rlmt[isp][:,1] # nr will be taken from this
         #
         for ilo in 1:nlorb[isp]
             l = lorbl[isp][ilo]
@@ -57,12 +78,11 @@ function genlofr!(atoms, eqatoms, mt_vars, apwlo_vars)
                 # linearisation energy accounting for energy derivative
                 E = lorbe[ia][ilo][jo] + lorbdm[isp][ilo][jo]*deapwlo
                 # integrate the radial Schrodinger equation
-                @views rgrid = rlmt[isp][:,1]
-                @views p0view = p0[:,jo]
+                @views p0view = p0[1:nr,jo]
                 nn, E = rschrodint!(l, E, rgrid, vr, p0view, p1, q0, q1)
                 ep0[1:nr,jo] .= E*p0[1:nr,jo]
                 # normalise radial functions
-                fr[1:nr] = p0[1:nr,jo]^2
+                fr[1:nr] = p0[1:nr,jo].^2
                 t1 = splint(nr, rgrid, fr)
                 t1 = 1.0/sqrt(abs(t1))
                 #CALL dscal(nr,t1,p0(:,jo),1)
@@ -76,18 +96,19 @@ function genlofr!(atoms, eqatoms, mt_vars, apwlo_vars)
                     ya[i] = p0[ir,jo]*rlmt[isp][ir,-1]
                 end
                 for io in 1:lorbord[isp][ilo]
-                    a[io,jo] = polynm(io-1, nplorb, xa, ya, rmt[isp])
+                    A[io,jo] = polynm(io-1, nplorb, xa, ya, rmt[isp])
                 end 
             end 
             # set up the target vector
-            b[:] = 0.0
+            b[:] .= 0.0
             b[lorbord[isp][ilo]] = 1.0
             #CALL dgesv(lorbord(ilo,is), 1, a, nplorb, ipiv, b, nplorb, info)
-            b[:] = A\b[:]
+            idx1 = 1:lorbord[isp][ilo]
+            b[idx1] = A[idx1,idx1]\b[idx1]
             #IF(info != 0) goto 10
             # generate linear superposition of radial functions
             p0s[:,ilo] .= 0.0
-            ep0s[:,ilo] = 0.0
+            ep0s[:,ilo] .= 0.0
             for io in 1:lorbord[isp][ilo]
                 t1 = b[io]
                 #CALL daxpy(nr,t1,p0(:,io),1,p0s(:,ilo),1)
