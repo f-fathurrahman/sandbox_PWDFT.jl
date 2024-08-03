@@ -248,6 +248,11 @@ export genapwfr!
 include("genlofr.jl")
 export genlofr!
 
+include("factr.jl"); export factr
+include("wigner3j.jl"); export wigner3j
+include("gaunt.jl"); export gaunt
+include("gauntyry.jl"); export gauntyry
+
 include("debug_main.jl")
 
 end
