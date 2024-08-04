@@ -1,10 +1,16 @@
 # Test naive FFT
 
 using LinearAlgebra: norm
+using Infiltrator
 using PWDFT
 
-
 include("GVectorsFull.jl")
+
+function func_G_analytic(Gl::Float64; rloc=1.5)
+    pre2 = sqrt(8*π^3)*rloc^3
+    expGr2 = exp(-0.5*(Gl*rloc)^2)
+    return pre2*expGr2
+end
 
 function func_R_analytic(rl::Float64; rloc=1.5)
     return exp(-0.5*(rl/rloc)^2)
@@ -91,24 +97,85 @@ function naive_R_to_G(pw, fR)
 end
 
 
-
-L = 10.0 # bohr
-ecutwfc = 5.0
-LatVecs = gen_lattice_fcc(L)
-rloc = 1.4
-func_R(r) = func_R_analytic(r, rloc=rloc)
-pw = PWGrid(ecutwfc, LatVecs)
-Npoints = prod(pw.Ns)
-fR_grid = zeros(Float64, Npoints)
-r_grid = PWDFT.init_grid_R(pw.Ns, LatVecs)
-
-offset_neighbors = [1, 1, 1]
-for ip in 1:Npoints
-    fR_grid[ip] = test_eval_R(LatVecs, func_R, r_grid[:,ip], offset_neighbors)
+function naive_G_to_R(pw, fG)
+    #
+    Nx, Ny, Nz = pw.Ns
+    fGr = reshape(fG, Nx, Ny, Nz) # output
+    fR = zeros(ComplexF64, Nx, Ny, Nz) # output
+    #
+    for w in 0:(Nz-1), v in 0:(Ny-1), u in 0:(Nx-1)
+        res = 0.0 + im*0.0
+        for l in 0:(Nz-1), k in 0:(Ny-1), j in 0:(Nx-1)
+            fex = exp(im*2*pi/Nx*j*u)
+            fey = exp(im*2*pi/Ny*k*v)
+            fez = exp(im*2*pi/Nz*l*w)
+            res += fGr[j+1,k+1,l+1] * fex * fey * fez
+            # need to offset the indices u,v,w with 1
+        end
+        fR[u+1,v+1,w+1] = res # offset indices j,k,l with 1
+    end
+    return reshape(fR, prod(pw.Ns))
 end
 
-ctmp = zeros(ComplexF64, Npoints)
-ctmp[:] .= fR_grid[:]
-R_to_G!(pw, ctmp)
-# scale with 1/Npoints
-#ctmp[:] *= (1/Npoints)
+
+function main_01()
+    L = 10.0 # bohr
+    ecutwfc = 5.0
+    LatVecs = gen_lattice_fcc(L)
+    rloc = 1.4
+    func_R(r) = func_R_analytic(r, rloc=rloc)
+    pw = PWGrid(ecutwfc, LatVecs)
+    Npoints = prod(pw.Ns)
+    fR_grid = zeros(Float64, Npoints)
+    r_grid = PWDFT.init_grid_R(pw.Ns, LatVecs)
+    
+    offset_neighbors = [1, 1, 1]
+    for ip in 1:Npoints
+        fR_grid[ip] = test_eval_R(LatVecs, func_R, r_grid[:,ip], offset_neighbors)
+    end
+    
+    ctmp = zeros(ComplexF64, Npoints)
+    ctmp[:] .= fR_grid[:]
+    ctmp2 = copy(ctmp)
+    R_to_G!(pw, ctmp)
+    # scale with 1/Npoints
+    #ctmp[:] *= (1/Npoints)
+
+    ctmp2 = naive_R_to_G(pw, ctmp2)
+    @infiltrate
+
+end
+
+
+function main_02()
+    L = 10.0 # bohr
+    ecutwfc = 5.0
+    LatVecs = gen_lattice_fcc(L)
+    rloc = 1.4
+    func_G(G) = func_G_analytic(G, rloc=rloc)
+    pw = PWGrid(ecutwfc, LatVecs)
+    Ng = pw.gvec.Ng
+    G2 = pw.gvec.G2
+    G = pw.gvec.G
+    CellVolume = pw.CellVolume
+    fG = zeros(Float64, Ng)
+    for ig in 1:Ng
+        Gl = sqrt(G2[ig])
+        fG[ig] = func_G(Gl)
+    end
+    Npoints = prod(pw.Ns)
+    ctmp = zeros(ComplexF64, Npoints)
+    for ig in 1:Ng
+        ip = pw.gvec.idx_g2r[ig]
+        ctmp[ip] = fG[ig]
+    end
+    ctmp2 = copy(ctmp)
+    G_to_R!(pw, ctmp)
+    # scale with Npoints
+    ctmp[:] *= Npoints
+
+    ctmp2 = naive_G_to_R(pw, ctmp2)
+    @infiltrate
+
+end
+
