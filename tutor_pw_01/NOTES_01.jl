@@ -79,10 +79,9 @@ using PWDFT
 # $$
 
 # %%
-function eval_func_G(Gl::Float64; rloc=1.5)
+function func_G_analytic(Gl::Float64; rloc=1.5)
     pre2 = sqrt(8*π^3)*rloc^3
-    Gr = Gl*rloc
-    expGr2 = exp(-0.5*Gr^2)
+    expGr2 = exp(-0.5*(Gl*rloc)^2)
     return pre2*expGr2
 end;
 
@@ -92,9 +91,8 @@ end;
 # $$
 
 # %%
-function eval_func_R(rl::Float64; rloc=1.5)
-    rrloc = rl/rloc
-    return exp(-0.5*rrloc^2)
+function func_R_analytic(rl::Float64; rloc=1.5)
+    return exp(-0.5*(rl/rloc)^2)
 end;
 
 # %% [markdown]
@@ -111,21 +109,19 @@ ecutwfc = 5.0 # hartree
 LatVecs = gen_lattice_sc(L)
 pw = PWGrid(ecutwfc, LatVecs)
 
-println(pw)
-
 Ng = pw.gvec.Ng
 G2 = pw.gvec.G2
 G = pw.gvec.G
 CellVolume = pw.CellVolume;
 
 # %% [markdown]
-# Let's evaluate $f(G)$, the coefficients of the expansions
+# Let's evaluate $f(G)$, the coefficients of the expansions, using analytic expression.
 
 # %%
 fG = zeros(Float64, Ng)
 for ig in 1:Ng
     Gl = sqrt(G2[ig])
-    fG[ig] = eval_func_G(Gl)/CellVolume
+    fG[ig] = func_G_analytic(Gl)/CellVolume
 end;
 
 # %% [markdown]
@@ -147,7 +143,7 @@ println("PW expansion = ", fR)
 
 # %%
 rl = norm(r)
-fR_a = eval_func_R(rl)
+fR_a = func_R_analytic(rl)
 println("analytic = ", fR_a)
 println("Difference = ", abs(fR - fR_a))
 
@@ -169,7 +165,7 @@ for i in -1:1, j in -1:1, k in -1:1
     NumNeighbors += 1
     rn = r + i*v1 + j*v2 + k*v3
     rl = norm(rn)
-    fR_a += eval_func_R(rl)
+    fR_a += func_R_analytic(rl)
 end
 println("NumNeighbors = ", NumNeighbors) # should be 27 - 1 = 26
 
@@ -245,26 +241,36 @@ L = 10.0 # bohr
 ecutwfc = 2.0 # hartree
 LatVecs = gen_lattice_sc(L)
 pw = PWGrid(ecutwfc, LatVecs);
-func_R(r) = eval_func_R(r, rloc=1.5)
-func_G(G) = eval_func_G(G, rloc=1.5)
+func_R(r) = func_R_analytic(r, rloc=1.5) # set rloc
+func_G(G) = func_G_analytic(G, rloc=1.5) # set rloc
+test_pw_expansions(pw, func_R, func_G; offset_neighbors=[1,1,1], r=[0.4, 0.4, 0.4])
+
+# %%
 test_pw_expansions(pw, func_R, func_G; offset_neighbors=[2,2,2], r=[0.4, 0.4, 0.4])
+
+# %%
+func_R(10.0), func_R(20.0), func_R(30.0)
+
+# %% [markdown]
+# Try using larger rloc:
+
+# %%
+L = 10.0 # bohr
+ecutwfc = 2.0 # hartree
+LatVecs = gen_lattice_sc(L)
+pw = PWGrid(ecutwfc, LatVecs);
+func_R(r) = func_R_analytic(r, rloc=2.5) # set rloc
+func_G(G) = func_G_analytic(G, rloc=2.5) # set rloc
+test_pw_expansions(pw, func_R, func_G; offset_neighbors=[1,1,1], r=[0.4, 0.4, 0.4])
+
+# %% jupyter={"outputs_hidden": true}
+func_R(10.0), func_R(20.0), func_R(30.0)
 
 # %%
 L = 10.0 # bohr
 ecutwfc = 5.0 # hartree
 LatVecs = gen_lattice_sc(L)
 pw = PWGrid(ecutwfc, LatVecs);
-func_R(r) = eval_func_R(r, rloc=1.5)
-func_G(G) = eval_func_G(G, rloc=1.5)
-test_pw_expansions(pw, func_R, func_G; num_neighbors=2, r=[0.4, 0.4, 0.4])
-
-# %%
-L = 10.0 # bohr
-ecutwfc = 1.0 # hartree
-LatVecs = gen_lattice_sc(L)
-pw = PWGrid(ecutwfc, LatVecs);
-func_R(r) = eval_func_R(r, rloc=1.5)
-func_G(G) = eval_func_G(G, rloc=1.5)
-test_pw_expansions(pw, func_R, func_G; num_neighbors=2, r=[0.4, 0.4, 0.4])
-
-# %%
+func_R(r) = func_R_analytic(r, rloc=2.5) # set rloc
+func_G(G) = func_G_analytic(G, rloc=2.5) # set rloc
+test_pw_expansions(pw, func_R, func_G; offset_neighbors=[1,1,1], r=[0.4, 0.4, 0.4])
