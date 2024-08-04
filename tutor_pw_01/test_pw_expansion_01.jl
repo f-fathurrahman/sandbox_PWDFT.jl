@@ -5,14 +5,12 @@ using PWDFT
 
 function eval_func_G(Gl::Float64; rloc=1.0)
     pre2 = sqrt(8*π^3)*rloc^3
-    Gr = Gl*rloc
-    expGr2 = exp(-0.5*Gl^2)
+    expGr2 = exp(-0.5*(Gl*rloc)^2)
     return pre2*expGr2
 end
 
 function eval_func_R(rl::Float64; rloc=1.0)
-    rrloc = rl/rloc
-    return exp(-0.5*rrloc^2)
+    return exp(-0.5*(rl/rloc)^2)
 end
 
 L = 10.0 # bohr

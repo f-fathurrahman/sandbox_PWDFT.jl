@@ -5,14 +5,12 @@ using PWDFT
 
 function eval_func_G(Gl::Float64; rloc=1.0)
     pre2 = sqrt(8*π^3)*rloc^3
-    Gr = Gl*rloc
-    expGr2 = exp(-0.5*Gl^2)
+    expGr2 = exp(-0.5*(Gl*rloc)^2)
     return pre2*expGr2
 end
 
 function eval_func_R(rl::Float64; rloc=1.0)
-    rrloc = rl/rloc
-    return exp(-0.5*rrloc^2)
+    return exp(-0.5*(rl/rloc)^2)
 end
 
 L = 10.0 # bohr
@@ -79,6 +77,10 @@ println("analytic (adding nearest neighbors contrib) = ", fR_a)
 println("Difference = ", abs(fR - fR_a))
 
 
+# Now we want to avoid evaluating PW expansion explicitly.
+# We begin with set of plane wave expansion coefficients fG
+# We will evaluate fR from fG using fft.
+# The obtained functions will be compared at an FFT grid point index ip
 
 # Prepare for FFT
 ctmp = zeros(ComplexF64, Npoints)
@@ -91,7 +93,7 @@ end
 println("\nUsing fft")
 G_to_R!(pw, ctmp)
 ctmp *= Npoints # rescale
-res = real(ctmp[ip])
+res = real(ctmp[ip]) # the function at ip
 println("From fft = ", res)
 println("Difference from fft - fR   = ", abs(res - fR)) # This should be the same within eps
 println("Difference from fft - fR_a = ", abs(res - fR_a))
