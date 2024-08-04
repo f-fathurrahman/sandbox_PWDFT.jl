@@ -1024,60 +1024,29 @@ Generates the APW radial functions.
 .
 \end_layout
 
-\begin_layout Standard
+\begin_layout Subsection*
 genlofr
 \end_layout
 
 \begin_layout Standard
-!
- Generates the local-orbital radial functions.
- This is done by integrating
-\end_layout
-
-\begin_layout Standard
-!
- the scalar relativistic Schr
-\backslash
-"{o}dinger equation (or its energy deriatives)
-\end_layout
-
-\begin_layout Standard
-!
- at the current linearisation energies using the spherical part of the
-\end_layout
-
-\begin_layout Standard
-!
- Kohn-Sham potential.
+Generates the local-orbital radial functions.
+ This is done by integrating the scalar relativistic Schroedinger equation (or its energy deriatives) at the current linearisation energies using the spherical part of the Kohn-Sham potential.
  For each local-orbital,
- a linear combination of
-\end_layout
+ a linear combination of 
+\begin_inset Formula ${\tt lorbord}$
+\end_inset
 
-\begin_layout Standard
-!
- {
-\backslash
-tt lorbord} radial functions is constructed such that its radial
-\end_layout
+ radial functions is constructed such that its radial derivatives up to order 
+\begin_inset Formula ${\tt lorbord}-1$
+\end_inset
 
-\begin_layout Standard
-!
- derivatives up to order ${
-\backslash
-tt lorbord}-1$ are zero at the muffin-tin radius.
-\end_layout
-
-\begin_layout Standard
-!
+ are zero at the muffin-tin radius.
  This function is normalised and the radial Hamiltonian applied to it.
- The
-\end_layout
+ The results are stored in the global array 
+\begin_inset Formula ${\tt lofr}$
+\end_inset
 
-\begin_layout Standard
-!
- results are stored in the global array {
-\backslash
-tt lofr}.
+.
 \end_layout
 
 \begin_layout Subsection*
@@ -1190,235 +1159,90 @@ match
 \end_layout
 
 \begin_layout Standard
-!
- Computes the $({
+Computes the $({
 \backslash
-bf G+p})$-dependent matching coefficients for the APW basis
-\end_layout
-
-\begin_layout Standard
-!
- functions.
+bf G+p})$-dependent matching coefficients for the APW basis functions.
  Inside muffin-tin $
 \backslash
 alpha$,
  the APW functions are given by
+\begin_inset Formula 
+\[
+\phi_{{\bf G+p}}^{\alpha}({\bf r})=\sum_{l=0}^{l_{{\rm max}}}\sum_{m=-l}^{l}\sum_{j=1}^{M_{l}^{\alpha}}A_{jlm}^{\alpha}({\bf G+p})u_{jl}^{\alpha}(r)Y_{lm}(\hat{{\bf r}}),
+\]
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-!
- $$ 
-\backslash
-phi^{
-\backslash
-alpha}_{
-\backslash
-bf G+p}({
-\backslash
-bf r})=
-\backslash
-sum_{l=0}^{l_{
-\backslash
-rm max}}
-\end_layout
+where 
+\begin_inset Formula $A_{jlm}^{\alpha}({\bf G+p})$
+\end_inset
 
-\begin_layout Standard
-!
+ is the matching coefficient,
  
-\backslash
-sum_{m=-l}^{l}
-\backslash
-sum_{j=1}^{M^{
-\backslash
-alpha}_l}A^{
-\backslash
-alpha}_{jlm}({
-\backslash
-bf G+p})
-\end_layout
+\begin_inset Formula $M_{l}^{\alpha}$
+\end_inset
 
-\begin_layout Standard
-!
- u^{
-\backslash
-alpha}_{jl}(r)Y_{lm}(
-\backslash
-hat{{
-\backslash
-bf r}}),
- $$
-\end_layout
+ is the order of the APW and 
+\begin_inset Formula $u_{jl}^{\alpha}$
+\end_inset
 
-\begin_layout Standard
-!
- where $A^{
-\backslash
-alpha}_{jlm}({
-\backslash
-bf G+p})$ is the matching coefficient,
-\end_layout
-
-\begin_layout Standard
-!
- $M^{
-\backslash
-alpha}_l$ is the order of the APW and $u^{
-\backslash
-alpha}_{jl}$ is the radial
-\end_layout
-
-\begin_layout Standard
-!
- function.
+ is the radial function.
  In the interstitial region,
  an APW function is a plane wave,
-\end_layout
+ 
+\begin_inset Formula $\exp(i({\bf G+p})\cdot{\bf r})/\sqrt{\Omega}$
+\end_inset
 
-\begin_layout Standard
-!
- $
-\backslash
-exp(i({
-\backslash
-bf G+p})
-\backslash
-cdot{
-\backslash
-bf r})/
-\backslash
-sqrt{
-\backslash
-Omega}$,
- where $
-\backslash
-Omega$ is the unit
-\end_layout
+,
+ where 
+\begin_inset Formula $\Omega$
+\end_inset
 
-\begin_layout Standard
-!
- cell volume.
+ is the unit cell volume.
  Ensuring continuity up to the $(M^{
 \backslash
-alpha}_l-1)$th derivative
-\end_layout
+alpha}_l-1)$th derivative across the muffin-tin boundary therefore requires that the matching coefficients satisfy
+\begin_inset Formula 
+\[
+\sum_{j=1}^{M_{l}^{\alpha}}D_{ij}A_{jlm}^{\alpha}({\bf G+p})=b_{i}\;,
+\]
 
-\begin_layout Standard
-!
- across the muffin-tin boundary therefore requires that the matching
-\end_layout
+\end_inset
 
-\begin_layout Standard
-!
- coefficients satisfy
-\end_layout
+where
+\begin_inset Formula 
+\[
+D_{ij}=\left.\frac{d^{i-1}u_{jl}^{\alpha}(r)}{dr^{i-1}}\right|_{r=R_{\alpha}}
+\]
 
-\begin_layout Standard
-!
- $$ 
-\backslash
-sum_{j=1}^{M^{
-\backslash
-alpha}_l}D_{ij}A^{
-\backslash
-alpha}_{jlm}({
-\backslash
-bf G+p})=b_i
-\backslash
-;,
- $$
-\end_layout
+\end_inset
 
-\begin_layout Standard
-!
- where
-\end_layout
+and
+\begin_inset Formula 
+\[
+b_{i}=\frac{4\pi i^{l}}{\sqrt{\Omega}}|{\bf G+p}|^{i-1}j_{l}^{(i-1)}(|{\bf G+p}|R_{\alpha})\exp(i({\bf G+p})\cdot{\bf r}_{\alpha})Y_{lm}^{*}(\widehat{{\bf G+p}})
+\]
 
-\begin_layout Standard
-!
- $$ D_{ij}=
-\backslash
-left.
-\backslash
-frac{d^{i-1}u^{
-\backslash
-alpha}_{jl}(r)}{dr^{i-1}}
-\end_layout
+\end_inset
 
-\begin_layout Standard
-!
- 
-\backslash
-right|_{r=R_{
-\backslash
-alpha}} $$
-\end_layout
+with 
+\begin_inset Formula ${\bf r}_{\alpha}$
+\end_inset
 
-\begin_layout Standard
-!
- and
-\end_layout
+ the atomic position and 
+\begin_inset Formula $R_{\alpha}$
+\end_inset
 
-\begin_layout Standard
-!
- $$ b_i=
-\backslash
-frac{4
-\backslash
-pi i^l}{
-\backslash
-sqrt{
-\backslash
-Omega}}|{
-\backslash
-bf G+p}|^{i-1}j^{(i-1)}_l
-\end_layout
+ the muffin-tin radius.
+ See routine 
+\begin_inset Formula ${\tt wavefmt}$
+\end_inset
 
-\begin_layout Standard
-!
- (|{
-\backslash
-bf G+p}|R_{
-\backslash
-alpha})
-\backslash
-exp(i({
-\backslash
-bf G+p})
-\backslash
-cdot{
-\backslash
-bf r}_{
-\backslash
-alpha})Y^*_{lm}
-\end_layout
-
-\begin_layout Standard
-!
- (
-\backslash
-widehat{{
-\backslash
-bf G+p}}),
- $$
-\end_layout
-
-\begin_layout Standard
-!
- with ${
-\backslash
-bf r}_{
-\backslash
-alpha}$ the atomic position and $R_{
-\backslash
-alpha}$ the muffin-tin
-\end_layout
-
-\begin_layout Standard
-!
- radius.
- See routine {
-\backslash
-tt wavefmt}.
+.
 \end_layout
 
 \begin_layout Subsection*
@@ -1426,155 +1250,99 @@ wavemt
 \end_layout
 
 \begin_layout Standard
-!
- Calculates the first-variational wavefunction in the muffin-tin in terms of
-\end_layout
+Calculates the first-variational wavefunction in the muffin-tin in terms of a spherical harmonic expansion.
+ For atom 
+\begin_inset Formula $\alpha$
+\end_inset
 
-\begin_layout Standard
-!
- a spherical harmonic expansion.
- For atom $
-\backslash
-alpha$ and a particular $k$-point
-\end_layout
+ and a particular 
+\begin_inset Formula $k$
+\end_inset
 
-\begin_layout Standard
-!
- ${
-\backslash
-bf p}$,
- the $r$-dependent $(l,m)$-coefficients of the wavefunction for
-\end_layout
+-point 
+\begin_inset Formula ${\bf p}$
+\end_inset
 
-\begin_layout Standard
-!
- the $i$th state are given by
-\end_layout
+,
+ the 
+\begin_inset Formula $r$
+\end_inset
 
-\begin_layout Standard
-!
- $$ 
-\backslash
-Phi^{i{
-\backslash
-bf p}}_{
-\backslash
-alpha lm}(r)=
-\backslash
-sum_{
-\backslash
-bf G}b^{i{
-\backslash
-bf p}}_{
-\backslash
-bf G}
-\end_layout
+-dependent 
+\begin_inset Formula $(l,m)$
+\end_inset
 
-\begin_layout Standard
-!
+-coefficients of the wavefunction for the 
+\begin_inset Formula $i$
+\end_inset
+
+-th state are given by
+\begin_inset Formula 
+\[
+\Phi_{\alpha lm}^{i{\bf p}}(r)=\sum_{{\bf G}}b_{{\bf G}}^{i{\bf p}}\sum_{j=1}^{M_{l}^{\alpha}}A_{jlm}^{\alpha}({\bf G+p})u_{jl}^{\alpha}(r)+\sum_{j=1}^{N^{\alpha}}b_{(\alpha,j,m)}^{i{\bf p}}v_{j}^{\alpha}(r)\delta_{l,l_{j}},
+\]
+
+\end_inset
+
+where $b^{i{
+\backslash
+bf p}}$ is the $i$th eigenvector returned from routine 
+\begin_inset Formula ${\tt eveqn}$
+\end_inset
+
+;
  
-\backslash
-sum_{j=1}^{M^{
-\backslash
-alpha}_l}A^{
-\backslash
-alpha}_{jlm}({
-\backslash
-bf G+p})u^{
-\backslash
-alpha}_{jl}(r)
-\end_layout
+\begin_inset Formula $A_{jlm}^{\alpha}({\bf G+p})$
+\end_inset
 
-\begin_layout Standard
-!
- +
-\backslash
-sum_{j=1}^{N^{
-\backslash
-alpha}}b^{i{
-\backslash
-bf p}}_{(
-\backslash
-alpha,j,m)}v^{
-\backslash
-alpha}_j(r)
-\end_layout
+ is the matching coefficient 
+\begin_inset Formula $M_{l}^{\alpha}$
+\end_inset
 
-\begin_layout Standard
-!
+ is the order of the APW;
  
-\backslash
-delta_{l,l_j},
- $$
-\end_layout
+\begin_inset Formula $u_{jl}^{\alpha}$
+\end_inset
 
-\begin_layout Standard
-!
- where $b^{i{
-\backslash
-bf p}}$ is the $i$th eigenvector returned from routine
-\end_layout
+ is the APW radial function;
+ 
+\begin_inset Formula $N^{\alpha}$
+\end_inset
 
-\begin_layout Standard
-!
- {
-\backslash
-tt eveqn};
- $A^{
-\backslash
-alpha}_{jlm}({
-\backslash
-bf G+p})$ is the matching coefficient;
-\end_layout
+ is the number of local-orbitals;
+ 
+\begin_inset Formula $v_{j}^{\alpha}$
+\end_inset
 
-\begin_layout Standard
-!
- $M^{
-\backslash
-alpha}_l$ is the order of the APW;
- $u^{
-\backslash
-alpha}_{jl}$ is the APW radial
-\end_layout
+ is the 
+\begin_inset Formula $j$
+\end_inset
 
-\begin_layout Standard
-!
- function;
- $N^{
-\backslash
-alpha}$ is the number of local-orbitals;
- $v^{
-\backslash
-alpha}_j$ is
-\end_layout
+-th local-orbital radial function;
+ and 
+\begin_inset Formula $(\alpha,j,m)$
+\end_inset
 
-\begin_layout Standard
-!
- the $j$th local-orbital radial function;
- and $(
-\backslash
-alpha,j,m)$ is a compound
-\end_layout
+ is a compound index for the location of the local-orbital in the eigenvector.
+ See routines 
+\begin_inset Formula ${\tt genapwfr}$
+\end_inset
 
-\begin_layout Standard
-!
- index for the location of the local-orbital in the eigenvector.
- See routines
-\end_layout
+,
+ 
+\begin_inset Formula ${\tt genlofr}$
+\end_inset
 
-\begin_layout Standard
-!
- {
-\backslash
-tt genapwfr},
- {
-\backslash
-tt genlofr},
- {
-\backslash
-tt match} and {
-\backslash
-tt eveqn}.
+,
+ 
+\begin_inset Formula ${\tt match}$
+\end_inset
+
+ and 
+\begin_inset Formula ${\tt eveqn}$
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Subsection*
@@ -1621,6 +1389,108 @@ If either
 \end_inset
 
  cannot be found then the band energy is set to the input value.
+\end_layout
+
+\begin_layout Subsection*
+wigner3j
+\end_layout
+
+\begin_layout Standard
+Returns the Wigner 
+\begin_inset Formula $3j$
+\end_inset
+
+-symbol.
+ There are many equivalent formulae for the 
+\begin_inset Formula $3j$
+\end_inset
+
+-symbols,
+ the following provides high accuracy for 
+\begin_inset Formula $j\le50$
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\begin{align*} & \begin{pmatrix}j_{1} & j_{2} & j_{3}\\
+m_{1} & m_{2} & m_{3}
+\end{pmatrix}=\\
+ & (-1)^{j1+j2+m3}\sqrt{\frac{(j_{1}+m_{1})!\,(j_{2}+m_{2})!\,(j_{3}+m_{3})!\,(j_{3}-m_{3})!\,(j_{1}-m_{1})!\,(j_{2}-m_{2})!}{(j_{2}-j_{1}+j_{3})!\,(j_{1}-j_{2}+j_{3})!\,(j_{1}+j_{2}-j_{3})!\,(1+j_{1}+j_{2}+j_{3})!}}\,\sum_{k}(-1)^{k}\\
+ & \frac{(j_{2}-j_{1}+j_{3})!\,(j_{1}-j_{2}+j_{3})!\,(j_{1}+j_{2}-j_{3})!}{(j_{3}-j_{1}-m_{2}+k)!\,(j_{3}-j_{2}+m_{1}+k)!\,(j_{1}+j_{2}-j_{3}-k)!\,k!\,(j_{1}-m_{1}-k)!\,(j_{2}+m_{2}-k)!},
+\end{align*}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where the sum is over all integers $k$ for which the factorials in the summand are non-negative.
+\end_layout
+
+\begin_layout Subsection*
+gaunt
+\end_layout
+
+\begin_layout Standard
+Returns the Gaunt coefficient given by
+\begin_inset Formula 
+\[
+\langle Y_{m_{1}}^{l_{1}}|Y_{m_{2}}^{l_{2}}|Y_{m_{3}}^{l_{3}}\rangle=(-1)^{m_{1}}\left[\frac{(2l_{1}+1)(2l_{2}+1)(2l_{3}+1)}{4\pi}\right]^{\frac{1}{2}}\begin{pmatrix}l_{1} & l_{2} & l_{3}\\
+0 & 0 & 0
+\end{pmatrix}\begin{pmatrix}l_{1} & l_{2} & l_{3}\\
+-m_{1} & m_{2} & m_{3}
+\end{pmatrix}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Suitable for 
+\begin_inset Formula $l_{i}$
+\end_inset
+
+ less than 50.
+\end_layout
+
+\begin_layout Subsection*
+gauntyry
+\end_layout
+
+\begin_layout Standard
+Returns the complex Gaunt-like coefficient given by
+\begin_inset Formula 
+\[
+\langle Y_{m_{1}}^{l_{1}}|R_{m_{2}}^{l_{2}}|Y_{m_{3}}^{l_{3}}\rangle
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $Y_{lm}$
+\end_inset
+
+ and 
+\begin_inset Formula $R_{lm}$
+\end_inset
+
+ are the complex and real spherical harmonics,
+ respectively.
+ Suitable for 
+\begin_inset Formula $l_{i}$
+\end_inset
+
+ less than 50.
+ See routine 
+\begin_inset Formula ${\tt genrlm}$
+\end_inset
+
+.
 \end_layout
 
 \end_body
