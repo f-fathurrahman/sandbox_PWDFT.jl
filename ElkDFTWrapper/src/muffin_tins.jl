@@ -68,6 +68,28 @@ function get_npcmtmax()
     return npcmtmax
 end
 
+function get_idxlm()
+    symbol = :__m_muffin_tins_MOD_idxlm
+    lmaxapw = get_lmaxapw()
+    idxlm = _load_allocatable_array(symbol, Int64, (lmaxapw+1, 2*lmaxapw+1))
+    return OffsetArray(idxlm, 0:lmaxapw, -lmaxapw:lmaxapw)
+end
+
+# lm -> l indices
+function get_idxil()
+    symbol = :__m_muffin_tins_MOD_idxil
+    lmmaxapw = get_lmmaxapw()
+    return _load_allocatable_array(symbol, Int64, (lmmaxapw,))
+end
+
+# lm -> m indices
+function get_idxim()
+    symbol = :__m_muffin_tins_MOD_idxim
+    lmmaxapw = get_lmmaxapw()
+    return _load_allocatable_array(symbol, Int64, (lmmaxapw,))
+end
+
+
 # XXX: Probably use a macro to generate these functions
 
 

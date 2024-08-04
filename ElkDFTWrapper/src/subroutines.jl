@@ -85,10 +85,65 @@ function call_gencore()
     return
 end
 
+# Compute hlolo, hloa, haa
+function call_hmlrad()
+    ccall( (:hmlrad_, LIBLAPW), Cvoid, () )
+    return
+end
+
+# ololo, oalo
+function call_olprad()
+    ccall( (:olprad_, LIBLAPW), Cvoid, () )
+    return
+end
+
 function call_info_apwlo()
     ccall( (:info_apwlo_, LIBLAPW), Cvoid, () )
     return
 end
+
+#=
+
+call_genevfsv()
+
+  ALLOCATE(evalfv(nstfv,nspnfv))
+  ALLOCATE(evecfv(nmatmax,nstfv,nspnfv), evecsv(nstsv,nstsv))
+  # second variational states probably are not needed
+  DO ik=1,nkpt
+    ! solve the first- and second-variational eigenvalue equations
+    CALL eveqn(ik, evalfv, evecfv, evecsv)
+  ENDDO
+
+call_eveqn  <-- for each k-points
+SUBROUTINE eveqn(ik, evalfv, evecfv, evecsv)
+
+evecsv <--- not needed ?
+
+# matching coefs?
+  ALLOCATE(apwalm(ngkmax,apwordmax,lmmaxapw,natmtot,nspnfv))
+  
+  ! loop over first-variational spins (nspnfv=2 for spin-spirals only)
+
+DO jspn=1,nspnfv
+
+#  find the matching coefficients
+    CALL match(ngk(jspn,ik),vgkc(:,:,jspn,ik),gkc(:,jspn,ik), &
+     sfacgk(:,:,jspn,ik),apwalm(:,:,:,:,jspn))
+    
+# solve the first-variational eigenvalue equation
+
+# not iterative
+
+! directly
+      CALL eveqnfv(
+      nmat(jspn,ik), ngk(jspn,ik), igkig(:,jspn,ik), 
+      vkc(:,ik), &
+       vgkc(:,:,jspn,ik), apwalm(:,:,:,:,jspn), evalfv(:,jspn),
+    evecfv(:,:,jspn))
+
+  ENDDO 
+
+=#
 
 
 # TODO: make a better interface for this
