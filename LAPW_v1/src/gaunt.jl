@@ -23,7 +23,7 @@ function gaunt(l1, l2, l3, m1, m2, m3)
     if mod(j,2) != 0
         return 0.0
     end
-    jh = j/2
+    jh = Int64(j/2)
     t1 = sqrt( (2*l1+1)*(2*l2+1)*(2*l3+1)*factr(j1,j+1)*factnm(j2,1)*factnm(j3,1) )
     t1 = t1*factr(jh,jh-l1) / ( factnm(jh-l2,1)*factnm(jh-l3,1) )
     res = t1*c1*wigner3j(l1, l2, l3, -m1, m2, m3)

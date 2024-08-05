@@ -167,3 +167,23 @@ function debug_main()
 
 end
 
+function init_gntyry(mt_vars)
+    lmmaxo = mt_vars.lmmaxo
+    lmmaxapw = mt_vars.lmmaxapw
+    lmaxo = mt_vars.lmaxo
+    lmaxapw = mt_vars.lmaxapw
+    idxlm = mt_vars.idxlm
+    gntyry = zeros(ComplexF64, lmmaxo, lmmaxapw, lmmaxapw)
+    for l1 in 0:lmaxapw, m1 in -l1:l1
+        lm1 = idxlm[l1,m1]
+        for l3 in 0:lmaxapw, m3 in -l3:l3
+            lm3 = idxlm[l3,m3]
+            for l2 in 0:lmaxo, m2 in -l2:l2
+                lm2 = idxlm[l2,m2]
+                gntyry[lm2,lm3,lm1] = gauntyry(l1,l2,l3,m1,m2,m3)
+            end
+        end
+    end
+    return gntyry
+end
+
