@@ -248,6 +248,12 @@ export genapwfr!
 include("genlofr.jl")
 export genlofr!
 
+include("olprad.jl");
+export olprad!
+
+include("hmlrad.jl")
+export hmlrad!
+
 include("factr.jl"); export factr
 include("wigner3j.jl"); export wigner3j
 include("gaunt.jl"); export gaunt

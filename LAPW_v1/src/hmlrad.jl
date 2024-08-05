@@ -1,7 +1,28 @@
-function hmlrad()
+function hmlrad!( atoms, mt_vars, apwlo_vars, vsmt, haa, hloa, hlolo )
+
+    Natoms = atoms.Natoms
+    atm2species = atoms.atm2species
+
+    nrmt = mt_vars.nrmt
+    nrmti = mt_vars.nrmti
+    nrmtmax = maximum(nrmt)
+    wrmt = mt_vars.wrmt
+    npmti = mt_vars.npmti
+    lmaxapw = mt_vars.lmaxapw
+    lmaxi = mt_vars.lmaxi
+    lmmaxi = mt_vars.lmmaxi
+    lmaxo = mt_vars.lmaxo
+    lmmaxo = mt_vars.lmmaxo
+
+    nlorb = apwlo_vars.nlorb
+    lorbl = apwlo_vars.lorbl
+    apword = apwlo_vars.apword
+    apwfr = apwlo_vars.apwfr
+    lofr = apwlo_vars.lofr
 
     fr = zeros(Float64, nrmtmax)
-  
+    y00 = 0.5/sqrt(pi)
+
     for ia in 1:Natoms
         isp = atm2species[ia]
         nr = nrmt[isp]
@@ -52,7 +73,7 @@ function hmlrad()
                                     lm2 = lm2 + 1
                                     i = npi + lm2
                                     for ir in iro:nr
-                                        t1 = apwfr(ir,1,io,l1,ias)*apwfr(ir,1,jo,l3,ias)
+                                        t1 = apwfr[ia][l1][io][ir,1] * apwfr[ia][l3][jo][ir,1]
                                         fr[ir] = t1*vsmt[ia][i]
                                         i = i + lmmaxo
                                     end 
@@ -104,7 +125,7 @@ function hmlrad()
                             lm2 = lm2 + 1
                             i = npi + lm2
                             for ir in iro:nr
-                                t1 = lofr[ia][ilo][ir,1] * apwfr[ia][l3][ir,1]
+                                t1 = lofr[ia][ilo][ir,1] * apwfr[ia][l3][io][ir,1]
                                 fr[ir] = t1*vsmt[ia][i]
                                 i = i + lmmaxo
                             end 
