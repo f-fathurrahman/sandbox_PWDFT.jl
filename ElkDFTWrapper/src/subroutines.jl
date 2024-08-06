@@ -3,6 +3,22 @@ function call_my_gndstate(maxscl)
         (Ref{Int32}, ),
         Int32(maxscl)
     )
+    return
+end
+
+function call_my_gndstate_setup_mixing()
+    ccall( (:my_gndstate_setup_mixing_, LIBLAPW), Cvoid, () )
+    return
+end
+
+function call_my_gndstate_do_mixing()
+    ccall( (:my_gndstate_do_mixing_, LIBLAPW), Cvoid, () )
+    return
+end
+
+function call_my_gndstate_increment_iscl()
+    ccall( (:my_gndstate_increment_iscl_, LIBLAPW), Cvoid, () )
+    return
 end
 
 function call_rotrfmt!(rot, nr, nri, rfmt1, rfmt2)
@@ -47,6 +63,32 @@ function call_genlofr()
     return
 end
 
+# Call the original genapwlofr
+function call_genapwlofr()
+    ccall( (:genapwlofr_, LIBLAPW), Cvoid, () )
+    return
+end
+
+function call_genevfsv()
+    ccall( (:genevfsv_, LIBLAPW), Cvoid, () )
+    return
+end
+
+function call_occupy()
+    ccall( (:occupy_, LIBLAPW), Cvoid, () )
+    return
+end
+
+function call_rhomag()
+    ccall( (:rhomag_, LIBLAPW), Cvoid, () )
+    return
+end
+
+function call_energy()
+    ccall( (:energy_, LIBLAPW), Cvoid, () )
+    return
+end
+
 function call_symmetry()
     ccall( (:symmetry_, LIBLAPW), Cvoid, () )
     return
@@ -54,6 +96,11 @@ end
 
 function call_rhoinit()
     ccall( (:rhoinit_, LIBLAPW), Cvoid, () )
+    return
+end
+
+function call_maginit()
+    ccall( (:maginit_, LIBLAPW), Cvoid, () )
     return
 end
 

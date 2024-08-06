@@ -56,6 +56,42 @@ export serialize_variables
 include("subroutines.jl")
 
 
+# Need to call init_run separately
+function gndstate()
+    call_rhoinit()
+    call_maginit()
+    call_potks(txc=true)
+    call_genvsig()
+    call_my_gndstate_setup_mixing()
+
+    # SCF loop
+    # XXX some steps are removed
+    Etot = get_engytot()
+    Etot_old = Etot
+    dE = NaN
+    for iterSCF in 1:20
+        call_my_gndstate_increment_iscl()
+        call_gencore()
+        call_linengy()
+        call_genapwlofr()
+        call_genevfsv()
+        call_occupy()
+        call_rhomag()
+        call_potks(txc=true)
+        call_my_gndstate_do_mixing()
+        call_genvsig()
+        call_energy()
+        if iterSCF > 0
+            Etot = get_engytot()
+            dE = abs(Etot - Etot_old)
+        end
+        @info "iscl = $(get_iscl()) finished"
+        @info "dE = $dE"
+        Etot_old = Etot
+    end
+end
+
+
 # Put the workload that we want to investigate
 function init_debug_calc()
     
