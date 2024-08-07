@@ -115,6 +115,8 @@ function init_debug_calc()
 
     call_genapwfr()
     call_genlofr()
+    call_olprad()
+    call_hmlrad()
 
 end
 export init_debug_calc
