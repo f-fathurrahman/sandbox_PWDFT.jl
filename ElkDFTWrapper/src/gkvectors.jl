@@ -26,22 +26,56 @@ function get_ngk()
     return _load_allocatable_array(symbol, Int64, (nspnfv,nkpt))
 end
 
-
-#=
-INTEGER, ALLOCATABLE :: ngk(:,:)
-
 # index from G+k-vectors to G-vectors
-INTEGER, ALLOCATABLE :: igkig(:,:,:)
+# igkig(ngkmax,nspnfv,nppt)
+function get_igkig()
+    symbol = :__m_gkvectors_MOD_igkig
+    ngkmax = get_ngkmax()
+    nkpt = get_nkpt() # nppt
+    nspnfv = get_nspnfv()
+    return _load_allocatable_array(symbol, Int64, (ngkmax,nspnfv,nkpt))
+end
 
 # G+k-vectors in lattice coordinates
-REAL(8), ALLOCATABLE :: vgkl(:,:,:,:)
+# vgkl(3,ngkmax,nspnfv,nppt)
+function get_vgkl()
+    symbol = :__m_gkvectors_MOD_vgkl
+    ngkmax = get_ngkmax()
+    nkpt = get_nkpt() # nppt
+    nspnfv = get_nspnfv()
+    return _load_allocatable_array(symbol, Float64, (3,ngkmax,nspnfv,nkpt))
+end
 
 # G+k-vectors in Cartesian coordinates
-REAL(8), ALLOCATABLE :: vgkc(:,:,:,:)
+function get_vgkc()
+    symbol = :__m_gkvectors_MOD_vgkc
+    ngkmax = get_ngkmax()
+    nkpt = get_nkpt() # nppt
+    nspnfv = get_nspnfv()
+    return _load_allocatable_array(symbol, Float64, (3,ngkmax,nspnfv,nkpt))
+end
 
 # length of G+k-vectors
-REAL(8), ALLOCATABLE :: gkc(:,:,:)
+function get_gkc()
+    symbol = :__m_gkvectors_MOD_gkc
+    ngkmax = get_ngkmax()
+    nkpt = get_nkpt() # nppt
+    nspnfv = get_nspnfv()
+    return _load_allocatable_array(symbol, Float64, (ngkmax,nspnfv,nkpt))
+end
 
 # structure factors for the G+k-vectors
+# sfacgk(ngkmax, natmtot, nspnfv,nppt)
+function get_sfacgk()
+    symbol = :__m_gkvectors_MOD_sfacgk
+    ngkmax = get_ngkmax()
+    natmtot = get_natmtot()
+    nkpt = get_nkpt() # nppt
+    nspnfv = get_nspnfv()
+    return _load_allocatable_array(symbol, ComplexF64, (ngkmax,natmtot,nspnfv,nkpt))
+end
+
+
+#=
 COMPLEX(8), ALLOCATABLE :: sfacgk(:,:,:,:)
 =#
