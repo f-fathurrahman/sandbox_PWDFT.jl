@@ -262,3 +262,18 @@ function test_driver_match(ik)
     return apwalm
 end
 
+function test_sbesseldm()
+
+    # SUBROUTINE sbesseldm(m,lmax,x,djl)
+    m = 2
+    lmax = 4
+    x = 0.1
+    @info "m = $m lmax = $lmax x = $x"
+    djl = zeros(Float64, lmax+1)
+    ccall( (:sbesseldm_, LIBLAPW), Cvoid,
+        (Ref{Int32}, Ref{Int32}, Ref{Float64}, Ptr{Float64}),
+        Int32(m), Int32(lmax), x, djl
+    )
+    return djl
+end
+
