@@ -244,3 +244,21 @@ function call_atom!(
 
     return
 end
+
+
+function test_driver_match(ik)
+    # COMPLEX(8) :: apwalm(ngkmax,apwordmax,lmmaxapw,natmtot,nspnfv)
+    ngkmax = get_ngkmax()
+    apwordmax = get_apwordmax()
+    lmmaxapw = get_lmmaxapw()
+    natmtot = get_natmtot()
+    nspnfv = get_nspnfv()
+    apwalm = zeros(ComplexF64, ngkmax, apwordmax, lmmaxapw, natmtot, nspnfv)
+    # Loop over jspn is done in driver_match (Fortran)
+    ccall( (:driver_match_, LIBLAPW), Cvoid,
+        (Ref{Int32}, Ptr{ComplexF64}),
+        Int32(ik), apwalm
+    )
+    return apwalm
+end
+
