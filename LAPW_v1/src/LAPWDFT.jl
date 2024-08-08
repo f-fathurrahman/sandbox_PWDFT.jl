@@ -162,8 +162,8 @@ export gencfun
 include("rhoinit.jl")
 export rhoinit!
 
-include("sbessel.jl")
-export sbessel!
+include("sbessel.jl"); export sbessel!
+include("sbesseldm.jl"); export sbesseldm!
 
 include("genjlgprmt.jl")
 export genjlgprmt!
@@ -258,6 +258,8 @@ include("factr.jl"); export factr
 include("wigner3j.jl"); export wigner3j
 include("gaunt.jl"); export gaunt
 include("gauntyry.jl"); export gauntyry
+
+include("calc_match_coeffs.jl"); export calc_match_coeffs!
 
 include("debug_main.jl")
 

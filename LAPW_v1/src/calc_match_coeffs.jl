@@ -1,7 +1,7 @@
-function calc_match_coeffs!(ngp, vgpc, gpc, sfacgp, apwalm)
+function calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm)
     #=
   ! arguments
-  INTEGER, intent(in) :: ngp
+  INTEGER, intent(in) :: Ngk
   REAL(8), intent(in) :: vgpc(3,ngkmax),gpc(ngkmax)
   COMPLEX(8), intent(in) :: sfacgp(ngkmax,natmtot)
   COMPLEX(8), intent(out) :: apwalm(ngkmax,apwordmax,lmmaxapw,natmtot)
@@ -21,31 +21,61 @@ function calc_match_coeffs!(ngp, vgpc, gpc, sfacgp, apwalm)
   REAL(8) polynm
   external polynm
 =#
+
+    Natoms = atoms.Natoms
+    atm2species = atoms.atm2species
+    Nspecies = atoms.Nspecies
+
+    apwordmax = apwlo_vars.apwordmax # accross all species
+
+    lmaxapw = mt_vars.lmaxapw
+    lmmaxapw = mt_vars.lmmaxapw
+    nrmt = mt_vars.nrmt
+    rmt = mt_vars.rmt
+    idxlm = mt_vars.idxlm
+
+    apwfr = apwlo_vars.apwfr
+
+    Ngk = pw.gvecw.Ngw[ik]
+    idx_gw2g = pw.gvecw.idx_gw2g
+    kpoints = pw.gvecw.kpoints
+    vgpc = zeros(Float64, 3, Ngk)
+    gpc = zeros(Float64, Ngk)
+    for igk in 1:Ngk
+        ig = idx_gw2g[ik][igk]
+        vgpc[1:3,igk] = pw.gvec.G[1:3,ig] + kpoints.k[1:3]
+        gpc[igk] = norm(vgpc[1:3,igk])
+    end
+    sfacgp = zeros(ComplexF64, Ngk, Natoms)
+    gensfacgp!(atoms, Ngk, vgpc, sfacgp)
+
+    a = zeros(ComplexF64, apwordmax, apwordmax)
+
     djl = OffsetArray(
-        zeros(Float64, lmaxapw+1, apwordmax, ngp),
-        0:lmaxapw, 1:apwordmax, 1:ngp
+        zeros(Float64, lmaxapw+1, apwordmax, Ngk),
+        0:lmaxapw, 1:apwordmax, 1:Ngk
     )
-    ylmgp = zeros(ComplexF6, lmmaxapw, ngp)
+    ylmgp = zeros(ComplexF64, lmmaxapw, Ngk)
 
     if apwordmax > 1
-        b = zeros(ComplexF64, apwordmax, ngp*(2*lmaxapw+1))
+        b = zeros(ComplexF64, apwordmax, Ngk*(2*lmaxapw+1))
     end
   
     # compute the spherical harmonics of the G+p-vectors
-    for igp in 1:ngp
+    for igp in 1:Ngk
         @views genylmv!( lmaxapw, vgpc[:,igp], ylmgp[:,igp] )
     end
 
-    t0 = 4π/sqrt(CellVolume)
+    t0 = 4π/sqrt(pw.CellVolume)
   
     # loop over species
     for isp in 1:Nspecies
-        nr = nrmt(is)
+        nr = nrmt[isp]
         # maximum APW order for this species
-        omax = maximsum( specs_info[isp].apword )
+        omax = maximum( apwlo_vars.apword[isp] )
         # special case of omax=1
         if omax==1 
-            for igp in 1:ngp
+            for igp in 1:Ngk
                 t1 = gpc[igp]*rmt[isp]
                 @views sbessel!(lmaxapw, t1, djl[:,1,igp] )
             end
@@ -54,12 +84,12 @@ function calc_match_coeffs!(ngp, vgpc, gpc, sfacgp, apwalm)
                     continue
                 end
                 for l in 0:lmaxapw
-                    z1=(t0/apwfr(nr,1,1,l,ias))*zil(l)
-                    for igp in 1:ngp
+                    z1 = ( t0/apwfr[ia][l][1][nr,1] ) * im^(l) #zil(l)
+                    for igp in 1:Ngk
                         z2 = djl[l,1,igp] * z1 * sfacgp[igp,ia]
                         for m in -l:l
-                            lm = idxlm(l,m)
-                            apwalm[ia][igp,1,lm] = z2*conjg(ylmgp[lm,igp])
+                            lm = idxlm[l,m]
+                            apwalm[ia][igp,1,lm] = z2*conj(ylmgp[lm,igp])
                         end 
                     end 
                 end 
@@ -69,7 +99,7 @@ function calc_match_coeffs!(ngp, vgpc, gpc, sfacgp, apwalm)
         # starting point on radial mesh for fitting polynomial of order npapw
         ir = nr-npapw+1
         # evaluate the spherical Bessel function derivatives for all G+p-vectors
-        for igp in 1:ngp
+        for igp in 1:Ngk
             t1 = gpc(igp)*rmt(is)
             for io in 1:omax
                 @views sbesseldm!( io-1, lmaxapw, t1, djl[:,io,igp] )
@@ -90,12 +120,12 @@ function calc_match_coeffs!(ngp, vgpc, gpc, sfacgp, apwalm)
                 z1 = t0*im^l  #zil[l]
                 # set up matrix of derivatives
                 for jo in 1:apword[isp][l], io in 1:apword[isp][l]
-                    a(io,jo)=polynm(io-1,npapw,rsp(ir,is),apwfr(ir,1,jo,l,ias),rmt(is))
+                    a[io,jo] = polynm(io-1, npapw, rsp[isp][ir], apwfr[ia][l][jo][ir,1], rmt[isp])
                 end 
                 # set up target vectors
                 i = 0
-                for igp in 1:ngp
-                    z2=z1*sfacgp(igp,ias)
+                for igp in 1:Ngk
+                    z2 = z1*sfacgp[igp,ia]
                     for m in -l:l
                         lm = idxlm(l,m)
                         i = i + 1
@@ -107,9 +137,11 @@ function calc_match_coeffs!(ngp, vgpc, gpc, sfacgp, apwalm)
                 end 
                 # solve the general complex linear systems
                 #CALL zgesv(apword(l,is),i,a,apwordmax,ipiv,b,apwordmax,info)
+                idx1 = 1:apword[isp][l]
+                b[idx1,idx1] = a[idx1,idx1] \ b[idx1,idx1]
                 #
                 i = 0
-                for igp in 1:ngp
+                for igp in 1:Ngk
                     for m in -l:l
                         lm = idxlm[l,m]
                         i = i + 1

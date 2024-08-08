@@ -204,6 +204,27 @@ function debug_main()
 
 end
 
+#=
+#apwalm = zeros(ComplexF64, ngkmax, apwordmax, lmmaxapw, natmtot, nspnfv)
+
+atoms = exfiltrated.atoms;
+mt_vars = exfiltrated.mt_vars;
+apwlo_vars = exfiltrated.apwlo_vars;
+pw = exfiltrated.pw;
+ik = 1
+apwalm = Vector{Array{ComplexF64,3}}(undef, atoms.Natoms);
+for ia in 1:atoms.Natoms
+    isp = atoms.atm2species[ia]
+    apwordmax = maximum(apwlo_vars.apword[isp])
+    Ngk = pw.gvecw.Ngw[ik]
+    lmmaxapw = mt_vars.lmmaxapw
+    apwalm[ia] = zeros(ComplexF64, Ngk, apwordmax, lmmaxapw);
+end
+=#
+
+
+
+
 function init_gntyry(mt_vars)
     lmmaxo = mt_vars.lmmaxo
     lmmaxapw = mt_vars.lmmaxapw
