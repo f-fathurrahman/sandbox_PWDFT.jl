@@ -118,6 +118,8 @@ function init_debug_calc()
     call_olprad()
     call_hmlrad()
 
+    call_genevfsv()
+
 end
 export init_debug_calc
 

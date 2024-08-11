@@ -70,7 +70,7 @@ function call_genapwlofr()
 end
 
 function call_genevfsv()
-    ccall( (:genevfsv_, LIBLAPW), Cvoid, () )
+    ccall( (:my_genevfsv_, LIBLAPW), Cvoid, () )
     return
 end
 
