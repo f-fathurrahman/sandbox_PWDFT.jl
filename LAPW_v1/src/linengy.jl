@@ -32,6 +32,7 @@ function linengy!(atoms, eqatoms, mt_vars, vsmt, efermi::Float64, apwlo_vars)
     lorbl = apwlo_vars.lorbl
     lorbe0 = apwlo_vars.lorbe0
     lorbe = apwlo_vars.lorbe
+    apwe0 = apwlo_vars.apwe0
 
     nnf = 0
     done = zeros(Bool, Natoms) # falses
