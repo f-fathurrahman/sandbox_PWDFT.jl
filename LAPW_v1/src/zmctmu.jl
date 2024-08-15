@@ -1,4 +1,5 @@
-SUBROUTINE zmctmu(tcr,l,n,a,b,ld,c)
+function zmctmu!(tcr, a, b, c)
+#=
   IMPLICIT NONE 
   ! arguments
   logical, intent(in) :: tcr
@@ -12,27 +13,35 @@ SUBROUTINE zmctmu(tcr,l,n,a,b,ld,c)
   REAL(8) ddot
   COMPLEX(8) zdotc
   external ddot,zdotc
+=#
+    l = size(a, 1)
+    n = size(a, 2)
+    @assert l == size(b, 1)
+    @assert n = size(b, 2)
+    ld = size(c, 1)
 
-  IF(tcr) THEN 
-    ! matrix c is real valued
-    l2=2*l
-    DO j=1,n
-      k=(j-1)*ld
-      DO i=1,j
-        k=k+1
-        c(k)=c(k)+ddot(l2,a(:,i),1,b(:,j),1)
-      ENDDO 
-    ENDDO 
-  ELSE 
-    ! matrix c is complex valued
-    DO j=1,n
-      k=(j-1)*ld
-      DO i=1,j
-        k=k+1
-        c(k)=c(k)+zdotc(l,a(:,i),1,b(:,j),1)
-      ENDDO 
-    ENDDO 
-  ENDIF 
-  RETURN 
-END SUBROUTINE 
+    # XXX need tcr? or use dot for both case
 
+    if tcr 
+        # matrix c is real valued
+        #l2 = 2*l  # should use 2*l
+        for j in 1:n
+            k = (j-1)*ld
+            for i in 1:j
+                k = k + 1
+                c[k] += dot( a[:,i], b[:,j] )
+            end 
+        end 
+    else 
+        # matrix c is complex valued
+        # This is the usual case
+        for j in 1:n
+            k = (j-1)*ld
+            for i in 1:j
+                k = k + 1
+                c[k] += dot( a[:,i], b[:,j] )
+            end
+        end
+    end
+    return
+end
