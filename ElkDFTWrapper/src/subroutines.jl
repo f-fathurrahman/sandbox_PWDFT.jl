@@ -277,3 +277,24 @@ function test_sbesseldm()
     return djl
 end
 
+
+# This is utilized in hmlaa and olpaa
+function call_zmctmu(tcr, a, b, c)
+    l = size(a, 1)
+    n = size(a, 2)
+    @assert size(b, 1) == l
+    @assert size(b, 2) == n
+    ld = size(c, 1)
+    ccall( (:zmctmu_, LIBLAPW), Cvoid,
+        (Ref{Bool}, Ref{Int32}, Ref{Int32},
+         Ptr{ComplexF64}, Ptr{ComplexF64}, Ref{Int32}, Ptr{ComplexF64}),
+        tcr, Int32(l), Int32(n), a, b, Int32(ld), c 
+    )
+    return
+end
+# Typical values (for testing zmctmu) 
+# - tcr is tevfr
+# - l is lmoapw
+# - n is Ngk
+# - ld is nmatp, second dim of c is also nmatp
+
