@@ -197,15 +197,19 @@ function debug_main()
         hlolo[ia] = zeros(Float64, lmmaxo, nlomax, nlomax)
     end
 
+    # Now calculate these terms
+    hmlrad!( atoms, mt_vars, apwlo_vars, vsmt, haa, hloa, hlolo )
+    olprad!( atoms, mt_vars, apwlo_vars, oalo, ololo )
+
+
+
     Nkpt = pw.gvecw.kpoints.Nkpt
     Ngw = pw.gvecw.Ngw
     # This should also depend on spins. We might want to combine Nkpt and Nspin.
     nmat = zeros(Int64, Nkpt)
     for ik in 1:Nkpt
         nmat[ik] = Ngw[ik] + apwlo_vars.nlotot
-        #=
-        assert ntsfv > nmat[ik]
-        =#
+        # assert ntsfv > nmat[ik]
     end
     nmatmax = maximum(nmat)
 
@@ -216,29 +220,6 @@ function debug_main()
 
 end
 
-#=
-# For testing calc_match_coeffs
-atoms = exfiltrated.atoms;
-mt_vars = exfiltrated.mt_vars;
-apwlo_vars = exfiltrated.apwlo_vars;
-pw = exfiltrated.pw;
-ik = 1
-apwalm = Vector{Array{ComplexF64,3}}(undef, atoms.Natoms);
-for ia in 1:atoms.Natoms
-    isp = atoms.atm2species[ia]
-    apwordmax = maximum(apwlo_vars.apword[isp])
-    Ngk = pw.gvecw.Ngw[ik]
-    lmmaxapw = mt_vars.lmmaxapw
-    apwalm[ia] = zeros(ComplexF64, Ngk, apwordmax, lmmaxapw);
-end
-
-calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm)
-
-ia = 1
-H = zeros(ComplexF64, nmat[ik], nmat[ik])
-hmlaa!(ia, atoms, pw, mt_vars, apwlo_vars, apwalm, H)
-
-=#
 
 
 

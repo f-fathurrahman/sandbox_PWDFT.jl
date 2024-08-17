@@ -54,20 +54,21 @@ function hmlaa!(ik, ia, atoms, pw, mt_vars, apwlo_vars, apwalm, haa, H)
     a = zeros(ComplexF64, lmo, Ngwk)
     b = zeros(ComplexF64, lmo, Ngwk)
     t0 = 0.5*rmt[isp]^2
+    @info "t0 = $t0"
     i = 0
     lm1 = 0
     for l1 in 0:lmaxapw
         for m1 in -l1:l1
-            lm1 = lm1 + 1
+            lm1 += 1
             for io in 1:apword[isp][l1]
-                i = i + 1
+                i += 1
                 b[i,:] .= 0.0
                 lm3 = 0
                 for l3 in 0:lmaxapw
                     for m3 in -l3:l3
-                        lm3 = lm3 + 1
+                        lm3 += 1
                         for jo in 1:apword[isp][l3]
-                            z1 = 0.0
+                            z1 = 0.0 + im*0.0 # complex
                             for l2 in 0:lmaxo
                                 if mod(l1+l2+l3, 2) == 0 
                                     for m2 in -l2:l2
@@ -76,6 +77,7 @@ function hmlaa!(ik, ia, atoms, pw, mt_vars, apwlo_vars, apwalm, haa, H)
                                     end # m2 
                                 end 
                             end 
+                            #println("z1 = ", z1)
                             if abs(real(z1)) + abs(imag(z1)) > 1.e-14
                                 #call zaxpy(ngp, z1, apwalm(:,jo,lm3),1, b(i,1),lmo )
                                 b[i,1:Ngwk] .+= z1*apwalm[ia][1:Ngwk,jo,lm3]
@@ -86,6 +88,7 @@ function hmlaa!(ik, ia, atoms, pw, mt_vars, apwlo_vars, apwalm, haa, H)
                 # kinetic surface contribution
                 for jo in 1:apword[isp][l1]
                     z1 = t0*apwfr[ia][l1][io][nrmt[isp],1] * apwdfr[ia][l1][jo]
+                    #println("z1 = ", z1)
                     #CALL zaxpy(ngp,z1,apwalm(:,jo,lm1),1,b(i,1),lmo)
                     b[i,1:Ngwk] .+= z1*apwalm[ia][1:Ngwk,jo,lm1]
                 end 
@@ -93,6 +96,8 @@ function hmlaa!(ik, ia, atoms, pw, mt_vars, apwlo_vars, apwalm, haa, H)
             end 
         end 
     end 
+    println("Before zmctmu: sum(a) = ", sum(a))
+    println("Before zmctmu: sum(b) = ", sum(b))
     zmctmu!(a, b, H)
     return
 end
