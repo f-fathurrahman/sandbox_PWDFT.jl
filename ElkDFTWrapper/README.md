@@ -16,3 +16,17 @@ Some convention (hopefully I consistently used this):
 
 - No specific convention for other function names.
 
+## Hamiltonian and overlap matrices construction
+
+Inputs:
+- radial basis functions
+- plane waves
+- potentials (muffin tins and interstitial)
+
+Relevant subroutines:
+- hmlfv, olpfv
+- Called by hmlfv:
+  - hmlaa, olpaa (for each atoms)
+  - hmlistl, olpistl (for interstitital)
+  - hmlalo, olpalo (for all atoms)
+  - hmllolo, olplolo (for all atoms)
