@@ -261,6 +261,9 @@ include("gauntyry.jl"); export gauntyry
 
 include("calc_match_coeffs.jl"); export calc_match_coeffs!
 
+include("zmctmu.jl"); export zmctmu!
+include("hmlaa.jl"); export hmlaa!
+
 include("debug_main.jl")
 
 end

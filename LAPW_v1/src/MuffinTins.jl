@@ -64,6 +64,8 @@ mutable struct MuffinTins
     npcmt::Vector{Int64}
     #
     SHT::SphericalHarmonicTransform
+    #
+    gntyry::Array{ComplexF64,3}
 end
 
 
@@ -240,16 +242,37 @@ function MuffinTins(
 
     SHT = SphericalHarmonicTransform(lmaxi, lmaxo)
 
+    gntyry = _init_gntyry(lmaxapw, idxlm, lmaxo)
+
     return MuffinTins(
         nrmtscf, nrmt, rmtall, rmtdelta, rmt, omegamt, lradstp,
         nrcmt, rcmt, rlmt, rlcmt, wrmt, wprmt, wrcmt, wprcmt,
         maxlapw, lmaxapw, lmmaxapw, lmaxo, lmmaxo, lmaxi, lmmaxi, fracinr,
         nrmti, nrcmti, idxlm, idxil, idxim, npmti, npmt, npcmti, npcmt,
-        SHT
+        SHT, gntyry
     )
 
 end
 
+function _init_gntyry(lmaxapw, idxlm, lmaxo)
+    lmmaxo = (lmaxo+1)^2
+    lmmaxapw = (lmaxapw+1)^2
+    gntyry = zeros(ComplexF64, lmmaxo, lmmaxapw, lmmaxapw)
+    for l1 in 0:lmaxapw, m1 in -l1:l1
+        lm1 = idxlm[l1,m1]
+        for l3 in 0:lmaxapw, m3 in -l3:l3
+            lm3 = idxlm[l3,m3]
+            for l2 in 0:lmaxo, m2 in -l2:l2
+                lm2 = idxlm[l2,m2]
+                gntyry[lm2,lm3,lm1] = gauntyry(l1,l2,l3,m1,m2,m3)
+            end
+        end
+    end
+    return gntyry
+end
+
+
+# TO BE REMOVED
 function MuffinTins(Nspecies::Int64; lmaxi=1)
 
     nrmtscf = 0
@@ -313,6 +336,7 @@ function MuffinTins(Nspecies::Int64; lmaxi=1)
 
 end
 
+# TO BE REMOVED
 # why need this separate step?
 function init_zero!( mt_vars::MuffinTins )
     

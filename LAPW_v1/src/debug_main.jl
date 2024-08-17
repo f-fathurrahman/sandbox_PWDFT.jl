@@ -197,6 +197,18 @@ function debug_main()
         hlolo[ia] = zeros(Float64, lmmaxo, nlomax, nlomax)
     end
 
+    Nkpt = pw.gvecw.kpoints.Nkpt
+    Ngw = pw.gvecw.Ngw
+    # This should also depend on spins. We might want to combine Nkpt and Nspin.
+    nmat = zeros(Int64, Nkpt)
+    for ik in 1:Nkpt
+        nmat[ik] = Ngw[ik] + apwlo_vars.nlotot
+        #=
+        assert ntsfv > nmat[ik]
+        =#
+    end
+    nmatmax = maximum(nmat)
+
     @infiltrate
     # open REPL and investigate the variables
 
@@ -205,8 +217,7 @@ function debug_main()
 end
 
 #=
-#apwalm = zeros(ComplexF64, ngkmax, apwordmax, lmmaxapw, natmtot, nspnfv)
-
+# For testing calc_match_coeffs
 atoms = exfiltrated.atoms;
 mt_vars = exfiltrated.mt_vars;
 apwlo_vars = exfiltrated.apwlo_vars;
@@ -220,28 +231,14 @@ for ia in 1:atoms.Natoms
     lmmaxapw = mt_vars.lmmaxapw
     apwalm[ia] = zeros(ComplexF64, Ngk, apwordmax, lmmaxapw);
 end
+
+calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm)
+
+ia = 1
+H = zeros(ComplexF64, nmat[ik], nmat[ik])
+hmlaa!(ia, atoms, pw, mt_vars, apwlo_vars, apwalm, H)
+
 =#
 
 
-
-
-function init_gntyry(mt_vars)
-    lmmaxo = mt_vars.lmmaxo
-    lmmaxapw = mt_vars.lmmaxapw
-    lmaxo = mt_vars.lmaxo
-    lmaxapw = mt_vars.lmaxapw
-    idxlm = mt_vars.idxlm
-    gntyry = zeros(ComplexF64, lmmaxo, lmmaxapw, lmmaxapw)
-    for l1 in 0:lmaxapw, m1 in -l1:l1
-        lm1 = idxlm[l1,m1]
-        for l3 in 0:lmaxapw, m3 in -l3:l3
-            lm3 = idxlm[l3,m3]
-            for l2 in 0:lmaxo, m2 in -l2:l2
-                lm2 = idxlm[l2,m2]
-                gntyry[lm2,lm3,lm1] = gauntyry(l1,l2,l3,m1,m2,m3)
-            end
-        end
-    end
-    return gntyry
-end
 

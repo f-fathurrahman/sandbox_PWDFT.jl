@@ -1,26 +1,7 @@
 function calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm)
-    #=
-  ! arguments
-  INTEGER, intent(in) :: Ngk
-  REAL(8), intent(in) :: vgpc(3,ngkmax),gpc(ngkmax)
-  COMPLEX(8), intent(in) :: sfacgp(ngkmax,natmtot)
-  COMPLEX(8), intent(out) :: apwalm(ngkmax,apwordmax,lmmaxapw,natmtot)
-  ! local variables
-  INTEGER :: is,ia,ias,omax
-  INTEGER :: l,m,lm,io,jo,i
-  INTEGER :: nr,ir,igp,info
-  REAL(8) :: t0,t1
-  COMPLEX(8) :: z1,z2,z3
-  ! automatic arrays
-  INTEGER :: ipiv(apwordmax)
-  COMPLEX(8) :: a(apwordmax,apwordmax)
-  ! ALLOCATABLE arrays
-  REAL(8), ALLOCATABLE :: djl(:,:,:)
-  COMPLEX(8), ALLOCATABLE :: ylmgp(:,:),b(:,:)
-  ! external functions
-  REAL(8) polynm
-  external polynm
-=#
+    # XXX: Need to test in case of omax > 1
+    # apword must be at least 2, however it is quite difficult to figure out
+    # apwe0 for this.
 
     Natoms = atoms.Natoms
     atm2species = atoms.atm2species
@@ -100,7 +81,7 @@ function calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm)
         ir = nr-npapw+1
         # evaluate the spherical Bessel function derivatives for all G+p-vectors
         for igp in 1:Ngk
-            t1 = gpc(igp)*rmt(is)
+            t1 = gpc[igp]*rmt[isp]
             for io in 1:omax
                 @views sbesseldm!( io-1, lmaxapw, t1, djl[:,io,igp] )
             end 
