@@ -291,10 +291,31 @@ function call_zmctmu(tcr, a, b, c)
         tcr, Int32(l), Int32(n), a, b, Int32(ld), c 
     )
     return
+
+#=
+Typical values (for testing zmctmu) 
+- tcr is tefvr - (e)igen (f)irst (v)ariational (r)eal
+- l is lmoapw
+- n is Ngk
+- ld is nmatp, second dim of c is also nmatp
+
+ik = 1
+isp = 1
+tefvr = elk.get_tefvr()
+nmat = elk.get_nmat()
+ngk = elk.get_ngk()
+nmatk = nmat[ik]
+lmoapw = elk.get_lmoapw()
+
+n = ngk[ik]
+nmatk = nmat[ik]
+l = lmoapw[isp]
+
+a = rand(ComplexF64, l, n)
+b = rand(ComplexF64, l, n)
+c = zeros(ComplexF64, nmatk, nmatk)
+elk.call_zmctmu(tefvr, a, b, c)
+=#
+
 end
-# Typical values (for testing zmctmu) 
-# - tcr is tevfr
-# - l is lmoapw
-# - n is Ngk
-# - ld is nmatp, second dim of c is also nmatp
 
