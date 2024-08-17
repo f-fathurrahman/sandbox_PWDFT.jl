@@ -246,7 +246,7 @@ function call_atom!(
 end
 
 
-function test_driver_match(ik)
+function get_apwalm(ik)
     # COMPLEX(8) :: apwalm(ngkmax,apwordmax,lmmaxapw,natmtot,nspnfv)
     ngkmax = get_ngkmax()
     apwordmax = get_apwordmax()
