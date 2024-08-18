@@ -1,5 +1,6 @@
 module ElkDFTWrapper
 
+using PWDFT: KPoints
 using OffsetArrays
 using Serialization: serialize
 
@@ -91,11 +92,25 @@ function gndstate()
     end
 end
 
+function export_pwdft_kpoints(; filename="pwdftjl_kpoints.dat")
+    Nkpt = get_nkpt()
+    ngridk = get_ngridk()
+    bvec = get_bvec()
+    vkc = get_vkc()[:,1:Nkpt]
+    wk = get_wkpt()[1:Nkpt]
+    kpoints = KPoints(
+        Nkpt, (ngridk[1],ngridk[2],ngridk[3]),
+        vkc, wk, bvec
+    )
+    @info "PWDFT.jl KPoints will be serialized to $filename"
+    serialize(filename, kpoints)
+end
 
 # Put the workload that we want to investigate
 function init_debug_calc()
     
     init_run()
+    export_pwdft_kpoints()
     
     # Only call after init_run
     #call_my_gndstate(1)
