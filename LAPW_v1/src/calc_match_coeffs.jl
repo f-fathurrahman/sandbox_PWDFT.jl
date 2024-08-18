@@ -22,9 +22,10 @@ function calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm)
     kpoints = pw.gvecw.kpoints
     vgpc = zeros(Float64, 3, Ngk)
     gpc = zeros(Float64, Ngk)
+    @views kvec = kpoints.k[:,ik]
     for igk in 1:Ngk
         ig = idx_gw2g[ik][igk]
-        vgpc[1:3,igk] = pw.gvec.G[1:3,ig] + kpoints.k[1:3]
+        vgpc[1:3,igk] .= pw.gvec.G[1:3,ig] .+ kvec[1:3]
         gpc[igk] = norm(vgpc[1:3,igk])
     end
     sfacgp = zeros(ComplexF64, Ngk, Natoms)
