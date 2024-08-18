@@ -319,3 +319,17 @@ elk.call_zmctmu(tefvr, a, b, c)
 
 end
 
+
+function get_hamiltonian(; ispin=1, ik=1)
+    nmat = get_nmat()
+    N = nmat[ispin,ik]
+    Hmat = zeros(ComplexF64, N, N)
+    Omat = zeros(ComplexF64, N, N)
+    ccall( (:debug_hamiltonian_, LIBLAPW), Cvoid,
+        (Ref{Int32}, Ref{Int32}, Ptr{ComplexF64}, Ptr{ComplexF64}),
+        Int32(ispin), Int32(ik), Hmat, Omat
+    )
+    serialize("Hmat_ispin_$(ispin)_ik_$(ik).dat", Hmat)
+    serialize("Omat_ispin_$(ispin)_ik_$(ik).dat", Omat)
+    return Hmat, Omat
+end
