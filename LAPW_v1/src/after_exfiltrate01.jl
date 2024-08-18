@@ -24,6 +24,9 @@ calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm);
 haa = exfiltrated.haa;
 nmat = exfiltrated.nmat;
 H = zeros(ComplexF64, nmat[ik], nmat[ik]);
-for ia in 1:atoms.Natoms
-    hmlaa!(ik, ia, atoms, pw, mt_vars, apwlo_vars, apwalm, haa, H);
-end
+#for ia in 1:atoms.Natoms
+#    hmlaa!(ik, ia, atoms, pw, mt_vars, apwlo_vars, apwalm, haa, H);
+#end
+cfunig = exfiltrated.cfunig;
+vsig = exfiltrated.vsig;
+hmlistl!(ik, pw, cfunig, vsig, nmat, H)
