@@ -265,6 +265,7 @@ include("zmctmu.jl"); export zmctmu!
 include("hmlaa.jl"); export hmlaa!
 include("hmlistl.jl"); export hmlistl!
 include("hmlalo.jl"); export hmlalo!
+include("hmllolo.jl"); export hmllolo!
 
 include("debug_main.jl")
 

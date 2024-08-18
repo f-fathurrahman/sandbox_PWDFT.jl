@@ -33,8 +33,12 @@ H = zeros(ComplexF64, nmat[ik], nmat[ik]);
 #vsig = exfiltrated.vsig;
 #hmlistl!(ik, pw, cfunig, vsig, H)
 
-hloa = exfiltrated.hloa;
-for ia in 1:atoms.Natoms
-    hmlalo!(ik, ia, atoms, pw, mt_vars, apwlo_vars, apwalm, hloa, H);
-end
+#hloa = exfiltrated.hloa;
+#for ia in 1:atoms.Natoms
+#    hmlalo!(ik, ia, atoms, pw, mt_vars, apwlo_vars, apwalm, hloa, H);
+#end
 
+hlolo = exfiltrated.hlolo;
+ia = 2;
+hmllolo!(ik, ia, atoms, pw, mt_vars, apwlo_vars, hlolo, H);
+# no need to pass apwalm
