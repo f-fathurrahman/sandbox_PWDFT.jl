@@ -45,6 +45,8 @@ mutable struct APWLOVars
     # maximum nlorb over all species
     nlomax::Int64
     #
+    idxlo::Vector{Vector{Vector{Int64}}}
+    #
     # total number of local-orbitals
     nlotot::Int64
     # local-orbital order
@@ -296,14 +298,17 @@ function APWLOVars(
     end
 
     nlotot = 0
+    idxlo = Vector{Vector{Vector{Int64}}}(undef,Natoms)
     for ia in 1:Natoms
         isp = atm2species[ia]
+        idxlo[ia] = Vector{Vector{Int64}}(undef, nlorb[isp])
         for ilo in 1:nlorb[isp]
             l = lorbl[isp][ilo]
+            idxlo[ia][ilo] = zeros(Int64, (l+1)^2)
             for m in -l:l
                 nlotot += 1
-                #lm = mt_vars.idxlm[l,m]
-                #idxlo[lm,ilo,ias] = nlotot
+                lm = mt_vars.idxlm[l,m]
+                idxlo[ia][ilo][lm] = nlotot
             end
         end
     end
@@ -322,7 +327,7 @@ function APWLOVars(
     return APWLOVars(
         deapwlo, apword, apwordmax,
         lmoapw, npapw, apwe0, apwe, apwdm, apwve, apwfr, apwdfr,
-        maxlorb, maxlorbord, nlorb, nlomax, nlotot, lorbord,
+        maxlorb, maxlorbord, nlorb, nlomax, idxlo, nlotot, lorbord,
         lorbordmax, nplorb, lorbl, lolmax,
         lolmmax, lorbe0, lorbe, lorbdm, lorbve,
         lofr, epsband, demaxbnd, e0min, autolinengy,
