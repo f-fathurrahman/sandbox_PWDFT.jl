@@ -1,15 +1,17 @@
-function hmlistl!(ik, pw, cfunig, vsig, nmat, H)
+function hmlistl!(ik, pw, cfunig, vsig, H)
+    # XXX: get nmat from size(H,1) ?
     #
+    nmatk = size(H, 1)
     Ngwk = pw.gvecw.Ngw[ik]
     idx_gw2g = pw.gvecw.idx_gw2g
     idx_g2miller = pw.gvec.idx_g2miller
     G = pw.gvec.G
     @views kvec = pw.gvecw.kpoints.k[:,ik]
     Gk_j = zeros(Float64, 3)
-    Gk_i = zeros(Float64, 3) 
+    Gk_i = zeros(Float64, 3)
     #
     for j in 1:Ngwk
-        k = (j-1)*nmat[ik]
+        k = (j-1)*nmatk
         jg = idx_gw2g[ik][j]
         Gk_j[:] .= G[:,jg] .+ kvec[:]
         j_idx = idx_g2miller[jg] # tuple
