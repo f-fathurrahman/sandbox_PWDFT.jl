@@ -72,10 +72,13 @@ function debug_main()
     @info "sym_info.Nrots = $(sym_info.Nrots)"
 
     # FIXME: need to pass k-points infor from elk_input
+    @info "KPoints read from pwdftjl_kpoints.dat"
     pw = PWGrid(
         ecutwfc, atoms.LatVecs, dual=dual,
-        kpoints=KPoints(atoms, elk_input.ngridk, [0,0,0], sym_info.s)
+        #kpoints=KPoints(atoms, elk_input.ngridk, [0,0,0], sym_info.s)
+        kpoints = deserialize("pwdftjl_kpoints.dat")
     )
+    # TODO: read kpoints generated from Elk
     println(pw)
 
     # Initialize rhomt and rhoir

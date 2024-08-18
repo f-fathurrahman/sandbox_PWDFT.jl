@@ -4,6 +4,7 @@ using Printf
 using LinearAlgebra
 using OffsetArrays
 using SpecialFunctions: sphericalbesselj
+using Serialization: deserialize
 
 import PWDFT
 using PWDFT: Atoms, PWGrid, KPoints, LibxcXCCalculator,
