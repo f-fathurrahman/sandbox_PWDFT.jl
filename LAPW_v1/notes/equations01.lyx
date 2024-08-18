@@ -410,7 +410,7 @@ where
 \end_layout
 
 \begin_layout Subsection*
-gensfacgp.f90
+gensfacgp
 \end_layout
 
 \begin_layout Standard
@@ -447,7 +447,7 @@ where
 \end_layout
 
 \begin_layout Subsection*
-gencfun.f90
+gencfun
 \end_layout
 
 \begin_layout Standard
@@ -519,63 +519,37 @@ where
 \end_layout
 
 \begin_layout Subsection*
-hmlrad.f90
+hmlistl
 \end_layout
 
 \begin_layout Standard
-Calculates the radial Hamiltonian integrals of the APW and local-orbital basis functions.
- In other words,
- for atom 
-\begin_inset Formula $\alpha$
-\end_inset
-
-,
- it computes integrals of the form 
-\end_layout
-
-\begin_layout Standard
+Computes the interstitial contribution to the Hamiltonian matrix for the APW basis functions.
+ The Hamiltonian is given by
 \begin_inset Formula 
 \[
-h_{qq';ll'l''m''}^{\alpha}=\begin{cases}
-\int_{0}^{R_{i}}u_{q;l}^{\alpha}(r)Hu_{q';l'}^{\alpha}(r)r^{2}dr & l''=0\\
-\int_{0}^{R_{i}}u_{q;l}^{\alpha}(r)V_{l''m''}^{\alpha}(r)u_{q';l'}^{\alpha}(r)r^{2}dr & l''>0
-\end{cases},
+H^{{\rm I}}({\bf G+k,G'+k})=\frac{1}{2}({\bf G+k})\cdot({\bf G'+k})\tilde{\Theta}({\bf G-G'})+V_{s}({\bf G-G'}),
 \]
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 where 
-\begin_inset Formula $u_{q;l}^{\alpha}$
+\begin_inset Formula $V_{s}$
 \end_inset
 
- is the 
-\begin_inset Formula $q$
+ is the interstitial Kohn-Sham potential and 
+\begin_inset Formula $\tilde{\Theta}$
 \end_inset
 
-th APW radial function for angular momentum 
-\begin_inset Formula $l$
+ is the characteristic function.
+ See routine 
+\begin_inset Formula ${\tt gencfun}$
 \end_inset
 
-;
- 
-\begin_inset Formula $H$
-\end_inset
-
- is the Hamiltonian of the radial Schroedinger equation;
- and 
-\begin_inset Formula $V_{l''m''}^{\alpha}$
-\end_inset
-
- is the muffin-tin Kohn-Sham potential.
- Similar integrals are calculated for APW-local-orbital and local-orbital-local-orbital contributions.
+.
 \end_layout
 
 \begin_layout Subsection*
-zpotcoul.f90
+zpotcoul
 \end_layout
 
 \begin_layout Standard
@@ -812,7 +786,7 @@ Finally note that the
 \end_layout
 
 \begin_layout Subsection*
-rdiracint.f90
+rdiracint
 \end_layout
 
 \begin_layout Standard
@@ -902,7 +876,7 @@ are the major and minor components multiplied by
 \end_layout
 
 \begin_layout Subsection*
-rschrodint.f90
+rschrodint
 \end_layout
 
 \begin_layout Standard
