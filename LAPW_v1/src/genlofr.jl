@@ -79,16 +79,16 @@ function genlofr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
                 E = lorbe[ia][ilo][jo] + lorbdm[isp][ilo][jo]*deapwlo
                 # integrate the radial Schrodinger equation
                 @views p0view = p0[1:nr,jo]
-                nn, E = rschrodint!(l, E, rgrid, vr, p0view, p1, q0, q1)
+                _ = rschrodint!(l, E, rgrid, vr, p0view, p1, q0, q1)
+                #@printf("\nl, ilo, linearization energy = %4d %4d %18.10f %4d\n", l, ilo, E, nn)
                 ep0[1:nr,jo] .= E*p0[1:nr,jo]
                 # normalise radial functions
                 fr[1:nr] = p0[1:nr,jo].^2
                 t1 = splint(nr, rgrid, fr)
                 t1 = 1.0/sqrt(abs(t1))
-                #CALL dscal(nr,t1,p0(:,jo),1)
-                p0[:,jo] .*= t1
-                #CALL dscal(nr,t1,ep0(:,jo),1)
-                ep0[:,jo] .*= t1
+                p0[1:nr,jo] .*= t1
+                ep0[1:nr,jo] .*= t1
+                #@printf("jo, sum abs ep0 = %4d %18.10f\n", jo, sum(abs.(ep0[1:nr,jo])))
                 # set up the matrix of radial derivatives
                 for i in 1:nplorb
                     ir = nr - nplorb + i
@@ -100,39 +100,37 @@ function genlofr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
                 end 
             end 
             # set up the target vector
-            b[:] .= 0.0
-            b[lorbord[isp][ilo]] = 1.0
+            b[:] .= 0.0 # zero
+            b[lorbord[isp][ilo]] = 1.0 # except this one
             #CALL dgesv(lorbord(ilo,is), 1, a, nplorb, ipiv, b, nplorb, info)
             idx1 = 1:lorbord[isp][ilo]
             b[idx1] = A[idx1,idx1]\b[idx1]
             #IF(info != 0) goto 10
             # generate linear superposition of radial functions
-            p0s[:,ilo] .= 0.0
-            ep0s[:,ilo] .= 0.0
+            p0s[1:nr,ilo] .= 0.0
+            ep0s[1:nr,ilo] .= 0.0
             for io in 1:lorbord[isp][ilo]
                 t1 = b[io]
-                #CALL daxpy(nr,t1,p0(:,io),1,p0s(:,ilo),1)
-                p0s[:,ilo] .+= t1*p0[:,io]
-                #CALL daxpy(nr,t1,ep0(:,io),1,ep0s(:,ilo),1)
-                ep0s[:,ilo] .+= t1*ep0[:,io]
+                #@printf("io = %4d b = %18.10f\n", io, b[io])
+                p0s[1:nr,ilo] .+= t1*p0[1:nr,io]
+                ep0s[1:nr,ilo] .+= t1*ep0[1:nr,io]
             end 
             # normalize radial functions
             fr[1:nr] .= p0s[1:nr,ilo].^2
             t1 = splint(nr, rgrid, fr)
             t1 = 1.0/sqrt(abs(t1))
-            #CALL dscal(nr,t1,p0s(:,ilo),1)
-            p0s[:,ilo] .*= t1
-            #CALL dscal(nr,t1,ep0s(:,ilo),1)
-            ep0s[:,ilo] .*= t1
+            #@printf("Scaling factor t1 from p0s = %18.10f\n", t1)
+            p0s[1:nr,ilo] .*= t1
+            ep0s[1:nr,ilo] .*= t1
+            #@printf("ilo, sum abs ep0s = %4d %18.10f\n", ilo, sum(abs.(ep0s[1:nr,ilo])))
+            #
             # subtract linear combination of previous local-orbitals with same l
             for jlo in 1:(ilo-1)
                 if lorbl[isp][jlo] == l
                     fr[1:nr] .= p0s[1:nr,ilo] .* p0s[1:nr,jlo]
                     t1 = -splint(nr, rgrid, fr)
-                    #CALL daxpy(nr,t1,p0s(:,jlo),1,p0s(:,ilo),1)
-                    p0s[:,ilo] .+= t1*p0s[:,jlo]
-                    #CALL daxpy(nr,t1,ep0s(:,jlo),1,ep0s(:,ilo),1)
-                    ep0s[:,ilo] .+= t1*ep0s[:,ilo]
+                    p0s[1:nr,ilo] .+= t1*p0s[1:nr,jlo]
+                    ep0s[1:nr,ilo] .+= t1*ep0s[1:nr,jlo]
                 end
             end
             # normalize radial functions again
@@ -143,10 +141,9 @@ function genlofr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
                 error("Degenerate LO radial functions")
             end
             t1 = 1.0/sqrt(t1)
-            # CALL dscal(nr,t1,p0s(:,ilo),1)
-            p0s[:,ilo] .*= t1
-            #CALL dscal(nr,t1,ep0s(:,ilo),1)
-            ep0s[:,ilo] .*= t1
+            #@printf("Scaling factor t1 again = %18.10f\n", t1)
+            p0s[1:nr,ilo] .*= t1
+            ep0s[1:nr,ilo] .*= t1
             # divide by r and store in global array
             for ir in 1:nr
                 t1 = rlmt[isp][ir,-1]
@@ -159,10 +156,8 @@ function genlofr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
         for ja in 1:Natoms
             if !done[ja] && eqatoms[ia,ja]
                 for ilo in 1:nlorb[isp]
-                    #CALL dcopy(nr,lofr(:,1,ilo,ias),1,lofr(:,1,ilo,jas),1)
-                    lofr[ja][ilo][:,1] .= lofr[ia][ilo][:,1]
-                    #CALL dcopy(nr,lofr(:,2,ilo,ias),1,lofr(:,2,ilo,jas),1)
-                    lofr[ja][ilo][:,2] .= lofr[ia][ilo][:,2]
+                    lofr[ja][ilo][1:nr,1] .= lofr[ia][ilo][1:nr,1]
+                    lofr[ja][ilo][1:nr,2] .= lofr[ia][ilo][1:nr,2]
                 end 
                 done[ja] = true
             end
