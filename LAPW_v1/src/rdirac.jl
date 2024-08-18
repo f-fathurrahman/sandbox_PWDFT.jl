@@ -52,7 +52,7 @@ function rdirac!(
         #println("calling rdiracint")
         #println("kpa = ", kpa)
         #println("nr  = ", nr)
-        nn, evals = rdiracint!(kpa, evals, r, vr, g0, g1, f0, f1, sol=sol)
+        nn = rdiracint!(kpa, evals, r, vr, g0, g1, f0, f1, sol=sol)
         # check the number of nodes
         nnd = nn - (n-l-1)
         if nnd > 0

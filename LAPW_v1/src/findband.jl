@@ -46,7 +46,7 @@ function findband!(l, r, Vr, E;
                     break
                 end
             end
-            nn, et = rschrodint!(l, et, r, Vr, p0, p1, q0, q1)
+            nn = rschrodint!(l, et, r, Vr, p0, p1, q0, q1)
             t = p0[nr]
             if ie > 1
                 if t*tp <= 0.0
@@ -77,7 +77,7 @@ function findband!(l, r, Vr, E;
             if eb < E-demax
                 return fnd, E
             end
-            nn, eb = rschrodint!(l, eb, r, Vr, p0, p1, q0, q1)
+            nn = rschrodint!(l, eb, r, Vr, p0, p1, q0, q1)
             t = p1[nr]
             if ie > 1
                 if t*tp <= 0.0

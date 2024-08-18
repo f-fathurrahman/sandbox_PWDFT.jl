@@ -78,7 +78,7 @@ function rschrodint!(
             P₁[ir:nr] = P₁[ir]
             Q₀[ir:nr] = Q₀[ir]
             Q₁[ir:nr] = Q₁[ir]
-            return nn, E
+            return nn
         end
         # check for node
         if P₀[ir-1]*P₀[ir] < 0.0
@@ -86,5 +86,5 @@ function rschrodint!(
         end
     end
 
-    return nn, E
+    return nn
 end

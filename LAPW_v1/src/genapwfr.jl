@@ -83,7 +83,7 @@ function genapwfr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
                 E = apwe[ia][l][io] + apwdm[isp][l][io]*deapwlo
                 # integrate the radial Schrodinger equation
                 @views p0view = p0[1:nr,io]
-                nn, E = rschrodint!(l, E, rgrid, vr, p0view, p1, q0, q1)
+                nn = rschrodint!(l, E, rgrid, vr, p0view, p1, q0, q1)
                 # multiply by the linearisation energy
                 ep0[1:nr,io] .= E*p0[1:nr,io]
                 # normalize radial functions

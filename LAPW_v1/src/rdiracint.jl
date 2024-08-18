@@ -78,12 +78,12 @@ function rdiracint!(
             #
             @views F₀[ir:nr] .= F₀[ir]
             @views F₁[ir:nr] .= F₁[ir]
-            return nn, E
+            return nn
         end
         # check for node
         if G₀[ir-1]*G₀[ir] < 0.0
             nn += 1
         end
     end
-    return nn, E
+    return nn
 end
