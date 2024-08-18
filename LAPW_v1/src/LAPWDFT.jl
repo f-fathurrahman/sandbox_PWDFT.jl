@@ -267,6 +267,11 @@ include("hmlistl.jl"); export hmlistl!
 include("hmlalo.jl"); export hmlalo!
 include("hmllolo.jl"); export hmllolo!
 
+include("olpaa.jl"); export olpaa!
+include("olpistl.jl"); export olpistl!
+include("olpalo.jl"); export olpalo!
+include("olplolo.jl"); export olplolo!
+
 include("debug_main.jl")
 
 end
