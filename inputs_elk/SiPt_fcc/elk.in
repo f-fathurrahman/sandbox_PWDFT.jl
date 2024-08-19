@@ -1,0 +1,32 @@
+tasks
+  0
+
+xctype
+ 100 1 12
+
+tforce
+ .true.
+
+avec
+  5.13  5.13  0.00
+  5.13  0.00  5.13
+  0.00  5.13  5.13
+
+! this is the relative path to the species files
+sppath
+  './'
+
+atoms
+  2                                 : nspecies
+  'Si.in'                           : spfname
+  1                                 : natoms; atposl below
+  0.0  0.0  0.0
+  'Pt.in'                           : spfname
+  1                                 : natoms; atposl below
+  0.25 0.25 0.25
+
+ngridk
+  2 2 2
+
+vkloff
+  0.0  0.0  0.0
