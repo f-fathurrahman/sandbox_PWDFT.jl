@@ -5,7 +5,13 @@ using OffsetArrays
 # This is currently hardcoded
 const LIBMINIPW = "/home/efefer/WORKS/my_github_repos/ffr-learns-qe/minipw-6.6/srclib/libqemain.so"
 
+IS_PREPARED = false
+
+# !!!! This function should be called only once
 function call_prepare_all(; filename=nothing)
+    if MinipwWrapper.IS_PREPARED
+        error("This function should be called only ONCE")
+    end
     # If running from REPL filename must be given, otherwise
     # it will wait for stdin
     if isinteractive()
@@ -21,9 +27,11 @@ function call_prepare_all(; filename=nothing)
         redirect_stdin(_call_func, file)
         close(file)
     end
+    MinipwWrapper.IS_PREPARED = true
     return
 end
 
+include("load_array.jl")
 include("subroutines.jl")
 include("variables.jl")
 
