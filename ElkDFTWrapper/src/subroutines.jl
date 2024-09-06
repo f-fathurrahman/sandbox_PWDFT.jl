@@ -49,17 +49,17 @@ function call_genvsig()
 end
 
 function call_linengy()
-    ccall( (:my_linengy_, LIBLAPW), Cvoid, () )
+    ccall( (:linengy_, LIBLAPW), Cvoid, () )
     return
 end
 
 function call_genapwfr()
-    ccall( (:my_genapwfr_, LIBLAPW), Cvoid, () )
+    ccall( (:genapwfr_, LIBLAPW), Cvoid, () )
     return
 end
 
 function call_genlofr()
-    ccall( (:my_genlofr_, LIBLAPW), Cvoid, () )
+    ccall( (:genlofr_, LIBLAPW), Cvoid, () )
     return
 end
 
@@ -70,7 +70,7 @@ function call_genapwlofr()
 end
 
 function call_genevfsv()
-    ccall( (:my_genevfsv_, LIBLAPW), Cvoid, () )
+    ccall( (:genevfsv_, LIBLAPW), Cvoid, () )
     return
 end
 

@@ -49,6 +49,7 @@ include("hamiltonian.jl")
 include("energy.jl")
 include("states.jl")
 include("convergence.jl")
+include("charge_moment_current.jl")
 
 include("serialize_variables.jl")
 export serialize_variables
