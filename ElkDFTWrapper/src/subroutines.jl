@@ -1,3 +1,16 @@
+# Need to call this before doing anything else with Elk
+function call_read_input()
+    ccall( (:read_input_, LIBLAPW), Cvoid, () )
+    return
+end
+
+# This is the original gndstate
+function call_gndstate()
+    ccall( (:gndstate_, LIBLAPW), Cvoid, () )
+    return
+end
+
+
 function call_my_gndstate(maxscl)
     ccall( (:my_gndstate_, LIBLAPW), Cvoid, 
         (Ref{Int32}, ),
