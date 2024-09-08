@@ -13,13 +13,19 @@ function get_spinorb()
     return unsafe_load(cglobal((:__m_spin_MOD_spinorb, LIBLAPW), Bool))
 end
 
+# dimension of magnetisation and magnetic vector fields (1 or 3)
+function get_ndmag()
+    return unsafe_load(cglobal((:__m_spin_MOD_ndmag, LIBLAPW), Int32)) |> Int64
+end
+
+# second-variational spinor dimension (1 or 2)
+function get_nspinor()
+    return unsafe_load(cglobal((:__m_spin_MOD_nspinor, LIBLAPW), Int32)) |> Int64
+end
 
 #=
 # scale factor of spin-orbit coupling term in Hamiltonian
 real(8) socscf
-
-# dimension of magnetisation and magnetic vector fields (1 or 3)
-integer ndmag
 
 # ncmag is .true. if the magnetisation is non-collinear, i.e. when ndmag = 3
 logical ncmag
@@ -51,9 +57,6 @@ real(8), allocatable :: bfsmcmt(:,:)
 
 # fixed spin moment field step size
 real(8) taufsm
-
-# second-variational spinor dimension (1 or 2)
-integer nspinor
 
 # global external magnetic field in Cartesian coordinates
 real(8) bfieldc(3)

@@ -1,3 +1,15 @@
+# tssxc is .true. if scaled spin exchange-correlation (SSXC) is to be used
+function get_tssxc()
+    return unsafe_load(cglobal((:__m_density_pot_xc_MOD_tssxc, LIBLAPW), Bool))
+end
+
+# SSXC scaling factor
+function get_ssxc()
+    return unsafe_load(cglobal((:__m_density_pot_xc_MOD_ssxc, LIBLAPW), Float64))
+end
+
+
+
 function get_msmooth()
     return unsafe_load(cglobal((:__m_density_pot_xc_MOD_msmooth, LIBLAPW), Int32)) |> Int64
 end
@@ -104,3 +116,23 @@ function get_vsig()
     ngvec = get_ngvec()
     return _load_allocatable_array(symbol, ComplexF64, (ngvec,))
 end
+
+
+
+#
+# muffin-tin and interstitial magnetisation vector field
+function get_magmt()
+    symbol = :__m_density_pot_xc_MOD_magmt
+    npmtmax = get_npmtmax()
+    natmtot = get_natmtot()
+    ndmag = get_ndmag()
+    return _load_allocatable_array(symbol, Float64, (npmtmax,natmtot,ndmag))
+end
+
+function get_magir()
+    symbol = :__m_density_pot_xc_MOD_magir
+    ngtot = get_ngtot()
+    ndmag = get_ndmag()
+    return _load_allocatable_array(symbol, Float64, (ngtot,ndmag))
+end
+

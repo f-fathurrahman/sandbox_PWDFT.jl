@@ -119,7 +119,7 @@ end
 
 # FIXME: pass txc?
 function call_potks(; txc=true)
-    ccall( (:potks_, LIBLAPW), Cvoid, (Ref{Bool},), true )
+    ccall( (:potks_, LIBLAPW), Cvoid, (Ref{Bool},), txc )
     return
 end
 

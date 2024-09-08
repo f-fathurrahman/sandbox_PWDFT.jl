@@ -13,6 +13,12 @@ function get_chgval()
     return unsafe_load(cglobal((:__m_charge_moment_current_MOD_chgval, LIBLAPW), Float64))
 end
 
+# total charge
+function get_chgtot()
+    return unsafe_load(cglobal((:__m_charge_moment_current_MOD_chgtot, LIBLAPW), Float64))
+end
+
+
 #=
 # core charges
 REAL(8) chgcr(maxspecies)
@@ -22,8 +28,6 @@ REAL(8) chgcrtot
 REAL(8), ALLOCATABLE :: chgcrlk(:)
 # excess charge
 REAL(8) chgexs
-# total charge
-REAL(8) chgtot
 # calculated total charge
 REAL(8) chgcalc
 # interstitial region charge
