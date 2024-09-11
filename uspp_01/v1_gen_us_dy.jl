@@ -1,4 +1,4 @@
-function _gen_us_dy!(ik::Int64, u::Vector{Float64}, atoms, pw, pspots, pspotNL, dvkb)
+function _v1_gen_us_dy!(ik::Int64, u::Vector{Float64}, atoms, pw, pspots, pspotNL, dvkb)
 
     if pspotNL.lmaxkb <= 0
         fill!(dvkb, 0.0 + im*0.0)

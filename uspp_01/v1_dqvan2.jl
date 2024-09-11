@@ -1,8 +1,8 @@
-function dqvan2!(
+function v1_dqvan2!(
     pspotNL, ipol,
     ih, jh, isp, G, G2, ylmk0, dylmk0, dQfuncG
 )
-    dqvan2!(
+    v1_dqvan2!(
         pspotNL.indv, pspotNL.nhtolm, pspotNL.lpl, pspotNL.lpx, pspotNL.ap,
         pspotNL.qradG, ipol,
         ih, jh, isp, G, G2, ylmk0, dylmk0, dQfuncG
@@ -11,7 +11,7 @@ function dqvan2!(
 end
 
 
-function dqvan2!(
+function v1_dqvan2!(
     indv, nhtolm, lpl, lpx, ap,
     qradG, ipol::Int64,
     ih, jh, isp, G, G2, ylmk0, dylmk0, dQfuncG

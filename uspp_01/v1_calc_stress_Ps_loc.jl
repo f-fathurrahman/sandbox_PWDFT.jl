@@ -1,4 +1,4 @@
-function calc_stress_Ps_loc!( atoms, pw, pspots, Rhoe, stress_Ps_loc )
+function v1_calc_stress_Ps_loc!( atoms, pw, pspots, Rhoe, stress_Ps_loc )
 
     fill!(stress_Ps_loc, 0.0)
 

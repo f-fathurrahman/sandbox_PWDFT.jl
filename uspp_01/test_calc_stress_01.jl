@@ -3,21 +3,16 @@ using FFTW
 using SpecialFunctions: erf
 using PWDFT
 
-const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)),"..")
-include(joinpath(DIR_PWDFT, "utilities", "PWSCFInput.jl"))
-include(joinpath(DIR_PWDFT, "utilities", "init_Ham_from_pwinput.jl"))
-
-include("calc_stress_hartree.jl")
-include("eval_dVloc_G.jl")
-include("calc_stress_Ps_loc.jl")
-include("calc_stress_xc.jl")
-include("calc_stress_nlcc.jl")
-include("calc_stress_kinetic.jl")
-include("calc_Deff.jl")
-include("gen_us_dj.jl")
-include("gen_us_dy.jl")
-include("dqvan2.jl")
-include("calc_stress_Ps_nloc.jl")
+include("v1_calc_stress_hartree.jl")
+include("v1_eval_dVloc_G.jl")
+include("v1_calc_stress_Ps_loc.jl")
+include("v1_calc_stress_xc.jl")
+include("v1_calc_stress_nlcc.jl")
+include("v1_calc_stress_kinetic.jl")
+include("v1_gen_us_dj.jl")
+include("v1_gen_us_dy.jl")
+include("v1_dqvan2.jl")
+include("v1_calc_stress_Ps_nloc.jl")
 
 function main()
     Ham = Serialization.deserialize("Hamiltonian.dat")

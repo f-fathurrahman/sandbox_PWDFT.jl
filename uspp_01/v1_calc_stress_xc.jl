@@ -1,4 +1,4 @@
-function calc_stress_xc!( pw, potentials, Rhoe, Exc, stress_xc )
+function v1_calc_stress_xc!( pw, potentials, Rhoe, Exc, stress_xc )
 
     Npoints = prod(pw.Ns)
     dVol = pw.CellVolume/Npoints

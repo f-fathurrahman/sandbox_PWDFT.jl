@@ -1,4 +1,4 @@
-function _gen_us_dj!(ik, atoms, pw, pspots, pspotNL, dvkb)
+function _v1_gen_us_dj!(ik, atoms, pw, pspots, pspotNL, dvkb)
 
     dq = 0.01 # HARDCODED
 

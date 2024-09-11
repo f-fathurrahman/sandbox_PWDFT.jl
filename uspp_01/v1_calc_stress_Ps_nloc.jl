@@ -1,4 +1,4 @@
-function calc_stress_Ps_nloc!(
+function v1_calc_stress_Ps_nloc!(
     atoms, pw, pspots, pspotNL, electrons, potentials, psiks,
     stress_Ps_nloc
 )

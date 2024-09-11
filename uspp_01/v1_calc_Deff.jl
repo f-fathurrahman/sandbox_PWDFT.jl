@@ -1,4 +1,4 @@
-function _calc_Deff!(
+function _v1_calc_Deff!(
     ispin::Int64, atoms, pspotNL, ebnd::Float64, Deff
 )
     Natoms = atoms.Natoms

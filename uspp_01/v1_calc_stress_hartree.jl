@@ -1,4 +1,4 @@
-function calc_stress_hartree!(pw, Rhoe, E_hartree, stress_hartree)
+function v1_calc_stress_hartree!(pw, Rhoe, E_hartree, stress_hartree)
 
     G = pw.gvec.G
     G2 = pw.gvec.G2

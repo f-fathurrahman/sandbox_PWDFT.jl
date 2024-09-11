@@ -1,4 +1,4 @@
-function calc_stress_kinetic!(pw, electrons, psiks, stress_kin)
+function v1_calc_stress_kinetic!(pw, electrons, psiks, stress_kin)
 
     G = pw.gvec.G
     idx_gw2g = pw.gvecw.idx_gw2g

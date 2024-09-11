@@ -1,5 +1,5 @@
 # Calculates the NLCC contribution to the force
-function calc_stress_nlcc!(
+function v1_calc_stress_nlcc!(
     atoms, pspots, pw, xc_calc, xcfunc, Rhoe, rhoe_core, stress_nlcc
 )
 
