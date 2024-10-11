@@ -1,16 +1,6 @@
-function occupy!(; NiterMax=1000)
-    #=
-  INTEGER ik,ist,it
-  REAL(8) e0,e1,e
-  REAL(8) chg,x,t1
-  ! external functions
-  REAL(8) sdelta,stheta
-  external sdelta,stheta
-    =#
+function occupy!(evalsv, occsv; NiterMax=1000)
 
-
-    # determine the smearing width automatically if required
-    #IF((autoswidth).and.(iscl.gt.1)) CALL findswidth
+    # XXX: automatic smearing width is disabled
     
     # find minimum and maximum eigenvalues
     e0 = evalsv[1,1]
@@ -44,7 +34,7 @@ function occupy!(; NiterMax=1000)
                     occsv[ist,ik] = 0.0
                 else
                     x = (efermi - e)*t1
-                    occsv[ist,ik] = occmax*stheta(stype,x) # smearing
+                    occsv[ist,ik] = occmax*stheta_fd(x) # smearing
                     chg += wkpt[ik]*occsv[ist,ik]
                 end 
             end
@@ -70,7 +60,7 @@ function occupy!(; NiterMax=1000)
     for ik in 1:nkpt
         for ist in 1:nstsv
             x = (evalsv[ist,ik] - efermi)*t1
-            fermidos = fermidos + wkpt[ik]*sdelta(stype,x)*t1
+            fermidos += wkpt[ik]*sdelta_fd(x)*t1
         end 
         if abs(occsv[nstsv,ik]) > epsocc
             println("WARNING: not enough empty states for k-point ", ik)
