@@ -216,6 +216,11 @@ function debug_main()
     end
     nmatmax = maximum(nmat)
 
+    # TODO: generate Hamiltonians for each kpoints, diagonalize them
+    # and store the results to files (to be read later)
+    # Using local variables for Hamiltonians, eigenvectors and eigenvalues
+
+
     @infiltrate
     # open REPL and investigate the variables
 
