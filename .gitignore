@@ -3,6 +3,7 @@ __pycache__
 TODO*.md
 BLOGS.md
 
+*.OUT
 fort.*
 IMG_*
 *.dat
