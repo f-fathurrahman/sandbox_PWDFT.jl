@@ -163,48 +163,8 @@ function debug_main()
     genapwfr!(atoms, sym_vars.eqatoms, mt_vars, apwlo_vars, vsmt)
     genlofr!(atoms, sym_vars.eqatoms, mt_vars, apwlo_vars, vsmt)
 
-
-    nlomax = apwlo_vars.nlomax
-    apwordmax = apwlo_vars.apwordmax
-    lmaxapw = mt_vars.lmaxapw
-    lmmaxo = mt_vars.lmmaxo
-
-    oalo = Vector{Matrix{Float64}}(undef, Natoms)
-    for ia in 1:Natoms
-        oalo[ia] = zeros(Float64, apwordmax, nlomax)
-    end
-
-    ololo = Vector{Matrix{Float64}}(undef, Natoms)
-    for ia in 1:Natoms
-        ololo[ia] = zeros(Float64, nlomax, nlomax)
-    end
-
-    haa = Vector{OffsetArray{Float64, 5, Array{Float64, 5}}}(undef, Natoms)
-    for ia in 1:Natoms
-        haa[ia] = OffsetArray(
-            zeros(Float64, lmmaxo, apwordmax, lmaxapw+1, apwordmax, lmaxapw+1),
-            1:lmmaxo, 1:apwordmax, 0:lmaxapw, 1:apwordmax, 0:lmaxapw
-        )
-    end
-
-    hloa = Vector{OffsetArray{Float64, 4, Array{Float64, 4}}}(undef, Natoms)
-    for ia in 1:Natoms
-        hloa[ia] = OffsetArray(
-            zeros(Float64, lmmaxo, apwordmax, lmaxapw+1, nlomax),
-            1:lmmaxo, 1:apwordmax, 0:lmaxapw, 1:nlomax
-        )
-    end
-
-    hlolo = Vector{Array{Float64,3}}(undef, Natoms)
-    for ia in 1:Natoms
-        hlolo[ia] = zeros(Float64, lmmaxo, nlomax, nlomax)
-    end
-
-    # Now calculate these terms
-    hmlrad!( atoms, mt_vars, apwlo_vars, vsmt, haa, hloa, hlolo )
-    olprad!( atoms, mt_vars, apwlo_vars, oalo, ololo )
-
-
+    apwlo_ints = APWLOIntegrals( atoms, mt_vars, apwlo_vars )
+    calc_apwlo_integrals!(atoms, mt_vars, apwlo_vars, vsmt, apwlo_ints)
 
     Nkpt = pw.gvecw.kpoints.Nkpt
     Ngw = pw.gvecw.Ngw
@@ -214,12 +174,18 @@ function debug_main()
         nmat[ik] = Ngw[ik] + apwlo_vars.nlotot
         # assert ntsfv > nmat[ik]
     end
-    nmatmax = maximum(nmat)
+    nmatmax = maximum(nmat) # not used?
 
     # TODO: generate Hamiltonians for each kpoints, diagonalize them
     # and store the results to files (to be read later)
     # Using local variables for Hamiltonians, eigenvectors and eigenvalues
-
+    ispin = 1
+    for ik in 1:Nkpt
+        gen_eigensystem( ispin, ik,
+            atoms, pw, mt_vars, apwlo_vars, apwlo_ints,
+            nmat, cfunig, vsig
+        )
+    end
 
     @infiltrate
     # open REPL and investigate the variables
