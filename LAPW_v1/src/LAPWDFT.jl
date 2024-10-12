@@ -4,7 +4,7 @@ using Printf
 using LinearAlgebra
 using OffsetArrays
 using SpecialFunctions: sphericalbesselj
-using Serialization: deserialize
+using Serialization: serialize, deserialize
 
 import PWDFT
 using PWDFT: Atoms, PWGrid, KPoints, LibxcXCCalculator,
@@ -272,6 +272,9 @@ include("olpaa.jl"); export olpaa!
 include("olpistl.jl"); export olpistl!
 include("olpalo.jl"); export olpalo!
 include("olplolo.jl"); export olplolo!
+include("APWLOIntegrals.jl"); export APWLOIntegrals, calc_apwlo_integrals!
+
+include("gen_eigensystem.jl"); export gen_eigensystem
 
 include("debug_main.jl")
 
