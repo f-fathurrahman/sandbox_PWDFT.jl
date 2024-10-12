@@ -1,27 +1,5 @@
 # This will modify some fields of apwlo_vars
 function genapwfr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
-    #=
-  USE m_atoms, ONLY: natmmax, natoms, idxas, nspecies
-  USE m_symmetry, ONLY: eqatoms
-  USE m_muffin_tins, ONLY: rlmt, nrmt, nrmti, nrmtmax, lmmaxi, lmmaxo, lmaxapw
-  USE m_apwlo, ONLY: apword, apwfr, apwordmax, apwdfr, deapwlo, apwdm, apwe
-  USE m_density_pot_xc, ONLY: vsmt
-  USE m_constants, ONLY: solsc, y00
-  IMPLICIT NONE 
-  ! local variables
-  INTEGER :: is,ia,ja,ias,jas
-  INTEGER :: nr,nri,ir,i
-  INTEGER :: nn,l,io,jo
-  REAL(8) :: e,t1
-  ! automatic arrays
-  LOGICAL :: done(natmmax)
-  REAL(8) :: vr(nrmtmax),fr(nrmtmax)
-  REAL(8) :: p0(nrmtmax,apwordmax),p1(nrmtmax),p1s(apwordmax)
-  REAL(8) :: q0(nrmtmax),q1(nrmtmax),ep0(nrmtmax,apwordmax)
-  ! external functions
-  REAL(8) splint
-  EXTERNAL splint
-    =#
 
     Natoms = atoms.Natoms
     atm2species = atoms.atm2species

@@ -1,17 +1,5 @@
 function genlofr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
 
-    #=
-  ! automatic arrays
-  LOGICAL :: done(natmmax)
-  INTEGER :: ipiv(nplorb)
-  REAL(8) :: vr(nrmtmax), fr(nrmtmax)
-  REAL(8) :: p0(nrmtmax,lorbordmax), p1(nrmtmax)
-  REAL(8) :: q0(nrmtmax), q1(nrmtmax), ep0(nrmtmax,lorbordmax)
-  REAL(8) :: p0s(nrmtmax,nlomax), ep0s(nrmtmax,nlomax)
-  REAL(8) :: xa(nplorb), ya(nplorb)
-  REAL(8) :: a(nplorb,nplorb), b(nplorb)
-    =#
-
     y00 = 0.5/sqrt(pi)
 
     Natoms = atoms.Natoms
