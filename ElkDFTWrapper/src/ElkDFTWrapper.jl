@@ -93,7 +93,7 @@ function gndstate()
     end
 end
 
-function export_pwdft_kpoints(; filename="pwdftjl_kpoints.dat")
+function export_pwdft_kpoints(; filename="pwdftjl_kpoints.jldat")
     Nkpt = get_nkpt()
     ngridk = get_ngridk()
     bvec = get_bvec()
