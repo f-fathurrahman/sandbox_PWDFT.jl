@@ -1,6 +1,6 @@
 mutable struct ElectronicChargesStates
     nspinor::Int64
-    nempty0::Float64
+    nempty0::Float64 #!!! This is Float64
     nempty::Int64
     #
     chgzn::Float64
@@ -10,8 +10,8 @@ mutable struct ElectronicChargesStates
     chgexs::Float64
     chgtot::Float64
     #
-    nstfv::Float64
-    nstsv::Float64
+    nstfv::Int64
+    nstsv::Int64
     occsv::Matrix{Float64}
     evalsv::Matrix{Float64}
 end

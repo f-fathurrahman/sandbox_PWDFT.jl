@@ -51,10 +51,18 @@ function gen_eigensystem(
     # calc eigenvalues and eigenvectors
     evals, evecs = eigen(Hermitian(H), Hermitian(O))
 
+    # FIXME: save full size (?)
     serialize("H_ispin_$(ispin)_ik_$(ik).dat", H)
     serialize("O_ispin_$(ispin)_ik_$(ik).dat", O)
     serialize("evals_ispin_$(ispin)_ik_$(ik).dat", evals)
     serialize("evecs_ispin_$(ispin)_ik_$(ik).dat", evecs)
+
+    
+    # Set eigenvalues
+    # FIXME: only for the case of nstfv == nstsv
+    @assert elec_chgst.nspinor == 1
+    nstsv = elec_chgst.nstsv
+    @views elec_chgst.evalsv[1:nstsv,ik] = evals[1:nstsv]
 
     return
 end
