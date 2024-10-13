@@ -47,36 +47,10 @@ function gen_eigensystem(
         olplolo!(ik, ia, atoms, pw, mt_vars, apwlo_vars, ololo, O)
     end
 
-    #=
-  DO is = 1,nspecies
-    ! nuclear charge
-    chgzn = chgzn + spzn(is)*natoms(is)
-    ! find the maximum number of atomic states
-    nstspmax = max(nstspmax,nstsp(is))
-    ! compute the electronic charge for each species, as well as the total core and
-    ! valence charge
-    spze(is) = 0.d0
-    chgcr(is) = 0.d0
-    DO ist = 1,nstsp(is)
-      spze(is) = spze(is) + occsp(ist,is)
-      IF( spcore(ist,is) ) THEN 
-        chgcr(is) = chgcr(is) + occsp(ist,is)
-        nstcr = nstcr + 2*ksp(ist,is)*natoms(is)
-      ELSE 
-        chgval = chgval + occsp(ist,is)*natoms(is)
-      ENDIF 
-    ENDDO 
-    chgcrtot=chgcrtot + chgcr(is)*natoms(is)
-  ENDDO 
-
-    nstfv = int(chgval/2.d0) + nempty + 1
-    =#
-
-
     # calc eigenvalues and eigenvectors
     evals, evecs = eigen(Hermitian(H), Hermitian(O))
 
-    serialize("H_ispin_ $(ispin)_ik_$(ik).dat", H)
+    serialize("H_ispin_$(ispin)_ik_$(ik).dat", H)
     serialize("O_ispin_$(ispin)_ik_$(ik).dat", O)
     serialize("evals_ispin_$(ispin)_ik_$(ik).dat", evals)
     serialize("evecs_ispin_$(ispin)_ik_$(ik).dat", evecs)
