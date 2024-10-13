@@ -92,6 +92,12 @@ function call_occupy()
     return
 end
 
+# Debug
+function call_my_occupy()
+    ccall( (:my_occupy_, LIBLAPW), Cvoid, () )
+    return
+end
+
 function call_rhomag()
     ccall( (:rhomag_, LIBLAPW), Cvoid, () )
     return
