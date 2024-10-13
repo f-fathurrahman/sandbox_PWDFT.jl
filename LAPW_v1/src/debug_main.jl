@@ -72,11 +72,11 @@ function debug_main()
     @info "sym_info.Nrots = $(sym_info.Nrots)"
 
     # FIXME: need to pass k-points information from elk_input
-    @info "KPoints read from pwdftjl_kpoints.dat"
+    @info "KPoints read from pwdftjl_kpoints.jldat"
     pw = PWGrid(
         ecutwfc, atoms.LatVecs, dual=dual,
         #kpoints=KPoints(atoms, elk_input.ngridk, [0,0,0], sym_info.s)
-        kpoints = deserialize("pwdftjl_kpoints.dat")
+        kpoints = deserialize("pwdftjl_kpoints.jldat")
     )
     println(pw)
 
