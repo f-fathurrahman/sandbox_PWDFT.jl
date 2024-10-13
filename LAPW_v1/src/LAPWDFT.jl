@@ -279,6 +279,10 @@ include("APWLOIntegrals.jl"); export APWLOIntegrals, calc_apwlo_integrals!
 
 include("gen_eigensystem.jl"); export gen_eigensystem
 
+include("stheta_fd.jl"); export stheta_fd
+include("sdelta_fd.jl"); export sdelta_fd
+include("occupy.jl"); export occupy!
+
 include("debug_main.jl")
 
 end

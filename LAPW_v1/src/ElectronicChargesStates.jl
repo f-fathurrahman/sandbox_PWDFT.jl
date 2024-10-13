@@ -12,13 +12,16 @@ mutable struct ElectronicChargesStates
     #
     nstfv::Int64
     nstsv::Int64
+    swidth::Float64
     occsv::Matrix{Float64}
     evalsv::Matrix{Float64}
+    efermi::Float64
 end
 
 function ElectronicChargesStates(
     atoms::Atoms, atsp_vars, Nkpt::Int64;
-    nempty0=4.0, nspinor=1, chgexs=0.0
+    nempty0=4.0, nspinor=1, chgexs=0.0,
+    swidth=0.001
 )
     # nempty0 is number of empty states per atom. It is a Float64
     # nspinor should be read from something else?
@@ -65,11 +68,12 @@ function ElectronicChargesStates(
 
     occsv = zeros(Float64, nstsv, Nkpt)
     evalsv = zeros(Float64, nstsv, Nkpt)
-
+    efermi = 0.0
     return ElectronicChargesStates(
         nspinor, nempty0, nempty,
         chgzn, chgval, chgcr,
         chgcrtot, chgexs, chgtot,
-        nstfv, nstsv, occsv, evalsv
+        nstfv, nstsv, swidth, occsv, evalsv,
+        efermi
     )
 end
