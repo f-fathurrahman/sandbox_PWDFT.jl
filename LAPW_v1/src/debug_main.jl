@@ -71,15 +71,17 @@ function debug_main()
     @info "sym_info.Nsyms = $(sym_info.Nsyms)"
     @info "sym_info.Nrots = $(sym_info.Nrots)"
 
-    # FIXME: need to pass k-points infor from elk_input
+    # FIXME: need to pass k-points information from elk_input
     @info "KPoints read from pwdftjl_kpoints.dat"
     pw = PWGrid(
         ecutwfc, atoms.LatVecs, dual=dual,
         #kpoints=KPoints(atoms, elk_input.ngridk, [0,0,0], sym_info.s)
         kpoints = deserialize("pwdftjl_kpoints.dat")
     )
-    # TODO: read kpoints generated from Elk
     println(pw)
+
+    # XXX: use simpler name?
+    elec_chgst = ElectronicChargesStates(atoms, atsp_vars, pw.gvecw.kpoints.Nkpt)
 
     # Initialize rhomt and rhoir
     npmt = mt_vars.npmt
@@ -182,7 +184,8 @@ function debug_main()
     ispin = 1
     for ik in 1:Nkpt
         gen_eigensystem( ispin, ik,
-            atoms, pw, mt_vars, apwlo_vars, apwlo_ints,
+            atoms, pw, mt_vars, apwlo_vars,
+            apwlo_ints, elec_chgst,
             nmat, cfunig, vsig
         )
     end

@@ -32,6 +32,9 @@ export SpeciesInfo
 include("AtomicSpeciesVars.jl")
 export AtomicSpeciesVars, init_nuclear_pot!
 
+include("ElectronicChargesStates.jl")
+export ElectronicChargesStates
+
 include("SphericalHarmonicTransform.jl")
 export SphericalHarmonicTransform
 

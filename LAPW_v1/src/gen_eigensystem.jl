@@ -1,6 +1,7 @@
 function gen_eigensystem(
     ispin::Int64, ik::Int64,
-    atoms, pw, mt_vars, apwlo_vars, apwlo_ints,
+    atoms::Atoms, pw::PWGrid, mt_vars::MuffinTins, apwlo_vars::APWLOVars,
+    apwlo_ints, elec_chgst,
     nmat, cfunig, vsig
 )
     haa = apwlo_ints.haa
