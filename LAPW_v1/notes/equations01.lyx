@@ -95,6 +95,113 @@
 \begin_body
 
 \begin_layout Subsection*
+wavefmt
+\end_layout
+
+\begin_layout Standard
+Calculates the first-variational wavefunction in the muffin-tin in terms of a spherical harmonic expansion.
+ For atom 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ and a particular 
+\begin_inset Formula $k$
+\end_inset
+
+-point 
+\begin_inset Formula ${\bf p}$
+\end_inset
+
+,
+ the 
+\begin_inset Formula $r$
+\end_inset
+
+-dependent 
+\begin_inset Formula $(l,m)$
+\end_inset
+
+-coefficients of the wavefunction for the 
+\begin_inset Formula $i$
+\end_inset
+
+th state are given by:
+\begin_inset Formula 
+\[
+\Phi_{\alpha lm}^{i{\bf p}}(r)=\sum_{{\bf G}}b_{{\bf G}}^{i{\bf p}}\sum_{j=1}^{M_{l}^{\alpha}}A_{jlm}^{\alpha}({\bf G+p})u_{jl}^{\alpha}(r)+\sum_{j=1}^{N^{\alpha}}b_{(\alpha,j,m)}^{i{\bf p}}v_{j}^{\alpha}(r)\delta_{l,l_{j}},
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $b^{i{\bf p}}$
+\end_inset
+
+is the 
+\begin_inset Formula $i$
+\end_inset
+
+th eigenvector returned from routine 
+\begin_inset Formula ${\tt eveqn}$
+\end_inset
+
+;
+ 
+\begin_inset Formula $A_{jlm}^{\alpha}({\bf G+p})$
+\end_inset
+
+ is the matching coefficient;
+ 
+\begin_inset Formula $M_{l}^{\alpha}$
+\end_inset
+
+ is the order of the APW;
+ 
+\begin_inset Formula $u_{jl}^{\alpha}$
+\end_inset
+
+ is the APW radial function;
+ 
+\begin_inset Formula $N^{\alpha}$
+\end_inset
+
+is the number of local-orbitals;
+ 
+\begin_inset Formula $v_{j}^{\alpha}$
+\end_inset
+
+ is the 
+\begin_inset Formula $j$
+\end_inset
+
+th local-orbital radial function;
+ and 
+\begin_inset Formula $(\alpha,j,m)$
+\end_inset
+
+ is a compound index for the location of the local-orbital in the eigenvector.
+ See routines 
+\begin_inset Formula ${\tt genapwfr}$
+\end_inset
+
+,
+ 
+\begin_inset Formula ${\tt genlofr}$
+\end_inset
+
+,
+ 
+\begin_inset Formula ${\tt match}$
+\end_inset
+
+ and 
+\begin_inset Formula ${\tt eveqn}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection*
 symrf
 \end_layout
 
