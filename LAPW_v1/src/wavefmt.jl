@@ -19,7 +19,7 @@ integer nrc,nrci,nrco,iro
 integer l,m,lm,npc,npci,i
 complex(8) z1
 =#
-function wavefmt(lrstp, ia, ngp, apwalm, evecfv, wfmt)
+function wavefmt!(lrstp, ia, ngp, apwalm, evecfv, wfmt)
 
     isp = atm2species[ia]
     ldi = 2*lmmaxi
@@ -43,13 +43,12 @@ function wavefmt(lrstp, ia, ngp, apwalm, evecfv, wfmt)
         error("Invalid lrstp = $(lrstp)")
     end
     nrco = nrc - nrci
-
+    #
     # zero the wavefunction
     @views wfmt[:,1:npc] .= 0.0
-
-    #-----------------------
-    #     APW functions     
-    #-----------------------
+    #
+    # APW functions     
+    #
     lm = 0
     for l in 0:lmaxo
         for m in -l:l
@@ -57,50 +56,26 @@ function wavefmt(lrstp, ia, ngp, apwalm, evecfv, wfmt)
             i = npci + lm
             for io in 1:apword[isp][l]
                 z1 = BLAS.dotu(ngp, evecfv, 1, apwalm[:,io,lm], 1)
-                if abs(real(z1)) > 1.e-14
-                    if l <= lmaxi
-                        #call daxpy(nrci,dble(z1),apwfr(1,1,io,l,ias),lrstp,wfmt(1,lm),ldi)
-                        axpy()
-                    end
-                    #call daxpy(nrco,dble(z1),apwfr(iro,1,io,l,ias),lrstp,wfmt(1,i),ldo)
-                    axpy()
+                if l <= lmaxi
+                    @views wfmt[1:nrci,lm] .+= z1 * apwfr[ia][l][io][1:nrci,1]
                 end
-                #
-                if abs(imag(z1)) > 1.e-14
-                    if l <= lmaxi
-                        #call daxpy(nrci,aimag(z1),apwfr(1,1,io,l,ias),lrstp,wfmt(2,lm),ldi)
-                    end
-                    #call daxpy(nrco,aimag(z1),apwfr(iro,1,io,l,ias),lrstp,wfmt(2,i),ldo)
-                    axpy()
-                end
+                wfmt[iro:(iro+nrco-1),i] .+= z1 * apwfr[ia][l][io][iro:(iro+nrco-1),1]
             end
         end
     end
-    #---------------------------------
-    #     local-orbital functions     
-    #---------------------------------
+    #
+    # local-orbital functions     
+    #
     for ilo in 1:nlorb[isp]
         l = lorbl[isp][ilo]
         for m in -l:l
             lm = idxlm[l,m]
             i = npci + lm
             z1 = evecfv[ngp+idxlo[ia][lm,ilo]]
-            if abs(real(z1)) > 1e-14
-                if l <= lmaxi
-                    #call daxpy(nrci,dble(z1),lofr(1,1,ilo,ias),lrstp,wfmt(1,lm),ldi)
-                    axpy()
-                end
-                #call daxpy(nrco,dble(z1),lofr(iro,1,ilo,ias),lrstp,wfmt(1,i),ldo)
-                axpy()
+            if l <= lmaxi
+                @views wfmt[1:nrci,lm] .+= z1 * lofr[ia][ilo][1:nrci,1]
             end
-            if abs(aimag(z1)) > 1e-14
-                if l <= lmaxi
-                    #call daxpy(nrci,aimag(z1),lofr(1,1,ilo,ias),lrstp,wfmt(2,lm),ldi)
-                    axpy()
-                end
-                #call daxpy(nrco,aimag(z1),lofr(iro,1,ilo,ias),lrstp,wfmt(2,i),ldo)
-                axpy()
-            end
+            wfmt[iro:(iro+nrco-1),i] .+= z1 * lofr[ia][ilo][iro:(iro+nrco-1),1]
         end
     end
     return
