@@ -11,6 +11,12 @@ function call_gndstate()
 end
 
 
+# debug version
+function call_my_rhomag()
+    ccall( (:my_rhomag_, LIBLAPW), Cvoid, () )
+end
+
+
 function call_my_gndstate(maxscl)
     ccall( (:my_gndstate_, LIBLAPW), Cvoid, 
         (Ref{Int32}, ),
