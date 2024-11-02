@@ -58,7 +58,14 @@ export serialize_variables
 include("subroutines.jl")
 
 
-# Need to call init_run separately
+#=
+We simulate gndstate call here.
+Maximum number of SCF iteration must be set manually.
+Criteria for stopping the iteration (converged case) is evaluated
+manually (not respecting Elk's default setting).
+
+XXX init_run MUST be called separately before.
+=#
 function gndstate()
     call_rhoinit()
     call_maginit()
@@ -93,6 +100,11 @@ function gndstate()
     end
 end
 
+
+
+#=
+This is needed to get the same irreducible kpoints as Elk.
+=#
 function export_pwdft_kpoints(; filename="pwdftjl_kpoints.jldat")
     Nkpt = get_nkpt()
     ngridk = get_ngridk()
@@ -107,7 +119,11 @@ function export_pwdft_kpoints(; filename="pwdftjl_kpoints.jldat")
     serialize(filename, kpoints)
 end
 
-# Put the workload that we want to investigate
+#=
+This is the function that we need to modify in most debugging case.
+
+Put the workload that we want to investigate
+=#
 function init_debug_calc()
     
     init_run()
