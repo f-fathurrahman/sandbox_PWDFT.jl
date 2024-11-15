@@ -35,6 +35,9 @@ include("load_array.jl")
 include("subroutines.jl")
 include("variables.jl")
 
+include("ld1x_subroutines.jl")
+include("ld1x_variables.jl")
+
 # Do a single-point calculation, also calculate forces and stress
 function run_single_point(; filename=nothing)
     #
