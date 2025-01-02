@@ -22,3 +22,8 @@ function call_ld1x_prepare_all(; filename=nothing)
     MinipwWrapper.IS_PREPARED = true
     return
 end
+
+# actually calls driver_starting_potential
+function call_ld1x_starting_potential()
+    ccall( (:ld1x_driver_starting_potential_, LIBMINIPW), Cvoid, () )
+end

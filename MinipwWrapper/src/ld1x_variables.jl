@@ -62,3 +62,59 @@ end
 function get_ld1x_enne()
     return unsafe_load(cglobal((:__ld1inc_MOD_enne, LIBMINIPW), Float64))
 end
+
+# the coulomb potential
+function get_ld1x_v0()
+    symbol = :__ld1inc_MOD_v0
+    ndmx = get_ld1x_ndmx()
+    return _load_automatic_array(symbol, Float64, (ndmx,))
+end
+
+# the hartree potential
+function get_ld1x_vh()
+    symbol = :__ld1inc_MOD_vh
+    ndmx = get_ld1x_ndmx()
+    return _load_automatic_array(symbol, Float64, (ndmx,))
+end
+
+# the external potential
+function get_ld1x_vxt()
+    symbol = :__ld1inc_MOD_vxt
+    ndmx = get_ld1x_ndmx()
+    return _load_automatic_array(symbol, Float64, (ndmx,))
+end
+
+# the exchange and correlation energy
+function get_ld1x_exc()
+    symbol = :__ld1inc_MOD_exc
+    ndmx = get_ld1x_ndmx()
+    return _load_automatic_array(symbol, Float64, (ndmx,))
+end
+
+# the all-electron scf potential
+function get_ld1x_vpot()
+    symbol = :__ld1inc_MOD_vpot
+    ndmx = get_ld1x_ndmx()
+    return _load_automatic_array(symbol, Float64, (ndmx,2))
+end
+
+# the exchange and correlation potential
+function get_ld1x_vxc()
+    symbol = :__ld1inc_MOD_vxc
+    ndmx = get_ld1x_ndmx()
+    return _load_automatic_array(symbol, Float64, (ndmx,2))
+end
+
+
+function get_ld1x_grid_mesh()
+    ccall((:__exposed_ld1x_MOD_expose_grid_mesh, LIBMINIPW), Cvoid, ())
+    return unsafe_load(cglobal((:__exposed_ld1x_MOD_grid_mesh, LIBMINIPW), Int32)) |> Int64
+end
+
+function get_ld1x_grid_r()
+    symbol = :__exposed_ld1x_MOD_grid_r
+    grid_mesh = get_ld1x_grid_mesh()
+    ccall((:__exposed_ld1x_MOD_expose_grid_r, LIBMINIPW), Cvoid, ())
+    return _load_allocatable_array(symbol, Float64, (grid_mesh,))
+end
+

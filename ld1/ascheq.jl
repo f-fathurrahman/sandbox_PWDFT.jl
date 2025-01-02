@@ -9,7 +9,10 @@
 # bound states in a local potential.
 # thresh determines the absolute accuracy for the eigenvalue
 function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
- 
+
+    # nstop is a somewhat a return code, probably can be removed.
+    # Its value depends on whether the calculation is successfull or not.
+
     Nrmesh = grid.Nrmesh
     println("input e = ", e)
 
