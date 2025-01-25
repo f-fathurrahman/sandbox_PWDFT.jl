@@ -1,0 +1,9 @@
+{
+    "files.exclude": {
+        "LOG_*": true,
+        "*.UPF": true,
+        "*.xsf": true,
+        "PWINPUT*": true,
+        "*.in": true,
+    },
+}
