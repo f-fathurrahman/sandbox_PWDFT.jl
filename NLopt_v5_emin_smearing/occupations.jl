@@ -51,7 +51,7 @@ function update_Focc!(
 )
 
     E_f = find_E_fermi( smear_func, ebands, Nelectrons, kT, Nkpt )
-    @info "E_f = $(E_f)"
+    #@info "E_f = $(E_f)"
 
     Nstates = size(ebands, 1)
     Nkspin = size(ebands, 2)

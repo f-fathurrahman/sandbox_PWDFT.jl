@@ -3,49 +3,22 @@ include("update_Hamiltonian.jl")
 # The inputs are:
 # - wavefunction psi, and
 # - auxiliary Hamiltonian in diagonal form, stored as matrix with size (Nstates,Nspin)
-#   Nspin=1 is assumed for the moment.
+#
 # Some fields of Ham will be modified
 function calc_Lfunc_ebands!(
     Ham::Hamiltonian,
-    psiks::BlochWavefunc, # (Nbasis,Nstates)
-    ebands::Matrix{Float64} # (Nstates,Nkspin)
+    psiks::BlochWavefunc,
+    ebands::Matrix{Float64}, # (Nstates,Nkspin)
+    kT::Float64
 )
-
-    # We don't support Nspin=2 yet
-    @assert size(ebands,2) == 1
-
-    update_from_ebands!(Ham, ebands)
-    update_from_wavefunc!(Ham, psi)
-
-    hx = Ham.grid.hx    
-    Npoints = Ham.grid.Npoints
-    Vion = Ham.potentials.Ions
-    Vxc = Ham.potentials.XC
-    Vhartree = Ham.potentials.Hartree
-    Vtot = Ham.potentials.Total
-    rhoe = Ham.rhoe
-    mTS = Ham.energies.mTS
-
-    # Evaluate total energy components
-    Ekin = calc_E_kin(Ham, psi)
-    Ham.energies.Kinetic = Ekin
+    E_fermi, mTS = update_from_ebands!( Ham, ebands, kT )
+    #@info "E_fermi = $(E_fermi)"
+    update_from_wavefunc!( Ham, psiks )
+    #
+    calc_energies!(Ham, psiks)
+    Ham.energies.mTS = mTS
     
-    Ehartree = 0.5*dot(rhoe[:,1], Vhartree)*hx
-    Ham.energies.Hartree = Ehartree
-
-    Eion = dot(rhoe, Vion)*hx
-    Ham.energies.Ion = Eion
-
-    epsxc = calc_epsxc_1d(Ham.xc_calc, rhoe[:,1])
-    Exc = dot(rhoe, epsxc)*hx
-    Ham.energies.XC = Exc
-
-    # The total energy (also include nuclei-nuclei or ion-ion energy)
-    Etot = Ekin + Ehartree + Eion + Exc + Ham.energies.NN + mTS
-
-    #println(Ham.energies)
-
-    return Etot
+    return sum(Ham.energies)
 end
 
 
@@ -61,14 +34,24 @@ end
 #
 # psi and Haux will not be modified in place upon calling this function.
 function calc_Lfunc_Haux!(
-    Ham::Hamiltonian1d,
-    psi, # (Nbasis,Nstates)
-    Haux # (Nstates,Nstates)
+    Ham::Hamiltonian,
+    psiks::BlochWavefunc,
+    Haux::Vector{Matrix{Float64}},
+    kT
 )
-    # Calculate ebands first
-    ebands = zeros(Float64, size(psi,2), 1) # ebands need to be of size (Nstates,1)
-    # Ham.electrons.ebands also can be used
-    ebands[:,1], Urot = eigen(Hermitian(Haux)) # Force Haux to be Hermitian
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
+    Nspin = Ham.electrons.Nspin
+    Nkspin = Nkpt * Nspin
+    Nstates = Ham.electrons.Nstates
+    ebands = Ham.electrons.ebands
 
-    return calc_Lfunc_ebands!(Ham, psi*Urot, ebands)
+    psiksU = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    Urot = zeros(Float64, Nstates, Nstates)
+    for ikspin in 1:Nkspin
+        ebands[:,ikspin], Urot[:,:] = eigen(Hermitian(Haux[ikspin]))
+        psiksU[ikspin] = psiks[ikspin]*Urot
+    end
+
+    return calc_Lfunc_ebands!(Ham, psiksU, ebands, kT)
 end
+

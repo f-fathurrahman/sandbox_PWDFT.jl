@@ -2,20 +2,22 @@
 
 
 # Input: ebands
-# Modifies: ebands (copy), Focc, E_fermi, mTS
+# Modifies: Focc, E_fermi, mTS
 # Also set kT (hardcoded)
 function update_from_ebands!(Ham, ebands, kT)
 
-    Nstates = Ham.electrons.Nstates
+    # NOTE: ebands are assumed to be updated outside this function
 
     # Calculate Kohn-Sham eigenvalues and occupation numbers
     Focc = Ham.electrons.Focc
-    Ham.electrons.ebands[:] .= ebands[:]
-
     Nelectrons = Ham.electrons.Nelectrons
-    Ham.electrons.E_fermi, Ham.energies.mTS = update_Focc!(
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
+    wk = Ham.pw.gvecw.kpoints.wk
+
+    E_fermi, mTS = update_Focc!(
         Focc, smear_fermi, smear_fermi_entropy,
-        ebands, Float64(Nelectrons), kT
+        ebands, Float64(Nelectrons), kT,
+        Nkpt, wk
     )
 
     #println("-----------------------")
@@ -31,35 +33,18 @@ function update_from_ebands!(Ham, ebands, kT)
     #println()
     #println("EXIT update_from_ebands!\n")
 
-    return
+    return E_fermi, mTS
 end
 
 
-# Input: psi
-# Modifies: Rhoe, potentials, energies
-function update_from_wavefunc!(Ham, psi)
-    Npoints = Ham.grid.Npoints
-    Vion = Ham.potentials.Ions
-    Vxc = Ham.potentials.XC
-    Vhartree = Ham.potentials.Hartree
-    Vtot = Ham.potentials.Total
-    rhoe = Ham.rhoe
-
-    #println("\nENTER update_from_wavefunc!")
-
-    # Electron density
-    hx = Ham.grid.hx
-    calc_rhoe!(Ham, psi, rhoe)
-    #println("integ rhoe = ", sum(rhoe)*hx)
-
+# Input: psiks
+# Modifies: Ham.rhoe, potentials
+function update_from_wavefunc!(Ham, psiks)    
+    # Compute electron density from psiks
+    # Use Ham.rhoe
+    calc_rhoe!(Ham, psiks, Ham.rhoe)
     # Update the potentials
-    # Note that Vxc, Vhartree, and Vtot refers to Ham.potentials
-    ρ = reshape(rhoe, Npoints) # FIXME: need to do this is Poisson_solve_sum!
-    Poisson_solve_sum!(Ham.grid, ρ, Vhartree)
-    Vxc[:] = calc_Vxc_1d(Ham.xc_calc, rhoe)
-    @views Vtot[:,1] = Vion[:] + Vhartree[:] + Vxc[:,1]
-
-    #println("EXIT update_from_wavefunc!\n")
-
+    update_from_rhoe!(Ham, psiks, Ham.rhoe)
+    # XXX: update_from_rhoe! will not overwrite update Ham.rhoe
     return
 end
