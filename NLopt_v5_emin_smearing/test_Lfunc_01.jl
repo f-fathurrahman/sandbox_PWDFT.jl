@@ -20,7 +20,9 @@ function main()
     if pwinput.occupations == "smearing"
         use_smearing = true
         kT = pwinput.degauss*0.5 # convert from Ry to Ha
+        Ham.electrons.kT = kT
     end
+    # No need to set kT here, it is already default to 0
 
     if pwinput.nspin == 2
         starting_magnetization = pwinput.starting_magnetization
@@ -45,7 +47,7 @@ function main()
         Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
     end
 
-    F = calc_Lfunc_Haux!( Ham, psiks, Haux, kT )
+    F = calc_Lfunc_Haux!( Ham, psiks, Haux )
     @info "F from Lfunc_Haux = $(F)"
 
     Urot = zeros(Float64, Nstates, Nstates)
@@ -54,7 +56,7 @@ function main()
         ebands[:,ikspin], Urot[:,:] = eigen(Hermitian(Haux[ikspin]))
         psiksU[ikspin] = psiks[ikspin]*Urot
     end
-    F = calc_Lfunc_ebands!( Ham, psiksU, ebands, kT )
+    F = calc_Lfunc_ebands!( Ham, psiksU, ebands )
     @info "F from Lfunc_ebands = $(F)"
 end
 

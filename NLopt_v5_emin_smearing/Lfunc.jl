@@ -8,15 +8,14 @@ include("update_Hamiltonian.jl")
 function calc_Lfunc_ebands!(
     Ham::Hamiltonian,
     psiks::BlochWavefunc,
-    ebands::Matrix{Float64}, # (Nstates,Nkspin)
-    kT::Float64
+    ebands::Matrix{Float64} # (Nstates,Nkspin)
 )
-    E_fermi, mTS = update_from_ebands!( Ham, ebands, kT )
-    #@info "E_fermi = $(E_fermi)"
+    update_from_ebands!( Ham, ebands )
     update_from_wavefunc!( Ham, psiks )
     #
     calc_energies!(Ham, psiks)
-    Ham.energies.mTS = mTS
+    # get entropy
+    Ham.energies.mTS = Ham.electrons.mTS
     
     return sum(Ham.energies)
 end
@@ -36,8 +35,7 @@ end
 function calc_Lfunc_Haux!(
     Ham::Hamiltonian,
     psiks::BlochWavefunc,
-    Haux::Vector{Matrix{Float64}},
-    kT
+    Haux::Vector{Matrix{Float64}}
 )
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
     Nspin = Ham.electrons.Nspin
@@ -52,6 +50,6 @@ function calc_Lfunc_Haux!(
         psiksU[ikspin] = psiks[ikspin]*Urot
     end
 
-    return calc_Lfunc_ebands!(Ham, psiksU, ebands, kT)
+    return calc_Lfunc_ebands!(Ham, psiksU, ebands)
 end
 

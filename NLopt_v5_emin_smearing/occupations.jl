@@ -50,7 +50,7 @@ function update_Focc!(
     wk::Vector{Float64}
 )
 
-    E_f = find_E_fermi( smear_func, ebands, Nelectrons, kT, Nkpt )
+    E_f = find_E_fermi( smear_func, ebands, Nelectrons, kT, Nkpt, wk )
     #@info "E_f = $(E_f)"
 
     Nstates = size(ebands, 1)
@@ -132,7 +132,8 @@ function find_E_fermi(
     ebands::Array{Float64,2},
     Nelectrons,
     kT::Float64,
-    Nkpt::Int64;
+    Nkpt::Int64,
+    wk;
     NiterMax=300, verbose=false
 )
 
