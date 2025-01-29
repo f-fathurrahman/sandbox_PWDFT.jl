@@ -24,7 +24,9 @@ function calc_grad!(
         Hpsi = op_H( Ham, psiks[ikspin] )
         Hsub[ikspin][:,:] = psiks[ikspin]' * Hpsi
         Hpsi[:,:] -= psiks[ikspin] * Hsub[ikspin]
-        g[ikspin][:,1:Nstates] .= Focc[1:Nstates,ikspin] .* Hpsi[:,1:Nstates]
+        for ist in 1:Nstates
+            g[ikspin][:,ist] .= Focc[ist,ikspin] .* Hpsi[:,ist]
+        end
     end
     #
     return
@@ -41,6 +43,7 @@ function calc_grad_Haux!(
 
     Nspin = Ham.electrons.Nspin
     Nstates = Ham.electrons.Nstates
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
 
     fprime = zeros(Float64, Nstates)
     fprimeNum = zeros(Float64, Nstates)
@@ -79,7 +82,7 @@ function calc_grad_Haux!(
 
     for ispin in 1:Nspin, ik in 1:Nkpt
         ikspin = ik + (ispin-1)*Nkpt
-        gradF0[:,:] = Hsub[ikspin] - diagm( 0 => ebands[:,ikspin] )
+        gradF0[:,:] = real.(Hsub[ikspin]) - diagm( 0 => ebands[:,ikspin] )
         gradF[:,:] = copy(gradF0)
         for ist in 1:Nstates
             gradF[ist,ist] = gradF0[ist,ist] - dmuContrib # FIXME: not tested for spinpol
@@ -131,31 +134,43 @@ end
 
 
 function calc_grad_Lfunc_Haux!(
-    Ham::Hamiltonian1d,
-    psi, # (Nbasis,Nstates)
-    Haux, # (Nstates,Nstates)
-    g,
+    Ham::Hamiltonian,
+    psiks::BlochWavefunc,
+    Haux::Vector{Matrix{Float64}},
+    g::BlochWavefunc,
     Hsub,
     g_Haux,
     Kg_Haux
 )
 
-    # Calculate ebands first
-    ebands = zeros(size(psi,2),1) # ebands need to be of size (Nstates,1)
-    # Ham.electrons.ebands also can be used
-    ebands[:,1], Urot = eigen(Hermitian(Haux)) # Force Haux to be Hermitian
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
+    Nspin = Ham.electrons.Nspin
+    Nkspin = Nkpt * Nspin
+    Nstates = Ham.electrons.Nstates
+    ebands = Ham.electrons.ebands
 
-    update_from_ebands!(Ham, ebands)
-    update_from_wavefunc!(Ham, psi*Urot)
-    # Urot should not affect anything in Rhoe calculation
+    # Diagonalize Haux and store the results in ebands
+    # Also rotate psiks accordingly
+    psiksU = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    Urot = zeros(Float64, Nstates, Nstates)
+    for ikspin in 1:Nkspin
+        ebands[:,ikspin], Urot[:,:] = eigen(Hermitian(Haux[ikspin]))
+        psiksU[ikspin] = psiks[ikspin]*Urot
+    end
 
-    fill!(g, 0.0)
-    fill!(Hsub, 0.0)
-    fill!(g_Haux, 0.0)
-    fill!(Kg_Haux, 0.0)
+    update_from_ebands!( Ham, ebands )
+    update_from_wavefunc!( Ham, psiks )
 
-    # Evaluate the gradient for psi
-    calc_grad!(Ham, psi*Urot, g, Hsub) # don't forget to include Urot in psi
+    for ikspin in 1:Nkspin
+        fill!(g[ikspin], 0.0 + 0.0*im)
+        fill!(Hsub[ikspin], 0.0 + 0.0*im)
+        fill!(g_Haux[ikspin], 0.0)
+        fill!(Kg_Haux[ikspin], 0.0)
+    end
+
+    # Evaluate the gradients for psi
+    calc_grad!(Ham, psiksU, g, Hsub) # don't forget to include Urot in psi
+    # pass Hsub
     calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
 
     return
@@ -163,7 +178,7 @@ end
 
 
 function calc_grad_Lfunc_ebands!(
-    Ham::Hamiltonian1d,
+    Ham::Hamiltonian,
     psi, # (Nbasis,Nstates)
     ebands, # (Nstates,1)
     g,
