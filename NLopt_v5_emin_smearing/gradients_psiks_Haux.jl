@@ -55,6 +55,7 @@ function calc_grad_Haux!(
     ebands = Ham.electrons.ebands
     kT = Ham.electrons.kT
     E_fermi = Ham.electrons.E_fermi
+    wk = Ham.pw.gvecw.kpoints.wk
 
     if Nspin == 1
         w_spin = 2.0
@@ -69,8 +70,8 @@ function calc_grad_Haux!(
             fprimeNum[ist] += fprime[ist] * ( real(Hsub[ikspin][ist,ist]) - ebands[ist,ikspin] )
         end
         # smear_fermi_prime might return NaN if E_fermi is not set properly
-        dmuNum[ispin] += w_spin * sum(fprimeNum)
-        dmuDen[ispin] += w_spin * sum(fprime)
+        dmuNum[ispin] += wk[ik] * sum(fprimeNum)
+        dmuDen[ispin] += wk[ik] * sum(fprime)
     end
 
     dmuContrib = sum(dmuNum)/sum(dmuDen)
