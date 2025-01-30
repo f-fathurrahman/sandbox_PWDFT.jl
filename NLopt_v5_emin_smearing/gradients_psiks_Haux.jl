@@ -159,7 +159,7 @@ function calc_grad_Lfunc_Haux!(
     end
 
     update_from_ebands!( Ham, ebands )
-    update_from_wavefunc!( Ham, psiks )
+    update_from_wavefunc!( Ham, psiksU )
 
     for ikspin in 1:Nkspin
         fill!(g[ikspin], 0.0 + 0.0*im)
