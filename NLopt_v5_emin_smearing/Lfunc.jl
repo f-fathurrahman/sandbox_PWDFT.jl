@@ -15,6 +15,7 @@ function calc_Lfunc_ebands!(
     #
     calc_energies!(Ham, psiks)
     # get entropy
+    # Ham.electrons.mTS is computed in update_from_ebands!
     Ham.energies.mTS = Ham.electrons.mTS
     
     return sum(Ham.energies)

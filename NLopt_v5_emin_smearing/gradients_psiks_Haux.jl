@@ -11,6 +11,7 @@ function calc_grad_psiks!(
     Nspin = Ham.electrons.Nspin
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
     Focc = Ham.electrons.Focc
+    wk = Ham.pw.gvecw.kpoints.wk
 
     #XXX Preallocate Hpsi ? Using Ngwx?
     # Ngwx = maximum(Ham.pw.gvecw.Ngw)
@@ -25,7 +26,8 @@ function calc_grad_psiks!(
         Hsub[ikspin][:,:] = psiks[ikspin]' * Hpsi
         Hpsi[:,:] -= psiks[ikspin] * Hsub[ikspin]
         for ist in 1:Nstates
-            g[ikspin][:,ist] .= Focc[ist,ikspin] .* Hpsi[:,ist]
+            # dont forget Focc and wk factor 
+            g[ikspin][:,ist] .= Focc[ist,ikspin] .* Hpsi[:,ist] * wk[ik]
         end
     end
     #
@@ -73,11 +75,12 @@ function calc_grad_Haux!(
         # smear_fermi_prime might return NaN if E_fermi is not set properly
         dmuNum[ispin] += wk[ik] * sum(fprimeNum)
         dmuDen[ispin] += wk[ik] * sum(fprime)
-        println(dmuNum[ispin], " ", dmuDen[ispin])
+        #println(dmuNum[ispin], " ", dmuDen[ispin])
     end
 
     dmuContrib = sum(dmuNum)/sum(dmuDen)
-    dBzContrib = 0.0 # not used
+    #println("dmuContrib = ", dmuContrib)
+    #dBzContrib = 0.0 # not used
 
     gradF0 = zeros(Float64, Nstates, Nstates)
     gradF = zeros(Float64, Nstates, Nstates)

@@ -1,7 +1,7 @@
 using LinearAlgebra
 using Printf
 using Infiltrator
-using Random
+using Serialization
 
 using PWDFT
 
@@ -10,16 +10,11 @@ include("occupations.jl")
 include("update_Hamiltonian.jl")
 include("Lfunc.jl")
 include("gradients_psiks_Haux.jl")
-include("utilities_emin_smearing.jl")
 
 function main()
 
     Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT");
-
-    Random.seed!(1234)
-
-    # This will take into account whether the overlap operator is needed or not
-    psiks = rand_BlochWavefunc(Ham)
+    # psiks and Haux will be read from files
 
     use_smearing = false
     kT = 0.0
@@ -44,12 +39,20 @@ function main()
     Focc = Ham.electrons.Focc
     wk = Ham.pw.gvecw.kpoints.wk
     Nelectrons = Ham.electrons.Nelectrons
+    CellVolume = Ham.pw.CellVolume
 
-    # Prepare Haux
+    psiks = deserialize("psiks.jldat")
+    # Renormalize
+    for ikspin in 1:Nkspin
+        psiks[ikspin] .*= sqrt(CellVolume)
+    end
+
+    # This is only for computing diagonal Haux
+    Hsub = deserialize("Hsub.jldat")
     Haux = Vector{Matrix{Float64}}(undef, Nkspin)
     for ikspin in 1:Nkspin
-        Haux[ikspin] = randn(Float64, Nstates, Nstates)
-        Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
+        Haux[ikspin] = zeros(Float64, Nstates, Nstates)
+        Haux[ikspin][:,:] = diagm( 0 => eigvals(Hermitian(Hsub[ikspin])) )
     end
 
     g = zeros_BlochWavefunc(Ham)
@@ -65,37 +68,20 @@ function main()
     # Compute this once
     Ham.energies.NN = calc_E_NN(Ham.atoms)
 
-    # Make Haux diagonal
-    transform_psiks_Haux!( Ham, psiks, Haux )
-
     E1 = calc_Lfunc_Haux!( Ham, psiks, Haux )
     @info "E1 from Lfunc_Haux = $(E1)"
 
     calc_grad_Lfunc_Haux!( Ham, psiks, Haux, g, Hsub, g_Haux, Kg_Haux )
 
-    Δ = 1e-5
-    Δ_Haux = 1e-5
-    dW = Δ*g
-    dW_Haux = Δ_Haux*g_Haux
-    psiks_new = psiks + dW
-    Haux_new = Haux + dW_Haux
-    for ikspin in 1:Nkspin
-        ortho_sqrt!(Ham, psiks_new[ikspin])
-    end
-    E2 = calc_Lfunc_Haux!( Ham, psiks_new, Haux_new )
-    @info "E2 from Lfunc_Haux = $(E2)"
+    # Compute Haux again
+    Hsub_after = deserialize("Hsub_after.jldat")
+    calc_grad_Haux!( Ham, Hsub_after, g_Haux, Kg_Haux )
 
-    ΔE = abs(E1 - E2)
-    dE_psiks = 2*real(dot(g, dW))
-    dE_Haux = dot(g_Haux, dW_Haux)
-    println("dE_psiks = ", dE_psiks)
-    println("dE_Haux = ", dE_Haux)
-    println("ratio abs(ΔE)/dE = ", ΔE/(dE_psiks + dE_Haux) )
 
     @infiltrate
 
 end
 
-
-
 main()
+
+
