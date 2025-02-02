@@ -1,6 +1,6 @@
 
-# for psiks
-function calc_grad!(
+# for psiks, renamed to calc_grad_psiks! to avoid name clashing
+function calc_grad_psiks!(
     Ham::Hamiltonian,
     psiks::BlochWavefunc,
     g::BlochWavefunc,
@@ -34,8 +34,9 @@ end
 
 
 # Gradient for Haux
-# The real input is actually stored in Ham.electrons.ebands which is calculated
-# from diagonalizing Haux
+# The real input is actually stored in Ham.electrons.ebands which
+# is calculated from diagonalizing Haux
+# Haux need to be diagonal here
 function calc_grad_Haux!(
     Ham, Hsub, g_Haux, Kg_Haux;
     κ=1.0
@@ -66,12 +67,13 @@ function calc_grad_Haux!(
         ikspin = ik + (ispin-1)*Nkpt
         # accumulate with Nkpt? Add wk ?
         for ist in 1:Nstates
-            fprime[ist] += smear_fermi_prime( ebands[ist,ikspin], E_fermi, kT )
-            fprimeNum[ist] += fprime[ist] * ( real(Hsub[ikspin][ist,ist]) - ebands[ist,ikspin] )
+            fprime[ist] = smear_fermi_prime( ebands[ist,ikspin], E_fermi, kT )
+            fprimeNum[ist] = fprime[ist] * ( real(Hsub[ikspin][ist,ist]) - ebands[ist,ikspin] )
         end
         # smear_fermi_prime might return NaN if E_fermi is not set properly
         dmuNum[ispin] += wk[ik] * sum(fprimeNum)
         dmuDen[ispin] += wk[ik] * sum(fprime)
+        println(dmuNum[ispin], " ", dmuDen[ispin])
     end
 
     dmuContrib = sum(dmuNum)/sum(dmuDen)
@@ -89,7 +91,7 @@ function calc_grad_Haux!(
             gradF[ist,ist] = gradF0[ist,ist] - dmuContrib # FIXME: not tested for spinpol
         end
         g_tmp[:,:] = grad_smear( smear_fermi, smear_fermi_prime, ebands[:,ikspin], E_fermi, kT, gradF )
-        g_Haux[ikspin][:,:] = w_spin * 0.5 * (g_tmp' + g_tmp)
+        g_Haux[ikspin][:,:] = wk[ik] * 0.5 * (g_tmp' + g_tmp)
         Kg_Haux[ikspin][:,:] = -κ * gradF0[:,:] # preconditioning here?
     end
 
@@ -155,7 +157,9 @@ function calc_grad_Lfunc_Haux!(
     psiksU = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     Urot = zeros(Float64, Nstates, Nstates)
     for ikspin in 1:Nkspin
+        # diagonal Haux is stored as ebands
         ebands[:,ikspin], Urot[:,:] = eigen(Hermitian(Haux[ikspin]))
+        # Also rotate psiks
         psiksU[ikspin] = psiks[ikspin]*Urot
     end
 
@@ -170,7 +174,7 @@ function calc_grad_Lfunc_Haux!(
     end
 
     # Evaluate the gradients for psi
-    calc_grad!(Ham, psiksU, g, Hsub) # don't forget to include Urot in psi
+    calc_grad_psiks!(Ham, psiksU, g, Hsub) # don't forget to include Urot in psi
     # pass Hsub
     calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
 
@@ -178,6 +182,7 @@ function calc_grad_Lfunc_Haux!(
 end
 
 
+#=
 function calc_grad_Lfunc_ebands!(
     Ham::Hamiltonian,
     psi, # (Nbasis,Nstates)
@@ -201,7 +206,9 @@ function calc_grad_Lfunc_ebands!(
     fill!(Kg_Haux, 0.0)
 
     # Evaluate the gradient for psi
-    calc_grad!(Ham, psi, g, Hsub)
+    calc_grad_psiks!(Ham, psi, g, Hsub)
     calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
     return
 end
+=#
+

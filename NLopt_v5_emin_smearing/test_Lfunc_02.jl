@@ -1,5 +1,7 @@
 using LinearAlgebra
 using Printf
+using Serialization
+using Infiltrator
 
 using PWDFT
 
@@ -12,9 +14,6 @@ include("utilities_emin_smearing.jl")
 function main()
 
     Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT");
-
-    # This will take into account whether the overlap operator is needed or not
-    psiks = rand_BlochWavefunc(Ham)
 
     use_smearing = false
     kT = 0.0
@@ -39,26 +38,29 @@ function main()
     Focc = Ham.electrons.Focc
     wk = Ham.pw.gvecw.kpoints.wk
     Nelectrons = Ham.electrons.Nelectrons
+    CellVolume = Ham.pw.CellVolume
 
-
-    Haux = Vector{Matrix{Float64}}(undef, Nkspin)
-    Urot = zeros(Float64, Nstates, Nstates)
+    psiks = deserialize("psiks.jldat")
+    # Renormalize
     for ikspin in 1:Nkspin
-        Haux[ikspin] = randn(Float64, Nstates, Nstates)
-        Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
+        psiks[ikspin] .*= sqrt(CellVolume)
     end
+
+    Hsub = deserialize("Hsub.jldat")
+    Haux = Vector{Matrix{Float64}}(undef, Nkspin)
+    for ikspin in 1:Nkspin
+        Haux[ikspin] = zeros(Float64, Nstates, Nstates)
+        Haux[ikspin][:,:] = diagm( 0 => eigvals(Hermitian(Hsub[ikspin])) )
+    end
+
+    # Compute this once
+    Ham.energies.NN = calc_E_NN(Ham.atoms)
 
     F1 = calc_Lfunc_Haux!( Ham, psiks, Haux )
     @info "F1 from Lfunc_Haux = $(F1)"
 
-    Urot = zeros(ComplexF64, Nstates, Nstates)
-    for ikspin in 1:Nkspin
-        Urot[:,:] = random_unitary_matrix(Nstates)
-        psiks[ikspin][:,:] = psiks[ikspin] * Urot
-        Haux[ikspin][:,:] = Urot' * Haux[ikspin] * Urot
-    end
-    F2 = calc_Lfunc_Haux!( Ham, psiks, Haux )
-    @info "F2 from Lfunc_ebands = $(F2)"
+    @infiltrate
+
 end
 
 main()
