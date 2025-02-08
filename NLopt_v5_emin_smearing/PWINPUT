@@ -13,7 +13,7 @@
   nat = 1
   ntyp = 1
   ecutwfc = 40.0
-  nbnd = 12
+  nbnd = 7
   input_dft = 'slater+vwn'
   occupations = 'smearing'
   smearing = 'fermi-dirac'
