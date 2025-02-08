@@ -7,7 +7,6 @@ using PWDFT
 
 include("smearing.jl")
 include("occupations.jl")
-include("update_Hamiltonian.jl")
 include("Lfunc.jl")
 include("gradients_psiks_Haux.jl")
 

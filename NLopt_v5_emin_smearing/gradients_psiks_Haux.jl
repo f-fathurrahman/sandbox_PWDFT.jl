@@ -1,5 +1,7 @@
 
 # for psiks, renamed to calc_grad_psiks! to avoid name clashing
+# input: Ham, psiks
+# output: g, Hsub
 function calc_grad_psiks!(
     Ham::Hamiltonian,
     psiks::BlochWavefunc,
@@ -39,6 +41,8 @@ end
 # The real input is actually stored in Ham.electrons.ebands which
 # is calculated from diagonalizing Haux
 # Haux need to be diagonal here
+# Input: Ham, Hsub
+# Output: g_Haux, Kg_Haux
 function calc_grad_Haux!(
     Ham, Hsub, g_Haux, Kg_Haux;
     κ=1.0
@@ -75,11 +79,11 @@ function calc_grad_Haux!(
         # smear_fermi_prime might return NaN if E_fermi is not set properly
         dmuNum[ispin] += wk[ik] * sum(fprimeNum)
         dmuDen[ispin] += wk[ik] * sum(fprime)
-        #println(dmuNum[ispin], " ", dmuDen[ispin])
+        println(dmuNum[ispin], " ", dmuDen[ispin])
     end
 
     dmuContrib = sum(dmuNum)/sum(dmuDen)
-    #println("dmuContrib = ", dmuContrib)
+    println("dmuContrib = ", dmuContrib)
     #dBzContrib = 0.0 # not used
 
     gradF0 = zeros(Float64, Nstates, Nstates)
