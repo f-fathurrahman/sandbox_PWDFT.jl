@@ -1,3 +1,22 @@
+function constrain_search_dir!( d::BlochWavefunc, psiks::BlochWavefunc )
+    Nkspin = length(psiks)
+    for i in 1:Nkspin
+        d[i][:,:] = d[i] - psiks[i] * ( psiks[i]' * d[i] )
+    end
+    return
+end
+
+
+function my_Kprec!(Ham, g, Kg)
+    Nspin = Ham.electrons.Nspin
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
+    for ispin in 1:Nspin, ik in 1:Nkpt
+        ikspin = ik + (ispin-1)*Nkpt
+        Kprec!( ik, Ham.pw, g[ikspin], Kg[ikspin] )
+    end
+    return
+end
+
 
 # for psiks, renamed to calc_grad_psiks! to avoid name clashing
 # input: Ham, psiks

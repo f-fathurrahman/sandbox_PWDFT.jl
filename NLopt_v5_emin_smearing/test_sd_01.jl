@@ -55,13 +55,18 @@ function main()
 
     # Gradients, subspace Hamiltonian
     g = zeros_BlochWavefunc(Ham)
+    Kg = zeros_BlochWavefunc(Ham)
+    d = zeros_BlochWavefunc(Ham)
+    #
     Hsub = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     g_Haux = Vector{Matrix{Float64}}(undef, Nkspin)
     Kg_Haux = Vector{Matrix{Float64}}(undef, Nkspin)
+    d_Haux = Vector{Matrix{Float64}}(undef, Nkspin)
     for ikspin in 1:Nkspin
         Hsub[ikspin] = zeros(ComplexF64, Nstates, Nstates)
         g_Haux[ikspin] = zeros(Float64, Nstates, Nstates)
         Kg_Haux[ikspin] = zeros(Float64, Nstates, Nstates)
+        d_Haux[ikspin] = zeros(Float64, Nstates, Nstates)
     end
 
     # psiks is already orthonormal
@@ -77,28 +82,45 @@ function main()
 
     #calc_grad_Lfunc_Haux!( Ham, psiks, Haux, g, Hsub, g_Haux, Kg_Haux )
 
-    calc_grad_psiks!(Ham, psiks, g, Hsub) # don't forget to include Urot in psi
+    calc_grad_psiks!(Ham, psiks, g, Hsub)
+    my_Kprec!(Ham, g, Kg)
     calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
 
     @info "Test grad psiks: $(2*dot(g, psiks))"
     @info "Test grad Haux: $(dot(Haux, g_Haux))"
 
-    Δ_orig = 1e-1
-    Δ = 1e-1
+    α = 1e-1
 
     for iterSD in 1:1000
 
-        psiks .-= Δ*g
-        Haux .-= Δ*g_Haux
+        # Set direction
+        for ikspin in 1:Nkspin
+            d[ikspin][:,:] = -Kg[ikspin][:,:]
+            d_Haux[ikspin][:,:] = -Kg_Haux[ikspin][:,:]
+        end
+        constrain_search_dir!(d, psiks)
+
+        gd = 2*real(dot(g,d)) + dot(g_Haux, d_Haux)
+        @info "gd = $(gd)"
+        if gd > 0
+            error("Bad step direction")
+        end
+
+        # Step
+        psiks .+= α*d
+        Haux .+= α*d_Haux
+
         for ikspin in 1:Nkspin
             ortho_sqrt!(Ham, psiks[ikspin])
         end
-
         transform_psiks_Haux_update_ebands!( Ham, psiks, Haux )
         update_from_ebands!( Ham )
         update_from_wavefunc!( Ham, psiks )
+        #
         E2 = calc_Lfunc( Ham, psiks )
-        calc_grad_psiks!(Ham, psiks, g, Hsub) # don't forget to include Urot in psi
+        #
+        calc_grad_psiks!(Ham, psiks, g, Hsub)
+        my_Kprec!(Ham, g, Kg)
         calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
 
         #
