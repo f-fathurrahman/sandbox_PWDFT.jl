@@ -89,58 +89,33 @@ function main()
     println("Test grad psiks: $(2*dot(g, psiks))")
     println("Test grad Haux: $(dot(Haux, g_Haux))")
 
+
+    # Set direction
+    for ikspin in 1:Nkspin
+        d[ikspin][:,:] = -Kg[ikspin][:,:]
+        d_Haux[ikspin][:,:] = -Kg_Haux[ikspin][:,:]
+    end
+    constrain_search_dir!(d, psiks)
+
+    gd = 2*real(dot(g,d)) + dot(g_Haux, d_Haux)
+    @info "gd = $(gd)"
+    if gd > 0
+        error("Bad step direction")
+    end
+
     α = 1.0
+    E_old = E1
+    E_new = try_step!(α, Ham, psiks, Haux, d, d_Haux)
+    println("E_new = ", E_new)
+    if E_old < E_new
+        @warn "E_new is larger"
+    end
 
-    for iterSD in 1:30
-
-        # Set direction
-        for ikspin in 1:Nkspin
-            d[ikspin][:,:] = -Kg[ikspin][:,:]
-            d_Haux[ikspin][:,:] = -Kg_Haux[ikspin][:,:]
-        end
-        constrain_search_dir!(d, psiks)
-
-        gd = 2*real(dot(g,d)) + dot(g_Haux, d_Haux)
-        @info "gd = $(gd)"
-        if gd > 0
-            error("Bad step direction")
-        end
-
-        # Step
-        psiks .+= α*d
-        Haux .+= α*d_Haux
-
-        for ikspin in 1:Nkspin
-            ortho_sqrt!(Ham, psiks[ikspin])
-        end
-        transform_psiks_Haux_update_ebands!( Ham, psiks, Haux )
-        update_from_ebands!( Ham )
-        update_from_wavefunc!( Ham, psiks )
-        #
-        E2 = calc_Lfunc( Ham, psiks )
-        #
-        calc_grad_psiks!(Ham, psiks, g, Hsub)
-        my_Kprec!(Ham, g, Kg)
-        calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
-        println("Test grad psiks: $(2*dot(g, psiks))")
-        println("Test grad Haux: $(dot(Haux, g_Haux))")
-
-        #
-        ΔE = E2 - E1
-        println("iterSD=$(iterSD) E=$(E2) abs(ΔE)=$(abs(ΔE)) E_fermi=$(Ham.electrons.E_fermi)")
-
-        #
-        if ΔE > 0
-            @warn "Energy is increasing"
-        end
-        #
-        if abs(ΔE) < 1e-6
-            @info "Converged"
-            break
-        end
-
-        E1 = E2
-
+    E_old = E_new
+    E_new = try_step!(α, Ham, psiks, Haux, d, d_Haux)
+    println("E_new = ", E_new)
+    if E_old < E_new
+        @warn "E_new is larger"
     end
 
     @infiltrate
@@ -148,5 +123,24 @@ function main()
 end
 
 
+# Ham.electrons.ebands and Ham.rhoe are modified
+# psiks and Haux are not modified
+function try_step!(α::Float64, Ham, psiks, Haux, d, d_Haux)
+
+    Nkspin = length(psiks)
+
+    # Step
+    psiks_new = psiks + α*d
+    Haux_new = Haux + α*d_Haux
+    for ikspin in 1:Nkspin
+        ortho_sqrt!(Ham, psiks_new[ikspin])
+    end
+    transform_psiks_Haux_update_ebands!( Ham, psiks_new, Haux_new )
+    update_from_ebands!( Ham )
+    update_from_wavefunc!( Ham, psiks_new )
+    #
+    E_try = calc_Lfunc( Ham, psiks_new )
+    return E_try
+end
 
 main()
