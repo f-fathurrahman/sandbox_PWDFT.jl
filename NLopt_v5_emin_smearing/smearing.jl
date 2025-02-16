@@ -69,7 +69,7 @@ end
 # `smear` and `smear_prime` must match
 function grad_smear(
     smear_func, smear_func_prime,
-    evals::Array{Float64,1}, E_f::Float64, kT::Float64, ∇F::Matrix{Float64}
+    evals::Array{Float64,1}, E_f::Float64, kT::Float64, ∇F
 )
     ∇ϵ = copy(∇F)
     #

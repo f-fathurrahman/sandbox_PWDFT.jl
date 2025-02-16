@@ -105,13 +105,13 @@ function calc_grad_Haux!(
     println("dmuContrib = $(dmuContrib)")
     #dBzContrib = 0.0 # not used
 
-    gradF0 = zeros(Float64, Nstates, Nstates)
-    gradF = zeros(Float64, Nstates, Nstates)
-    g_tmp = zeros(Float64, Nstates, Nstates)
+    gradF0 = zeros(ComplexF64, Nstates, Nstates)
+    gradF = zeros(ComplexF64, Nstates, Nstates)
+    g_tmp = zeros(ComplexF64, Nstates, Nstates)
 
     for ispin in 1:Nspin, ik in 1:Nkpt
         ikspin = ik + (ispin-1)*Nkpt
-        gradF0[:,:] = real.(Hsub[ikspin]) - diagm( 0 => ebands[:,ikspin] )
+        gradF0[:,:] = Hsub[ikspin] - diagm( 0 => ebands[:,ikspin] )
         gradF[:,:] = copy(gradF0)
         for ist in 1:Nstates
             gradF[ist,ist] = gradF0[ist,ist] - dmuContrib # FIXME: not tested for spinpol
@@ -120,6 +120,27 @@ function calc_grad_Haux!(
         g_Haux[ikspin][:,:] = wk[ik] * 0.5 * (g_tmp' + g_tmp)
         Kg_Haux[ikspin][:,:] = -κ * gradF0[:,:] # preconditioning here?
     end
+
+    #@infiltrate
+
+    Haux = get_diag_Haux_from_ebands( Ham )
+    check_grad = real(dot(Haux, g_Haux))
+    @info "check_grad = $(check_grad)"
+    if abs(check_grad) > 1e-3 || isnan(check_grad)
+        @info "Wrong gradients?"
+        @infiltrate
+    end
+
+    #if isnan(dmuContrib)
+    #    @infiltrate
+    #end
+    
+    if sum(abs.(dmuDen)) < 1e-10
+        # something wrong with E_fermi and ebands
+        println("Very small dmuDen")
+        @infiltrate
+    end
+
 
     return
 
