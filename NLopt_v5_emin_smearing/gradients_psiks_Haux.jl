@@ -64,7 +64,7 @@ end
 # Output: g_Haux, Kg_Haux
 function calc_grad_Haux!(
     Ham, Hsub, g_Haux, Kg_Haux;
-    κ=1.0
+    κ=0.1
 )
 
     Nspin = Ham.electrons.Nspin
@@ -102,6 +102,10 @@ function calc_grad_Haux!(
     end
 
     dmuContrib = sum(dmuNum)/sum(dmuDen)
+    if isnan(dmuContrib)
+        @warn "dmuContrib is set to unity"
+        dmuContrib = sign(sum(dmuNum))*sign(sum(dmuDen))
+    end
     println("dmuContrib = $(dmuContrib)")
     #dBzContrib = 0.0 # not used
 
@@ -123,23 +127,24 @@ function calc_grad_Haux!(
 
     #@infiltrate
 
-    Haux = get_diag_Haux_from_ebands( Ham )
-    check_grad = real(dot(Haux, g_Haux))
-    @info "check_grad = $(check_grad)"
-    if abs(check_grad) > 1e-3 || isnan(check_grad)
-        @info "Wrong gradients?"
-        @infiltrate
-    end
-
-    #if isnan(dmuContrib)
+    #Haux = get_diag_Haux_from_ebands( Ham )
+    #check_grad = real(dot(Haux, g_Haux))
+    #@info "check_grad = $(check_grad)"
+    #if abs(check_grad) > 1e-3 || isnan(check_grad)
+    #    @info "Wrong gradients?"
     #    @infiltrate
     #end
-    
-    if sum(abs.(dmuDen)) < 1e-10
-        # something wrong with E_fermi and ebands
-        println("Very small dmuDen")
+
+    if isnan(dmuContrib)
+        @warn "Something wrong with dmuContrib"
         @infiltrate
     end
+    
+    #if sum(abs.(dmuDen)) < 1e-10
+    #    # something wrong with E_fermi and ebands
+    #    println("Very small dmuDen")
+    #    @infiltrate
+    #end
 
 
     return

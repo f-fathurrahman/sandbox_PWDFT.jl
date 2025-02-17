@@ -104,9 +104,9 @@ function main()
         UrotC[ikspin] = zeros(ComplexF64, Nstates, Nstates)
     end
 
-    α = 0.1
+    α = 1.0
 
-    for iterSD in 1:10
+    for iterSD in 1:50
 
         # Set direction
         for ikspin in 1:Nkspin
@@ -136,13 +136,12 @@ function main()
             psiks[ikspin][:,:] = psiks[ikspin]*UrotC[ikspin]
         end
 
-        #=
+        
         for ikspin in 1:Nkspin
             rotPrev[ikspin] = rotPrev[ikspin] * Urot[ikspin]
             rotPrevC[ikspin] = rotPrevC[ikspin] * UrotC[ikspin]
             rotPrevCinv[ikspin] = inv(UrotC[ikspin]) * rotPrevCinv[ikspin]
         end
-        =#
 
         update_from_ebands!( Ham )
         update_from_wavefunc!( Ham, psiks )
