@@ -51,7 +51,7 @@ function update_Focc!(
 )
 
     E_f = find_E_fermi( smear_func, ebands, Nelectrons, kT, Nkpt, wk )
-    #@info "E_f = $(E_f)"
+    @info "Found E_fermi = $(E_f)"
 
     Nstates = size(ebands, 1)
     Nkspin = size(ebands, 2)
@@ -103,7 +103,7 @@ end
 function sum_Focc(
     smear_func,
     ebands::Array{Float64,2},
-    ene::Float64,
+    E_f::Float64,
     kT::Float64,
     Nkpt::Int64,
     wk
@@ -121,7 +121,7 @@ function sum_Focc(
     ss = 0.0
     for ispin in 1:Nspin, ik in 1:Nkpt, ist in 1:Nstates
         ikspin = ik + (ispin-1)*Nkpt
-        ss = ss + w_spin * wk[ik] * smear_func( ebands[ist,ikspin], ene, kT )
+        ss = ss + w_spin * wk[ik] * smear_func( ebands[ist,ikspin], E_f, kT )
     end
     return ss
 end
@@ -189,7 +189,7 @@ function find_E_fermi(
         Ef_old = Ef
     end
 
-    @printf("WARNING: Ef is not found after %d iterations\n", NiterMax)
+    @warn "WARNING: Ef is not found after $(NiterMax) iterations"
     return Ef
     
 end
