@@ -64,7 +64,7 @@ end
 # Output: g_Haux, Kg_Haux
 function calc_grad_Haux!(
     Ham, Hsub, g_Haux, Kg_Haux;
-    κ=0.1
+    κ=1.0
 )
 
     Nspin = Ham.electrons.Nspin
