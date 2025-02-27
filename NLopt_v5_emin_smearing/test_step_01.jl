@@ -11,6 +11,51 @@ include("Lfunc.jl")
 include("gradients_psiks_Haux.jl")
 include("utilities_emin_smearing.jl")
 
+
+mutable struct RotationsCache
+    rotPrev::Vector{Matrix{ComplexF64}}
+    rotPrevC::Vector{Matrix{ComplexF64}}
+    rotPrevCinv::Vector{Matrix{ComplexF64}}
+    Urot::Vector{Matrix{ComplexF64}}
+    UrotC::Vector{Matrix{ComplexF64}}
+end
+
+function RotationsCache(Nkspin, Nstates)
+    rotPrev = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    rotPrevC = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    rotPrevCinv = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    Urot = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    UrotC = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    for ikspin in 1:Nkspin
+        rotPrev[ikspin] = Matrix(1.0*I(Nstates))
+        rotPrevC[ikspin] = Matrix(1.0*I(Nstates))
+        rotPrevCinv[ikspin] = Matrix(1.0*I(Nstates))
+        Urot[ikspin] = Matrix(1.0*I(Nstates))
+        UrotC[ikspin] = Matrix(1.0*I(Nstates))
+    end
+    return RotationsCache(
+        rotPrev,
+        rotPrevC,
+        rotPrevCinv,
+        Urot,
+        UrotC,
+    )
+end
+
+
+function rotate_gradients!(g, Kg, g_Haux, Kg_Haux, rots_cache)
+    Nkspin = length(g)
+    rotPrevCinv = rots_cache.rotPrevCinv
+    rotPrev = rots_cache.rotPrev
+    for ikspin in 1:Nkspin
+        g[ikspin][:,:] = g[ikspin][:,:] * rotPrevCinv[ikspin]
+        Kg[ikspin][:,:] = Kg[ikspin][:,:] * rotPrevCinv[ikspin]
+        g_Haux[ikspin][:,:] = rotPrev[ikspin] * g_Haux[ikspin][:,:] * rotPrev[ikspin]'
+        Kg_Haux[ikspin][:,:] = rotPrev[ikspin] * Kg_Haux[ikspin][:,:] * rotPrev[ikspin]'
+    end
+    return
+end
+
 function main()
 
     Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT");
@@ -47,9 +92,9 @@ function main()
     Nelectrons = Ham.electrons.Nelectrons
 
     # Prepare Haux (random numbers)
-    Haux = Vector{Matrix{Float64}}(undef, Nkspin)
+    Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     for ikspin in 1:Nkspin
-        Haux[ikspin] = randn(Float64, Nstates, Nstates)
+        Haux[ikspin] = randn(ComplexF64, Nstates, Nstates)
         Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
     end
 
@@ -59,20 +104,23 @@ function main()
     d = zeros_BlochWavefunc(Ham)
     #
     Hsub = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-    g_Haux = Vector{Matrix{Float64}}(undef, Nkspin)
-    Kg_Haux = Vector{Matrix{Float64}}(undef, Nkspin)
-    d_Haux = Vector{Matrix{Float64}}(undef, Nkspin)
+    g_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    Kg_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    d_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     for ikspin in 1:Nkspin
         Hsub[ikspin] = zeros(ComplexF64, Nstates, Nstates)
-        g_Haux[ikspin] = zeros(Float64, Nstates, Nstates)
-        Kg_Haux[ikspin] = zeros(Float64, Nstates, Nstates)
-        d_Haux[ikspin] = zeros(Float64, Nstates, Nstates)
+        g_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
+        Kg_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
+        d_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
     end
+
+    rots_cache = RotationsCache(Nkspin, Nstates)
 
     # psiks is already orthonormal
     # Make Haux diagonal and rotate psiks
     # Ham.electrons.ebands are updated here
-    transform_psiks_Haux_update_ebands!( Ham, psiks, Haux )
+    transform_psiks_Haux_update_ebands!( Ham, psiks, Haux, rots_cache )
+    # rots_cache is needed because Haux is not yet diagonal
     #
     # Update Hamiltonian before evaluating free energy
     update_from_ebands!( Ham )
@@ -80,15 +128,15 @@ function main()
     E1 = calc_Lfunc( Ham, psiks )
     @info "E1 from Lfunc_Haux = $(E1)"
 
-    #calc_grad_Lfunc_Haux!( Ham, psiks, Haux, g, Hsub, g_Haux, Kg_Haux )
-
+    # Calculate gradients
     calc_grad_psiks!(Ham, psiks, g, Hsub)
     my_Kprec!(Ham, g, Kg)
     calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
 
+    rotate_gradients!(g, Kg, g_Haux, Kg_Haux, rots_cache)
+
     println("Test grad psiks: $(2*dot(g, psiks))")
     println("Test grad Haux: $(dot(Haux, g_Haux))")
-
 
     # Set direction
     for ikspin in 1:Nkspin
@@ -97,7 +145,7 @@ function main()
     end
     constrain_search_dir!(d, psiks)
 
-    gd = 2*real(dot(g,d)) + dot(g_Haux, d_Haux)
+    gd = 2*real(dot(g,d)) + real(dot(g_Haux, d_Haux))
     @info "gd = $(gd)"
     if gd > 0
         error("Bad step direction")
@@ -105,14 +153,7 @@ function main()
 
     α = 1.0
     E_old = E1
-    E_new = try_step!(α, Ham, psiks, Haux, d, d_Haux)
-    println("E_new = ", E_new)
-    if E_old < E_new
-        @warn "E_new is larger"
-    end
-
-    E_old = E_new
-    E_new = try_step!(α, Ham, psiks, Haux, d, d_Haux)
+    E_new = do_step_psiks_Haux!(α, Ham, psiks, Haux, d, d_Haux, rots_cache)
     println("E_new = ", E_new)
     if E_old < E_new
         @warn "E_new is larger"
@@ -142,5 +183,50 @@ function try_step!(α::Float64, Ham, psiks, Haux, d, d_Haux)
     E_try = calc_Lfunc( Ham, psiks_new )
     return E_try
 end
+
+
+# Ham.electrons.ebands and Ham.rhoe are modified
+# psiks and Haux are modified
+function do_step_psiks_Haux!(α::Float64, Ham, psiks, Haux, d, d_Haux, rots_cache)
+
+    Nkspin = length(psiks)
+
+    ebands = Ham.electrons.ebands
+
+    UrotC = rots_cache.UrotC
+    Urot = rots_cache.Urot
+    rotPrev = rots_cache.rotPrev
+    rotPrevC = rots_cache.rotPrevC
+    rotPrevCinv = rots_cache.rotPrevCinv
+
+    # Step
+    for ikspin in 1:Nkspin
+        psiks[ikspin] += α * d[ikspin] * rotPrevC[ikspin]
+        Haux[ikspin]  += α * rotPrev[ikspin]' * d_Haux[ikspin] * rotPrev[ikspin]
+    end
+
+    for ikspin in 1:Nkspin
+        ebands[:,ikspin], Urot[ikspin][:,:] = eigen(Hermitian(Haux[ikspin]))
+        Haux[ikspin] = diagm( 0 => Ham.electrons.ebands[:,ikspin] )
+        # wavefunc
+        UrotC[ikspin][:,:] = inv(sqrt(psiks[ikspin]' * psiks[ikspin]))
+        UrotC[ikspin][:,:] *= Urot[ikspin] # extra rotation
+        psiks[ikspin][:,:] = psiks[ikspin]*UrotC[ikspin]
+    end
+
+    
+    for ikspin in 1:Nkspin
+        rotPrev[ikspin] = rotPrev[ikspin] * Urot[ikspin]
+        rotPrevC[ikspin] = rotPrevC[ikspin] * UrotC[ikspin]
+        rotPrevCinv[ikspin] = inv(UrotC[ikspin]) * rotPrevCinv[ikspin]
+    end
+
+    update_from_ebands!( Ham )
+    update_from_wavefunc!( Ham, psiks )
+    #
+    E_try = calc_Lfunc( Ham, psiks )
+    return E_try
+end
+
 
 main()

@@ -77,6 +77,39 @@ function transform_psiks_Haux_update_ebands!(Ham, psiks, Haux)
     return
 end
 
+
+
+# Modifies Ham.electrons.ebands, save rotations in rots_cache
+# psiks is assumed to be
+function transform_psiks_Haux_update_ebands!(Ham, psiks, Haux, rots_cache)
+    Nstates = Ham.electrons.Nstates
+    Nspin = Ham.electrons.Nspin
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
+    Nkspin = Nkpt*Nspin
+    ebands = Ham.electrons.ebands
+    #
+    Urot = rots_cache.Urot
+    UrotC = rots_cache.UrotC
+    rotPrev = rots_cache.rotPrev
+    rotPrevC = rots_cache.rotPrevC
+    rotPrevCinv = rots_cache.rotPrevCinv
+    #
+    for ikspin in 1:Nkspin
+        ebands[:,ikspin], Urot[ikspin] = eigen(Hermitian(Haux[ikspin]))
+        psiks[ikspin] *= Urot[ikspin] # rotate psiks
+        Haux[ikspin] = diagm( 0 => Ham.electrons.ebands[:,ikspin] )
+        #
+        rotPrev[ikspin] *= Urot[ikspin]
+        #
+        UrotC[ikspin] *= Urot[ikspin] # extra rotation for wavefunc
+        rotPrevC[ikspin] = rotPrevC[ikspin] * UrotC[ikspin]
+        rotPrevCinv[ikspin] = inv(UrotC[ikspin]) * rotPrevCinv[ikspin]
+    end
+    return
+end
+
+
+
 # Haux (in diagonal form) is stored in Ham.electrons.ebands
 # psiks is already orthonormalized and rotated according to Urot
 # that makes Haux diagonal
@@ -133,7 +166,7 @@ end
 function calc_Lfunc_Haux!(
     Ham::Hamiltonian,
     psiks::BlochWavefunc,
-    Haux::Vector{Matrix{Float64}}
+    Haux::Vector{Matrix{ComplexF64}}
 )
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
     Nspin = Ham.electrons.Nspin
@@ -142,7 +175,7 @@ function calc_Lfunc_Haux!(
     ebands = Ham.electrons.ebands
 
     psiksU = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-    Urot = zeros(Float64, Nstates, Nstates)
+    Urot = zeros(ComplexF64, Nstates, Nstates)
     for ikspin in 1:Nkspin
         ebands[:,ikspin], Urot[:,:] = eigen(Hermitian(Haux[ikspin]))
         psiksU[ikspin] = psiks[ikspin]*Urot
