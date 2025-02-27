@@ -72,6 +72,9 @@ function main()
     my_Kprec!(Ham, g, Kg) # not really needed
     calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
 
+    g_Haux_r = deserialize("DATA_jdftx_Fe_v2/g_Haux.jldat")
+    Kg_Haux_r = deserialize("DATA_jdftx_Fe_v2/Kg_Haux.jldat")
+
     @infiltrate
 
 end
