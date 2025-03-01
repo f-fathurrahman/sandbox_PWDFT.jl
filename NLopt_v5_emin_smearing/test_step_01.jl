@@ -119,8 +119,9 @@ function main()
     # psiks is already orthonormal
     # Make Haux diagonal and rotate psiks
     # Ham.electrons.ebands are updated here
-    transform_psiks_Haux_update_ebands!( Ham, psiks, Haux, rots_cache )
+    transform_psiks_Haux_update_ebands!( Ham, psiks, Haux, rots_cache, do_ortho_psi=false )
     # rots_cache is needed because Haux is not yet diagonal
+    # do_ortho_psi=false because psiks is already orthonormal, UrotC is identity
     #
     # Update Hamiltonian before evaluating free energy
     update_from_ebands!( Ham )
@@ -132,7 +133,8 @@ function main()
     calc_grad_psiks!(Ham, psiks, g, Hsub)
     my_Kprec!(Ham, g, Kg)
     calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
-
+    #
+    # Gradients are also rotated
     rotate_gradients!(g, Kg, g_Haux, Kg_Haux, rots_cache)
 
     println("Test grad psiks: $(2*dot(g, psiks))")
@@ -152,12 +154,18 @@ function main()
     end
 
     α = 1.0
-    E_old = E1
-    E_new = do_step_psiks_Haux!(α, Ham, psiks, Haux, d, d_Haux, rots_cache)
-    println("E_new = ", E_new)
-    if E_old < E_new
-        @warn "E_new is larger"
+    # Step forward (positive α)
+    E2 = do_step_psiks_Haux!(α, Ham, psiks, Haux, d, d_Haux, rots_cache)
+    println("E2 = ", E2)
+    # E2 should be lower (if not overshooting linemin)
+    if E1 < E2
+        @warn "E2 is larger"
     end
+
+    # Step backward (negative α)
+    E3 = do_step_psiks_Haux!(-α, Ham, psiks, Haux, d, d_Haux, rots_cache)
+    println("E3 = ", E3)
+    println("E3 should be the same as E1 = ", E1)
 
     @infiltrate
 
@@ -205,25 +213,12 @@ function do_step_psiks_Haux!(α::Float64, Ham, psiks, Haux, d, d_Haux, rots_cach
         Haux[ikspin]  += α * rotPrev[ikspin]' * d_Haux[ikspin] * rotPrev[ikspin]
     end
 
-    for ikspin in 1:Nkspin
-        ebands[:,ikspin], Urot[ikspin][:,:] = eigen(Hermitian(Haux[ikspin]))
-        Haux[ikspin] = diagm( 0 => Ham.electrons.ebands[:,ikspin] )
-        # wavefunc
-        UrotC[ikspin][:,:] = inv(sqrt(psiks[ikspin]' * psiks[ikspin]))
-        UrotC[ikspin][:,:] *= Urot[ikspin] # extra rotation
-        psiks[ikspin][:,:] = psiks[ikspin]*UrotC[ikspin]
-    end
+    transform_psiks_Haux_update_ebands!( Ham, psiks, Haux, rots_cache, do_ortho_psi=true )
 
-    
-    for ikspin in 1:Nkspin
-        rotPrev[ikspin] = rotPrev[ikspin] * Urot[ikspin]
-        rotPrevC[ikspin] = rotPrevC[ikspin] * UrotC[ikspin]
-        rotPrevCinv[ikspin] = inv(UrotC[ikspin]) * rotPrevCinv[ikspin]
-    end
-
+    # Update Hamiltonian terms
     update_from_ebands!( Ham )
     update_from_wavefunc!( Ham, psiks )
-    #
+    # Now, we are ready to evaluate
     E_try = calc_Lfunc( Ham, psiks )
     return E_try
 end

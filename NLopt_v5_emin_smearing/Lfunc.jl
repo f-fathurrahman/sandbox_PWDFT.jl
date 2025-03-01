@@ -81,7 +81,7 @@ end
 
 # Modifies Ham.electrons.ebands, save rotations in rots_cache
 # psiks is assumed to be
-function transform_psiks_Haux_update_ebands!(Ham, psiks, Haux, rots_cache)
+function transform_psiks_Haux_update_ebands!(Ham, psiks, Haux, rots_cache; do_ortho_psi=true)
     Nstates = Ham.electrons.Nstates
     Nspin = Ham.electrons.Nspin
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
@@ -96,12 +96,17 @@ function transform_psiks_Haux_update_ebands!(Ham, psiks, Haux, rots_cache)
     #
     for ikspin in 1:Nkspin
         ebands[:,ikspin], Urot[ikspin] = eigen(Hermitian(Haux[ikspin]))
-        psiks[ikspin] *= Urot[ikspin] # rotate psiks
         Haux[ikspin] = diagm( 0 => Ham.electrons.ebands[:,ikspin] )
-        #
+        if do_ortho_psi
+            UrotC[ikspin][:,:] = inv(sqrt(psiks[ikspin]' * psiks[ikspin]))
+        end
+        UrotC[ikspin][:,:] *= Urot[ikspin] # extra rotation
+        psiks[ikspin][:,:] = psiks[ikspin]*UrotC[ikspin]
+    end
+    #
+    for ikspin in 1:Nkspin
+        # Save previous
         rotPrev[ikspin] *= Urot[ikspin]
-        #
-        UrotC[ikspin] *= Urot[ikspin] # extra rotation for wavefunc
         rotPrevC[ikspin] = rotPrevC[ikspin] * UrotC[ikspin]
         rotPrevCinv[ikspin] = inv(UrotC[ikspin]) * rotPrevCinv[ikspin]
     end
