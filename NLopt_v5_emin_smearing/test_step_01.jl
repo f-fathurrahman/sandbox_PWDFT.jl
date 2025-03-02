@@ -116,6 +116,8 @@ function main()
 
     rots_cache = RotationsCache(Nkspin, Nstates)
 
+    Haux_orig = copy(Haux)
+
     # psiks is already orthonormal
     # Make Haux diagonal and rotate psiks
     # Ham.electrons.ebands are updated here
@@ -134,11 +136,20 @@ function main()
     my_Kprec!(Ham, g, Kg)
     calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
     #
+    println("Test grad psiks before rotate: $(2*dot(g, psiks))")
+    println("Test grad Haux before rotate: $(dot(Haux, g_Haux))")
+    #
+    #
     # Gradients are also rotated
     rotate_gradients!(g, Kg, g_Haux, Kg_Haux, rots_cache)
+    #
+    println("Test grad psiks after rotate: $(2*dot(g, psiks))")
+    println("Test grad Haux after rotate: $(dot(Haux, g_Haux))")
+    #
+    println("Test grad Haux_orig after rotate: $(dot(Haux, g_Haux))")
+    # need to save Haux_eigs ?
 
-    println("Test grad psiks: $(2*dot(g, psiks))")
-    println("Test grad Haux: $(dot(Haux, g_Haux))")
+    @infiltrate
 
     # Set direction
     for ikspin in 1:Nkspin
