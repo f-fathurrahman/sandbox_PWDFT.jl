@@ -81,7 +81,11 @@ end
 
 # Modifies Ham.electrons.ebands, save rotations in rots_cache
 # psiks is assumed to be
-function transform_psiks_Haux_update_ebands!(Ham, psiks, Haux, rots_cache; do_ortho_psi=true)
+function transform_psiks_Haux_update_ebands!(
+    Ham, psiks, Haux, rots_cache;
+    overwrite_Haux=false,
+    do_ortho_psi=true
+)
     Nstates = Ham.electrons.Nstates
     Nspin = Ham.electrons.Nspin
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
@@ -96,7 +100,10 @@ function transform_psiks_Haux_update_ebands!(Ham, psiks, Haux, rots_cache; do_or
     #
     for ikspin in 1:Nkspin
         ebands[:,ikspin], Urot[ikspin] = eigen(Hermitian(Haux[ikspin]))
-        Haux[ikspin] = diagm( 0 => Ham.electrons.ebands[:,ikspin] )
+        if overwrite_Haux
+            Haux[ikspin] = diagm( 0 => Ham.electrons.ebands[:,ikspin] )
+        end
+        #
         if do_ortho_psi
             UrotC[ikspin][:,:] = inv(sqrt(psiks[ikspin]' * psiks[ikspin]))
         end
