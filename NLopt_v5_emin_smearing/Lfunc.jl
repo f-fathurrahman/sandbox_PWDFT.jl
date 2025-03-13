@@ -83,7 +83,7 @@ end
 # psiks is assumed to be
 function transform_psiks_Haux_update_ebands!(
     Ham, psiks, Haux, rots_cache;
-    overwrite_Haux=false,
+    overwrite_Haux=true,
     do_ortho_psi=true
 )
     Nstates = Ham.electrons.Nstates
