@@ -121,7 +121,9 @@ function main()
     # psiks is already orthonormal
     # Make Haux diagonal and rotate psiks
     # Ham.electrons.ebands are updated here
-    transform_psiks_Haux_update_ebands!( Ham, psiks, Haux, rots_cache, do_ortho_psi=false )
+    transform_psiks_Haux_update_ebands!( Ham, psiks, Haux, rots_cache,
+        do_ortho_psi=false, overwrite_Haux=true
+    )
     # rots_cache is needed because Haux is not yet diagonal
     # do_ortho_psi=false because psiks is already orthonormal, UrotC is identity
     #
@@ -141,15 +143,20 @@ function main()
     #
     #
     # Gradients are also rotated
+    # (XXX: do we absolutely need this?)
+    # XXX: If this is used, then the gradients are w.r.t variables (psiks and Haux) before transformation
+    # XXX: I think we don't need this
+    #=
     rotate_gradients!(g, Kg, g_Haux, Kg_Haux, rots_cache)
     #
     println("Test grad psiks after rotate: $(2*dot(g, psiks))")
     println("Test grad Haux after rotate: $(dot(Haux, g_Haux))")
     #
-    println("Test grad Haux_orig after rotate: $(dot(Haux, g_Haux))")
+    println("Test grad Haux_orig after rotate: $(dot(Haux_orig, g_Haux))")
+    =#
     # need to save Haux_eigs ?
 
-    @infiltrate
+    #@infiltrate
 
     # Set direction
     for ikspin in 1:Nkspin
@@ -178,7 +185,9 @@ function main()
     println("E3 = ", E3)
     println("E3 should be the same as E1 = ", E1)
 
-    @infiltrate
+    # TODO: need to compare variables psiks and Haux after step backward and original
+
+    #@infiltrate
 
 end
 
