@@ -47,9 +47,9 @@ function main()
     Nelectrons = Ham.electrons.Nelectrons
 
     # Prepare Haux (random numbers)
-    Haux = Vector{Matrix{Float64}}(undef, Nkspin)
+    Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     for ikspin in 1:Nkspin
-        Haux[ikspin] = randn(Float64, Nstates, Nstates)
+        Haux[ikspin] = randn(ComplexF64, Nstates, Nstates)
         Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
     end
 
@@ -59,14 +59,14 @@ function main()
     d = zeros_BlochWavefunc(Ham)
     #
     Hsub = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-    g_Haux = Vector{Matrix{Float64}}(undef, Nkspin)
-    Kg_Haux = Vector{Matrix{Float64}}(undef, Nkspin)
-    d_Haux = Vector{Matrix{Float64}}(undef, Nkspin)
+    g_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    Kg_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    d_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     for ikspin in 1:Nkspin
         Hsub[ikspin] = zeros(ComplexF64, Nstates, Nstates)
-        g_Haux[ikspin] = zeros(Float64, Nstates, Nstates)
-        Kg_Haux[ikspin] = zeros(Float64, Nstates, Nstates)
-        d_Haux[ikspin] = zeros(Float64, Nstates, Nstates)
+        g_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
+        Kg_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
+        d_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
     end
 
     # psiks is already orthonormal
@@ -89,7 +89,7 @@ function main()
     println("Test grad psiks: $(2*dot(g, psiks))")
     println("Test grad Haux: $(dot(Haux, g_Haux))")
 
-    α = 1.0
+    α = 0.1
 
     for iterSD in 1:30
 
@@ -100,7 +100,7 @@ function main()
         end
         constrain_search_dir!(d, psiks)
 
-        gd = 2*real(dot(g,d)) + dot(g_Haux, d_Haux)
+        gd = 2*real(dot(g,d)) + real(dot(g_Haux, d_Haux))
         @info "gd = $(gd)"
         if gd > 0
             error("Bad step direction")
