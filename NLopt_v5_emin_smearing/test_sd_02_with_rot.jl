@@ -42,9 +42,6 @@ function main()
     Nkspin = Nkpt*Nspin
     Nstates = Ham.electrons.Nstates
     ebands = Ham.electrons.ebands
-    Focc = Ham.electrons.Focc
-    wk = Ham.pw.gvecw.kpoints.wk
-    Nelectrons = Ham.electrons.Nelectrons
 
     # Prepare Haux (random numbers)
     Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
@@ -104,7 +101,7 @@ function main()
         UrotC[ikspin] = zeros(ComplexF64, Nstates, Nstates)
     end
 
-    α = 1.0
+    α = 0.1
 
     for iterSD in 1:50
 
@@ -129,7 +126,7 @@ function main()
 
         for ikspin in 1:Nkspin
             ebands[:,ikspin], Urot[ikspin][:,:] = eigen(Hermitian(Haux[ikspin]))
-            Haux[ikspin] = diagm( 0 => Ham.electrons.ebands[:,ikspin] )
+            #Haux[ikspin] = diagm( 0 => Ham.electrons.ebands[:,ikspin] )
             # wavefunc
             UrotC[ikspin][:,:] = inv(sqrt(psiks[ikspin]' * psiks[ikspin]))
             UrotC[ikspin][:,:] *= Urot[ikspin] # extra rotation
@@ -152,12 +149,12 @@ function main()
         my_Kprec!(Ham, g, Kg)
         calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
 
-        println("Test grad psiks: $(2*dot(g, psiks))")
-        println("Test grad Haux: $(dot(Haux, g_Haux))")
-        if abs(dot(Haux, g_Haux)) > 0.1
-            @info "Wrong grad Haux again?"
-            @infiltrate
-        end
+        #println("Test grad psiks: $(2*dot(g, psiks))")
+        #println("Test grad Haux: $(dot(Haux, g_Haux))")
+        #if abs(dot(Haux, g_Haux)) > 0.1
+        #    @info "Wrong grad Haux again?"
+        #    @infiltrate
+        #end
 
         for ikspin in 1:Nkspin
             g[ikspin][:,:] = g[ikspin][:,:] * rotPrevCinv[ikspin]
