@@ -11,61 +11,11 @@ include("Lfunc.jl")
 include("gradients_psiks_Haux.jl")
 include("utilities_emin_smearing.jl")
 
-
-mutable struct RotationsCache
-    rotPrev::Vector{Matrix{ComplexF64}}
-    rotPrevC::Vector{Matrix{ComplexF64}}
-    rotPrevCinv::Vector{Matrix{ComplexF64}}
-    Urot::Vector{Matrix{ComplexF64}}
-    UrotC::Vector{Matrix{ComplexF64}}
-end
-
-function RotationsCache(Nkspin, Nstates)
-    rotPrev = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-    rotPrevC = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-    rotPrevCinv = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-    Urot = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-    UrotC = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-    for ikspin in 1:Nkspin
-        rotPrev[ikspin] = Matrix(1.0*I(Nstates))
-        rotPrevC[ikspin] = Matrix(1.0*I(Nstates))
-        rotPrevCinv[ikspin] = Matrix(1.0*I(Nstates))
-        Urot[ikspin] = Matrix(1.0*I(Nstates))
-        UrotC[ikspin] = Matrix(1.0*I(Nstates))
-    end
-    return RotationsCache(
-        rotPrev,
-        rotPrevC,
-        rotPrevCinv,
-        Urot,
-        UrotC,
-    )
-end
-
-
-function rotate_gradients!(g, Kg, g_Haux, Kg_Haux, rots_cache)
-    Nkspin = length(g)
-    rotPrevCinv = rots_cache.rotPrevCinv
-    rotPrev = rots_cache.rotPrev
-    for ikspin in 1:Nkspin
-        g[ikspin][:,:] = g[ikspin][:,:] * rotPrevCinv[ikspin]
-        Kg[ikspin][:,:] = Kg[ikspin][:,:] * rotPrevCinv[ikspin]
-        g_Haux[ikspin][:,:] = rotPrev[ikspin] * g_Haux[ikspin][:,:] * rotPrev[ikspin]'
-        Kg_Haux[ikspin][:,:] = rotPrev[ikspin] * Kg_Haux[ikspin][:,:] * rotPrev[ikspin]'
-    end
-    return
-end
-
 function main()
 
     Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT");
     # Compute this once and for all
     Ham.energies.NN = calc_E_NN(Ham.atoms)
-
-    Random.seed!(1234)
-
-    # This will take into account whether the overlap operator is needed or not
-    psiks = rand_BlochWavefunc(Ham)
 
     use_smearing = false
     kT = 0.0
@@ -86,10 +36,10 @@ function main()
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
     Nkspin = Nkpt*Nspin
     Nstates = Ham.electrons.Nstates
-    ebands = Ham.electrons.ebands
-    Focc = Ham.electrons.Focc
-    wk = Ham.pw.gvecw.kpoints.wk
-    Nelectrons = Ham.electrons.Nelectrons
+
+    Random.seed!(1234)
+    # This will take into account whether the overlap operator is needed or not
+    psiks = rand_BlochWavefunc(Ham)
 
     # Prepare Haux (random numbers)
     Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
@@ -186,6 +136,7 @@ function main()
     println("E3 should be the same as E1 = ", E1)
 
     # TODO: need to compare variables psiks and Haux after step backward and original
+    # TODO: need more steps, e.g 2 times do_step(α) should be the same as do_step(2α), do
 
     #@infiltrate
 
