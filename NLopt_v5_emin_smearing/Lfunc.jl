@@ -291,18 +291,27 @@ function linmin_quad_v01!(Ham, psiks, Haux, g, g_Haux, d, d_Haux, E_old)
 
     α_t = 1.0
     α_safe =  1e-5 # safe step size
-    α = α_safe
+    α = α_safe # declare this outside for loop, set to a "safe" value
+    α_prev = 0.0
+    α_t_ReduceFactor = 0.1
+    α_t_IncreaseFactor = 3.0
     IS_SUCCESS = false
     for itry in 1:NtryMax
         println("--- Begin itry linmin = $(itry) using α_t=$(α_t)")
-        do_step_psiks_Haux!(α, Ham, psiks, Haux, d, d_Haux, rots_cache)
+        do_step_psiks_Haux!(α_t - α_prev, Ham, psiks, Haux, d, d_Haux, rots_cache)
+        α_prev = α_t
         E_t = do_compute_energy(Ham, psiks)
+        if !isfinite(E_t)
+            α_t *= α_t_ReduceFactor
+            println("α_t is reduced to=$(α_t)")
+        end
+        # prediciton of step size
         c = ( E_t - (E_old + α_t*gd) ) / α_t^2
         α = -gd/(2*c)
         println("Find α = $(α)")
         if α < 0
             @info "Wrong curvature, α is negative"
-            α_t *= 2.0
+            α_t *= α_t_IncreaseFactor
             println("Should continue to next iter")
             continue
         end
