@@ -1,3 +1,49 @@
+mutable struct RotationsCache
+    rotPrev::Vector{Matrix{ComplexF64}}
+    rotPrevC::Vector{Matrix{ComplexF64}}
+    rotPrevCinv::Vector{Matrix{ComplexF64}}
+    Urot::Vector{Matrix{ComplexF64}}
+    UrotC::Vector{Matrix{ComplexF64}}
+end
+
+function RotationsCache(Nkspin, Nstates)
+    rotPrev = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    rotPrevC = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    rotPrevCinv = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    Urot = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    UrotC = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    for ikspin in 1:Nkspin
+        rotPrev[ikspin] = Matrix(1.0*I(Nstates))
+        rotPrevC[ikspin] = Matrix(1.0*I(Nstates))
+        rotPrevCinv[ikspin] = Matrix(1.0*I(Nstates))
+        Urot[ikspin] = Matrix(1.0*I(Nstates))
+        UrotC[ikspin] = Matrix(1.0*I(Nstates))
+    end
+    return RotationsCache(
+        rotPrev,
+        rotPrevC,
+        rotPrevCinv,
+        Urot,
+        UrotC,
+    )
+end
+
+
+function rotate_gradients!(g, Kg, g_Haux, Kg_Haux, rots_cache)
+    Nkspin = length(g)
+    rotPrevCinv = rots_cache.rotPrevCinv
+    rotPrev = rots_cache.rotPrev
+    for ikspin in 1:Nkspin
+        g[ikspin][:,:] = g[ikspin][:,:] * rotPrevCinv[ikspin]
+        Kg[ikspin][:,:] = Kg[ikspin][:,:] * rotPrevCinv[ikspin]
+        g_Haux[ikspin][:,:] = rotPrev[ikspin] * g_Haux[ikspin][:,:] * rotPrev[ikspin]'
+        Kg_Haux[ikspin][:,:] = rotPrev[ikspin] * Kg_Haux[ikspin][:,:] * rotPrev[ikspin]'
+    end
+    return
+end
+
+
+
 #
 # Various functions to update Hamiltonian
 #
@@ -196,3 +242,88 @@ function calc_Lfunc_Haux!(
     return calc_Lfunc_ebands!(Ham, psiksU, ebands)
 end
 
+
+function do_step_psiks_Haux!(α::Float64, Ham, psiks, Haux, d, d_Haux, rots_cache)
+
+    Nkspin = length(psiks)
+
+    ebands = Ham.electrons.ebands
+
+    UrotC = rots_cache.UrotC
+    Urot = rots_cache.Urot
+    rotPrev = rots_cache.rotPrev
+    rotPrevC = rots_cache.rotPrevC
+    rotPrevCinv = rots_cache.rotPrevCinv
+
+    # Step
+    for ikspin in 1:Nkspin
+        psiks[ikspin] += α * d[ikspin] * rotPrevC[ikspin]
+        Haux[ikspin]  += α * rotPrev[ikspin]' * d_Haux[ikspin] * rotPrev[ikspin]
+    end
+
+    transform_psiks_Haux_update_ebands!( Ham, psiks, Haux, rots_cache, do_ortho_psi=true )
+    return
+end
+
+
+
+function do_compute_energy(Ham, psiks)
+    # Update Hamiltonian terms
+    update_from_ebands!( Ham )
+    update_from_wavefunc!( Ham, psiks )
+    # Now, we are ready to evaluate
+    E = calc_Lfunc( Ham, psiks )
+    return E
+end
+
+
+
+function linmin_quad_v01!(Ham, psiks, Haux, g, g_Haux, d, d_Haux, E_old)
+
+    gd = 2*real(dot(g,d)) + real(dot(g_Haux, d_Haux))
+    println("gd = $(gd)")
+    if gd > 0
+        @infiltrate
+        error("Bad step direction")
+    end
+
+    NtryMax = 5
+
+    α_t = 1.0
+    α_safe =  1e-5 # safe step size
+    α = α_safe
+    IS_SUCCESS = false
+    for itry in 1:NtryMax
+        println("--- Begin itry linmin = $(itry) using α_t=$(α_t)")
+        do_step_psiks_Haux!(α, Ham, psiks, Haux, d, d_Haux, rots_cache)
+        E_t = do_compute_energy(Ham, psiks)
+        c = ( E_t - (E_old + α_t*gd) ) / α_t^2
+        α = -gd/(2*c)
+        println("Find α = $(α)")
+        if α < 0
+            @info "Wrong curvature, α is negative"
+            α_t *= 2.0
+            println("Should continue to next iter")
+            continue
+        end
+        # actual step
+        do_step_psiks_Haux!(α, Ham, psiks, Haux, d, d_Haux, rots_cache)
+        E_t2 = do_compute_energy(Ham, psiks)
+        println("Trial energy 2: E_t2 = $(E_t2)")
+        if E_t2 > E_old
+            @warn "Energy is not decreasing"
+            α_t *= 0.1
+        else
+            println("Accept α=$(α)")
+            IS_SUCCESS = true
+            break
+        end
+    end
+
+    if IS_SUCCESS
+        return α
+    else
+        return α_safe
+    end
+
+end

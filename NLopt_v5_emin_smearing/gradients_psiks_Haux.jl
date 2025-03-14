@@ -98,7 +98,7 @@ function calc_grad_Haux!(
         # smear_fermi_prime might return NaN if E_fermi is not set properly
         dmuNum[ispin] += wk[ik] * sum(fprimeNum)
         dmuDen[ispin] += wk[ik] * sum(fprime)
-        println("dmu = $(dmuNum[ispin]) $(dmuDen[ispin])")
+        #println("dmu = $(dmuNum[ispin]) $(dmuDen[ispin])")
     end
 
     dmuContrib = sum(dmuNum)/sum(dmuDen)
@@ -106,7 +106,7 @@ function calc_grad_Haux!(
         @warn "dmuContrib is set to unity"
         dmuContrib = sign(sum(dmuNum))*sign(sum(dmuDen))
     end
-    println("dmuContrib = $(dmuContrib)")
+    #println("dmuContrib = $(dmuContrib)")
     #dBzContrib = 0.0 # not used
 
     gradF0 = zeros(ComplexF64, Nstates, Nstates)
