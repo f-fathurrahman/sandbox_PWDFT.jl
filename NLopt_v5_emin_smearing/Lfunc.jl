@@ -278,7 +278,7 @@ end
 
 
 
-function linmin_quad_v01!(Ham, psiks, Haux, g, g_Haux, d, d_Haux, E_old)
+function linmin_quad_v01!(Ham, psiks, Haux, Hsub, g, g_Haux, d, d_Haux, E_old)
 
     gd = 2*real(dot(g,d)) + real(dot(g_Haux, d_Haux))
     println("gd = $(gd)")
@@ -295,44 +295,69 @@ function linmin_quad_v01!(Ham, psiks, Haux, g, g_Haux, d, d_Haux, E_old)
     α_prev = 0.0
     α_t_ReduceFactor = 0.1
     α_t_IncreaseFactor = 3.0
-    IS_SUCCESS = false
+    is_success = false
     for itry in 1:NtryMax
-        println("--- Begin itry linmin = $(itry) using α_t=$(α_t)")
+        println("--- Begin itry linmin trial step = $(itry) using α_t=$(α_t)")
         do_step_psiks_Haux!(α_t - α_prev, Ham, psiks, Haux, d, d_Haux, rots_cache)
         α_prev = α_t
         E_t = do_compute_energy(Ham, psiks)
         if !isfinite(E_t)
             α_t *= α_t_ReduceFactor
             println("α_t is reduced to=$(α_t)")
+            continue # continue
         end
         # prediciton of step size
         c = ( E_t - (E_old + α_t*gd) ) / α_t^2
         α = -gd/(2*c)
         println("Find α = $(α)")
         if α < 0
-            @info "Wrong curvature, α is negative"
+            println("Wrong curvature, α is negative: E_t=$(E_t), E1=$(E1)")
             α_t *= α_t_IncreaseFactor
-            println("Should continue to next iter")
-            continue
+            println("Trial step will become true step.")
+            # calculate gradients
+            # Ham.electrons.ebands should be set already
+            calc_grad_psiks!(Ham, psiks, g, Hsub)
+            my_Kprec!(Ham, g, Kg)
+            calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
+            # return trial energy and status
+            is_success = true
+            return E_t, is_success
         end
-        # actual step
-        do_step_psiks_Haux!(α, Ham, psiks, Haux, d, d_Haux, rots_cache)
+        break
+    end
+    
+    # actual step
+    for itry in 1:NtryMax
+        #
+        println("--- Begin itry linmin actual step = $(itry) using α=$(α)")
+        #
+        do_step_psiks_Haux!(α - α_prev, Ham, psiks, Haux, d, d_Haux, rots_cache)
+        α_prev = α
+        # calculate energy and gradients
         E_t2 = do_compute_energy(Ham, psiks)
-        println("Trial energy 2: E_t2 = $(E_t2)")
+        calc_grad_psiks!(Ham, psiks, g, Hsub)
+        my_Kprec!(Ham, g, Kg)
+        calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
+        #
+        println("Actual step energy 2: E_t2 = $(E_t2)")
+        #
+        if !isfinite(E_t2)
+            α *= α_t_ReduceFactor
+            println("α is reduced to=$(α)")
+        end
+        # trial energy is higher, reduce α
         if E_t2 > E_old
-            @warn "Energy is not decreasing"
-            α_t *= 0.1
+            α *= α_t_ReduceFactor
+            println("Energy is not decreasing, try do decrease α to $(α)")
+            continue # continue iteration
         else
-            println("Accept α=$(α)")
-            IS_SUCCESS = true
-            break
+            println("Actual step is successful")
+            is_success = true
+            return E_t2, is_success
         end
     end
 
-    if IS_SUCCESS
-        return α
-    else
-        return α_safe
-    end
+    # default is unsuccessful try
+    return Inf, false
 
 end

@@ -37,7 +37,7 @@ includet("utilities_emin_smearing.jl")
 # %%
 Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT");
 # Compute this once and for all
-Ham.energies.NN = calc_E_NN(Ham.atoms)
+Ham.energies.NN = calc_E_NN(Ham.atoms);
 
 # %% [markdown]
 # We need to set some parameters manually:
@@ -68,7 +68,7 @@ end
 Nspin = Ham.electrons.Nspin
 Nkpt = Ham.pw.gvecw.kpoints.Nkpt
 Nkspin = Nkpt*Nspin
-Nstates = Ham.electrons.Nstates
+Nstates = Ham.electrons.Nstates;
 
 # %% [markdown]
 # Initialize electronic variables: `psiks` and `Haux`:
@@ -120,7 +120,6 @@ for ikspin in 1:Nkspin
     d_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
 end
 
-# %%
 rots_cache = RotationsCache(Nkspin, Nstates);
 
 # %%
@@ -141,17 +140,6 @@ Haux_orig[1]
 
 # %% [markdown]
 # Update Hamiltonian, compute energy and gradients at current psiks and Haux:
-
-# %%
-# Update Hamiltonian before evaluating free energy
-update_from_ebands!( Ham )
-update_from_wavefunc!( Ham, psiks )
-E1 = calc_Lfunc( Ham, psiks )
-#
-# Calculate gradients
-calc_grad_psiks!(Ham, psiks, g, Hsub)
-my_Kprec!(Ham, g, Kg)
-calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
 
 # %%
 # Update Hamiltonian before evaluating free energy
@@ -179,6 +167,9 @@ println("Test grad Haux after rotate: $(dot(Haux, g_Haux))")
 # %%
 println("Test grad Haux orig after rotate: $(dot(Haux_orig, g_Haux))")
 
+# %% [markdown]
+# We set the direction (start of minimization):
+
 # %%
 # Set direction
 for ikspin in 1:Nkspin
@@ -187,21 +178,18 @@ for ikspin in 1:Nkspin
 end
 constrain_search_dir!(d, psiks)
 
-# Check direction
+# Check direction (this is also done in linmin)
 gd = 2*real(dot(g,d)) + real(dot(g_Haux, d_Haux))
-@info "gd = $(gd)"
+println("gd = $(gd)")
 if gd > 0
     error("Bad step direction")
 end
-
-# %%
-Haux_orig[1]
 
 # %% [markdown]
 # Trying some steps (this is only for debugging):
 
 # %%
-α = -1.0
+α = 1.0
 do_step_psiks_Haux!(α, Ham, psiks, Haux, d, d_Haux, rots_cache)
 do_step_psiks_Haux!(α, Ham, psiks, Haux, d, d_Haux, rots_cache)
 
@@ -211,8 +199,18 @@ E1
 # %%
 do_compute_energy(Ham, psiks)
 
-# %%
-linmin_quad_v01!(Ham, psiks, Haux, g, g_Haux, d, d_Haux, E1)
+# %% [markdown]
+# Do line minimization:
 
 # %%
-Haux[1]
+E_new, is_success = linmin_quad_v01!(Ham, psiks, Haux, Hsub, g, g_Haux, d, d_Haux, E1)
+rotate_gradients!(g, Kg, g_Haux, Kg_Haux, rots_cache)
+
+# %% [markdown]
+# Continue iterations
+
+# %%
+println("E_new = $(E_new), ΔE = $(E_new - E1)")
+
+# %%
+E1 = E_new
