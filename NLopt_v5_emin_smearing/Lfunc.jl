@@ -278,7 +278,12 @@ end
 
 
 
-function linmin_quad_v01!(Ham, psiks, Haux, Hsub, g, g_Haux, d, d_Haux, E_old)
+function linmin_quad_v01!(
+    Ham, psiks, Haux, Hsub, g, g_Haux,
+    Kg, Kg_Haux,
+    d, d_Haux, rots_cache,
+    E_old
+)
 
     gd = 2*real(dot(g,d)) + real(dot(g_Haux, d_Haux))
     println("gd = $(gd)")
@@ -311,7 +316,7 @@ function linmin_quad_v01!(Ham, psiks, Haux, Hsub, g, g_Haux, d, d_Haux, E_old)
         α = -gd/(2*c)
         println("Find α = $(α)")
         if α < 0
-            println("Wrong curvature, α is negative: E_t=$(E_t), E1=$(E1)")
+            println("Wrong curvature, α is negative: E_t=$(E_t), E_old=$(E_old)")
             α_t *= α_t_IncreaseFactor
             println("Trial step will become true step.")
             # calculate gradients

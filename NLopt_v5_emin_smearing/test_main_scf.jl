@@ -1,6 +1,6 @@
 using PWDFT
 
-function main()
+function main_scf()
     Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT");
 
     # This will take into account whether the overlap operator is needed or not
@@ -19,9 +19,7 @@ function main()
         starting_magnetization = nothing
     end
 
-
-    #=
-    electrons_scf_G!(
+    PWDFT.electrons_scf_G!(
         Ham, psiks,
         NiterMax=100,
         use_smearing=use_smearing,
@@ -29,7 +27,6 @@ function main()
         betamix=0.1,
         starting_magnetization=starting_magnetization
     )
-    =#
 
     return
 end
