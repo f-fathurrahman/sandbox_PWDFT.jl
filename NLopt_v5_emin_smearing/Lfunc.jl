@@ -279,6 +279,7 @@ end
 
 
 function linmin_quad_v01!(
+    α_t,
     Ham, psiks, Haux, Hsub, g, g_Haux,
     Kg, Kg_Haux,
     d, d_Haux, rots_cache,
@@ -294,7 +295,6 @@ function linmin_quad_v01!(
 
     NtryMax = 5
 
-    α_t = 1.0
     α_safe =  1e-5 # safe step size
     α = α_safe # declare this outside for loop, set to a "safe" value
     α_prev = 0.0
@@ -314,7 +314,6 @@ function linmin_quad_v01!(
         # prediciton of step size
         c = ( E_t - (E_old + α_t*gd) ) / α_t^2
         α = -gd/(2*c)
-        println("Find α = $(α)")
         if α < 0
             println("Wrong curvature, α is negative: E_t=$(E_t), E_old=$(E_old)")
             α_t *= α_t_IncreaseFactor
@@ -326,10 +325,11 @@ function linmin_quad_v01!(
             calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
             # return trial energy and status
             is_success = true
-            return E_t, is_success
+            return E_t, is_success, α
         end
         break
     end
+    println("Find α = $(α)")
     
     # actual step
     for itry in 1:NtryMax
@@ -358,11 +358,11 @@ function linmin_quad_v01!(
         else
             println("Actual step is successful")
             is_success = true
-            return E_t2, is_success
+            return E_t2, is_success, α
         end
     end
 
     # default is unsuccessful try
-    return Inf, false
+    return Inf, false, α
 
 end

@@ -114,7 +114,17 @@ function main()
     # %%
     println("Test grad Haux orig after rotate: $(dot(Haux_orig, g_Haux))")
 
+    α_t_start = 1.0
+    α_t_min = 1e-10
+    α_t = α_t_start
+
+    Rhoe = Ham.rhoe
+    dVol = Ham.pw.CellVolume/prod(Ham.pw.Ns)
+
     for iterSD in 1:500
+
+        println("\nStart iterSD = ", iterSD)
+
         # Set direction
         for ikspin in 1:Nkspin
             d[ikspin][:,:] = -Kg[ikspin][:,:]
@@ -122,13 +132,31 @@ function main()
         end
         constrain_search_dir!(d, psiks)
 
+        #
         # Do line minimization:
-
-        E_new, is_success = linmin_quad_v01!(
+        E_new, is_success, α = linmin_quad_v01!(
+            α_t,
             Ham, psiks, Haux, Hsub, g, g_Haux, Kg, Kg_Haux, d, d_Haux, rots_cache, E1
         )
         rotate_gradients!(g, Kg, g_Haux, Kg_Haux, rots_cache)
+        #
+        if is_success
+            α_t = α
+            println("linminQuad is successful. α_t is updated to α = ", α)
+            if α_t < α_t_min
+                # bad step size: make sure next test step size is not too bad
+                α_t = α_t_start 
+                println("Bad step size is encountered, α_t is set to α_t_start = \n", α_t_start)
+            end
+        else
+            @warn "Line minimization is not successful"
+        end
 
+        if Nspin == 2
+            magn = sum(Rhoe[:,1] - Rhoe[:,2])*dVol
+            integRhoe = sum(Rhoe)*dVol
+            println("integRhoe = $integRhoe integ magn = $magn")
+        end
         ΔE = abs(E_new - E1)
         println("iterSD=$(iterSD) E_new = $(E_new), ΔE = $(ΔE)")
 
