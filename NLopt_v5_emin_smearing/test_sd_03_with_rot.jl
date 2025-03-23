@@ -48,21 +48,22 @@ function main()
     psiks = rand_BlochWavefunc(Ham);
 
     # Prepare Haux (random numbers)
-    #=
+    #
     # For Haux, choose between generic symmetric Haux:
     Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     for ikspin in 1:Nkspin
         Haux[ikspin] = randn(ComplexF64, Nstates, Nstates)
         Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
     end
-    =#
 
+    #=
     # or diagonal Haux:
     # Prepare Haux (random numbers)
     Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     for ikspin in 1:Nkspin
         Haux[ikspin] = diagm(0 => sort(randn(Float64, Nstates)))
     end
+    =#
 
     # Gradients, subspace Hamiltonian
     g = zeros_BlochWavefunc(Ham)
