@@ -1,7 +1,10 @@
+using Revise, Infiltrator
 using PWDFT
 
 function main_scf()
-    Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT");
+    #Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT");
+    #Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT_Al");
+    Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT_Al_nospin");
 
     # This will take into account whether the overlap operator is needed or not
     psiks = rand_BlochWavefunc(Ham)
@@ -27,6 +30,8 @@ function main_scf()
         betamix=0.1,
         starting_magnetization=starting_magnetization
     )
+
+    @infiltrate
 
     return
 end

@@ -172,8 +172,9 @@ function find_E_fermi(
     for iter in 1:NiterMax
         sum_mid = sum_Focc( smear_func, ebands, Ef, kT, Nkpt, wk )
         if abs(sum_mid-Nelectrons) < SMALL
+            verbose && println("Fermi converged: diff_Ef = $(abs(sum_mid-Nelectrons)), E_fermi=$(Ef)")
             return Ef
-        elseif sum_mid-Nelectrons < -SMALL
+        elseif (sum_mid-Nelectrons) < -SMALL
             Elw = Ef
         else
             Eup = Ef
@@ -184,6 +185,7 @@ function find_E_fermi(
             @printf("find_E_fermi: %3d %18.10f %18.10f %18.10e\n", iter, Ef, sum_mid, diff_Ef)
         end
         if diff_Ef < SMALL
+            verbose && println("Fermi converged: diff_Ef = $(diff_Ef), E_fermi=$(Ef)")
             return Ef
         end
         Ef_old = Ef

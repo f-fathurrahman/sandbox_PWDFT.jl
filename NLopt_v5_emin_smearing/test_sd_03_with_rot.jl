@@ -14,7 +14,10 @@ includet("utilities_emin_smearing.jl")
 
 function main()
 
-    Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT");
+    #Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT");
+    #Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT_Al")
+    Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT_Al_nospin");
+
     # Compute this once and for all
     Ham.energies.NN = calc_E_NN(Ham.atoms);
     
@@ -33,32 +36,65 @@ function main()
         starting_magnetization = nothing
     end
 
-    # %%
     Nspin = Ham.electrons.Nspin
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
     Nkspin = Nkpt*Nspin
     Nstates = Ham.electrons.Nstates;
 
-    # %% [markdown]
     # Initialize electronic variables: `psiks` and `Haux`:
-
-    # %%
     Random.seed!(1234)
     # This will take into account whether the overlap operator is needed or not
     psiks = rand_BlochWavefunc(Ham);
 
-    # Prepare Haux (random numbers)
+    # Initial Rhoe, taking into account starting magnetization
     #
-    # For Haux, choose between generic symmetric Haux:
-    Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-    for ikspin in 1:Nkspin
-        Haux[ikspin] = randn(ComplexF64, Nstates, Nstates)
-        Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
+    # XXX: This is needed for GTH pspots because rho_atom is not available
+    if Nspin == 2
+        Rhoe_tot = Ham.rhoe[:,1] + Ham.rhoe[:,2]
+        starting_magnetization = 2.6
+        magn = starting_magnetization .* ones(size(Rhoe_tot)) / Ham.pw.CellVolume
+        Ham.rhoe[:,1] .= 0.5*(Rhoe_tot + magn)
+        Ham.rhoe[:,2] .= 0.5*(Rhoe_tot - magn)
+        # Update again the Hamiltonian
+        _, _ = update_from_rhoe!( Ham, psiks, Ham.rhoe )
+    else
+        _, _ = PWDFT._prepare_scf!(Ham, psiks)
     end
 
+    Hsub = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    for ikspin in 1:Nkspin
+        Hsub[ikspin] = zeros(ComplexF64, Nstates, Nstates)
+    end
+    # Calculate Hsub
+    for ispin in 1:Nspin, ik in 1:Nkpt
+        Ham.ispin = ispin
+        Ham.ik = ik
+        ikspin = ik + (ispin-1)*Nkpt
+        Hsub[ikspin][:,:] = psiks[ikspin]' * (Ham * psiks[ikspin])
+    end
+    #@infiltrate
+
+    # Prepare Haux (random numbers)
+    #
+    Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    # For Haux, choose between generic symmetric Haux:
     #=
+    for ikspin in 1:Nkspin
+        Haux[ikspin] = randn(ComplexF64, Nstates, Nstates)
+        # the same as Hsub
+        Haux[ikspin][:,:] = Hsub[ikspin][:,:]
+        Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
+    end
+    =#
+
+    # eigenvalues of Hsub
+    for ikspin in 1:Nkspin
+        Haux[ikspin] = diagm(0 => eigvals(Hsub[ikspin]))
+    end
+
     # or diagonal Haux:
     # Prepare Haux (random numbers)
+    #=
     Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     for ikspin in 1:Nkspin
         Haux[ikspin] = diagm(0 => sort(randn(Float64, Nstates)))
@@ -70,12 +106,10 @@ function main()
     Kg = zeros_BlochWavefunc(Ham)
     d = zeros_BlochWavefunc(Ham)
     #
-    Hsub = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     g_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     Kg_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     d_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     for ikspin in 1:Nkspin
-        Hsub[ikspin] = zeros(ComplexF64, Nstates, Nstates)
         g_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
         Kg_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
         d_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
@@ -93,7 +127,6 @@ function main()
 
     # Update Hamiltonian, compute energy and gradients at current psiks and Haux:
 
-    # %%
     # Update Hamiltonian before evaluating free energy
     update_from_ebands!( Ham )
     update_from_wavefunc!( Ham, psiks )
@@ -104,16 +137,12 @@ function main()
     calc_grad_psiks!(Ham, psiks, g, Hsub)
     my_Kprec!(Ham, g, Kg)
     calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
-
-    println("Test grad psiks before rotate: $(2*dot(g, psiks))")
-    println("Test grad Haux before rotate: $(dot(Haux, g_Haux))")
-    # %%
     rotate_gradients!(g, Kg, g_Haux, Kg_Haux, rots_cache)
-    # %%
-    println("Test grad psiks after rotate: $(2*dot(g, psiks))")
-    println("Test grad Haux after rotate: $(dot(Haux, g_Haux))")
-    # %%
-    println("Test grad Haux orig after rotate: $(dot(Haux_orig, g_Haux))")
+
+    println("Initial Focc = ")
+    display(Ham.electrons.Focc); println
+    println("Initial ebands = ")
+    display(Ham.electrons.ebands); println
 
     α_t_start = 1.0
     α_t_min = 1e-10
@@ -122,7 +151,7 @@ function main()
     Rhoe = Ham.rhoe
     dVol = Ham.pw.CellVolume/prod(Ham.pw.Ns)
 
-    for iterSD in 1:500
+    for iterSD in 1:50
 
         println("\nStart iterSD = ", iterSD)
 
@@ -160,6 +189,24 @@ function main()
         end
         ΔE = abs(E_new - E1)
         println("iterSD=$(iterSD) E_new = $(E_new), ΔE = $(ΔE)")
+        println("Focc = ")
+        display(Ham.electrons.Focc); println
+        println("ebands = ")
+        display(Ham.electrons.ebands); println
+
+        found_zero_Focc = false
+        for ikspin in 1:Nkspin
+            s = sum(Ham.electrons.Focc[:,ikspin])
+            if s < 1e-10
+                println("Detected Focc for ikspin=$(ikspin) is zeros, break from iteration")
+                found_zero_Focc = true
+                break # from ikspin loop
+            end
+        end
+        if found_zero_Focc
+            println("Some problems with Focc detected")
+            break
+        end
 
         if ΔE < 1e-6
             println("Converged")
@@ -170,5 +217,8 @@ function main()
         E1 = E_new
     end
 
+    @infiltrate
+
+    return
 end
 

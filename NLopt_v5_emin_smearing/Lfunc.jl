@@ -58,7 +58,6 @@ end
 # Input: ebands
 # Modifies: Focc, E_fermi, mTS
 # Ham.electrons.ebands are not modified here
-# Also set kT (hardcoded)
 function update_from_ebands!(Ham, ebands)
 
     # NOTE: ebands are assumed to be updated outside this function
@@ -69,6 +68,7 @@ function update_from_ebands!(Ham, ebands)
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
     wk = Ham.pw.gvecw.kpoints.wk
     kT = Ham.electrons.kT
+    Nspin = Ham.electrons.Nspin
     @assert kT > 1e-10
 
     E_fermi, mTS = update_Focc!(
@@ -76,6 +76,8 @@ function update_from_ebands!(Ham, ebands)
         ebands, Float64(Nelectrons), kT,
         Nkpt, wk
     )
+
+    @info "mTS = $(mTS), E_fermi=$(E_fermi)"
     # Set some output
     Ham.electrons.E_fermi = E_fermi
     Ham.energies.mTS = mTS
@@ -289,7 +291,6 @@ function linmin_quad_v01!(
     gd = 2*real(dot(g,d)) + real(dot(g_Haux, d_Haux))
     println("gd = $(gd)")
     if gd > 0
-        @infiltrate
         error("Bad step direction")
     end
 
@@ -317,15 +318,15 @@ function linmin_quad_v01!(
         if α < 0
             println("Wrong curvature, α is negative: E_t=$(E_t), E_old=$(E_old)")
             α_t *= α_t_IncreaseFactor
-            println("Trial step will become true step.")
+            println("Trial step will become true step. α_t will be set to $(α_t)")
             # calculate gradients
-            # Ham.electrons.ebands should be set already
             calc_grad_psiks!(Ham, psiks, g, Hsub)
             my_Kprec!(Ham, g, Kg)
             calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
+            @infiltrate
             # return trial energy and status
             is_success = true
-            return E_t, is_success, α
+            return E_t, is_success, α_t
         end
         break
     end
