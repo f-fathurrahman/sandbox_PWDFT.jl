@@ -44,7 +44,7 @@ function main()
     Focc_r = deserialize("DATA_jdftx_Fe_v2/Focc.jldat")
 
     Hsub = deserialize("DATA_jdftx_Fe_v2/Hsub.jldat")
-    Haux = Vector{Matrix{Float64}}(undef, Nkspin)
+    Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     for ikspin in 1:Nkspin
         Haux[ikspin] = zeros(Float64, Nstates, Nstates)
         Haux[ikspin][:,:] = diagm( 0 => eigvals(Hermitian(Hsub[ikspin])) )
