@@ -88,17 +88,21 @@ function calc_grad_Haux!(
     else
         w_spin = 1.0 
     end
-    for ispin in 1:Nspin, ik in 1:Nkpt
-        ikspin = ik + (ispin-1)*Nkpt
-        # accumulate with Nkpt? Add wk ?
-        for ist in 1:Nstates
-            fprime[ist] = smear_fermi_prime( ebands[ist,ikspin], E_fermi, kT )
-            fprimeNum[ist] = fprime[ist] * ( real(Hsub[ikspin][ist,ist]) - ebands[ist,ikspin] )
+    for ispin in 1:Nspin
+        dmuNum[ispin] = 0.0
+        dmuDen[ispin] = 0.0
+        for ik in 1:Nkpt
+            ikspin = ik + (ispin-1)*Nkpt
+            # accumulate with Nkpt? Add wk ?
+            for ist in 1:Nstates
+                fprime[ist] = smear_fermi_prime( ebands[ist,ikspin], E_fermi, kT )
+                fprimeNum[ist] = fprime[ist] * ( real(Hsub[ikspin][ist,ist]) - ebands[ist,ikspin] )
+            end
+            # smear_fermi_prime might return NaN if E_fermi is not set properly
+            dmuNum[ispin] += wk[ik] * sum(fprimeNum)
+            dmuDen[ispin] += wk[ik] * sum(fprime)
         end
-        # smear_fermi_prime might return NaN if E_fermi is not set properly
-        dmuNum[ispin] += wk[ik] * sum(fprimeNum)
-        dmuDen[ispin] += wk[ik] * sum(fprime)
-        println("dmu = $(dmuNum[ispin]) $(dmuDen[ispin])")
+        println("ispin=$(ispin) dmu = $(dmuNum[ispin]) $(dmuDen[ispin])")
     end
 
     dmuContrib = sum(dmuNum)/sum(dmuDen)

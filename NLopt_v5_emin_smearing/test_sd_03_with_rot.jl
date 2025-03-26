@@ -11,12 +11,9 @@ includet("Lfunc.jl")
 includet("gradients_psiks_Haux.jl")
 includet("utilities_emin_smearing.jl")
 
+function prepare_Ham_from_pwinput(; filename="PWINPUT")
 
-function main()
-
-    #Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT");
-    #Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT_Al")
-    Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT_Al_nospin");
+    Ham, pwinput = init_Ham_from_pwinput(filename=filename);
 
     # Compute this once and for all
     Ham.energies.NN = calc_E_NN(Ham.atoms);
@@ -37,19 +34,16 @@ function main()
     end
 
     Nspin = Ham.electrons.Nspin
-    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
-    Nkspin = Nkpt*Nspin
-    Nstates = Ham.electrons.Nstates;
-
     # Initialize electronic variables: `psiks` and `Haux`:
     Random.seed!(1234)
-    # This will take into account whether the overlap operator is needed or not
-    psiks = rand_BlochWavefunc(Ham);
+    psiks = rand_BlochWavefunc(Ham)
+    # XXX: this is not really needed, should be able to pass nothing to
 
     # Initial Rhoe, taking into account starting magnetization
     #
     # XXX: This is needed for GTH pspots because rho_atom is not available
     if Nspin == 2
+        _, _ = update_from_rhoe!( Ham, psiks, Ham.rhoe )
         Rhoe_tot = Ham.rhoe[:,1] + Ham.rhoe[:,2]
         starting_magnetization = 2.6
         magn = starting_magnetization .* ones(size(Rhoe_tot)) / Ham.pw.CellVolume
@@ -60,6 +54,22 @@ function main()
     else
         _, _ = PWDFT._prepare_scf!(Ham, psiks)
     end
+
+    return Ham
+end
+
+
+
+function main(Ham; NiterMax=100)
+
+    Nspin = Ham.electrons.Nspin
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
+    Nkspin = Nkpt*Nspin
+    Nstates = Ham.electrons.Nstates;
+
+    # Initialize electronic variables: `psiks` and `Haux`:
+    Random.seed!(1234)
+    psiks = rand_BlochWavefunc(Ham);
 
     Hsub = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     for ikspin in 1:Nkspin
@@ -141,8 +151,8 @@ function main()
 
     println("Initial Focc = ")
     display(Ham.electrons.Focc); println
-    println("Initial ebands = ")
-    display(Ham.electrons.ebands); println
+    println("Initial ebands (w.r.t Fermi) = ")
+    display(Ham.electrons.ebands .- Ham.electrons.E_fermi); println
 
     α_t_start = 1.0
     α_t_min = 1e-10
@@ -151,7 +161,7 @@ function main()
     Rhoe = Ham.rhoe
     dVol = Ham.pw.CellVolume/prod(Ham.pw.Ns)
 
-    for iterSD in 1:50
+    for iterSD in 1:NiterMax
 
         println("\nStart iterSD = ", iterSD)
 
@@ -168,7 +178,11 @@ function main()
             α_t,
             Ham, psiks, Haux, Hsub, g, g_Haux, Kg, Kg_Haux, d, d_Haux, rots_cache, E1
         )
+        println("Test grad psiks before rotate: $(2*dot(g, psiks))")
+        println("Test grad Haux before rotate: $(dot(Haux, g_Haux))")
         rotate_gradients!(g, Kg, g_Haux, Kg_Haux, rots_cache)
+        println("Test grad psiks after rotate: $(2*dot(g, psiks))")
+        println("Test grad Haux after rotate: $(dot(Haux, g_Haux))")
         #
         if is_success
             α_t = α
@@ -190,22 +204,22 @@ function main()
         ΔE = abs(E_new - E1)
         println("iterSD=$(iterSD) E_new = $(E_new), ΔE = $(ΔE)")
         println("Focc = ")
-        display(Ham.electrons.Focc); println
-        println("ebands = ")
-        display(Ham.electrons.ebands); println
+        display(Ham.electrons.Focc); println()
+        println("ebands (w.r.t) Fermi energy = ")
+        display(Ham.electrons.ebands .- Ham.electrons.E_fermi); println()
 
         found_zero_Focc = false
         for ikspin in 1:Nkspin
             s = sum(Ham.electrons.Focc[:,ikspin])
             if s < 1e-10
-                println("Detected Focc for ikspin=$(ikspin) is zeros, break from iteration")
+                @warn "Detected Focc for ikspin=$(ikspin) is zeros, break from iteration"
                 found_zero_Focc = true
-                break # from ikspin loop
+                #break # from ikspin loop
             end
         end
         if found_zero_Focc
-            println("Some problems with Focc detected")
-            break
+            @warn "Some problems with Focc detected"
+            #break
         end
 
         if ΔE < 1e-6

@@ -153,15 +153,15 @@ function transform_psiks_Haux_update_ebands!(
         end
         #
         if do_ortho_psi
-            UrotC[ikspin][:,:] = inv(sqrt(psiks[ikspin]' * psiks[ikspin]))
+            UrotC[ikspin] = inv(sqrt(psiks[ikspin]' * psiks[ikspin]))
         end
-        UrotC[ikspin][:,:] *= Urot[ikspin] # extra rotation
-        psiks[ikspin][:,:] = psiks[ikspin]*UrotC[ikspin]
+        UrotC[ikspin] = UrotC[ikspin]*Urot[ikspin] # extra rotation
+        psiks[ikspin] = psiks[ikspin]*UrotC[ikspin]
     end
     #
     for ikspin in 1:Nkspin
         # Save previous
-        rotPrev[ikspin] *= Urot[ikspin]
+        rotPrev[ikspin] = rotPrev[ikspin] * Urot[ikspin]
         rotPrevC[ikspin] = rotPrevC[ikspin] * UrotC[ikspin]
         rotPrevCinv[ikspin] = inv(UrotC[ikspin]) * rotPrevCinv[ikspin]
     end
@@ -304,9 +304,25 @@ function linmin_quad_v01!(
     is_success = false
     for itry in 1:NtryMax
         println("--- Begin itry linmin trial step = $(itry) using α_t=$(α_t)")
+        #
+        #println("Before step: ")
+        #display(Ham.electrons.Focc); println()
+        #display(Ham.electrons.ebands); println()
+        #
         do_step_psiks_Haux!(α_t - α_prev, Ham, psiks, Haux, d, d_Haux, rots_cache)
+        # Ham.electrons.Focc and Ham.electrons.ebands are not yet updated here
+        #println("After step 1: ")
+        #display(Ham.electrons.Focc); println()
+        #display(Ham.electrons.ebands); println()
+        # make explicit calls to update_* functions
+        #
         α_prev = α_t
-        E_t = do_compute_energy(Ham, psiks)
+        E_t = do_compute_energy(Ham, psiks) # this will update ebands, Focc, and Rhoe
+        #
+        #println("After step 2: ")
+        #display(Ham.electrons.Focc); println()
+        #display(Ham.electrons.ebands); println()
+        #
         if !isfinite(E_t)
             α_t *= α_t_ReduceFactor
             println("α_t is reduced to=$(α_t)")
@@ -323,7 +339,7 @@ function linmin_quad_v01!(
             calc_grad_psiks!(Ham, psiks, g, Hsub)
             my_Kprec!(Ham, g, Kg)
             calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
-            @infiltrate
+            #@infiltrate
             # return trial energy and status
             is_success = true
             return E_t, is_success, α_t
