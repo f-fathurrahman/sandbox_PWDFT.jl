@@ -5,37 +5,17 @@ using Random
 
 using PWDFT
 
-include("smearing.jl")
-include("occupations.jl")
-include("Lfunc.jl")
-include("gradients_psiks_Haux.jl")
-include("utilities_emin_smearing.jl")
+includet("smearing.jl")
+includet("occupations.jl")
+includet("Lfunc.jl")
+includet("gradients_psiks_Haux.jl")
+includet("utilities_emin_smearing.jl")
+includet("prepare_Ham_various.jl")
 
-function main()
-
-    Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT");
-    # Compute this once and for all
-    Ham.energies.NN = calc_E_NN(Ham.atoms)
+function main_sd_02(Ham; NiterMax=100)
 
     Random.seed!(1234)
-
-    # This will take into account whether the overlap operator is needed or not
     psiks = rand_BlochWavefunc(Ham)
-
-    use_smearing = false
-    kT = 0.0
-    if pwinput.occupations == "smearing"
-        use_smearing = true
-        kT = pwinput.degauss*0.5 # convert from Ry to Ha
-        Ham.electrons.kT = kT
-    end
-    # No need to set kT here, it is already default to 0
-
-    if pwinput.nspin == 2
-        starting_magnetization = pwinput.starting_magnetization
-    else
-        starting_magnetization = nothing
-    end
 
     Nspin = Ham.electrons.Nspin
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
