@@ -33,33 +33,13 @@ includet("occupations.jl")
 includet("Lfunc.jl")
 includet("gradients_psiks_Haux.jl")
 includet("utilities_emin_smearing.jl")
-
-# %%
-Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT");
-# Compute this once and for all
-Ham.energies.NN = calc_E_NN(Ham.atoms);
+includet("prepare_Ham_various.jl")
 
 # %% [markdown]
-# We need to set some parameters manually:
+# Initializing Hamiltonian:
 
 # %%
-use_smearing = false
-kT = 0.0
-if pwinput.occupations == "smearing"
-    use_smearing = true
-    kT = pwinput.degauss*0.5 # convert from Ry to Ha
-    Ham.electrons.kT = kT
-end
-# No need to set kT here, it is already default to 0
-
-# XXX This is probably not needed. We are not directly initializing Rhoe.
-# XXX This might be useful for SCF which need this parameter to be
-# XXX set for spin-polarized calculations 
-if pwinput.nspin == 2
-    starting_magnetization = pwinput.starting_magnetization
-else
-    starting_magnetization = nothing
-end
+Ham = prepare_Ham_from_pwinput("PWINPUT");
 
 # %% [markdown]
 # Some shortcuts:
@@ -74,57 +54,64 @@ Nstates = Ham.electrons.Nstates;
 # Initialize electronic variables: `psiks` and `Haux`:
 
 # %%
-Random.seed!(1234)
-# This will take into account whether the overlap operator is needed or not
-psiks = rand_BlochWavefunc(Ham);
-
-# Prepare Haux (random numbers)
-
-#=
-# For Haux, choose between generic symmetric Haux:
-Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-for ikspin in 1:Nkspin
-    Haux[ikspin] = randn(ComplexF64, Nstates, Nstates)
-    Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
+# Symmetric Haux, but not diagonal
+function gen_random_symm_Haux(Ham)
+    Nspin = Ham.electrons.Nspin
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
+    Nkspin = Nkpt*Nspin
+    Nstates = Ham.electrons.Nstates;
+    Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    for ikspin in 1:Nkspin
+        Haux[ikspin] = randn(ComplexF64, Nstates, Nstates)
+        Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
+    end
+    return Haux
 end
-=#
 
 # or diagonal Haux:
 # Prepare Haux (random numbers)
-Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-for ikspin in 1:Nkspin
-    Haux[ikspin] = diagm(0 => sort(randn(Float64, Nstates)))
+function gen_random_diag_Haux(Ham)
+    Nspin = Ham.electrons.Nspin
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
+    Nkspin = Nkpt*Nspin
+    Nstates = Ham.electrons.Nstates;
+    Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    for ikspin in 1:Nkspin
+        Haux[ikspin] = diagm(0 => sort(randn(Float64, Nstates)))
+    end
+    return Haux
 end
 
 # %%
-Haux[1]
-
-# %% [markdown]
-#
-# Initialize gradients and related quantities:
-
-# %%
-# Gradients, subspace Hamiltonian
-g = zeros_BlochWavefunc(Ham)
-Kg = zeros_BlochWavefunc(Ham)
-d = zeros_BlochWavefunc(Ham)
-#
 Hsub = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-g_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-Kg_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-d_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
 for ikspin in 1:Nkspin
     Hsub[ikspin] = zeros(ComplexF64, Nstates, Nstates)
-    g_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
-    Kg_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
-    d_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
 end
 
-rots_cache = RotationsCache(Nkspin, Nstates);
+# %%
+# Calculate Hsub
+for ispin in 1:Nspin, ik in 1:Nkpt
+    Ham.ispin = ispin
+    Ham.ik = ik
+    ikspin = ik + (ispin-1)*Nkpt
+    Hsub[ikspin][:,:] = psiks[ikspin]' * (Ham * psiks[ikspin])
+end
+
+# %% [markdown]
+# ### Generate initial point: (psiks and Haux)
+
+# %%
+Random.seed!(1234)
+psiks = rand_BlochWavefunc(Ham)
+Haux = gen_random_symm_Haux(Ham);
+
+# %% [markdown]
+# ### Do transformation:
 
 # %%
 Haux_orig = copy(Haux);
-
+psiks_orig = copy(psiks);
+rots_cache = RotationsCache(Nkspin, Nstates);
 # psiks is already orthonormal
 # Make Haux diagonal and rotate psiks
 # Ham.electrons.ebands are updated here
@@ -132,14 +119,28 @@ transform_psiks_Haux_update_ebands!( Ham, psiks, Haux, rots_cache,
     do_ortho_psi=false, overwrite_Haux=true
 )
 
-# %%
-Haux[1]
-
-# %%
-Haux_orig[1]
+# %% [markdown] jp-MarkdownHeadingCollapsed=true
+# Update Hamiltonian, compute energy and gradients at current psiks and Haux.
+#
+# Haux is stored in ebands and psiks already rotated in case Haux is not diagonal.
 
 # %% [markdown]
-# Update Hamiltonian, compute energy and gradients at current psiks and Haux:
+# ### Initialize gradients and related quantities:
+
+# %%
+# Gradients
+g = zeros_BlochWavefunc(Ham)
+Kg = zeros_BlochWavefunc(Ham)
+d = zeros_BlochWavefunc(Ham)
+#
+g_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+Kg_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+d_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+for ikspin in 1:Nkspin
+    g_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
+    Kg_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
+    d_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
+end
 
 # %%
 # Update Hamiltonian before evaluating free energy
@@ -165,6 +166,7 @@ println("Test grad psiks after rotate: $(2*dot(g, psiks))")
 println("Test grad Haux after rotate: $(dot(Haux, g_Haux))")
 
 # %%
+println("Test grad psiks after rotate: $(2*dot(g, psiks_orig))")
 println("Test grad Haux orig after rotate: $(dot(Haux_orig, g_Haux))")
 
 # %% [markdown]
@@ -189,7 +191,7 @@ end
 # Trying some steps (this is only for debugging):
 
 # %%
-α = 1.0
+α = -1.0
 do_step_psiks_Haux!(α, Ham, psiks, Haux, d, d_Haux, rots_cache)
 do_step_psiks_Haux!(α, Ham, psiks, Haux, d, d_Haux, rots_cache)
 
@@ -199,18 +201,5 @@ E1
 # %%
 do_compute_energy(Ham, psiks)
 
-# %% [markdown]
-# Do line minimization:
-
 # %%
-E_new, is_success = linmin_quad_v01!(Ham, psiks, Haux, Hsub, g, g_Haux, d, d_Haux, E1)
-rotate_gradients!(g, Kg, g_Haux, Kg_Haux, rots_cache)
-
-# %% [markdown]
-# Continue iterations
-
-# %%
-println("E_new = $(E_new), ΔE = $(E_new - E1)")
-
-# %%
-E1 = E_new
+Ham.electrons.Focc
