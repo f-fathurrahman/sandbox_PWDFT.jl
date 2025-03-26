@@ -11,6 +11,7 @@ function prepare_Ham_from_pwinput(filename::String)
     if pwinput.occupations == "smearing"
         use_smearing = true
         kT = pwinput.degauss*0.5 # convert from Ry to Ha
+        Ham.electrons.use_smearing = true
         Ham.electrons.kT = kT
     end
 
@@ -30,6 +31,13 @@ function prepare_Ham_from_pwinput(filename::String)
     #
     # XXX: This is needed for GTH pspots because rho_atom is not available
     if Nspin == 2
+        # some heuristics
+        is_using_gth_analytic = (eltype(Ham.pspots) == PsPot_GTH)
+        is_using_gth_numeric = contains(uppercase(Ham.pspots[1].pspfile), "GTH")
+        is_using_hgh_numeric = contains(uppercase(Ham.pspots[1].pspfile), "HGH")
+        #
+        @assert is_using_gth_analytic || is_using_gth_numeric || is_using_hgh_numeric
+        #
         _, _ = update_from_rhoe!( Ham, psiks, Ham.rhoe )
         Rhoe_tot = Ham.rhoe[:,1] + Ham.rhoe[:,2]
         starting_magnetization = 2.6

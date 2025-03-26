@@ -35,7 +35,7 @@ ATOMIC_POSITIONS bohr
 Al       0.0000000000       0.0000000000       0.0000000000
 
 K_POINTS automatic
-4 4 4 0 0 0
+3 3 3 0 0 0
 
 CELL_PARAMETERS bohr
  -3.8263  0.0     -3.8263

@@ -23,11 +23,10 @@ function main_sd_02(Ham; NiterMax=100)
     Nstates = Ham.electrons.Nstates
     ebands = Ham.electrons.ebands
 
-    # Prepare Haux (random numbers)
+    # Prepare Haux (random numbers), diagonal
     Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     for ikspin in 1:Nkspin
-        Haux[ikspin] = randn(ComplexF64, Nstates, Nstates)
-        Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
+        Haux[ikspin] = diagm(0 => sort(randn(Float64, Nstates)))
     end
 
     # Gradients, subspace Hamiltonian
@@ -82,13 +81,17 @@ function main_sd_02(Ham; NiterMax=100)
     end
 
     α = 0.1
+    Rhoe = Ham.rhoe
+    dVol = Ham.pw.CellVolume/prod(Ham.pw.Ns)
 
-    for iterSD in 1:50
+    for iterSD in 1:NiterMax
+
+        println("\nBegin SD iteration=$(iterSD)")
 
         # Set direction
         for ikspin in 1:Nkspin
-            d[ikspin][:,:] = -Kg[ikspin][:,:]
-            d_Haux[ikspin][:,:] = -Kg_Haux[ikspin][:,:]
+            d[ikspin][:,:] = -g[ikspin][:,:]
+            d_Haux[ikspin][:,:] = -g_Haux[ikspin][:,:]
         end
         constrain_search_dir!(d, psiks)
 
@@ -100,25 +103,29 @@ function main_sd_02(Ham; NiterMax=100)
 
         # Step
         for ikspin in 1:Nkspin
-            psiks[ikspin] += α * d[ikspin] * rotPrevC[ikspin]
-            Haux[ikspin]  += α * rotPrev[ikspin]' * d_Haux[ikspin] * rotPrev[ikspin]
+            #psiks[ikspin] += α * d[ikspin] * rotPrevC[ikspin]
+            #Haux[ikspin]  += α * rotPrev[ikspin]' * d_Haux[ikspin] * rotPrev[ikspin]
+            psiks[ikspin] += α * d[ikspin]
+            Haux[ikspin]  += α * d_Haux[ikspin]
         end
 
+        # Transform
         for ikspin in 1:Nkspin
             ebands[:,ikspin], Urot[ikspin][:,:] = eigen(Hermitian(Haux[ikspin]))
-            #Haux[ikspin] = diagm( 0 => Ham.electrons.ebands[:,ikspin] )
+            Haux[ikspin] = diagm( 0 => Ham.electrons.ebands[:,ikspin] )
             # wavefunc
             UrotC[ikspin][:,:] = inv(sqrt(psiks[ikspin]' * psiks[ikspin]))
             UrotC[ikspin][:,:] *= Urot[ikspin] # extra rotation
             psiks[ikspin][:,:] = psiks[ikspin]*UrotC[ikspin]
         end
 
-        
+        #=
         for ikspin in 1:Nkspin
             rotPrev[ikspin] = rotPrev[ikspin] * Urot[ikspin]
             rotPrevC[ikspin] = rotPrevC[ikspin] * UrotC[ikspin]
             rotPrevCinv[ikspin] = inv(UrotC[ikspin]) * rotPrevCinv[ikspin]
         end
+        =#
 
         update_from_ebands!( Ham )
         update_from_wavefunc!( Ham, psiks )
@@ -129,27 +136,38 @@ function main_sd_02(Ham; NiterMax=100)
         my_Kprec!(Ham, g, Kg)
         calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
 
-        #println("Test grad psiks: $(2*dot(g, psiks))")
-        #println("Test grad Haux: $(dot(Haux, g_Haux))")
+        println("Test grad psiks before rotate: $(2*dot(g, psiks))")
+        println("Test grad Haux before rotate: $(dot(Haux, g_Haux))")
         #if abs(dot(Haux, g_Haux)) > 0.1
         #    @info "Wrong grad Haux again?"
         #    @infiltrate
         #end
 
-        for ikspin in 1:Nkspin
-            g[ikspin][:,:] = g[ikspin][:,:] * rotPrevCinv[ikspin]
-            Kg[ikspin][:,:] = Kg[ikspin][:,:] * rotPrevCinv[ikspin]
-            g_Haux[ikspin][:,:] = rotPrev[ikspin] * g_Haux[ikspin][:,:] * rotPrev[ikspin]'
-            Kg_Haux[ikspin][:,:] = rotPrev[ikspin] * Kg_Haux[ikspin][:,:] * rotPrev[ikspin]'
-        end
+        #for ikspin in 1:Nkspin
+        #    g[ikspin][:,:] = g[ikspin][:,:] * rotPrevCinv[ikspin]
+        #    Kg[ikspin][:,:] = Kg[ikspin][:,:] * rotPrevCinv[ikspin]
+        #    g_Haux[ikspin][:,:] = rotPrev[ikspin] * g_Haux[ikspin][:,:] * rotPrev[ikspin]'
+        #    Kg_Haux[ikspin][:,:] = rotPrev[ikspin] * Kg_Haux[ikspin][:,:] * rotPrev[ikspin]'
+        #end
+        #println("Test grad psiks AFTER rotate: $(2*dot(g, psiks))")
+        #println("Test grad Haux AFTER rotate: $(dot(Haux, g_Haux))")
 
         #
         ΔE = E2 - E1
-        println("iterSD=$(iterSD) E=$(E2) abs(ΔE)=$(abs(ΔE)) E_fermi=$(Ham.electrons.E_fermi)")
+        @info "iterSD=$(iterSD) E=$(E2) abs(ΔE)=$(abs(ΔE)) E_fermi=$(Ham.electrons.E_fermi)"
+        if Nspin == 2
+            magn = sum(Rhoe[:,1] - Rhoe[:,2])*dVol
+            integRhoe = sum(Rhoe)*dVol
+            println("integRhoe = $integRhoe integ magn = $magn")
+        end
+        println("Focc = ")
+        display(Ham.electrons.Focc); println
+        println("ebands (w.r.t Fermi) = ")
+        display(Ham.electrons.ebands .- Ham.electrons.E_fermi); println
 
         #
         if ΔE > 0
-            @warn "Energy is increasing"
+            error("Energy is increasing")
         end
         #
         if abs(ΔE) < 1e-6
@@ -164,7 +182,3 @@ function main_sd_02(Ham; NiterMax=100)
     @infiltrate
 
 end
-
-
-
-main()
