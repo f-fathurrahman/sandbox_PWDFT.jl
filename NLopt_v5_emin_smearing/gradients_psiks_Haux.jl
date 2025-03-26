@@ -134,28 +134,6 @@ function calc_grad_Haux!(
         Kg_Haux[ikspin][:,:] = -κ * gradF0[:,:] # preconditioning here?
     end
 
-    #@infiltrate
-
-    #Haux = get_diag_Haux_from_ebands( Ham )
-    #check_grad = real(dot(Haux, g_Haux))
-    #@info "check_grad = $(check_grad)"
-    #if abs(check_grad) > 1e-3 || isnan(check_grad)
-    #    @info "Wrong gradients?"
-    #    @infiltrate
-    #end
-
-    if isnan(dmuContrib)
-        @warn "Something wrong with dmuContrib"
-        @infiltrate
-    end
-    
-    #if sum(abs.(dmuDen)) < 1e-10
-    #    # something wrong with E_fermi and ebands
-    #    println("Very small dmuDen")
-    #    @infiltrate
-    #end
-
-
     return
 
 end

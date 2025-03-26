@@ -125,6 +125,8 @@ function main_sd_03(Ham; NiterMax=100)
         end
         constrain_search_dir!(d, psiks)
 
+        reset_rotations!(rots_cache)
+
         #
         # Do line minimization:
         E_new, is_success, α = linmin_quad_v01!(
@@ -136,6 +138,7 @@ function main_sd_03(Ham; NiterMax=100)
         rotate_gradients!(g, Kg, g_Haux, Kg_Haux, rots_cache)
         println("Test grad psiks after rotate: $(2*dot(g, psiks))")
         println("Test grad Haux after rotate: $(dot(Haux, g_Haux))")
+ 
         #
         if is_success
             α_t = α

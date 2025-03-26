@@ -29,6 +29,20 @@ function RotationsCache(Nkspin, Nstates)
 end
 
 
+function reset_rotations!(rots_cache)
+    Nkspin = size(rots_cache.rotPrev, 1)
+    Nstates = size(rots_cache.rotPrev[1], 1)
+    for ikspin in 1:Nkspin
+        rots_cache.rotPrev[ikspin] = Matrix(1.0*I(Nstates))
+        rots_cache.rotPrevC[ikspin] = Matrix(1.0*I(Nstates))
+        rots_cache.rotPrevCinv[ikspin] = Matrix(1.0*I(Nstates))
+        rots_cache.Urot[ikspin] = Matrix(1.0*I(Nstates))
+        rots_cache.UrotC[ikspin] = Matrix(1.0*I(Nstates))
+    end
+    return
+end
+
+
 function rotate_gradients!(g, Kg, g_Haux, Kg_Haux, rots_cache)
     Nkspin = length(g)
     rotPrevCinv = rots_cache.rotPrevCinv
