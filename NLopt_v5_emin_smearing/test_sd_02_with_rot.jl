@@ -58,8 +58,7 @@ function main_sd_02(Ham; NiterMax=100)
 
     #calc_grad_Lfunc_Haux!( Ham, psiks, Haux, g, Hsub, g_Haux, Kg_Haux )
 
-    calc_grad_psiks!(Ham, psiks, g, Hsub)
-    my_Kprec!(Ham, g, Kg)
+    calc_grad_psiks!(Ham, psiks, g, Kg, Hsub)
     calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
 
     println("Test grad psiks: $(2*dot(g, psiks))")
@@ -90,8 +89,8 @@ function main_sd_02(Ham; NiterMax=100)
 
         # Set direction
         for ikspin in 1:Nkspin
-            d[ikspin][:,:] = -g[ikspin][:,:]
-            d_Haux[ikspin][:,:] = -g_Haux[ikspin][:,:]
+            d[ikspin][:,:] = -Kg[ikspin][:,:]
+            d_Haux[ikspin][:,:] = -Kg_Haux[ikspin][:,:]
         end
         constrain_search_dir!(d, psiks)
 
@@ -103,10 +102,8 @@ function main_sd_02(Ham; NiterMax=100)
 
         # Step
         for ikspin in 1:Nkspin
-            #psiks[ikspin] += α * d[ikspin] * rotPrevC[ikspin]
-            #Haux[ikspin]  += α * rotPrev[ikspin]' * d_Haux[ikspin] * rotPrev[ikspin]
-            psiks[ikspin] += α * d[ikspin]
-            Haux[ikspin]  += α * d_Haux[ikspin]
+            psiks[ikspin] += α * d[ikspin] * rotPrevC[ikspin]
+            Haux[ikspin]  += α * rotPrev[ikspin]' * d_Haux[ikspin] * rotPrev[ikspin]
         end
 
         # Transform
@@ -119,38 +116,30 @@ function main_sd_02(Ham; NiterMax=100)
             psiks[ikspin][:,:] = psiks[ikspin]*UrotC[ikspin]
         end
 
-        #=
         for ikspin in 1:Nkspin
             rotPrev[ikspin] = rotPrev[ikspin] * Urot[ikspin]
             rotPrevC[ikspin] = rotPrevC[ikspin] * UrotC[ikspin]
             rotPrevCinv[ikspin] = inv(UrotC[ikspin]) * rotPrevCinv[ikspin]
         end
-        =#
 
         update_from_ebands!( Ham )
         update_from_wavefunc!( Ham, psiks )
         #
         E2 = calc_Lfunc( Ham, psiks )
         #
-        calc_grad_psiks!(Ham, psiks, g, Hsub)
-        my_Kprec!(Ham, g, Kg)
+        calc_grad_psiks!(Ham, psiks, g, Kg, Hsub)
         calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
 
         println("Test grad psiks before rotate: $(2*dot(g, psiks))")
         println("Test grad Haux before rotate: $(dot(Haux, g_Haux))")
-        #if abs(dot(Haux, g_Haux)) > 0.1
-        #    @info "Wrong grad Haux again?"
-        #    @infiltrate
-        #end
-
-        #for ikspin in 1:Nkspin
-        #    g[ikspin][:,:] = g[ikspin][:,:] * rotPrevCinv[ikspin]
-        #    Kg[ikspin][:,:] = Kg[ikspin][:,:] * rotPrevCinv[ikspin]
-        #    g_Haux[ikspin][:,:] = rotPrev[ikspin] * g_Haux[ikspin][:,:] * rotPrev[ikspin]'
-        #    Kg_Haux[ikspin][:,:] = rotPrev[ikspin] * Kg_Haux[ikspin][:,:] * rotPrev[ikspin]'
-        #end
-        #println("Test grad psiks AFTER rotate: $(2*dot(g, psiks))")
-        #println("Test grad Haux AFTER rotate: $(dot(Haux, g_Haux))")
+        for ikspin in 1:Nkspin
+            g[ikspin][:,:] = g[ikspin][:,:] * rotPrevCinv[ikspin]
+            Kg[ikspin][:,:] = Kg[ikspin][:,:] * rotPrevCinv[ikspin]
+            g_Haux[ikspin][:,:] = rotPrev[ikspin] * g_Haux[ikspin][:,:] * rotPrev[ikspin]'
+            Kg_Haux[ikspin][:,:] = rotPrev[ikspin] * Kg_Haux[ikspin][:,:] * rotPrev[ikspin]'
+        end
+        println("Test grad psiks AFTER rotate: $(2*dot(g, psiks))")
+        println("Test grad Haux AFTER rotate: $(dot(Haux, g_Haux))")
 
         #
         ΔE = E2 - E1

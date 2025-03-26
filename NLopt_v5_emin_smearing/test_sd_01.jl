@@ -1,56 +1,66 @@
+using Revise, Infiltrator
+
 using LinearAlgebra
 using Printf
-using Infiltrator
 using Random
 
 using PWDFT
 
-include("smearing.jl")
-include("occupations.jl")
-include("Lfunc.jl")
-include("gradients_psiks_Haux.jl")
-include("utilities_emin_smearing.jl")
+includet("smearing.jl")
+includet("occupations.jl")
+includet("Lfunc.jl")
+includet("gradients_psiks_Haux.jl")
+includet("prepare_Ham_various.jl")
 
-function main()
-
-    Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT");
-    # Compute this once and for all
-    Ham.energies.NN = calc_E_NN(Ham.atoms)
-
-    Random.seed!(1234)
-
-    # This will take into account whether the overlap operator is needed or not
-    psiks = rand_BlochWavefunc(Ham)
-
-    use_smearing = false
-    kT = 0.0
-    if pwinput.occupations == "smearing"
-        use_smearing = true
-        kT = pwinput.degauss*0.5 # convert from Ry to Ha
-        Ham.electrons.kT = kT
+# Ham.electrons.ebands and Ham.rhoe are modified
+# psiks and Haux are not modified
+function try_step!(α::Float64, Ham, psiks, Haux, d, d_Haux)
+    Nkspin = length(psiks)
+    # Step
+    psiks_new = psiks + α*d
+    Haux_new = Haux + α*d_Haux
+    for ikspin in 1:Nkspin
+        ortho_sqrt!(Ham, psiks_new[ikspin])
     end
-    # No need to set kT here, it is already default to 0
+    transform_psiks_Haux_update_ebands!( Ham, psiks_new, Haux_new )
+    update_from_ebands!( Ham )
+    update_from_wavefunc!( Ham, psiks_new )
+    #
+    E_try = calc_Lfunc( Ham, psiks_new )
+    return E_try
+end
 
-    if pwinput.nspin == 2
-        starting_magnetization = pwinput.starting_magnetization
-    else
-        starting_magnetization = nothing
-    end
+
+function main_sd_01(Ham; NiterMax=100, α=0.1)
 
     Nspin = Ham.electrons.Nspin
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
     Nkspin = Nkpt*Nspin
     Nstates = Ham.electrons.Nstates
-    ebands = Ham.electrons.ebands
-    Focc = Ham.electrons.Focc
-    wk = Ham.pw.gvecw.kpoints.wk
-    Nelectrons = Ham.electrons.Nelectrons
+    Rhoe = Ham.rhoe
+    dVol = Ham.pw.CellVolume/prod(Ham.pw.Ns)
+
+    # Initialize electronic variables: `psiks` and `Haux`:
+    Random.seed!(1234)
+    psiks = rand_BlochWavefunc(Ham);
+
+    Hsub = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    for ikspin in 1:Nkspin
+        Hsub[ikspin] = zeros(ComplexF64, Nstates, Nstates)
+    end
+    # Calculate Hsub
+    for ispin in 1:Nspin, ik in 1:Nkpt
+        Ham.ispin = ispin
+        Ham.ik = ik
+        ikspin = ik + (ispin-1)*Nkpt
+        Hsub[ikspin][:,:] = psiks[ikspin]' * (Ham * psiks[ikspin])
+    end
 
     # Prepare Haux (random numbers)
     Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+    # eigenvalues of Hsub
     for ikspin in 1:Nkspin
-        Haux[ikspin] = randn(ComplexF64, Nstates, Nstates)
-        Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
+        Haux[ikspin] = diagm(0 => eigvals(Hsub[ikspin]))
     end
 
     # Gradients, subspace Hamiltonian
@@ -58,15 +68,19 @@ function main()
     Kg = zeros_BlochWavefunc(Ham)
     d = zeros_BlochWavefunc(Ham)
     #
-    Hsub = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     g_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     Kg_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     d_Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     for ikspin in 1:Nkspin
-        Hsub[ikspin] = zeros(ComplexF64, Nstates, Nstates)
         g_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
         Kg_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
         d_Haux[ikspin] = zeros(ComplexF64, Nstates, Nstates)
+    end
+
+    if Nspin == 2
+        magn = sum(Rhoe[:,1] - Rhoe[:,2])*dVol
+        integRhoe = sum(Rhoe)*dVol
+        println("INITIAL INPUT: integRhoe = $integRhoe integ magn = $magn")
     end
 
     # psiks is already orthonormal
@@ -76,27 +90,30 @@ function main()
     #
     # Update Hamiltonian before evaluating free energy
     update_from_ebands!( Ham )
-    update_from_wavefunc!( Ham, psiks )
+    #update_from_wavefunc!( Ham, psiks )
     E1 = calc_Lfunc( Ham, psiks )
     @info "E1 from Lfunc_Haux = $(E1)"
 
     #calc_grad_Lfunc_Haux!( Ham, psiks, Haux, g, Hsub, g_Haux, Kg_Haux )
 
-    calc_grad_psiks!(Ham, psiks, g, Hsub)
-    my_Kprec!(Ham, g, Kg)
+    calc_grad_psiks!(Ham, psiks, g, Kg, Hsub)
     calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
 
     println("Test grad psiks: $(2*dot(g, psiks))")
     println("Test grad Haux: $(dot(Haux, g_Haux))")
 
-    α = 0.1
+    if Nspin == 2
+        magn = sum(Rhoe[:,1] - Rhoe[:,2])*dVol
+        integRhoe = sum(Rhoe)*dVol
+        println("INITIAL after evaluate: integRhoe = $integRhoe integ magn = $magn")
+    end
 
-    for iterSD in 1:30
+    for iterSD in 1:NiterMax
 
         # Set direction
         for ikspin in 1:Nkspin
-            d[ikspin][:,:] = -Kg[ikspin][:,:]
-            d_Haux[ikspin][:,:] = -Kg_Haux[ikspin][:,:]
+            d[ikspin] = -Kg[ikspin]
+            d_Haux[ikspin] = -Kg_Haux[ikspin]
         end
         constrain_search_dir!(d, psiks)
 
@@ -106,9 +123,27 @@ function main()
             error("Bad step direction")
         end
 
+        α_t = 5.0
+        is_linmin_success = false
+        for itry in 1:10
+            E_t = try_step!(α_t, Ham, psiks, Haux, d, d_Haux)
+            println("itry=$(itry), using α_t=$(α_t) E_t=$(E_t)")
+            if E_t < E1
+                println("α_t is accepted")
+                is_linmin_success = true
+                break
+            end
+            α_t = α_t * 0.5 # reduce
+        end
+
+        if !is_linmin_success
+            @warn "LineMin is not successful, break from iteration"
+            break
+        end
+
         # Step
-        psiks .+= α*d
-        Haux .+= α*d_Haux
+        psiks .+= α_t*d
+        Haux .+= α_t*d_Haux
 
         for ikspin in 1:Nkspin
             ortho_sqrt!(Ham, psiks[ikspin])
@@ -119,8 +154,7 @@ function main()
         #
         E2 = calc_Lfunc( Ham, psiks )
         #
-        calc_grad_psiks!(Ham, psiks, g, Hsub)
-        my_Kprec!(Ham, g, Kg)
+        calc_grad_psiks!(Ham, psiks, g, Kg, Hsub)
         calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
         println("Test grad psiks: $(2*dot(g, psiks))")
         println("Test grad Haux: $(dot(Haux, g_Haux))")
@@ -128,10 +162,22 @@ function main()
         #
         ΔE = E2 - E1
         println("iterSD=$(iterSD) E=$(E2) abs(ΔE)=$(abs(ΔE)) E_fermi=$(Ham.electrons.E_fermi)")
+        #
+        println("Focc = ")
+        display(Ham.electrons.Focc); println()
+        println("ebands (w.r.t) Fermi energy = ")
+        display(Ham.electrons.ebands .- Ham.electrons.E_fermi); println()
+        #
+        if Nspin == 2
+            magn = sum(Rhoe[:,1] - Rhoe[:,2])*dVol
+            integRhoe = sum(Rhoe)*dVol
+            println("integRhoe = $integRhoe integ magn = $magn")
+        end
 
         #
         if ΔE > 0
             @warn "Energy is increasing"
+            break
         end
         #
         if abs(ΔE) < 1e-6
@@ -146,7 +192,3 @@ function main()
     @infiltrate
 
 end
-
-
-
-main()
