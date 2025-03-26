@@ -24,7 +24,7 @@ end
 function calc_grad_psiks!(
     Ham::Hamiltonian,
     psiks::BlochWavefunc,
-    g::BlochWavefunc,
+    g::BlochWavefunc, Kg::BlochWavefunc,
     Hsub::Vector{Matrix{ComplexF64}}
 )
     Nstates = Ham.electrons.Nstates
@@ -49,9 +49,10 @@ function calc_grad_psiks!(
         for ist in 1:Nstates
             # dont forget Focc and wk factor 
             g[ikspin][:,ist] .= Focc[ist,ikspin] .* Hpsi[:,ist] * wk[ik]
+            # FIXME: for nonspin-pol?
         end
+        Kprec!( ik, Ham.pw, Hpsi, Kg[ikspin] )
     end
-    #
     return
 end
 
@@ -110,9 +111,9 @@ function calc_grad_Haux!(
         @warn "dmuContrib is problematic"
         sign_frac = sign(sum(dmuNum))*sign(sum(dmuDen))
         if sign_frac == 0
-            dmuContrib = 1
+            dmuContrib = 0.0 #1
         else
-            dmuContrib = 1*sign_frac
+            dmuContrib = 0.0 #1*sign_frac
         end
     end
     println("dmuContrib = $(dmuContrib)")
