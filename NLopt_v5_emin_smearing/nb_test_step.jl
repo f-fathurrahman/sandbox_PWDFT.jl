@@ -34,6 +34,7 @@ includet("Lfunc.jl")
 includet("gradients_psiks_Haux.jl")
 includet("utilities_emin_smearing.jl")
 includet("prepare_Ham_various.jl")
+includet("utils_nb_01.jl")
 
 # %% [markdown]
 # Initializing Hamiltonian:
@@ -48,39 +49,25 @@ Ham = prepare_Ham_from_pwinput("PWINPUT");
 Nspin = Ham.electrons.Nspin
 Nkpt = Ham.pw.gvecw.kpoints.Nkpt
 Nkspin = Nkpt*Nspin
-Nstates = Ham.electrons.Nstates;
-
-# %% [markdown]
-# Initialize electronic variables: `psiks` and `Haux`:
+Nstates = Ham.electrons.Nstates
+dVol = Ham.pw.CellVolume/prod(Ham.pw.Ns);
 
 # %%
-# Symmetric Haux, but not diagonal
-function gen_random_symm_Haux(Ham)
-    Nspin = Ham.electrons.Nspin
-    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
-    Nkspin = Nkpt*Nspin
-    Nstates = Ham.electrons.Nstates;
-    Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-    for ikspin in 1:Nkspin
-        Haux[ikspin] = randn(ComplexF64, Nstates, Nstates)
-        Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
-    end
-    return Haux
-end
+sum(Ham.rhoe[:,1])*dVol, sum(Ham.rhoe[:,2])*dVol
 
-# or diagonal Haux:
-# Prepare Haux (random numbers)
-function gen_random_diag_Haux(Ham)
-    Nspin = Ham.electrons.Nspin
-    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
-    Nkspin = Nkpt*Nspin
-    Nstates = Ham.electrons.Nstates;
-    Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-    for ikspin in 1:Nkspin
-        Haux[ikspin] = diagm(0 => sort(randn(Float64, Nstates)))
-    end
-    return Haux
-end
+# %%
+sum(Ham.rhoe[:,1] - Ham.rhoe[:,2])*dVol
+
+# %% [markdown]
+# ### Generate initial point: (psiks and Haux)
+
+# %%
+Random.seed!(1234)
+psiks = rand_BlochWavefunc(Ham)
+Haux, is_Haux_diag = gen_random_symm_Haux(Ham);
+
+# %% [markdown]
+# ### Allocate memory for subspace Hamiltonian:
 
 # %%
 Hsub = Vector{Matrix{ComplexF64}}(undef, Nkspin)
@@ -96,14 +83,6 @@ for ispin in 1:Nspin, ik in 1:Nkpt
     ikspin = ik + (ispin-1)*Nkpt
     Hsub[ikspin][:,:] = psiks[ikspin]' * (Ham * psiks[ikspin])
 end
-
-# %% [markdown]
-# ### Generate initial point: (psiks and Haux)
-
-# %%
-Random.seed!(1234)
-psiks = rand_BlochWavefunc(Ham)
-Haux = gen_random_symm_Haux(Ham);
 
 # %% [markdown]
 # ### Do transformation:
@@ -166,7 +145,7 @@ println("Test grad psiks after rotate: $(2*dot(g, psiks))")
 println("Test grad Haux after rotate: $(dot(Haux, g_Haux))")
 
 # %%
-println("Test grad psiks after rotate: $(2*dot(g, psiks_orig))")
+println("Test grad psiks orig after rotate: $(2*dot(g, psiks_orig))")
 println("Test grad Haux orig after rotate: $(dot(Haux_orig, g_Haux))")
 
 # %% [markdown]

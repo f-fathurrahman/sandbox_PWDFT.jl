@@ -31,6 +31,7 @@ function prepare_Ham_from_pwinput(filename::String)
     #
     # XXX: This is needed for GTH pspots because rho_atom is not available
     if Nspin == 2
+        _, _ = PWDFT._prepare_scf!(Ham, psiks)
         # some heuristics
         is_using_gth_analytic = (eltype(Ham.pspots) == PsPot_GTH)
         is_using_gth_numeric = contains(uppercase(Ham.pspots[1].pspfile), "GTH")
