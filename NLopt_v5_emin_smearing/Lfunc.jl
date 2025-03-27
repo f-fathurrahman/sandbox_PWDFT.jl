@@ -350,8 +350,7 @@ function linmin_quad_v01!(
             α_t *= α_t_IncreaseFactor
             println("Trial step will become true step. α_t will be set to $(α_t)")
             # calculate gradients
-            calc_grad_psiks!(Ham, psiks, g, Hsub)
-            my_Kprec!(Ham, g, Kg)
+            calc_grad_psiks!(Ham, psiks, g, Kg, Hsub)
             calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
             #@infiltrate
             # return trial energy and status
@@ -371,8 +370,7 @@ function linmin_quad_v01!(
         α_prev = α
         # calculate energy and gradients
         E_t2 = do_compute_energy(Ham, psiks)
-        calc_grad_psiks!(Ham, psiks, g, Hsub)
-        my_Kprec!(Ham, g, Kg)
+        calc_grad_psiks!(Ham, psiks, g, Kg, Hsub)
         calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
         #
         println("Actual step energy 2: E_t2 = $(E_t2)")
