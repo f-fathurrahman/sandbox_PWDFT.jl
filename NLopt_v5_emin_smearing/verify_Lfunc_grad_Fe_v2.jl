@@ -11,7 +11,7 @@ include("gradients_psiks_Haux.jl")
 include("Lfunc.jl")
 include("utilities_emin_smearing.jl")
 
-function main()
+function main_verify()
 
     Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT");
 
@@ -79,4 +79,4 @@ function main()
 
 end
 
-main()
+main_verify()
