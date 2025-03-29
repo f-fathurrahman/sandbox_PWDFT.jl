@@ -1,0 +1,4 @@
+LOG_*
+*.wfc
+*.test
+*.pot

@@ -1,7 +1,7 @@
 &INPUT
   iswitch = 1
   verbosity = 'high'
-  rel = 1
+  rel = 0
   zed = 14.0
   config = "[Ne] 3s2 3p2"
   dft = "LDA"
