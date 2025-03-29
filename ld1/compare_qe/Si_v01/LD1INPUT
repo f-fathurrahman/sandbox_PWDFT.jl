@@ -1,0 +1,18 @@
+&INPUT
+  iswitch = 1
+  verbosity = 'high'
+  rel = 1
+  zed = 14.0
+  config = "[Ne] 3s2 3p2"
+  dft = "LDA"
+/
+
+&INPUTP
+  pseudotype = 1
+  lloc = 1
+  file_pseudopw = 'Si.UPF'
+/
+2
+3S 1 0 2.00 0.00 2.20 2.20
+3P 2 1 2.00 0.00 2.20 2.20
+
