@@ -101,7 +101,6 @@ end
 # TODO: some bibliography
 function radial_grid_series!(f, r, r2, b)
 
-
     dr21 = r[2] - r[1]
     dr31 = r[3] - r[1]
     dr32 = r[3] - r[2]

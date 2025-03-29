@@ -1,42 +1,8 @@
 # Solution of the Poisson's equation on a radial (logarithmic) grid
-function radial_poisson_solve!(k, nst, mesh, grid, f, vh)
-    #use upf_kinds, only : DP
-    #implicit none
-    #integer,intent(in)::       & 
-    #    k,   & ! input: the k of the equation
-    #    nst, & ! input: at low r, f goes as r**nst
-    #    mesh   ! input: the dimension of the mesh
-    #type(radial_grid_type), intent(in) :: &
-    #     grid   ! input: the radial grid
-    #real(DP), intent(in)::        &
-    #     f(mesh)  ! input: the 4\pi r2 \rho function
-    #real(DP), intent(out)::       &
-    #     vh(mesh) ! output: the required solution
-    #
-    # local variables
-    #
-    #integer ::        &
-    #     k21,  &   ! 2k+1
-    #     nk1,  &   ! nst-k-1
-    #     ierr, &   ! integer variable for allocation control
-    #     i         ! counter
-    #real(DP)::        &
-    #     c0,c2,c3, & ! coefficients of the polynomial expansion close to r=0
-    #     ch,       & ! dx squared / 12.0
-    #     xkh2,     & ! ch * f
-    #     ei, di,   & ! auxiliary variables for the diagonal and 
-    #                 ! off diagonal elements of the matrix
-    #     f1, fn,   & ! variables used for the boundary condition
-    #     vhim1, vhi  ! variables for the right hand side
-    #real(DP), allocatable:: &
-    #     d(:), &       ! the diagonal elements of 
-    #                   ! the tridiagonal sys.
-    #     e(:)          ! the off diagonal elements 
-    #                   ! of the trid. sys.
-    #!
-    #! Allocate space for the diagonal and off diagonal elements
-    #!
-    # if (mesh.ne.grid%mesh) call upf_error('hartree',' grid dimension mismatch',1) 
+function radial_poisson_solve!(k, nst, grid, f, vh)
+    # k,  ! input: the k of the equation
+    # nst ! input: at low r, f goes as r**nst
+    #real(DP), intent(in) :: f(Nrmesh)  input: the 4\pi r2 \rho function
   
     Nrmesh = grid.Nrmesh
     d = zeros(Float64,Nrmesh)
@@ -55,9 +21,10 @@ function radial_poisson_solve!(k, nst, mesh, grid, f, vh)
     else
         e[1] = 0.0
         for i in 1:4
-           d(i) = -k21*f[i]/grid.r[i]^nst
+           d[i] = -k21*f[i]/grid.r[i]^nst
         end
-        radial_grid_series!(d, grid.r, grid.r2, e[nk1])
+        idx_e = nk1:(nk1+3)
+        @views radial_grid_series!(d, grid.r, grid.r2, e[idx_e])
         c2 = e[1]/(4.0*k + 6.0)
         c3 = e[2]/(6.0*k + 12.0)
     end
@@ -92,9 +59,9 @@ function radial_poisson_solve!(k, nst, mesh, grid, f, vh)
     
     # Compute the right hand side using the auxiliary quantity vh(i).
     for i in 2:Nrmesh-1
-       vhi = vh[i]
-       vh[i] = vhim1 + 10.0*vhi + vh[i+1]
-       vhim1 = vhi
+        vhi = vh[i]
+        vh[i] = vhim1 + 10.0*vhi + vh[i+1]
+        vhim1 = vhi
     end
     # Use the boundary condition to eliminate the value of the solution in the 
     # first point from the first equation. This part for the right hand side.
@@ -103,8 +70,15 @@ function radial_poisson_solve!(k, nst, mesh, grid, f, vh)
             c2*(grid.r2[2] - grid.r2[1]) + 
             c3*(grid.r[2]^3 - grid.r[1]^3) )
   
+    #@infiltrate
     # solve the linear system with lapack routine dptsv
-    dptsv(Nrmesh-2, 1, d[2], e[2], vh[2], Nrmesh-2, ierr)
+    idx_start = 2
+    idx_stop = 2 + (Nrmesh-2) - 1
+    idx_D = idx_start:idx_stop
+    idx_E = idx_start:(idx_stop-1)
+    @views LinearAlgebra.LAPACK.ptsv!( d[idx_D], e[idx_E], vh[idx_D] )
+    # Original call call dptsv(mesh-2,1,d(2),e(2),vh(2),mesh-2,ierr)
+    # ptsv!(D, E, B)
     #if (ierr.ne.0) call upf_error('hartree', 'error in lapack', ierr)
   
     # Set the value of the solution at the first and last point
@@ -125,6 +99,5 @@ function radial_poisson_solve!(k, nst, mesh, grid, f, vh)
        vh[i] = vh[i] / grid.sqrtr[i]
     end
 
-
-  return
+    return
 end
