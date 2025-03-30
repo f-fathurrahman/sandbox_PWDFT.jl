@@ -31,7 +31,7 @@ function radial_poisson_solve!(k, nst, grid, f, vh)
 
     # Set the main auxiliary parameters
     ch = grid.dx^2/12.0
-    xkh2 = ch*( k + 0.5)^2
+    xkh2 = ch*(k + 0.5)^2
     ei = 1.0 - xkh2
     di = -(2.0 + 10.0*xkh2)
 
@@ -69,13 +69,15 @@ function radial_poisson_solve!(k, nst, grid, f, vh)
     vh[2] = vh[2] - ei*grid.sqrtr[1]^k21 * (
             c2*(grid.r2[2] - grid.r2[1]) + 
             c3*(grid.r[2]^3 - grid.r[1]^3) )
-  
-    #@infiltrate
+
     # solve the linear system with lapack routine dptsv
     idx_start = 2
     idx_stop = 2 + (Nrmesh-2) - 1
     idx_D = idx_start:idx_stop
     idx_E = idx_start:(idx_stop-1)
+
+    #@infiltrate
+
     @views LinearAlgebra.LAPACK.ptsv!( d[idx_D], e[idx_E], vh[idx_D] )
     # Original call call dptsv(mesh-2,1,d(2),e(2),vh(2),mesh-2,ierr)
     # ptsv!(D, E, B)
@@ -98,6 +100,8 @@ function radial_poisson_solve!(k, nst, grid, f, vh)
     for i in 1:Nrmesh
        vh[i] = vh[i] / grid.sqrtr[i]
     end
+
+    @infiltrate
 
     return
 end

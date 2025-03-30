@@ -2,16 +2,19 @@ using Revise, Infiltrator
 using Printf
 import LinearAlgebra
 
+#=
 # Use import to avoid potential name clash
-#import Plots, PlotThemes
-#Plots.theme(:dark)
-#
+import Plots, PlotThemes
+Plots.theme(:dark)
+=#
 
 using PWDFT
 
 
 includet("RadialGrid.jl")
 includet("starting_potential.jl")
+includet("start_scheq.jl")
+includet("ascheq.jl")
 includet("lschps.jl")
 includet("radial_poisson_solve.jl")
 
@@ -32,8 +35,9 @@ function test_radial_poisson_solve()
     @assert length(oc) == Nwf
 
     rmax = 100.0
-    xmin = -8.0 # iswitch = 1
-    dx = 0.008 # iswitch = 1
+    #xmin = -8.0 # iswitch=1, rel=1
+    xmin = -7.0 # iswitch=1, rel=0
+    dx = 0.008 # iswitch=1, rel=1
     ibound = false # default
 
     # Initialize radial grid
@@ -55,12 +59,18 @@ function test_radial_poisson_solve()
     thresh0 = 1.0e-10
     psi = zeros(Float64, Nrmesh, Nwf)
     nstop = 0
-    mode = 1
+    mode = 1 # for lschps
+    ze2 = -Zval # should be 2*Zval in Ry unit
     for iwf in 1:Nwf
         @views psi1 = psi[:,iwf] # zeros wavefunction
-        enl[iwf], nstop = lschps!( mode, Zval, thresh0, 
-            grid, nn[iwf], ll[iwf], enl[iwf], vpot, psi1
+        #enl[iwf], nstop = lschps!( mode, Zval, thresh0, 
+        #    grid, nn[iwf], ll[iwf], enl[iwf], vpot, psi1
+        #)
+        enl[iwf], nstop = ascheq!(
+            nn[iwf], ll[iwf], enl[iwf], grid, vpot, ze2, thresh0, psi1, nstop
         )
+
+
     end
 
     for iwf in 1:Nwf
