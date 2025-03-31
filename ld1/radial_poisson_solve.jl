@@ -101,7 +101,7 @@ function radial_poisson_solve!(k, nst, grid, f, vh)
        vh[i] = vh[i] / grid.sqrtr[i]
     end
 
-    @infiltrate
+    #@infiltrate
 
     return
 end

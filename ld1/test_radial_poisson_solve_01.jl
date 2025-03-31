@@ -69,14 +69,12 @@ function test_radial_poisson_solve()
         enl[iwf], nstop = ascheq!(
             nn[iwf], ll[iwf], enl[iwf], grid, vpot, ze2, thresh0, psi1, nstop
         )
-
-
     end
 
+    println("Energy levels:")
     for iwf in 1:Nwf
-        println("outside lschps: enl = ", enl[iwf])
+        @printf("%3d %18.10f\n", iwf, enl[iwf])
     end
-    println("Pass here")
 
     #
     # calculate charge density (spherical approximation)
