@@ -12,7 +12,7 @@
 #
 function starting_potential!(
   Nrmesh, Zval, Zed, Nwf, oc, nn, ll, r, enl,
-  v0, vxt, vpot, enne, Nspin;
+  v0, vxt, Vpot;
   frozen_core=false, noscf=false
 )
   
@@ -46,16 +46,12 @@ function starting_potential!(
        t = max(1.0,t)
        v0[i] = -Zed/r[i]
        if noscf
-          vpot[i,1] = v0[i] + vxt[i]
+          Vpot[i] = v0[i] + vxt[i]
        else
-          vpot[i,1] = -t/r[i] + vxt[i]
+          Vpot[i] = -t/r[i] + vxt[i]
        end
     end
     
-    if Nspin == 2
-       for i in 1:Nrmesh
-          vpot[i,2] = vpot[i,1]
-       end
-    end
+    # XXX: spinpol is handled outside this function
     return
 end
