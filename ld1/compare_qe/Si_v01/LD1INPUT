@@ -1,10 +1,11 @@
 &INPUT
   iswitch = 1
   verbosity = 'high'
-  rel = 0
+  rel = 1
   zed = 14.0
   config = "[Ne] 3s2 3p2"
-  dft = "vwn"
+  !dft = "LDA"
+  dft = 'lda_x_sla lda_c_vwn'
 /
 
 &INPUTP
