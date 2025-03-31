@@ -72,12 +72,12 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
     b = zeros(Float64,4) # XXX: b is originally b(0:3)
     radial_grid_series!( y, grid.r, grid.r2, b )
 
-    println()
-    println("Near origin: r, vpot, yi, b (in Ha)")
-    println()
-    for i in 1:4
-        @printf("%18.10e %18.10e %18.10e %18.10e\n", grid.r[i], vpot[i], y[i], b[i])
-    end
+    #println()
+    #println("Near origin: r, vpot, yi, b (in Ha)")
+    #println()
+    #for i in 1:4
+    #    @printf("%18.10e %18.10e %18.10e %18.10e\n", grid.r[i], vpot[i], y[i], b[i])
+    #end
 
     #exit()
 
@@ -91,9 +91,9 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
 
     for iterSch in 1:NmaxIter
     
-        println("===============================")
-        println("iterSch = ", iterSch)
-        println("===============================")
+        #println("===============================")
+        #println("iterSch = ", iterSch)
+        #println("===============================")
 
         nstop = 300
     
@@ -113,7 +113,7 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
                 ik = i
             end
         end
-        println("f = ", f[1:4])
+        #println("f = ", f[1:4])
         nstop = 302
     
         # XXX: What's this?
@@ -126,10 +126,12 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
         for i in 1:Nrmesh
             f[i] = 1.0 - 2*f[i] # convert to Ry?
         end
-        for i in 1:4
-            @printf("f = %18.10f\n", f[i])
-        end
-        @printf("ddx12 = %18.10f\n", ddx12)
+        
+        #for i in 1:4
+        #    @printf("f = %18.10f\n", f[i])
+        #end
+        #@printf("ddx12 = %18.10f\n", ddx12)
+        
         fill!(y, 0.0)
   
         # determination of the wave-function in the first two points by
@@ -139,11 +141,15 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
         b0e = b[1] - e # Ha unit
         c1 = Zval/xl1  # in Ha?
         c2 = (c1*Zval + b0e)/x4l6 # Ha
-        println("e = ", e)
+        
+        #println("e = ", e)
+        
         start_scheq!( l, e, b, grid, Zval, y )
-        @printf("After start_scheq! ")
-        @printf("y[1] = %18.10f\n", y[1])
-        @printf("y[2] = %18.10f\n", y[2])
+        
+        #@printf("After start_scheq! ")
+        #@printf("y[1] = %18.10f\n", y[1])
+        #@printf("y[2] = %18.10f\n", y[2])
+        
         #if iter == 1
         #    println("exit ffr 138")
         #    exit()
@@ -152,9 +158,9 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
         # start outward integration and count number of crossings
         ncross = 0
         ymx = 0.0
-        println("\nStarting outward integration")
-        println("ik = ", ik)
-        println("fn = ", f[1:4])
+        #println("\nStarting outward integration")
+        #println("ik = ", ik)
+        #println("fn = ", f[1:4])
         for n in 2:(ik-1)
             # Numerov algorithm
             y[n+1] = ( ( 12.0 - 10.0*f[n] )*y[n] - f[n-1]*y[n-1] ) / f[n+1]
@@ -164,8 +170,8 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
             end
             ymx = max( ymx, abs(y[n+1]) )
         end
-        @printf("ymx = %18.10f\n", ymx)
-        println("ncross = ", ncross)
+        #@printf("ymx = %18.10f\n", ymx)
+        #println("ncross = ", ncross)
         #if iter == 1
         #    println("exit ffr 159")
         #    exit()
@@ -199,7 +205,7 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
             continue
         end
     
-        println("ndcr = ", ndcr)
+        #println("ndcr = ", ndcr)
         #if iter == 1
         #    println("exit ffr 201")
         #    exit()
@@ -213,6 +219,7 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
         #
         nstart = Nrmesh
         ns = 10
+        @assert ik > 0
         rstart = ns*grid.r[ik]
         if rstart < grid.r[Nrmesh]
             for i in ik:Nrmesh
@@ -226,12 +233,11 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
             nstart = round(Int64, floor(nstart/2))
             nstart = 2*nstart + 1
         end
-        println("nstart = ", nstart)
+        #println("nstart = ", nstart)
         #if iter == 1
         #    println("exit ffr 231")
         #    exit()
         #end
-
 
         # set up a, l, and c vectors
         n = ik + 1
@@ -243,8 +249,8 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
            el[n] = di - f[n]*f[n-1]/el[n-1]
            c[n] = -c[n-1]*f[n-1]/el[n-1]
         end
-        println("el[nstart] = ", el[nstart])
-        println("c[nstart] = ", c[nstart])
+        #println("el[nstart] = ", el[nstart])
+        #println("c[nstart] = ", c[nstart])
         #if iter == 1
         #    println("exit ffr 247")
         #    exit()
@@ -257,7 +263,7 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
         for n in range(nstart-2, stop=ik+1, step=-1) #nstart-2,ik+1,-1
             y[n] = ( c[n] - f[n+1]*y[n+1])/el[n]
         end
-        @printf("y = %18.10f\n", y[ik+1])
+        #@printf("y = %18.10f\n", y[ik+1])
         #if iter == 1
         #    println("exit ffr 260")
         #    exit()
@@ -266,7 +272,7 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
         # if necessary, improve the trial eigenvalue by the cooley's
         # procedure. jw cooley math of comp 15,363(1961)
         fe = ( 12.0 - 10.0*f[ik] )*y[ik] - f[ik-1]*y[ik-1] - f[ik+1]*y[ik+1]
-        @printf("fe = %18.10f\n", fe)
+        #@printf("fe = %18.10f\n", fe)
         #if iter == 1
         #    println("exit ffr 270")
         #    exit()
@@ -279,9 +285,9 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
               y[i] = y[i]/ymx
            end
         end
-        @printf("ymx = %18.10f\n", ymx)        
-        @printf("y[1] = %18.10f\n", y[1])
-        @printf("y[Nrmesh] = %18.10f\n", y[Nrmesh])
+        #@printf("ymx = %18.10f\n", ymx)        
+        #@printf("y[1] = %18.10f\n", y[1])
+        #@printf("y[Nrmesh] = %18.10f\n", y[Nrmesh])
         #if iter == 1
         #    println("exit ffr 283")
         #    exit()
@@ -300,7 +306,7 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
             f2 = grid.r2[n+2]*y[n+2]*y[n+2]
             ss = ss + f0 + f2 + 4.0*f1
         end
-        @printf("ss = %18.10f\n", ss)
+        #@printf("ss = %18.10f\n", ss)
         #if iter == 1
         #    println("exit ffr 310")
         #    exit()
@@ -311,14 +317,13 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
         de = -fe*dfe*0.5 # Ha unit?
         eeps = abs(de/e)
         
-        @printf("ss = %18.10f\n", ss)
-        @printf("de = %18.10f\n", de)
+        #@printf("ss = %18.10f\n", ss)
+        #@printf("de = %18.10f\n", de)
 
         #if iter == 4
         #    println("exit ffr 321")
         #    exit()
         #end
-
 
         println("iterSch = ", iterSch, " e = ", e,  " de = ", de)
         if abs(de) < 2*thresh
@@ -329,31 +334,31 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
         end
     
         if eeps > 0.25
-            println("Updating de in 341")
+            #println("Updating de in 341")
             de = 0.25*de/eeps
         end
 
         if de > 0.0
-            println("Updating elw in 346")
+            #println("Updating elw in 346")
             elw = e
         end
     
         if de < 0.0
-            println("Updating eup")
+            #println("Updating eup")
             eup = e
         end
   
         e = e + de
-        println("de = ", de)
-        println("e = ", e)
+        #println("de = ", de)
+        #println("e = ", e)
   
         if e > eup
-            println("Updating e 358")
+            #println("Updating e 358")
             e = 0.9*eup + 0.1*elw
         end
     
         if e < elw
-            println("Updating e 363")
+            #println("Updating e 363")
             e = 0.9*elw + 0.1*eup
         end
     
@@ -361,14 +366,14 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
   
         nstop = 50
     
-        println("New data:")
-        @printf("e = %18.10f\n", e)
-        @printf("eup = %18.10f\n", eup)
-        @printf("elw = %18.10f\n", elw)
+        #println("New data:")
+        #@printf("e = %18.10f\n", e)
+        #@printf("eup = %18.10f\n", eup)
+        #@printf("elw = %18.10f\n", elw)
 
     end
 
-    println("e = ", e)
+    #println("e = ", e)
 
     #println("exit ffr 340")
     #exit()
