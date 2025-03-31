@@ -4,7 +4,7 @@
   rel = 0
   zed = 14.0
   config = "[Ne] 3s2 3p2"
-  dft = "LDA"
+  dft = "vwn"
 /
 
 &INPUTP
