@@ -47,12 +47,11 @@ function test_xc_01()
     Nrmesh = grid.Nrmesh
     v0 = zeros(Float64, Nrmesh)
     vxt = zeros(Float64, Nrmesh)
-    vpot = zeros(Float64, Nrmesh, 2)
-    enne = 0.0
+    Vpot = zeros(Float64, Nrmesh, Nspin)
     starting_potential!(
         Nrmesh, Zval, Zed,
         Nwf, oc, nn, ll,
-        grid.r, enl, v0, vxt, vpot, enne, Nspin
+        grid.r, enl, v0, vxt, Vpot
     )
 
     # Solve for all states
