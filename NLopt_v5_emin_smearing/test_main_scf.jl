@@ -1,5 +1,4 @@
-using Revise, Infiltrator
-using PWDFT
+# Need to run setup first
 
 function main_scf(filename)
     Ham, pwinput = init_Ham_from_pwinput(filename=filename);

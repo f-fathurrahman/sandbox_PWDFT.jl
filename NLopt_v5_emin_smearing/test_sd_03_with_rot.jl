@@ -1,19 +1,7 @@
-using Revise
-using LinearAlgebra
-using Printf
-using Infiltrator
-using Random
-using PWDFT
-
-includet("smearing.jl")
-includet("occupations.jl")
-includet("Lfunc.jl")
-includet("gradients_psiks_Haux.jl")
-includet("utilities_emin_smearing.jl")
-includet("prepare_Ham_various.jl")
+# Need to run setup first
 
 
-function main_sd_03(Ham; NiterMax=100)
+function main_sd_03(Ham; NiterMax=100, psiks=nothing, Haux=nothing)
 
     Nspin = Ham.electrons.Nspin
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
@@ -24,7 +12,9 @@ function main_sd_03(Ham; NiterMax=100)
 
     # Initialize electronic variables: `psiks` and `Haux`:
     Random.seed!(1234)
-    psiks = rand_BlochWavefunc(Ham);
+    if isnothing(psiks)
+        psiks = rand_BlochWavefunc(Ham)
+    end
 
     Hsub = Vector{Matrix{ComplexF64}}(undef, Nkspin)
     for ikspin in 1:Nkspin
@@ -37,17 +27,18 @@ function main_sd_03(Ham; NiterMax=100)
         ikspin = ik + (ispin-1)*Nkpt
         Hsub[ikspin][:,:] = psiks[ikspin]' * (Ham * psiks[ikspin])
     end
-    #@infiltrate
 
     # Prepare Haux (random numbers)
     #
-    Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-    # For Haux, choose between generic symmetric Haux:
-    for ikspin in 1:Nkspin
-        Haux[ikspin] = randn(ComplexF64, Nstates, Nstates)
-        # the same as Hsub
-        Haux[ikspin][:,:] = Hsub[ikspin][:,:]
-        Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
+    if isnothing(Haux)
+        Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
+        # For Haux, choose between generic symmetric Haux:
+        for ikspin in 1:Nkspin
+            Haux[ikspin] = randn(ComplexF64, Nstates, Nstates)
+            # the same as Hsub
+            Haux[ikspin][:,:] = Hsub[ikspin][:,:]
+            Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
+        end
     end
 
     # eigenvalues of Hsub
@@ -102,7 +93,7 @@ function main_sd_03(Ham; NiterMax=100)
     display(Ham.electrons.ebands .- Ham.electrons.E_fermi); println
 
     α_t_start = 1.0
-    α_t_min = 1e-1
+    α_t_min = 1e-10
     α_t = α_t_start
 
     for iterSD in 1:NiterMax
@@ -125,8 +116,6 @@ function main_sd_03(Ham; NiterMax=100)
         println("Test grad psiks before rotate: $(2*dot(g, psiks))")
         println("Test grad Haux before rotate: $(dot(Haux, g_Haux))")
         rotate_gradients!(g, Kg, g_Haux, Kg_Haux, rots_cache)
-        println("Test grad psiks after rotate: $(2*dot(g, psiks))")
-        println("Test grad Haux after rotate: $(dot(Haux, g_Haux))")
  
         #
         if is_success
@@ -147,7 +136,7 @@ function main_sd_03(Ham; NiterMax=100)
             println("integRhoe = $integRhoe integ magn = $magn")
         end
         ΔE = abs(E_new - E1)
-        println("iterSD=$(iterSD) E_new = $(E_new), ΔE = $(ΔE)")
+        println("iterSD: $(iterSD) E_new = $(E_new) ΔE = $(ΔE)")
         println("Focc = ")
         display(Ham.electrons.Focc); println()
         println("ebands (w.r.t) Fermi energy = ")
@@ -167,7 +156,7 @@ function main_sd_03(Ham; NiterMax=100)
             #break
         end
 
-        if ΔE < 1e-6
+        if ΔE < 1e-8
             println("Converged")
             break
         end 
@@ -176,7 +165,10 @@ function main_sd_03(Ham; NiterMax=100)
         E1 = E_new
     end
 
-    @infiltrate
+    serialize("psiks.jldat", psiks)
+    serialize("Haux.jldat", Haux)
+
+    #@infiltrate
 
     return
 end
