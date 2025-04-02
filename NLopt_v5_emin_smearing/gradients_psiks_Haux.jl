@@ -100,8 +100,8 @@ function calc_grad_Haux!(
                 fprimeNum[ist] = fprime[ist] * ( real(Hsub[ikspin][ist,ist]) - ebands[ist,ikspin] )
             end
             # smear_fermi_prime might return NaN if E_fermi is not set properly
-            dmuNum[ispin] += wk[ik] * sum(fprimeNum)
-            dmuDen[ispin] += wk[ik] * sum(fprime)
+            dmuNum[ispin] += wk[ik] * sum(fprimeNum) * w_spin
+            dmuDen[ispin] += wk[ik] * sum(fprime) * w_spin
         end
         println("ispin=$(ispin) dmu = $(dmuNum[ispin]) $(dmuDen[ispin])")
     end
@@ -131,7 +131,7 @@ function calc_grad_Haux!(
             gradF[ist,ist] = gradF0[ist,ist] - dmuContrib # FIXME: not tested for spinpol
         end
         g_tmp[:,:] = grad_smear( smear_fermi, smear_fermi_prime, ebands[:,ikspin], E_fermi, kT, gradF )
-        g_Haux[ikspin][:,:] = wk[ik] * 0.5 * (g_tmp' + g_tmp)
+        g_Haux[ikspin][:,:] = wk[ik] * 0.5 * (g_tmp' + g_tmp) * w_spin
         Kg_Haux[ikspin][:,:] = -κ * gradF0[:,:] # preconditioning here?
     end
 
