@@ -53,3 +53,25 @@ function prepare_Ham_from_pwinput(filename::String)
 
     return Ham
 end
+
+const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)), "..")
+const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
+const DIR_STRUCTURES = joinpath(DIR_PWDFT, "structures")
+
+function create_Ham_O2_smearing()
+    atoms = Atoms(ext_xyz_file=joinpath(DIR_STRUCTURES, "O2.xyz"))
+    pspfiles = [joinpath(DIR_PSP, "O-q6.gth")]
+    ecutwfc = 15.0
+    Ham = Hamiltonian( atoms, pspfiles, ecutwfc, extra_states=4, Nspin=2 )
+    Ham.electrons.use_smearing = true
+    Ham.electrons.kT = 0.003
+    # Compute this once and for all
+    Ham.energies.NN = calc_E_NN(Ham.atoms)
+    #
+    Rhoe = guess_rhoe_atomic(Ham, starting_magnetization=[0.1])
+    psiks = rand_BlochWavefunc(Ham)
+    update!(Ham, psiks, Rhoe)
+    return Ham
+end
+
+
