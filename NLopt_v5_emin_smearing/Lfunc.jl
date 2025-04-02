@@ -166,6 +166,7 @@ function transform_psiks_Haux_update_ebands!(
             Haux[ikspin] = diagm( 0 => Ham.electrons.ebands[:,ikspin] )
         end
         #
+        # XXX Check this again, probably do_ortho_psi should always be true
         if do_ortho_psi
             UrotC[ikspin] = inv(sqrt(psiks[ikspin]' * psiks[ikspin]))
         end
