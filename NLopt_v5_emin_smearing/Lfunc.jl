@@ -305,38 +305,27 @@ function linmin_quad_v01!(
 
     gd = 2*real(dot(g,d)) + real(dot(g_Haux, d_Haux))
     println("gd = $(gd)")
+    α_prev = 0.0
     if gd > 0
-        error("Bad step direction")
+        println("ERROR: Bad step direction")
+        return E_old, false, α_prev
     end
 
     NtryMax = 5
 
     α_safe =  1e-5 # safe step size
     α = α_safe # declare this outside for loop, set to a "safe" value
-    α_prev = 0.0
     α_t_ReduceFactor = 0.1
     α_t_IncreaseFactor = 3.0
     is_success = false
     for itry in 1:NtryMax
         println("--- Begin itry linmin trial step = $(itry) using α_t=$(α_t)")
         #
-        #println("Before step: ")
-        #display(Ham.electrons.Focc); println()
-        #display(Ham.electrons.ebands); println()
-        #
         do_step_psiks_Haux!(α_t - α_prev, Ham, psiks, Haux, d, d_Haux, rots_cache)
-        # Ham.electrons.Focc and Ham.electrons.ebands are not yet updated here
-        #println("After step 1: ")
-        #display(Ham.electrons.Focc); println()
-        #display(Ham.electrons.ebands); println()
         # make explicit calls to update_* functions
         #
         α_prev = α_t
         E_t = do_compute_energy(Ham, psiks) # this will update ebands, Focc, and Rhoe
-        #
-        #println("After step 2: ")
-        #display(Ham.electrons.Focc); println()
-        #display(Ham.electrons.ebands); println()
         #
         if !isfinite(E_t)
             α_t *= α_t_ReduceFactor
