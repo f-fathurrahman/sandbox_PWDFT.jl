@@ -1,7 +1,17 @@
-function constrain_search_dir!( d::BlochWavefunc, psiks::BlochWavefunc )
-    Nkspin = length(psiks)
-    for i in 1:Nkspin
-        d[i][:,:] = d[i] - psiks[i] * ( psiks[i]' * d[i] )
+function constrain_search_dir!( Ham, d::BlochWavefunc, psiks::BlochWavefunc )
+    Nspin = Ham.electrons.Nspin
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
+    #XXX need overlap ?
+    for ispin in 1:Nspin, ik in 1:Nkpt
+        # Don't forget to set current index for Hamiltonian
+        Ham.ispin = ispin
+        Ham.ik = ik
+        i = ik + (ispin-1)*Nkpt
+        if Ham.need_overlap
+            d[i][:,:] = d[i] - psiks[i] * ( psiks[i]' * op_S(Ham, d[i]) )
+        else
+            d[i][:,:] = d[i] - psiks[i] * ( psiks[i]' * d[i] )
+        end
     end
     return
 end
@@ -45,7 +55,12 @@ function calc_grad_psiks!(
         #
         Hpsi = op_H( Ham, psiks[ikspin] )
         Hsub[ikspin][:,:] = psiks[ikspin]' * Hpsi
-        Hpsi[:,:] -= psiks[ikspin] * Hsub[ikspin]
+        if Ham.need_overlap
+            Spsi = op_S(Ham, psiks[ikspin])
+            Hpsi[:,:] -= Spsi * Hsub[ikspin]
+        else
+            Hpsi[:,:] -= psiks[ikspin] * Hsub[ikspin] # op_S(psiks[iskspin])
+        end
         for ist in 1:Nstates
             # dont forget Focc and wk factor 
             g[ikspin][:,ist] .= Focc[ist,ikspin] .* Hpsi[:,ist] * wk[ik]
@@ -175,12 +190,14 @@ end
 =#
 
 
+# DEPRECATED functions
 
+#=
 function calc_grad_Lfunc_Haux!(
     Ham::Hamiltonian,
     psiks::BlochWavefunc,
     Haux::Vector{Matrix{Float64}},
-    g::BlochWavefunc,
+    g::BlochWavefunc, Kg::BlochWavefunc,
     Hsub,
     g_Haux,
     Kg_Haux
@@ -206,20 +223,14 @@ function calc_grad_Lfunc_Haux!(
     update_from_ebands!( Ham, ebands )
     update_from_wavefunc!( Ham, psiksU )
 
-    for ikspin in 1:Nkspin
-        fill!(g[ikspin], 0.0 + 0.0*im)
-        fill!(Hsub[ikspin], 0.0 + 0.0*im)
-        fill!(g_Haux[ikspin], 0.0)
-        fill!(Kg_Haux[ikspin], 0.0)
-    end
-
     # Evaluate the gradients for psi
-    calc_grad_psiks!(Ham, psiksU, g, Hsub) # don't forget to include Urot in psi
+    calc_grad_psiks!(Ham, psiksU, g, Kg, Hsub) # don't forget to include Urot in psi
     # pass Hsub
     calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
 
     return
 end
+=#
 
 
 #=

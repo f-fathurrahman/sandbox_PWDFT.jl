@@ -124,6 +124,7 @@ function get_diag_Haux_from_ebands( Ham )
     return Haux
 end
 
+#=
 # Modifies Ham.electrons.ebands
 function transform_psiks_Haux_update_ebands!(Ham, psiks, Haux)
     Nstates = Ham.electrons.Nstates
@@ -139,7 +140,7 @@ function transform_psiks_Haux_update_ebands!(Ham, psiks, Haux)
     end
     return
 end
-
+=#
 
 
 # Modifies Ham.electrons.ebands, save rotations in rots_cache
@@ -161,7 +162,13 @@ function transform_psiks_Haux_update_ebands!(
     rotPrevC = rots_cache.rotPrevC
     rotPrevCinv = rots_cache.rotPrevCinv
     #
-    for ikspin in 1:Nkspin
+    for ispin in 1:Nspin, ik in 1:Nkpt
+        # Don't forget to set current index for Hamiltonian
+        # Need this in case we need to apply op_S
+        Ham.ispin = ispin
+        Ham.ik = ik
+        ikspin = ik + (ispin-1)*Nkpt
+        #
         ebands[:,ikspin], Urot[ikspin] = eigen(Hermitian(Haux[ikspin]))
         if overwrite_Haux
             Haux[ikspin] = diagm( 0 => Ham.electrons.ebands[:,ikspin] )
@@ -169,7 +176,11 @@ function transform_psiks_Haux_update_ebands!(
         #
         # XXX Check this again, probably do_ortho_psi should always be true
         if do_ortho_psi
-            UrotC[ikspin] = inv(sqrt(psiks[ikspin]' * psiks[ikspin]))
+            if Ham.need_overlap
+                UrotC[ikspin] = inv(sqrt(psiks[ikspin]' * op_S(Ham, psiks[ikspin])))
+            else
+                UrotC[ikspin] = inv(sqrt(psiks[ikspin]' * psiks[ikspin]))
+            end
         end
         UrotC[ikspin] = UrotC[ikspin]*Urot[ikspin] # extra rotation
         psiks[ikspin] = psiks[ikspin]*UrotC[ikspin]
@@ -200,12 +211,11 @@ function calc_Lfunc(
 )
     calc_energies!(Ham, psiks)
     # get entropy
-    # Ham.electrons.mTS is computed in update_from_ebands!
-    #Ham.energies.mTS = Ham.electrons.mTS
-    #
+    # Ham.energies.mTS is computed in update_from_ebands!
     return sum(Ham.energies)
 end
 
+#=
 # The inputs are:
 # - wavefunction psi, and
 # - auxiliary Hamiltonian in diagonal form, stored as matrix with size (Nstates,Nspin)
@@ -220,14 +230,13 @@ function calc_Lfunc_ebands!(
     update_from_wavefunc!( Ham, psiks )
     #
     calc_energies!(Ham, psiks)
-    # get entropy
-    # Ham.electrons.mTS is computed in update_from_ebands!
-    Ham.energies.mTS = Ham.electrons.mTS
     
     return sum(Ham.energies)
 end
+=#
 
 
+#=
 # The inputs are:
 # - wavefunction psi, and
 # - auxiliary Hamiltonian Haux. No support for spin polarization for now.
@@ -259,7 +268,7 @@ function calc_Lfunc_Haux!(
 
     return calc_Lfunc_ebands!(Ham, psiksU, ebands)
 end
-
+=#
 
 function do_step_psiks_Haux!(α::Float64, Ham, psiks, Haux, d, d_Haux, rots_cache)
 
