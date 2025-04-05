@@ -55,8 +55,11 @@ function prepare_Ham_from_pwinput(filename::String)
 end
 
 const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)), "..")
-const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
 const DIR_STRUCTURES = joinpath(DIR_PWDFT, "structures")
+const DIR_PSP_GTH = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
+const DIR_PSP_GBRV_LDA = joinpath(DIR_PWDFT, "pseudopotentials", "GBRV_LDA")
+
+
 
 function create_Ham_O2_smearing()
     atoms = Atoms(ext_xyz_file=joinpath(DIR_STRUCTURES, "O2.xyz"))
@@ -81,7 +84,7 @@ function create_Ham_Pt_fcc_smearing(; meshk=[3,3,3])
 
         Pt  0.0  0.0  0.0
         """, LatVecs=gen_lattice_fcc(3.9231*ANG2BOHR))
-    pspfiles = [joinpath(DIR_PSP, "Pt-q10.gth")]
+    pspfiles = [joinpath(DIR_PSP_GTH, "Pt-q10.gth")]
     ecutwfc = 15.0
     Ham = Hamiltonian( atoms, pspfiles, ecutwfc,
                        meshk=meshk, extra_states=5 )
@@ -96,3 +99,33 @@ function create_Ham_Pt_fcc_smearing(; meshk=[3,3,3])
     return Ham
 end
 
+
+function create_Ham_Pt_fcc_smearing_gbrv(; meshk=[3,3,3])
+    atoms = Atoms(xyz_string_frac=
+        """
+        1
+
+        Pt  0.0  0.0  0.0
+        """, LatVecs=gen_lattice_fcc(3.9231*ANG2BOHR))
+    pspots = [
+        PsPot_UPF(joinpath(DIR_PSP_GBRV_LDA, "pt_lda_v1.4.uspp.F.UPF"))
+    ]
+    ecutwfc = 20.0 # or 40 Ry
+    ecutrho = 100.0 # or 200 Ry
+    #
+    options = HamiltonianOptions()
+    options.extra_states = 4
+    options.dual = ecutrho/ecutwfc
+    options.meshk = meshk
+    #
+    Ham = Hamiltonian( atoms, pspots, ecutwfc, options )
+    Ham.electrons.use_smearing = true
+    Ham.electrons.kT = 0.003
+    # Compute this once and for all
+    Ham.energies.NN = calc_E_NN(Ham.atoms)
+    #
+    Random.seed!(1234)
+    psiks = rand_BlochWavefunc(Ham)
+    _, _ = PWDFT._prepare_scf!(Ham, psiks)
+    return Ham
+end
