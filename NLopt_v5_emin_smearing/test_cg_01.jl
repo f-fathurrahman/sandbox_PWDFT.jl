@@ -86,7 +86,7 @@ function main_cg_01(Ham; NiterMax=100, psiks=nothing, Haux=nothing)
     display(Ham.electrons.ebands .- Ham.electrons.E_fermi); println()
 
     α_t_start = 1.0
-    α_t_min = 1e-10
+    α_t_min = 1e-5
     α_t = α_t_start
 
     do_force_grad_dir = true
@@ -102,12 +102,12 @@ function main_cg_01(Ham; NiterMax=100, psiks=nothing, Haux=nothing)
 
         β = 0.0
         if !do_force_grad_dir
-            gd = 2*real(dot(g, d)) + real(dot(g_Haux, d_Haux))
+            #gd = 2*real(dot(g, d)) + real(dot(g_Haux, d_Haux))
             gPrevKg = 2*real(dot(gPrev, Kg)) + real(dot(gPrev_Haux, Kg_Haux))
-            gg = 2*real(dot(g, g)) + real(dot(g_Haux, g_Haux))
-            dd = 2*real(dot(d, d)) + real(dot(d_Haux, d_Haux))
-            @printf("linmin: %10.3le", gd/sqrt(gg*dd))
-            @printf("  cgtest: %10.3le\n", gPrevKg/sqrt(gKNorm*gKNormPrev))
+            #gg = 2*real(dot(g, g)) + real(dot(g_Haux, g_Haux))
+            #dd = 2*real(dot(d, d)) + real(dot(d_Haux, d_Haux))
+            #@printf("linmin: %10.3le", gd/sqrt(gg*dd))
+            #@printf("  cgtest: %10.3le\n", gPrevKg/sqrt(gKNorm*gKNormPrev))
             # Update beta:
             println("gKNorm = $(gKNorm), gPrevKg = $(gPrevKg)")
             β = (gKNorm - gPrevKg)/gKNormPrev
@@ -182,6 +182,9 @@ function main_cg_01(Ham; NiterMax=100, psiks=nothing, Haux=nothing)
             magn = sum(Rhoe[:,1] - Rhoe[:,2])*dVol
             integRhoe = sum(Rhoe)*dVol
             println("integRhoe = $integRhoe integ magn = $magn")
+        else
+            integRhoe = sum(Rhoe)*dVol
+            println("integRhoe = $integRhoe")
         end
         ΔE = abs(E_new - E1)
         println("iterCG: $(iterCG) E_new = $(E_new) ΔE = $(ΔE)")
@@ -189,7 +192,8 @@ function main_cg_01(Ham; NiterMax=100, psiks=nothing, Haux=nothing)
         display(Ham.electrons.Focc); println()
         println("ebands (w.r.t) Fermi energy = ")
         display(Ham.electrons.ebands .- Ham.electrons.E_fermi); println()
-
+        println("Energies:")
+        println(Ham.energies, use_smearing=true)
 
         if ΔE < 1e-8
             println("Converged")

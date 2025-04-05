@@ -74,4 +74,25 @@ function create_Ham_O2_smearing()
     return Ham
 end
 
+function create_Ham_Pt_fcc_smearing(; meshk=[3,3,3])
+    atoms = Atoms(xyz_string_frac=
+        """
+        1
+
+        Pt  0.0  0.0  0.0
+        """, LatVecs=gen_lattice_fcc(3.9231*ANG2BOHR))
+    pspfiles = [joinpath(DIR_PSP, "Pt-q10.gth")]
+    ecutwfc = 15.0
+    Ham = Hamiltonian( atoms, pspfiles, ecutwfc,
+                       meshk=meshk, extra_states=5 )
+    Ham.electrons.use_smearing = true
+    Ham.electrons.kT = 0.003
+    # Compute this once and for all
+    Ham.energies.NN = calc_E_NN(Ham.atoms)
+    #
+    Rhoe = guess_rhoe_atomic(Ham)
+    psiks = rand_BlochWavefunc(Ham)
+    update!(Ham, psiks, Rhoe)
+    return Ham
+end
 

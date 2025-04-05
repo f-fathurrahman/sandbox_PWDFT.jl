@@ -91,10 +91,11 @@ function update_from_ebands!(Ham, ebands)
         Nkpt, wk
     )
 
-    @info "mTS = $(mTS), E_fermi=$(E_fermi)"
+    println("mTS = $(mTS), E_fermi=$(E_fermi)")
     # Set some output
     Ham.electrons.E_fermi = E_fermi
     Ham.energies.mTS = mTS
+    println("Ham.energies.mTS = ", Ham.energies.mTS)
 
     return
 end
@@ -200,7 +201,7 @@ function calc_Lfunc(
     calc_energies!(Ham, psiks)
     # get entropy
     # Ham.electrons.mTS is computed in update_from_ebands!
-    Ham.energies.mTS = Ham.electrons.mTS
+    #Ham.energies.mTS = Ham.electrons.mTS
     #
     return sum(Ham.energies)
 end
