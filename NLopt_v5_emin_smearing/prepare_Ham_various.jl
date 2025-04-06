@@ -58,7 +58,7 @@ const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)), "..")
 const DIR_STRUCTURES = joinpath(DIR_PWDFT, "structures")
 const DIR_PSP_GTH = joinpath(DIR_PWDFT, "pseudopotentials", "pade_gth")
 const DIR_PSP_GBRV_LDA = joinpath(DIR_PWDFT, "pseudopotentials", "GBRV_LDA")
-
+const DIR_PSP_PAW_JTH_LDA = joinpath(DIR_PWDFT, "pseudopotentials", "PAW_JTH_LDA")
 
 
 function create_Ham_O2_smearing()
@@ -117,6 +117,70 @@ function create_Ham_Pt_fcc_smearing_gbrv(; meshk=[3,3,3])
     options.extra_states = 4
     options.dual = ecutrho/ecutwfc
     options.meshk = meshk
+    #
+    Ham = Hamiltonian( atoms, pspots, ecutwfc, options )
+    Ham.electrons.use_smearing = true
+    Ham.electrons.kT = 0.003
+    # Compute this once and for all
+    Ham.energies.NN = calc_E_NN(Ham.atoms)
+    #
+    Random.seed!(1234)
+    psiks = rand_BlochWavefunc(Ham)
+    _, _ = PWDFT._prepare_scf!(Ham, psiks)
+    return Ham
+end
+
+
+function create_Ham_Fe_bcc_smearing_gbrv(; meshk=[3,3,3])
+    atoms = Atoms(xyz_string_frac=
+        """
+        1
+
+        Fe  0.0  0.0  0.0
+        """, LatVecs=gen_lattice_bcc(2.866*ANG2BOHR))
+    pspots = [
+        PsPot_UPF(joinpath(DIR_PSP_GBRV_LDA, "fe_lda_v1.5.uspp.F.UPF"))
+    ]
+    ecutwfc = 20.0 # or 40 Ry
+    ecutrho = 100.0 # or 200 Ry
+    #
+    options = HamiltonianOptions()
+    options.extra_states = 4
+    options.dual = ecutrho/ecutwfc
+    options.meshk = meshk
+    options.Nspin = 2
+    #
+    Ham = Hamiltonian( atoms, pspots, ecutwfc, options )
+    Ham.electrons.use_smearing = true
+    Ham.electrons.kT = 0.003
+    # Compute this once and for all
+    Ham.energies.NN = calc_E_NN(Ham.atoms)
+    #
+    Random.seed!(1234)
+    psiks = rand_BlochWavefunc(Ham)
+    _, _ = PWDFT._prepare_scf!(Ham, psiks)
+    return Ham
+end
+
+
+function create_Ham_Fe_bcc_smearing_paw_jth(; meshk=[3,3,3])
+    atoms = Atoms(xyz_string_frac=
+        """
+        1
+
+        Fe  0.0  0.0  0.0
+        """, LatVecs=gen_lattice_bcc(2.866*ANG2BOHR))
+    pspots = [
+        PsPot_UPF(joinpath(DIR_PSP_PAW_JTH_LDA, "Fe.upf"))
+    ]
+    ecutwfc = 20.0 # or 40 Ry
+    ecutrho = 100.0 # or 200 Ry
+    #
+    options = HamiltonianOptions()
+    options.extra_states = 4
+    options.dual = ecutrho/ecutwfc
+    options.meshk = meshk
+    options.Nspin = 2
     #
     Ham = Hamiltonian( atoms, pspots, ecutwfc, options )
     Ham.electrons.use_smearing = true

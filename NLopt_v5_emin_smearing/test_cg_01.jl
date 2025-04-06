@@ -94,6 +94,8 @@ function main_cg_01(Ham; NiterMax=100, psiks=nothing, Haux=nothing)
     gKNormPrev = 0.0
     # current and previous norms of the preconditioned gradient
 
+    ok_paw = any(Ham.pspotNL.are_paw) # only used for printing?
+
     for iterCG in 1:NiterMax
 
         println("\nStart iterCG = ", iterCG)
@@ -201,7 +203,7 @@ function main_cg_01(Ham; NiterMax=100, psiks=nothing, Haux=nothing)
         println("ebands (w.r.t) Fermi energy = ")
         display(Ham.electrons.ebands .- Ham.electrons.E_fermi); println()
         println("Energies:")
-        println(Ham.energies, use_smearing=true)
+        println(Ham.energies, use_smearing=true, is_paw=ok_paw)
 
         if ΔE < 1e-8
             println("Converged")
