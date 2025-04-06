@@ -102,12 +102,20 @@ function main_cg_01(Ham; NiterMax=100, psiks=nothing, Haux=nothing)
 
         β = 0.0
         if !do_force_grad_dir
-            #gd = 2*real(dot(g, d)) + real(dot(g_Haux, d_Haux))
             gPrevKg = 2*real(dot(gPrev, Kg)) + real(dot(gPrev_Haux, Kg_Haux))
-            #gg = 2*real(dot(g, g)) + real(dot(g_Haux, g_Haux))
-            #dd = 2*real(dot(d, d)) + real(dot(d_Haux, d_Haux))
-            #@printf("linmin: %10.3le", gd/sqrt(gg*dd))
-            #@printf("  cgtest: %10.3le\n", gPrevKg/sqrt(gKNorm*gKNormPrev))
+            gd = 2*real(dot(g, d)) + real(dot(g_Haux, d_Haux))
+            gg = 2*real(dot(g, g)) + real(dot(g_Haux, g_Haux))
+            dd = 2*real(dot(d, d)) + real(dot(d_Haux, d_Haux))
+            if gg*dd > 0
+                @printf("linmin: %10.3le\n", gd/sqrt(gg*dd))
+            else
+                @warn "Negative gg*dd encountered"
+            end
+            if gKNorm*gKNormPrev > 0
+                @printf("cgtest: %10.3le\n", gPrevKg/sqrt(gKNorm*gKNormPrev))
+            else
+                @warn "Negative gKNorm*gKNormPrev encountered"
+            end
             # Update beta:
             println("gKNorm = $(gKNorm), gPrevKg = $(gPrevKg)")
             β = (gKNorm - gPrevKg)/gKNormPrev
@@ -134,7 +142,7 @@ function main_cg_01(Ham; NiterMax=100, psiks=nothing, Haux=nothing)
             d[ikspin] = -Kg[ikspin] + β*d[ikspin]
             d_Haux[ikspin] = -Kg_Haux[ikspin] + β*d_Haux[ikspin]
         end
-        constrain_search_dir!(d, psiks)
+        constrain_search_dir!(Ham, d, psiks)
 
         #
         # Do line minimization:
