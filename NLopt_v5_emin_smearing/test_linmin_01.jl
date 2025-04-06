@@ -97,7 +97,7 @@ function main()
             d[ikspin][:,:] = -Kg[ikspin][:,:]
             d_Haux[ikspin][:,:] = -Kg_Haux[ikspin][:,:]
         end
-        constrain_search_dir!(d, psiks)
+        constrain_search_dir!(Ham, d, psiks)
 
         α = 1.0 #linmin_quad!(Ham, psiks, Haux, g, g_Haux, d, d_Haux, E1)
         println("Using α=$(α) from linmin")

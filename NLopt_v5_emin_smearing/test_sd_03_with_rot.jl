@@ -105,7 +105,7 @@ function main_sd_03(Ham; NiterMax=100, psiks=nothing, Haux=nothing)
             d[ikspin] = -Kg[ikspin]
             d_Haux[ikspin] = -Kg_Haux[ikspin]
         end
-        constrain_search_dir!(d, psiks)
+        constrain_search_dir!(Ham, d, psiks)
 
         #
         # Do line minimization:

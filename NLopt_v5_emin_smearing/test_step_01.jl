@@ -113,7 +113,7 @@ function main()
         d[ikspin][:,:] = -Kg[ikspin][:,:]
         d_Haux[ikspin][:,:] = -Kg_Haux[ikspin][:,:]
     end
-    constrain_search_dir!(d, psiks)
+    constrain_search_dir!(Ham, d, psiks)
 
     gd = 2*real(dot(g,d)) + real(dot(g_Haux, d_Haux))
     @info "gd = $(gd)"

@@ -157,7 +157,7 @@ for ikspin in 1:Nkspin
     d[ikspin][:,:] = -Kg[ikspin][:,:]
     d_Haux[ikspin][:,:] = -Kg_Haux[ikspin][:,:]
 end
-constrain_search_dir!(d, psiks)
+constrain_search_dir!(Ham, d, psiks)
 
 # Check direction (this is also done in linmin)
 gd = 2*real(dot(g,d)) + real(dot(g_Haux, d_Haux))
