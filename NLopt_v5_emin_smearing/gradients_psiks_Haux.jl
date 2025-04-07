@@ -118,7 +118,7 @@ function calc_grad_Haux!(
             dmuNum[ispin] += wk[ik] * sum(fprimeNum) * w_spin
             dmuDen[ispin] += wk[ik] * sum(fprime) * w_spin
         end
-        println("ispin=$(ispin) dmu = $(dmuNum[ispin]) $(dmuDen[ispin])")
+        #println("ispin=$(ispin) dmu = $(dmuNum[ispin]) $(dmuDen[ispin])")
     end
 
     dmuContrib = sum(dmuNum)/sum(dmuDen)
@@ -130,8 +130,8 @@ function calc_grad_Haux!(
         else
             dmuContrib = 0.0 #1*sign_frac
         end
+        println("dmuContrib = $(dmuContrib)")
     end
-    println("dmuContrib = $(dmuContrib)")
     #dBzContrib = 0.0 # not used
 
     gradF0 = zeros(ComplexF64, Nstates, Nstates)
@@ -153,6 +153,9 @@ function calc_grad_Haux!(
     return
 
 end
+
+
+# Probably useful for refactoring
 
 #=
 # Eq (24)
@@ -189,77 +192,4 @@ function offdiag_elements( Hsub, ebands, E_f::Float64, kT::Float64 )
 end
 =#
 
-
-# DEPRECATED functions
-
-#=
-function calc_grad_Lfunc_Haux!(
-    Ham::Hamiltonian,
-    psiks::BlochWavefunc,
-    Haux::Vector{Matrix{Float64}},
-    g::BlochWavefunc, Kg::BlochWavefunc,
-    Hsub,
-    g_Haux,
-    Kg_Haux
-)
-
-    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
-    Nspin = Ham.electrons.Nspin
-    Nkspin = Nkpt * Nspin
-    Nstates = Ham.electrons.Nstates
-    ebands = Ham.electrons.ebands
-
-    # Diagonalize Haux and store the results in ebands
-    # Also rotate psiks accordingly
-    psiksU = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-    Urot = zeros(Float64, Nstates, Nstates)
-    for ikspin in 1:Nkspin
-        # diagonal Haux is stored as ebands
-        ebands[:,ikspin], Urot[:,:] = eigen(Hermitian(Haux[ikspin]))
-        # Also rotate psiks
-        psiksU[ikspin] = psiks[ikspin]*Urot
-    end
-
-    update_from_ebands!( Ham, ebands )
-    update_from_wavefunc!( Ham, psiksU )
-
-    # Evaluate the gradients for psi
-    calc_grad_psiks!(Ham, psiksU, g, Kg, Hsub) # don't forget to include Urot in psi
-    # pass Hsub
-    calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
-
-    return
-end
-=#
-
-
-#=
-function calc_grad_Lfunc_ebands!(
-    Ham::Hamiltonian,
-    psi, # (Nbasis,Nstates)
-    ebands, # (Nstates,1)
-    g,
-    Hsub,
-    g_Haux,
-    Kg_Haux
-)
-
-    @assert size(ebands,2) == 1
-
-    Haux = diagm(0 => ebands[:,1])
-
-    update_from_ebands!(Ham, ebands)
-    update_from_wavefunc!(Ham, psi)
-
-    fill!(g, 0.0)
-    fill!(Hsub, 0.0)
-    fill!(g_Haux, 0.0)
-    fill!(Kg_Haux, 0.0)
-
-    # Evaluate the gradient for psi
-    calc_grad_psiks!(Ham, psi, g, Hsub)
-    calc_grad_Haux!(Ham, Hsub, g_Haux, Kg_Haux)
-    return
-end
-=#
 
