@@ -36,7 +36,8 @@ function main_cg_01(Ham; NiterMax=100, psiks=nothing, Haux=nothing)
             Haux[ikspin] = randn(ComplexF64, Nstates, Nstates)
             # the same as Hsub
             Haux[ikspin][:,:] = Hsub[ikspin][:,:]
-            Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' )
+            Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' ) # make symmetric
+            #Haux[ikspin] = diagm(0 => sort(randn(Float64, Nstates)))
         end
     end
 
