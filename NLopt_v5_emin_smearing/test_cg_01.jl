@@ -32,7 +32,6 @@ function main_cg_01(Ham; NiterMax=100, psiks=nothing, Haux=nothing)
     #
     if isnothing(Haux)
         Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin)
-        # For Haux, choose between generic symmetric Haux:
         for ikspin in 1:Nkspin
             Haux[ikspin] = randn(ComplexF64, Nstates, Nstates)
             # the same as Hsub
@@ -63,9 +62,7 @@ function main_cg_01(Ham; NiterMax=100, psiks=nothing, Haux=nothing)
     # psiks is already orthonormal
     # Make Haux diagonal and rotate psiks
     # Ham.electrons.ebands are updated here
-    transform_psiks_Haux_update_ebands!( Ham, psiks, Haux, rots_cache,
-        do_ortho_psi=false, overwrite_Haux=true
-    )
+    transform_psiks_Haux_update_ebands!( Ham, psiks, Haux, rots_cache )
 
     # Update Hamiltonian, compute energy and gradients at current psiks and Haux:
 
@@ -206,7 +203,7 @@ function main_cg_01(Ham; NiterMax=100, psiks=nothing, Haux=nothing)
         println(Ham.energies, use_smearing=true, is_paw=ok_paw)
 
         if ΔE < 1e-8
-            println("Converged")
+            println("\nConverged !!!")
             break
         end 
         

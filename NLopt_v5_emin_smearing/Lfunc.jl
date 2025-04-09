@@ -74,6 +74,10 @@ end
 # Ham.electrons.ebands are not modified here
 function update_from_ebands!(Ham, ebands)
 
+    if !Ham.electrons.use_smearing
+        return
+    end
+
     # NOTE: ebands are assumed to be updated outside this function
 
     # Calculate Kohn-Sham eigenvalues and occupation numbers
@@ -82,7 +86,6 @@ function update_from_ebands!(Ham, ebands)
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
     wk = Ham.pw.gvecw.kpoints.wk
     kT = Ham.electrons.kT
-    Nspin = Ham.electrons.Nspin
     @assert kT > 1e-10
 
     E_fermi, mTS = update_Focc!(
@@ -90,12 +93,9 @@ function update_from_ebands!(Ham, ebands)
         ebands, Float64(Nelectrons), kT,
         Nkpt, wk
     )
-
-    println("mTS = $(mTS), E_fermi=$(E_fermi)")
     # Set some output
     Ham.electrons.E_fermi = E_fermi
     Ham.energies.mTS = mTS
-    println("Ham.energies.mTS = ", Ham.energies.mTS)
 
     return
 end
@@ -131,7 +131,6 @@ function transform_psiks_Haux_update_ebands!(
     overwrite_Haux=true,
     do_ortho_psi=true
 )
-    Nstates = Ham.electrons.Nstates
     Nspin = Ham.electrons.Nspin
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
     Nkspin = Nkpt*Nspin
@@ -197,17 +196,9 @@ function calc_Lfunc(
 end
 
 function do_step_psiks_Haux!(α::Float64, Ham, psiks, Haux, d, d_Haux, rots_cache)
-
     Nkspin = length(psiks)
-
-    ebands = Ham.electrons.ebands
-
-    UrotC = rots_cache.UrotC
-    Urot = rots_cache.Urot
     rotPrev = rots_cache.rotPrev
     rotPrevC = rots_cache.rotPrevC
-    rotPrevCinv = rots_cache.rotPrevCinv
-
     # Step
     for ikspin in 1:Nkspin
         psiks[ikspin] += α * d[ikspin] * rotPrevC[ikspin]

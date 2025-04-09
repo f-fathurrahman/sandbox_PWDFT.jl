@@ -30,7 +30,7 @@ function main_scf(filename)
         starting_magnetization=starting_magnetization
     )
 
-    @infiltrate
+    #@infiltrate
 
     return
 end
