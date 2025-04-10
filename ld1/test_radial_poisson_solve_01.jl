@@ -48,12 +48,12 @@ function test_radial_poisson_solve()
     v0 = zeros(Float64, Nrmesh)
     vxt = zeros(Float64, Nrmesh)
     vpot = zeros(Float64, Nrmesh, 2)
-    enne = 0.0
     starting_potential!(
         Nrmesh, Zval, Zed,
         Nwf, oc, nn, ll,
-        grid.r, enl, v0, vxt, vpot, enne, Nspin
+        grid.r, enl, v0, vxt, vpot
     )
+
 
     # Solve for all states
     thresh0 = 1.0e-10
