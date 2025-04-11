@@ -1,4 +1,4 @@
-function ld1x_find_qi(log_der_ae, xc, ik, 𝓁, ncn, flag, iok )
+function ld1x_find_qi!(grid, log_der_ae, xc, ik, 𝓁, ncn, flag)
 #=
   !
   ! This routine finds three values of q such that the
@@ -40,7 +40,6 @@ function ld1x_find_qi(log_der_ae, xc, ik, 𝓁, ncn, flag, iok )
     ncmax = 10
     j1 = zeros(Float64, ncmax) # for saving Bessel function values
 
-    iok = 0
     if ncn > ncmax
         error("ncn is too large")
     end
@@ -135,7 +134,7 @@ function ld1x_find_qi(log_der_ae, xc, ik, 𝓁, ncn, flag, iok )
             j1[ip] = sphericalbesselj(𝓁, xc[nc]*grid.r[ik-3+ip-1])
             j1[ip] = j1[ip] * grid.r[ik-3+ip-1]^flag
         end
-        logder = ld1x_compute_log(j1, grid%r[ik], grid.dx) - log_der_ae
+        logder = ld1x_compute_log(j1, grid.r[ik], grid.dx) - log_der_ae
         #
         if logder*logdermin < 0.0
             qmax = xc[nc]

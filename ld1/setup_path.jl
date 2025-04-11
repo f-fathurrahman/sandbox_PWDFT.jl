@@ -15,3 +15,7 @@ includet("start_scheq.jl")
 includet("ascheq.jl")
 includet("lschps.jl")
 includet("radial_poisson_solve.jl")
+
+includet("ld1x_deriv_7pts.jl")
+includet("ld1x_deriv2_7pts.jl")
+includet("ld1x_find_qi.jl")

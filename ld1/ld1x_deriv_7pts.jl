@@ -24,7 +24,7 @@ function deriv_7pts(f, ik, rc, h)
     for i in 1:7
         ss += a[i]*f[i-4+ik]
     end
-    res = sum/(720.0*h)
+    res = ss/(720.0*h)
     # transform to logarithmic mesh
     res = res/rc
     return res
