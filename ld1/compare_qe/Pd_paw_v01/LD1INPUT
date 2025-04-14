@@ -1,5 +1,5 @@
 &input
-  iswitch = 1
+  iswitch = 3
   verbosity = 'high'
   zed = 46.0
   rel = 1
