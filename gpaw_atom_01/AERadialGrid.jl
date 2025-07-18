@@ -22,8 +22,8 @@ function AERadialGrid(
     for i in 1:npts
         g = i - 1 # offset by 1
         r[i] = a*g/(1 - b*g)
-        dr[i] = (b*r[i] + a)^2 / a
-        d2gdr2[i] = -2 * a * b / (b * r[i] + a)^3
+        dr[i] = (b*r[i] + a)^2 / a # dr/dg
+        d2gdr2[i] = -2 * a * b / (b * r[i] + a)^3 # d2g/dr2
     end
 
     return AERadialGrid(
