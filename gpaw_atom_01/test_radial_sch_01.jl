@@ -8,7 +8,7 @@ using PWDFT: LibxcXCCalculator, calc_epsxc_Vxc_LDA!
 includet("AERadialGrid.jl")
 includet("my_functions.jl")
 
-function main_test_Si_01()
+function main_radial_01()
 
     atsymb = "Si"
     Z = 14
@@ -67,6 +67,11 @@ function main_test_Si_01()
 
     Exc = radial_integrate(ae_grid, epsxc .* rhoe)
     @. vr = (vHr + vXC*r)
+
+    solve_radial_sch!(
+        ae_grid, NradialPoints, r, dr, vr, d2gdr2, n_j, l_j,e_j, u_j;
+        scalarrel=true
+    )
 
     @exfiltrate
 end
