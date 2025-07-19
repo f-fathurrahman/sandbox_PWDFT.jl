@@ -336,6 +336,123 @@ c_{0}=\ell(\ell+1)+2M(v-E)r^{2}+\frac{2}{2Mc^{2}}\frac{\mathrm{d}v}{\mathrm{d}r}
 \end_layout
 
 \begin_layout Standard
+Discretization of
+\begin_inset Formula 
+\[
+\frac{\mathrm{d}^{2}u}{\mathrm{d}g^{2}}c_{2}+\frac{\mathrm{d}u}{\mathrm{d}g}c_{1}+uc_{0}=0
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Using centered difference:
+ 
+\begin_inset Formula $\Delta g=1$
+\end_inset
+
+,
+ center point index is 0
+\begin_inset Formula 
+\[
+\left(u_{1}-2u_{0}+u_{-1}\right)c_{2}+\frac{1}{2}\left(u_{1}-u_{-1}\right)c_{1}+u_{0}c_{0}=0
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+u_{1}c_{2}-2u_{0}c_{2}+u_{-1}c_{2}+\frac{1}{2}c_{1}u_{1}-\frac{1}{2}c_{1}u_{-1}+u_{0}c_{0}=0
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+u_{1}c_{2}+\frac{1}{2}c_{1}u_{1}+u_{-1}c_{2}-\frac{1}{2}c_{1}u_{-1}+u_{0}c_{0}-2u_{0}c_{2}=0
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\left(c_{2}+\frac{1}{2}c_{1}\right)u_{1}+\left(c_{2}-\frac{1}{2}c_{1}\right)u_{-1}+\left(c_{0}-2c_{2}\right)u_{0}=0
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Rearranging:
+\begin_inset Formula 
+\[
+\left(\frac{1}{2}c_{1}+c_{2}\right)u_{1}+\left(c_{0}-2c_{2}\right)u_{0}=\left(\frac{1}{2}c_{1}-c_{2}\right)u_{-1}
+\]
+
+\end_inset
+
+Finding 
+\begin_inset Formula $u_{-1}$
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\left(\frac{1}{2}c_{1}+c_{2}\right)u_{1}+\left(c_{0}-2c_{2}\right)u_{0}}{\left(\frac{1}{2}c_{1}-c_{2}\right)}=u_{-1}
+\]
+
+\end_inset
+
+Finding 
+\begin_inset Formula $u_{1}$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+\left(\frac{1}{2}c_{1}+c_{2}\right)u_{1}=\left(\frac{1}{2}c_{1}-c_{2}\right)u_{-1}-\left(c_{0}-2c_{2}\right)u_{0}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+u_{1}=\frac{\left(\frac{1}{2}c_{1}-c_{2}\right)u_{-1}-\left(c_{0}-2c_{2}\right)u_{0}}{\left(\frac{1}{2}c_{1}+c_{2}\right)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Note that 
+\begin_inset Formula $c_{0}$
+\end_inset
+
+,
+ 
+\begin_inset Formula $c_{1}$
+\end_inset
+
+,
+ and 
+\begin_inset Formula $c_{2}$
+\end_inset
+
+ is evaluated at current grid point index g=0.
+ The subscripts of these variables are not indices.
+\end_layout
+
+\begin_layout Standard
 s
 \end_layout
 
