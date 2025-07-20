@@ -11,7 +11,7 @@ using PWDFT: LibxcXCCalculator, calc_epsxc_Vxc_LDA!
 includet("AERadialGrid.jl")
 includet("my_functions.jl")
 
-function main_radial_01()
+function main_radial_02()
 
     atsymb = "Si"
     Z = 14
@@ -74,10 +74,37 @@ function main_radial_01()
     for ist in 1:Nstates
         fill!(u_j[ist], 0.0)
     end
-    solve_radial_sch!(
-        ae_grid, NradialPoints, r, dr, vr, d2gdr2, n_j, l_j,e_j, u_j;
-        scalarrel=true
-    )
+
+    scalarrel = true
+
+    c2 = @. -(r/dr)^2 # beware this can become a matrix without @.
+    c10 = @. -d2gdr2 * r^2  # first part of c1 vector
+
+    if scalarrel
+        r2dvdr = zeros(Float64, NradialPoints)
+        radial_derivative!(ae_grid, vr, r2dvdr) # calc dvdr
+        r2dvdr[:] .*= r
+        r2dvdr[:] .-= vr
+    else
+        r2dvdr = nothing
+    end
+    #println("sum abs r2dvdr = ", sum(abs.(r2dvdr)))
+    # XXX: r2dvdr is local to this function
+
+    # solve for each quantum state separately
+    Nstates = length(n_j)
+    ist = 4
+    
+    println("\nSolving radial Schroedinger equation for ist = $ist")
+
+    n = n_j[ist]
+    l = l_j[ist]
+    E = -0.5573946000000001
+    u = u_j[ist]
+    #
+    # initial radial integration
+    nn, A = integ_radial_sch!(u, l, vr, E, r2dvdr, r, dr, c10, c2, scalarrel)
+
 
     @exfiltrate
 end
