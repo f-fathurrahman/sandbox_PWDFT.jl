@@ -36,6 +36,7 @@ function calc_density!(r, f_j, u_j, rhoe)
     NradialPoints = length(rhoe)
     Nstates = length(f_j)
     pref = 1/(4π)
+    fill!(rhoe, 0.0)
     for ist in 1:Nstates, i in 2:NradialPoints
         if abs(u_j[ist][i]) >= 1e-160
             rhoe[i] += pref * f_j[ist] * u_j[ist][i]^2 / r[i]^2

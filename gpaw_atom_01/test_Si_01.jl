@@ -3,6 +3,9 @@ using Infiltrator
 using LinearAlgebra 
 using Printf
 
+using Plots, PlotThemes
+theme(:dark)
+
 using PWDFT: LibxcXCCalculator, calc_epsxc_Vxc_LDA!
 
 includet("AERadialGrid.jl")
@@ -43,9 +46,11 @@ function main_test_Si_01()
 
     # Effective potential multiplied by radius:
     vr = zeros(Float64, NradialPoints)
+    vrold = zeros(Float64, NradialPoints)
 
     # Electron density:
     rhoe = zeros(Float64, NradialPoints)
+    rhoe_old = zeros(Float64, NradialPoints)
 
     vHr = zeros(Float64, NradialPoints)
     vXC = zeros(Float64, NradialPoints)
@@ -54,19 +59,44 @@ function main_test_Si_01()
     # Initialize starting wavefunctions and calculate density from them
     init_wavefunc!(atsymb, r, dr, l_j, e_j, u_j)
     calc_density!(r, f_j, u_j, rhoe)
-
-    solve_radial_hartree!(0, rhoe .* r .* dr, r, vHr)
-
-    # add potential from nuclear point charge (v = -Z / r)
-    vHr .-= Z # vHr is vH times r, so the potential to added is (-Z/r)*r => -Z
+    rhoe_old[:] = rhoe[:] # save old rhoe
 
     xc_calc = LibxcXCCalculator(x_id=1, c_id=12)
 
-    fill!(vXC, 0.0)
-    calc_epsxc_Vxc_LDA!(xc_calc, rhoe, epsxc, vXC)
+    β_mix = 0.4
 
-    Exc = radial_integrate(ae_grid, epsxc .* rhoe)
-    @. vr = (vHr + vXC*r)
+    for iterSCF in 1:100
+
+        solve_radial_hartree!(0, rhoe .* r .* dr, r, vHr)
+
+        # add potential from nuclear point charge (v = -Z / r)
+        vHr .-= Z # vHr is vH times r, so the potential to added is (-Z/r)*r => -Z
+
+        fill!(vXC, 0.0)
+        calc_epsxc_Vxc_LDA!(xc_calc, rhoe, epsxc, vXC)
+
+        Exc = radial_integrate(ae_grid, epsxc .* rhoe)
+        @. vr = (vHr + vXC*r)
+
+        # Mix the potential
+        if iterSCF > 1
+            vr[:] = β_mix * vr + (1 - β_mix) * vrold
+        end
+        vrold[:] = copy(vr)
+
+        solve_radial_sch!(
+            ae_grid, NradialPoints, r, dr, vr, d2gdr2, n_j, l_j,e_j, u_j;
+            scalarrel=true
+        )
+        calc_density!(r, f_j, u_j, rhoe)
+        drhoeNorm = sum( ((rhoe - rhoe_old) .* r ).^2 )
+        @printf("iterSCF = %4d drhoeNorm = %18.10e\n", iterSCF, drhoeNorm)
+        if drhoeNorm < 1e-10
+            println("SCF is converged!")
+            break
+        end
+        rhoe_old = rhoe[:]
+    end # iterSCF
 
     @exfiltrate
 end

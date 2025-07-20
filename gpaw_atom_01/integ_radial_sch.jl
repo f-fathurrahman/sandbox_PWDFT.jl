@@ -4,7 +4,7 @@ function integ_radial_sch!(
 )
     # FIXME: r2dvdr can be nothing
 
-    println("\nENTER integ_radial_sch with E=$E l=$l")
+    #println("\nENTER integ_radial_sch with E=$E l=$l")
 
     # Calculate some arrays that depend on E
     if scalarrel
@@ -30,10 +30,10 @@ function integ_radial_sch!(
         @. c0 += x * r2dvdr / Mr
         @. c1 = c10 - x * r * r2dvdr / (Mr * dr)
     end
-    @printf("sum c10 = %18.10e\n", sum(c10))
-    @printf("sum c0 = %18.10e\n", sum(c0))
-    @printf("sum c1 = %18.10e\n", sum(c1))
-    @printf("sum c2 = %18.10e\n", sum(c2))
+    #@printf("sum c10 = %18.10e\n", sum(c10))
+    #@printf("sum c0 = %18.10e\n", sum(c0))
+    #@printf("sum c1 = %18.10e\n", sum(c1))
+    #@printf("sum c2 = %18.10e\n", sum(c2))
 
 
     # vectors needed for numeric integration of diff. equation
@@ -41,9 +41,9 @@ function integ_radial_sch!(
     fp = @. 0.5*c1 + c2
     f0 = @. c0 - 2*c2
 
-    @printf("sum fm = %18.10e\n", sum(fm))
-    @printf("sum fp = %18.10e\n", sum(fp))
-    @printf("sum f0 = %18.10e\n", sum(f0))    
+    #@printf("sum fm = %18.10e\n", sum(fm))
+    #@printf("sum fp = %18.10e\n", sum(fp))
+    #@printf("sum f0 = %18.10e\n", sum(f0))    
 
     if isnothing(gmax)
         # set boundary conditions at r -> oo (u(oo) = 0 is implicit)
@@ -54,13 +54,11 @@ function integ_radial_sch!(
         while c0[g] > 0.0  # this defines the classical turning point
             u[g-1] = ( f0[g]*u[g] + fp[g]*u[g+1] ) / fm[g]
             if u[g-1] < 0.0
-                println("WARNING: There should't be a node here!  Use a more negative")
-                error()
+                error("There should't be a node here!  Use a more negative E")
                 return 100, nothing
             end
             if u[g-1] > 1e100
-                @info "Scaling u in integ_radial_sch"
-                error()
+                @info "u is too big. Scaling u in integ_radial_sch"
                 u[:] .*= 1e-100
             end
             g -= 1
@@ -70,14 +68,15 @@ function integ_radial_sch!(
         gtp = g + 1 # ???
         utp = u[gtp] # ????
         if gtp == length(u) # some errors or warnings ?
-            @info "Early return in integ_radial_sch 237"
-            return 100, 0
+            error("gtp is the same as length(u)")
+            #@info "Early return in integ_radial_sch 237"
+            #return 100, 0
         end
         dudrplus = 0.5*( u[gtp+1] - u[gtp-1] ) / dr[gtp]
     else
         gtp = gmax
     end
-    println("integ_radial_sch: After backward integration gtp=$gtp, c0=$(c0[gtp]) u=$(u[gtp])")
+    #println("integ_radial_sch: After backward integration gtp=$gtp, c0=$(c0[gtp]) u=$(u[gtp])")
 
     # set boundary conditions at r -> 0
     u[1] = 0.0
@@ -90,8 +89,8 @@ function integ_radial_sch!(
         u[g+1] = (fm[g]*u[g-1] - f0[g]*u[g]) / fp[g]
         # Counts number of nodes
         if u[g+1]*u[g] < 0.0 && (g <= gtp) 
-            println("Found nodes between: $(g+1) and $(g)")
-            println("Values: $(u[g+1]) and $(u[g])")
+            #println("Found nodes between: $(g+1) and $(g)")
+            #println("Values: $(u[g+1]) and $(u[g])")
             nodes += 1
         end
     end
@@ -99,24 +98,24 @@ function integ_radial_sch!(
     if !isnothing(gmax)
         return #???
     end
-    println("my_eigen_shoot: after inward integration u=$(u[gtp])")
+    #println("my_eigen_shoot: after inward integration u=$(u[gtp])")
 
     # scale first part of wavefunction, such that it is continuous at gtp
     u[1:gtp+2] .*= (utp/u[gtp]) # utp from backward integ
 
-    println("my_eigen_shoot: after scale u=$(u[gtp])")
+    #println("my_eigen_shoot: after scale u=$(u[gtp])")
 
     # determine size of the derivative discontinuity at gtp
     dudrminus = 0.5 * (u[gtp+1] - u[gtp-1]) / dr[gtp]
     A = (dudrplus - dudrminus) * utp
     
-    println("nodes = ", nodes)
-    @printf("utp = %18.10e\n", utp)
-    @printf("dudrplus = %18.10e\n", dudrplus)
-    @printf("dudrminus = %18.10e\n", dudrminus)
-    @printf("A = %18.10e\n", A)
+    #println("nodes = ", nodes)
+    #@printf("utp = %18.10e\n", utp)
+    #@printf("dudrplus = %18.10e\n", dudrplus)
+    #@printf("dudrminus = %18.10e\n", dudrminus)
+    #@printf("A = %18.10e\n", A)
 
-    println("EXIT integ_radial_sch\n")
+    #println("EXIT integ_radial_sch\n")
 
     return nodes, A
 end
