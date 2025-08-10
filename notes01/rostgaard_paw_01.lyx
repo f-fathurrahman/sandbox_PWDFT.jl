@@ -1,0 +1,508 @@
+#LyX 2.4 created this file. For more info see https://www.lyx.org/
+\lyxformat 620
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+% Added by lyx2lyx
+\setlength{\parskip}{\smallskipamount}
+\setlength{\parindent}{0pt}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children no
+\language english
+\language_package default
+\inputencoding auto-legacy
+\fontencoding default
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "libertine-ntxm" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_roman_osf false
+\font_sans_osf false
+\font_typewriter_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement class
+\float_alignment class
+\paperfontsize default
+\spacing onehalf
+\use_hyperref false
+\papersize a4
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_formatted_ref 0
+\use_minted 0
+\use_lineno 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip halfline
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tablestyle default
+\tracking_changes false
+\output_changes false
+\change_bars false
+\postpone_fragile_content false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\docbook_table_output 0
+\docbook_mathml_prefix 1
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+Sumber:
+ Carsten Rostgaard - The Projector Augmented-wave Method
+\end_layout
+
+\begin_layout Standard
+https://arxiv.org/abs/0910.1921
+\end_layout
+
+\begin_layout Section
+Operator transformasi
+\end_layout
+
+\begin_layout Standard
+Transformasi linear 
+\begin_inset Formula $\hat{\mathcal{T}}$
+\end_inset
+
+ yang dapat mengubah smooth wave function 
+\begin_inset Formula $\left|\tilde{\psi}_{n}\right\rangle $
+\end_inset
+
+ menjadi all-electron wave function 
+\begin_inset Formula $\left|\psi_{n}\right\rangle $
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+\left|\psi_{n}\right\rangle =\hat{\mathcal{T}}\left|\tilde{\psi}_{n}\right\rangle 
+\]
+
+\end_inset
+
+dengan 
+\begin_inset Formula $n$
+\end_inset
+
+ adalah indeks quantum state (band index)
+\end_layout
+
+\begin_layout Standard
+Transformed Kohn-Sham equations:
+\begin_inset Formula 
+\[
+\hat{\mathcal{T}}^{\dagger}\hat{H}\hat{\mathcal{T}}\left|\tilde{\psi}_{n}\right\rangle =\epsilon_{n}\hat{\mathcal{T}}^{\dagger}\hat{\mathcal{T}}\left|\tilde{\psi}_{n}\right\rangle 
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Definisi dari operator transformasi:
+\begin_inset Formula 
+\[
+\hat{\mathcal{T}}=1+\sum_{a}\hat{\mathcal{T}}^{a}
+\]
+
+\end_inset
+
+dengan 
+\begin_inset Formula $a$
+\end_inset
+
+ adalah atom index,
+ dan 
+\begin_inset Formula $\hat{\mathcal{T}}^{a}$
+\end_inset
+
+ merupakan atom-centered transformation,
+ yang tidak memberikan efek di luar daerah augmentasi atom (berbentuk bola) 
+\begin_inset Formula $\left|\mathbf{r}-\mathbf{R}^{a}\right|<r_{c}^{a}$
+\end_inset
+
+.
+ Radius cut-off diasumsikan sudah dipilih sedemikian rupa sehingga tidak ada overlap antara daerah augmentasi.
+\end_layout
+
+\begin_layout Standard
+Dalam daerah augmentasi,
+ true wave function akan diekspansi menggunakan partial wave 
+\begin_inset Formula $\phi_{i}^{a}$
+\end_inset
+
+ dan untuk setiap partial wave tersebut didefinisikan smooth partial wave 
+\begin_inset Formula $\tilde{\phi}_{i}^{a}$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+\left|\phi_{i}^{a}\right\rangle =\left(1+\hat{\mathcal{T}^{a}}\right)\left|\tilde{\phi}_{i}^{a}\right\rangle 
+\]
+
+\end_inset
+
+sehingga dapat dituliskan juga:
+\begin_inset Formula 
+\[
+\left|\phi_{i}^{a}\right\rangle =\left|\tilde{\phi}_{i}^{a}\right\rangle +\hat{\mathcal{T}^{a}}\left|\tilde{\phi}_{i}^{a}\right\rangle 
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\Rightarrow\hat{\mathcal{T}^{a}}\left|\tilde{\phi}_{i}^{a}\right\rangle =\left|\phi_{i}^{a}\right\rangle -\left|\tilde{\phi}_{i}^{a}\right\rangle 
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Karena operator 
+\begin_inset Formula $\hat{\mathcal{T}}^{a}$
+\end_inset
+
+ hanya bekerja pada daerah augmentasi,
+ maka partial wave dan smooth partial wave harus sama untuk daerah di luar daerah augmentasi.
+\begin_inset Formula 
+\[
+\forall a,\qquad\phi_{i}^{a}(\mathbf{r})=\tilde{\phi}_{i}^{a}(\mathbf{r}),\text{untuk }r>r_{c}^{a}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Ekspansi smooth wave function pada daerah augmentasi:
+\begin_inset Formula 
+\[
+\left|\tilde{\psi}_{n}\right\rangle =\sum_{i}P_{ni}^{a}\left|\tilde{\phi}_{i}^{a}\right\rangle ,\text{untuk }\left|\mathbf{r}-\mathbf{R}^{a}\right|<r_{c}^{a}
+\]
+
+\end_inset
+
+dengan 
+\begin_inset Formula $P_{ni}^{a}$
+\end_inset
+
+ adalah koefisien ekspansi.
+\end_layout
+
+\begin_layout Standard
+Karena 
+\begin_inset Formula $\left|\phi_{i}^{a}\right\rangle =\hat{\mathcal{T}}\left|\tilde{\phi}_{i}^{a}\right\rangle $
+\end_inset
+
+ dapat diperoleh untuk daerah augmentasi:
+\begin_inset Formula 
+\begin{align*}
+\left|\psi_{n}\right\rangle  & =\hat{\mathcal{T}}\left|\tilde{\psi}_{n}\right\rangle \\
+ & =\hat{\mathcal{T}}\sum_{i}P_{ni}^{a}\left|\tilde{\phi}_{i}^{a}\right\rangle \\
+ & =\sum_{i}P_{ni}^{a}\hat{\mathcal{T}}\left|\tilde{\phi}_{i}^{a}\right\rangle \\
+ & =\sum_{i}P_{ni}^{a}\left|\phi_{i}^{a}\right\rangle 
+\end{align*}
+
+\end_inset
+
+yaitu koefisien ekpansi yang sama:
+\begin_inset Formula 
+\[
+\left|\psi_{n}\right\rangle =\sum_{i}P_{ni}^{a}\left|\phi_{i}^{a}\right\rangle 
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Karena operator 
+\begin_inset Formula $\hat{\mathcal{T}}$
+\end_inset
+
+ disyaratkan sebagai operator linear,
+ maka koefisien 
+\begin_inset Formula $P_{ni}^{a}$
+\end_inset
+
+ merupakan fungsional linear dari 
+\begin_inset Formula $\left|\tilde{\psi}_{n}\right\rangle $
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+P_{ni}^{a}=\left\langle \tilde{p}_{i}^{a}|\tilde{\psi}_{n}\right\rangle =\int\mathrm{d}\mathbf{r}\,\tilde{p}_{i}^{a*}(\mathbf{r-\mathbf{R}}^{a})\tilde{\psi}_{n}(\mathbf{r})
+\]
+
+\end_inset
+
+dengan 
+\begin_inset Formula $\left|\tilde{p}_{i}^{a}\right\rangle $
+\end_inset
+
+ adalah suatu fungsi proyektor yang disebut sebagai smooth projector functions.
+\end_layout
+
+\begin_layout Standard
+Karena tidak ada overlap antara daerah augmentasi,
+ maka berlaku hubungan berikut pada setiap daerah augmentasi:
+\begin_inset Formula 
+\[
+\sum_{i}\left|\tilde{\phi}_{i}^{a}\right\rangle \left\langle \tilde{p}_{i}^{a}\right|=1
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\left\langle \tilde{p}_{i_{1}}^{a}|\tilde{\phi}_{i_{2}}^{a}\right\rangle =\delta_{i_{1}i_{2}}
+\]
+
+\end_inset
+
+Bentuk proyektor:
+\begin_inset Formula 
+\[
+\left\langle \tilde{p}_{i}^{a}\right|=\sum_{j}\left(\left\langle f_{k}^{a}|\tilde{\phi_{l}^{a}}\right\rangle \right)_{ij}^{-1}\left\langle f_{j}^{a}\right|
+\]
+
+\end_inset
+
+dengan 
+\begin_inset Formula $\left|f_{j}^{a}\right\rangle $
+\end_inset
+
+ adalah suatu himpunan fungsi yang saling independen linear.
+\end_layout
+
+\begin_layout Standard
+Bentuk transformasi:
+\begin_inset Formula 
+\[
+\hat{\mathcal{T}^{a}}=\sum_{i}\hat{\mathcal{T}}^{a}\left|\tilde{\phi}_{i}^{a}\right\rangle \left\langle \tilde{p}_{i}^{a}\right|=\sum_{i}\left(\left|\phi_{i}^{a}\right\rangle -\left|\tilde{\phi}_{i}^{a}\right\rangle \right)\left\langle \tilde{p}_{i}^{a}\right|
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Transformasi:
+\begin_inset Formula 
+\[
+\hat{\mathcal{T}}=1+\sum_{a}\sum_{i}\left(\left|\phi_{i}^{a}\right\rangle -\left|\tilde{\phi}_{i}^{a}\right\rangle \right)\left\langle \tilde{p}_{i}^{a}\right|
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Transformasi:
+\begin_inset Formula 
+\[
+\psi_{n}(\mathbf{r})=\tilde{\psi}_{n}(\mathbf{r})+\sum_{a}\sum_{i}\left(\left|\phi_{i}^{a}\right\rangle -\left|\tilde{\phi}_{i}^{a}\right\rangle \right)\left\langle \tilde{p}_{i}^{a}|\tilde{\psi}_{n}\right\rangle 
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+One-center expansions:
+\begin_inset Formula 
+\[
+\psi_{n}^{a}(\mathbf{r})=\sum_{i}\phi_{i}^{a}(\mathbf{r})\left\langle \tilde{p}_{i}^{a}|\tilde{\psi}_{n}\right\rangle 
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\tilde{\psi}_{n}^{a}(\mathbf{r})=\sum_{i}\tilde{\phi}_{i}^{a}(\mathbf{r})\left\langle \tilde{p}_{i}^{a}|\tilde{\psi}_{n}\right\rangle 
+\]
+
+\end_inset
+
+All-electron KS wave function:
+\begin_inset Formula 
+\[
+\psi_{n}(\mathbf{r})=\tilde{\psi}_{n}(\mathbf{r})+\sum_{a}\left(\psi_{n}^{a}(\mathbf{r}-\mathbf{R}^{a})-\tilde{\psi}_{n}^{a}(\mathbf{r}-\mathbf{R}^{a})\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Frozen core approximation
+\end_layout
+
+\begin_layout Section
+Expectation values
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\left\langle \hat{O}\right\rangle =\sum_{n}^{\text{valence}}f_{n}\left\langle \psi_{n}\left|\hat{O}\right|\psi_{n}\right\rangle +\sum_{a}\sum_{\alpha}^{\text{core}}\left\langle \phi_{\alpha}^{a,\text{core}}\left|\hat{O}\right|\phi_{\alpha}^{a,\text{core}}\right\rangle 
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Hermitian one-center density matrix:
+\begin_inset Formula 
+\[
+D_{i_{1}i_{2}}^{a}=\sum_{n}f_{n}P_{ni_{1}}^{a*}P_{ni_{2}}^{a}=\sum_{n}f_{n}\left\langle \tilde{\psi}_{n}|\tilde{p}_{i_{1}}^{a}\right\rangle \left\langle \tilde{p}_{i_{2}}^{a}|\tilde{\psi}_{n}\right\rangle 
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Local operator (in space)
+\end_layout
+
+\begin_layout Section
+Density
+\end_layout
+
+\begin_layout Standard
+Density:
+\begin_inset Formula 
+\[
+n(\mathbf{r})=\sum_{n}f_{n}\left\langle \psi_{n}|\mathbf{r}\right\rangle \left\langle \mathbf{r}|\psi_{n}\right\rangle =\sum_{n}f_{n}\left|\psi_{n}(\mathbf{r})\right|^{2}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Karena operator proyeksi real-space adalah operator lokal,
+ maka:
+\begin_inset Formula 
+\[
+n(\mathbf{r})=\sum_{n}^{\text{valence}}f_{n}\left|\tilde{\psi}_{n}(\mathbf{r})\right|^{2}+\sum_{a}\sum_{i_{1}i_{2}}\left(\phi_{i_{1}}^{a}\phi_{i_{2}}^{a}-\tilde{\phi}_{i_{1}}^{a}\tilde{\phi}_{i_{2}}^{a}\right)D_{i_{1}i_{2}}^{a}+\sum_{a}\sum_{\alpha}^{\text{core}}\left|\phi_{\alpha}^{a,\text{core}}(\mathbf{r})\right|^{2}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Agar persamaan ini dapat mereproduksi kerapatan elektron yang sebenarnya meskipun beberapa dari keadaan core tidak sepenuhnya terlokalisasi pada daerah augmentasi,
+ maka smooth core density,
+ 
+\begin_inset Formula $\tilde{n}_{c}$
+\end_inset
+
+ dikonstruksi.
+ Smooth core density identik dengan core density di luar daerah augmentasi dan tidak berosilasi seperti core density.
+ Oleh karena itu kerapatan elektron biasanya dievaluasi sebagai:
+\begin_inset Formula 
+\[
+n(\mathbf{r})=\tilde{n}(\mathbf{r})+\sum_{a}\left(n^{a}(\mathbf{r})-\tilde{n}^{a}(\mathbf{r})\right)
+\]
+
+\end_inset
+
+dengan:
+\begin_inset Formula 
+\[
+\tilde{n}(\mathbf{r})=\sum_{n}^{\text{valence}}f_{n}\left|\tilde{\psi}_{n}(\mathbf{r})\right|^{2}+\tilde{n}_{c}(\mathbf{r})
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+n^{a}(\mathbf{r})=\sum_{i_{1}i_{2}}D_{i_{1}i_{2}}^{a}\phi_{i_{1}}^{a}(\mathbf{r})\phi_{i_{2}}^{a}(\mathbf{r})+n_{c}^{a}(\mathbf{r})
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\tilde{n}^{a}(\mathbf{r})=\sum_{i_{1}i_{2}}D_{i_{1}i_{2}}^{a}\tilde{\phi}_{i_{1}}(\mathbf{r})\tilde{\phi}_{i_{2}}(\mathbf{r})+\tilde{n}_{c}^{a}(\mathbf{r})
+\]
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
