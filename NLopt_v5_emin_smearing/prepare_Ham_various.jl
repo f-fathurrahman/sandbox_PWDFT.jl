@@ -63,7 +63,7 @@ const DIR_PSP_PAW_JTH_LDA = joinpath(DIR_PWDFT, "pseudopotentials", "PAW_JTH_LDA
 
 function create_Ham_O2_smearing()
     atoms = Atoms(ext_xyz_file=joinpath(DIR_STRUCTURES, "O2.xyz"))
-    pspfiles = [joinpath(DIR_PSP, "O-q6.gth")]
+    pspfiles = [joinpath(DIR_PSP_GTH, "O-q6.gth")]
     ecutwfc = 15.0
     Ham = Hamiltonian( atoms, pspfiles, ecutwfc, extra_states=4, Nspin=2 )
     Ham.electrons.use_smearing = true
