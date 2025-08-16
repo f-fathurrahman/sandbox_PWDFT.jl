@@ -46,7 +46,6 @@ function qe_sph_bes!( l::Int64, q::Float64, r, jl )
             break
         end
     end
-    @assert ir0 <= Npoints
 
     for ir in 1:(ir0-1)
         x = q * r[ir]
@@ -60,6 +59,10 @@ function qe_sph_bes!( l::Int64, q::Float64, r, jl )
                                       ( 1.0 - x^2/3.0/2.0/(2.0*l+7) *
                                       ( 1.0 - x^2/4.0/2.0/(2.0*l+9) ) ) ) )
     end # do
+
+    if ir0 > Npoints
+        return
+    end
 
     idxs = ir0:Npoints
     if l == 0

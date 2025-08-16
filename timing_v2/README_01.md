@@ -1,6 +1,8 @@
 For convenience initialize Hamiltonian first, then run the benchmark for specific functions.
 
 
+# PsPotNL benchmark
+
 Some results for O2 spinpol
 ```
 julia> bench_PsPotNL(Ham_gth)  # quite fast
@@ -43,4 +45,28 @@ Benchmark: 1 sample with 1 evaluation
 julia> bench_PsPotNL(Ham_paw_jth)
 Benchmark: 1 sample with 1 evaluation
         11.173 s (21694959 allocs: 345.127 MiB, 0.13% gc time, without a warmup)
+```
+
+# Result after using `qe_sph_bes` in `PsPotNL_UPF`
+
+O2 molecule: (GBRV: 3.069 s -> 837.389 ms) (PAW: 7.097 s -> 2.281 s)
+```
+julia> bench_PsPotNL(Ham_gbrv)
+Benchmark: 1 sample with 1 evaluation
+        837.389 ms (1757323 allocs: 123.144 MiB, 0.93% gc time, without a warmup)
+
+julia> bench_PsPotNL(Ham_paw_jth)
+Benchmark: 1 sample with 1 evaluation
+        2.281 s (4844140 allocs: 203.174 MiB, 0.41% gc time, without a warmup)
+```
+
+Pt atom: (GBRV: 4.152 s -> 1.490 s) (PAW: 11.173 s -> 3.951 s)
+```
+julia> bench_PsPotNL(Ham_gbrv)
+Benchmark: 1 sample with 1 evaluation
+        1.490 s (2977560 allocs: 150.345 MiB, 0.88% gc time, without a warmup)
+
+julia> bench_PsPotNL(Ham_paw_jth)
+Benchmark: 1 sample with 1 evaluation
+        3.951 s (7716051 allocs: 423.723 MiB, 0.45% gc time, without a warmup)
 ```
