@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.4 created this file. For more info see https://www.lyx.org/
+\lyxformat 620
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -7,9 +7,12 @@
 \textclass article
 \begin_preamble
 \usepackage{babel}
+% Added by lyx2lyx
+\setlength{\parskip}{\smallskipamount}
+\setlength{\parindent}{0pt}
 \end_preamble
 \use_default_options false
-\maintain_unincluded_children false
+\maintain_unincluded_children no
 \language american
 \language_package default
 \inputencoding iso8859-15
@@ -21,7 +24,9 @@
 \font_default_family default
 \use_non_tex_fonts false
 \font_sc false
-\font_osf false
+\font_roman_osf false
+\font_sans_osf false
+\font_typewriter_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
 \use_microtype false
@@ -31,6 +36,8 @@
 \output_sync 0
 \bibtex_command default
 \index_command default
+\float_placement class
+\float_alignment class
 \paperfontsize default
 \spacing single
 \use_hyperref false
@@ -55,7 +62,9 @@
 \suppress_date false
 \justification true
 \use_refstyle 0
+\use_formatted_ref 0
 \use_minted 0
+\use_lineno 0
 \index Index
 \shortcut idx
 \color #008000
@@ -67,7 +76,7 @@
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation skip
-\defskip smallskip
+\defskip halfline
 \is_math_indent 0
 \math_numbering_side default
 \quotes_style english
@@ -75,11 +84,16 @@
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
+\tablestyle default
 \tracking_changes false
 \output_changes false
+\change_bars false
+\postpone_fragile_content false
 \html_math_output 0
 \html_css_as_file 0
 \html_be_strict false
+\docbook_table_output 0
+\docbook_mathml_prefix 1
 \end_header
 
 \begin_body
@@ -97,14 +111,16 @@ E_{\mathrm{tot}}\left[\left\{ \phi_{i}\right\} ,\left\{ \mathbf{R}_{I}\right\} \
 \begin_inset Formula $n(\mathbf{r})$
 \end_inset
 
-: electron density
+:
+ electron density
 \end_layout
 
 \begin_layout Standard
 \begin_inset Formula $U\left(\left\{ \mathbf{R}_{I}\right\} \right)$
 \end_inset
 
-: ion-ion interaction energy
+:
+ ion-ion interaction energy
 \end_layout
 
 \begin_layout Standard
@@ -180,7 +196,9 @@ n(\mathbf{r})=\sum_{i}\left[\left|\phi_{i}(\mathbf{r})\right|^{2}+\sum_{nm,I}Q_{
 \begin_inset Formula $Q_{nm}^{I}(\mathbf{r})$
 \end_inset
 
-: augmentation functions, localized in the core.
+:
+ augmentation functions,
+ localized in the core.
 \end_layout
 
 \begin_layout Standard
@@ -193,6 +211,109 @@ Q_{nm}(\mathbf{r})=\psi_{n}^{AE*}(\mathbf{r})\psi_{m}^{AE}(\mathbf{r})-\psi_{n}^
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+Generalized orthonormality conditions:
+\begin_inset Formula 
+\[
+\left\langle \phi_{i}\left|S\left(\left\{ \mathbf{R}_{I}\right\} \right)\right|\phi_{j}\right\rangle =\delta_{ij}
+\]
+
+\end_inset
+
+Overlap operator:
+\begin_inset Formula 
+\[
+S=1+\sum_{nm,I}q_{nm}\left|\beta_{n}^{I}\right\rangle \left\langle \beta_{m}^{I}\right|
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+q_{nm}=\int\mathrm{d}\mathbf{r}\,Q_{nm}(\mathbf{r})
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Minimizing total energy s.t.
+ constraints
+\begin_inset Formula 
+\[
+\frac{\delta E_{\mathrm{tot}}}{\delta\phi_{i}^{*}(\mathbf{r})}=\epsilon_{i}S\phi_{i}(\mathbf{r})
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\epsilon_{i}$
+\end_inset
+
+ are the Lagrange multipliers,
+ giving Kohn-Sham equation:
+\begin_inset Formula 
+\[
+H\left|\phi_{i}\right\rangle =\epsilon_{i}S\left|\phi_{i}\right\rangle 
+\]
+
+\end_inset
+
+with Hamiltonian:
+\begin_inset Formula 
+\[
+H=-\frac{\hbar^{2}}{2m}\nabla^{2}+V_{\mathrm{eff}}+\sum_{nm,I}D_{nm}^{I}\left|\beta_{nm}^{I}\right\rangle \left\langle \beta_{nm}^{I}\right|
+\]
+
+\end_inset
+
+and screened effective local potential:
+\begin_inset Formula 
+\[
+V_{\mathrm{eff}}(\mathbf{r})=V_{\mathrm{loc}}^{\mathrm{ion}}(\mathbf{r})+V_{\mathrm{H}}(\mathbf{r})+\mu_{\mathrm{xc}}(\mathbf{r})
+\]
+
+\end_inset
+
+exchange correlation potential:
+\begin_inset Formula 
+\[
+\mu_{xc}(\mathbf{r})=\frac{\delta E_{\mathrm{xc}}[n]}{\delta n(\mathbf{r})}
+\]
+
+\end_inset
+
+Hartree potential:
+\begin_inset Formula 
+\[
+V_{\mathrm{H}}(\mathbf{r})=e^{2}\int\mathrm{d}\mathbf{r}'\,\frac{n(\mathbf{r}')}{\left|\mathbf{r}-\mathbf{r}'\right|}
+\]
+
+\end_inset
+
+Screened coefficients 
+\begin_inset Formula $D_{nm}^{I}$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+D_{nm}^{I}=D_{nm}^{(0)}+\int\mathrm{d}\mathbf{r}\,V_{\mathrm{eff}}(\mathbf{r})Q_{nm}^{I}(\mathbf{r})
+\]
+
+\end_inset
+
+They depend on the KS orbitals through 
+\begin_inset Formula $V_{\mathrm{eff}}$
+\end_inset
+
+,,
+ and the charge density.
 \end_layout
 
 \begin_layout Standard
@@ -212,9 +333,10 @@ Some references:
 \end_layout
 
 \begin_layout Standard
-Giannozzi, De Angelis and Car.
- First principle molecular dynamics with ultrasoft pseudopotentials: parallel
- implementation and application to extended bio-inorganic systems
+Giannozzi,
+ De Angelis and Car.
+ First principle molecular dynamics with ultrasoft pseudopotentials:
+ parallel implementation and application to extended bio-inorganic systems
 \end_layout
 
 \end_body
