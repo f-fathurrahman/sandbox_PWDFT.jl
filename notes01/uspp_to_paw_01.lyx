@@ -1,0 +1,658 @@
+#LyX 2.4 created this file. For more info see https://www.lyx.org/
+\lyxformat 620
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+% Added by lyx2lyx
+\setlength{\parskip}{\smallskipamount}
+\setlength{\parindent}{0pt}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children no
+\language english
+\language_package default
+\inputencoding auto-legacy
+\fontencoding default
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "libertine-ntxm" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_roman_osf false
+\font_sans_osf false
+\font_typewriter_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement class
+\float_alignment class
+\paperfontsize default
+\spacing onehalf
+\use_hyperref false
+\papersize a4
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_formatted_ref 0
+\use_minted 0
+\use_lineno 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip halfline
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tablestyle default
+\tracking_changes false
+\output_changes false
+\change_bars false
+\postpone_fragile_content false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\docbook_table_output 0
+\docbook_mathml_prefix 1
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+Energi total:
+\begin_inset Formula 
+\[
+E=\sum_{n}f_{n}\left\langle \Psi_{n}\left|-\dfrac{1}{2}\nabla^{2}\right|\Psi_{n}\right\rangle +E_{H}\left[n+n_{Z}\right]+E_{xc}[n]
+\]
+
+\end_inset
+
+di mana 
+\begin_inset Formula $E_{H}\left[n+n_{Z}\right]$
+\end_inset
+
+ adalah energi Hartree dari kerapatan elektron 
+\begin_inset Formula $n$
+\end_inset
+
+ dan muatan titik dari nuklei 
+\begin_inset Formula $n_{Z}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Fungsi gelombang seluruh-elektron (all-electron,
+ disingkat AE),
+ diperoleh dari fungsi gelombang semu (pseudo,
+ disingkat PS) 
+\begin_inset Formula $\widetilde{\Psi}$
+\end_inset
+
+ melalui transformasi linear
+\begin_inset Formula 
+\[
+\left|\Psi\right\rangle =\left|\widetilde{\Psi}_{n}\right\rangle +\sum_{i}\left(\left|\phi_{i}\right\rangle -\left|\widetilde{\phi}_{i}\right\rangle \right)\left\langle \widetilde{p}_{i}\middle|\widetilde{\Psi}_{n}\right\rangle 
+\]
+
+\end_inset
+
+Indeks 
+\begin_inset Formula $i$
+\end_inset
+
+ adalah singkatan dari situs atomik 
+\begin_inset Formula $\mathbf{R}$
+\end_inset
+
+,
+ momentum sudut 
+\begin_inset Formula $L=(l,m)$
+\end_inset
+
+ dan indeks tambahan 
+\begin_inset Formula $k$
+\end_inset
+
+ yang merupakan indeks dari energi (nilai eigen atomik) referensi 
+\begin_inset Formula $\epsilon_{kl}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\phi_{i}$
+\end_inset
+
+ adalah gelombang parsial AE yang diperoleh dari atom referensi.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\widetilde{\phi}_{i}$
+\end_inset
+
+ adalah gelombang parsial PS yang sama dengan gelombang parsial AE di luar radius 
+\begin_inset Formula $r_{c}^{l}$
+\end_inset
+
+ (and match continuously onto 
+\begin_inset Formula $\widetilde{\phi}$
+\end_inset
+
+ inside the core radius).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\widetilde{p}_{i}$
+\end_inset
+
+ adalah fungsi proyektor yang merupakan dual dari gelombang parsial:
+\begin_inset Formula 
+\[
+\left\langle \widetilde{p}_{i}\middle|\widetilde{\phi}_{j}\right\rangle =\delta_{ij}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Kerapatan elektron AE (apakah hanya untuk elektron valensi saja?
+ cf.
+ Holzwarth,
+ PRB 
+\series bold
+55
+\series default
+,
+ 2005 (1997)):
+\begin_inset Formula 
+\[
+n(\mathbf{r})=\widetilde{n}(\mathbf{r})+n^{1}(\mathbf{r})-\widetilde{n}^{1}(\mathbf{r})
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Asumsi frozen core.
+\end_layout
+
+\begin_layout Standard
+Beberapa kuantitas yang digunakan untuk mendeskripsikan kerapatan muatan inti (core charge density):
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $n_{c}$
+\end_inset
+
+:
+ kerapatan inti yang diperoleh dari fungsi gelombang AE dari atom referensi
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\widetilde{n}_{c}$
+\end_inset
+
+:kerapatan inti parsial,
+ sama dengan 
+\begin_inset Formula $n_{c}$
+\end_inset
+
+ di luar suatu radius tertentu 
+\begin_inset Formula $r_{pc}$
+\end_inset
+
+ yang berada di dalam daerah augmentasi.
+ Kerapatan inti parsial digunakan untuk menghitung koreksi inti nonlinear (nonlinear core-correction).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $n_{Zc}$
+\end_inset
+
+:
+ muatan titik dari nuklei 
+\begin_inset Formula $n_{Z}$
+\end_inset
+
+ ditambah kerapatan inti AE 
+\begin_inset Formula $n_{c}$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+n_{Zc}=n_{Z}+n_{c}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\widetilde{n}_{Zc}$
+\end_inset
+
+:
+ kerapatan inti semu (pseudized core density) yang bernilai sama dengan 
+\begin_inset Formula $n_{Zc}$
+\end_inset
+
+ di luar radius inti dan memiliki momen yang sama dengan 
+\begin_inset Formula $n_{Zc}$
+\end_inset
+
+ di dalam daerah inti:
+\begin_inset Formula 
+\[
+\int_{\Omega_{r}}n_{Zc}(\mathbf{r})\ \mathrm{d}\mathbf{r}=\int_{\Omega_{r}}\widetilde{n}_{Zc}\ \mathrm{d}\mathbf{r}
+\]
+
+\end_inset
+
+di mana momen total dari 
+\begin_inset Formula $n_{Zc}$
+\end_inset
+
+ dan 
+\begin_inset Formula $\widetilde{n}_{Zc}$
+\end_inset
+
+ sama dengan muatan ionik bersih 
+\begin_inset Formula $-Z_{\mathrm{ion}}$
+\end_inset
+
+ (dengan konvensi bahwa muatan elektron adalah +1).
+\end_layout
+
+\begin_layout Standard
+SKIPPED
+\end_layout
+
+\begin_layout Standard
+Ekspresi untuk energi total
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+E=\widetilde{E}+E^{1}-\widetilde{E}^{1}
+\]
+
+\end_inset
+
+dengan
+\begin_inset Formula 
+\[
+\widetilde{E}=\sum_{n}f_{n}\left\langle \widetilde{\Psi}_{n}\left|-\frac{1}{2}\nabla^{2}\right|\widetilde{\Psi}_{n}\right\rangle +E_{\mathrm{xc}}\left[\widetilde{n}+\widehat{n}+\widetilde{n}_{c}\right]+E_{\mathrm{H}}\left[\widetilde{n}+\widehat{n}\right]+\int V_{\mathrm{H}}\left[\widetilde{n}_{Zc}\right]\left[\widetilde{n}(\mathbf{r})+\widehat{n}(\mathbf{r})\right]\ \mathrm{d}\mathbf{r}+U(\mathbf{R},Z_{\mathrm{ion}})
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+E^{1}=\sum_{i,j}\rho_{ij}\left\langle \phi_{i}\left|-\frac{1}{2}\nabla^{2}\right|\phi_{j}\right\rangle +\overline{E_{\mathrm{xc}}\left[n^{1}+n_{c}\right]}+\overline{E_{\mathrm{H}}\left[n^{1}\right]}+\int_{\Omega_{r}}V_{\mathrm{H}}\left[n_{Zc}\right]n^{1}(\mathbf{r})\ \mathrm{d}\mathbf{r}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\widetilde{E}^{1}=\sum_{i,j}\rho_{ij}\left\langle \widetilde{\phi}_{i}\left|-\frac{1}{2}\nabla^{2}\right|\widetilde{\phi}_{j}\right\rangle +\overline{E_{\mathrm{xc}}\left[\widetilde{n}^{1}+\widehat{n}+\widetilde{n}_{c}\right]}+\overline{E_{\mathrm{H}}\left[\widetilde{n}^{1}+\widehat{n}\right]}+\int_{\Omega_{r}}V_{\mathrm{H}}\left[\widetilde{n}_{Zc}\right]\left[\widetilde{n}^{1}(\mathbf{r})+\widehat{n}(\mathbf{r})\right]\ \mathrm{d}\mathbf{r}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Perhatikan bahwa 
+\begin_inset Formula $\widetilde{E}$
+\end_inset
+
+ mirip dengan fungsional energi dari formulasi USPP jika 
+\begin_inset Formula $\widehat{n}$
+\end_inset
+
+ diasosiasikan dengan pseudized augmentation charges pada USPP.
+\end_layout
+
+\begin_layout Standard
+Relasi dengan USPP
+\end_layout
+
+\begin_layout Standard
+Persamaan untuk formulasi USPP dapat diperoleh dari fungsional energi total PAW (termodifikasi),
+ Pers.
+ (21)-(23) melalui linearisasi Pers.
+ (22) dan Pers.
+ (23) disekitar okupansi atom referensi 
+\begin_inset Formula $\rho_{ij}^{a}$
+\end_inset
+
+.
+ Misalkan densitas yang diperoleh dengan okupansi tersebut adalah 
+\begin_inset Formula $n_{a}^{1}$
+\end_inset
+
+,
+ 
+\begin_inset Formula $\widetilde{n}_{a}^{1}$
+\end_inset
+
+,
+ dan 
+\begin_inset Formula $\widehat{n}_{a}$
+\end_inset
+
+.
+ Linearisasi dari suku XC dan Hartree dari 
+\begin_inset Formula $E^{1}$
+\end_inset
+
+ disekitar 
+\begin_inset Formula $n_{a}^{1}$
+\end_inset
+
+ memberikan
+\begin_inset Formula 
+\[
+E_{\mathrm{xc}}\left[n_{a}^{1}+n_{c}\right]+E_{\mathrm{H}}\left[n_{a}^{1}\right]+\int\left(V_{\mathrm{xc}}\left[n_{a}^{1}+n_{c}\right]+V_{\mathrm{H}}\left[n_{a}^{1}\right]\right)\left(n^{1}(\mathbf{r})-n_{a}^{1}(\mathbf{r})\right)\ \mathrm{d}\mathbf{r}
+\]
+
+\end_inset
+
+Dengan menggunakan ekspresi untuk 
+\begin_inset Formula $n^{1}(\mathbf{r})$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+n^{1}(\mathbf{r})=\sum_{i,j}\rho_{ij}\left\langle \phi_{i}|\mathbf{r}\right\rangle \left\langle \mathbf{r}|\phi_{j}\right\rangle 
+\]
+
+\end_inset
+
+diperoleh
+\begin_inset Formula 
+\[
+E^{1}=C+\sum_{i,j}\rho_{ij}\left\langle \phi_{i}\left|V_{\mathrm{xc}}\left[n_{a}^{1}+n_{c}\right]+V_{\mathrm{H}}\left[n_{a}^{1}\right]\right|\phi_{j}\right\rangle 
+\]
+
+\end_inset
+
+Dua suku yang lain,
+ yaitu energi kinetik dan interaksi elektrostatik antara core-valence sudah linear dalam 
+\begin_inset Formula $\rho_{ij}$
+\end_inset
+
+ dan jika dikombinasikan dengan Pers.
+ (29) diperoleh aproksimasi untuk 
+\begin_inset Formula $E^{1}$
+\end_inset
+
+ dalam orde pertama dari okupansi 
+\begin_inset Formula $\rho_{ij}$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+E^{1}\approx C+\sum_{i,j}\rho_{ij}\left\langle \phi_{i}\left|-\frac{1}{2}\nabla^{2}+V_{\mathrm{eff}}^{a}\right|\phi_{j}\right\rangle 
+\]
+
+\end_inset
+
+dengan
+\begin_inset Formula 
+\[
+V_{\mathrm{eff}}^{a}=V_{\mathrm{H}}\left[n_{a}^{1}+n_{Zc}\right]+V_{\mathrm{xc}}\left[n_{a}^{1}+n_{c}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Potential lokal 
+\begin_inset Formula $V_{\mathrm{eff}}^{a}$
+\end_inset
+
+ tidak lain adalah potensial AE dalam atom referensi.
+\end_layout
+
+\begin_layout Standard
+Linearisasi yang sama dapat diaplikasikan untuk 
+\begin_inset Formula $\widetilde{E}^{1}$
+\end_inset
+
+,
+ dengan memperhitungkan bahwa 
+\begin_inset Formula $\widetilde{n}^{1}$
+\end_inset
+
+ dan 
+\begin_inset Formula $\widehat{n}$
+\end_inset
+
+ bergantung pada okupansi 
+\begin_inset Formula $\rho_{ij}$
+\end_inset
+
+.
+ Hasil akhir yang diperoleh adalah
+\begin_inset Formula 
+\[
+\widetilde{E}^{1}\approx\widetilde{C}+\sum_{i,j}\left[\rho_{ij}\left\langle \widetilde{\phi}_{i}\left|-\frac{1}{2}\nabla^{2}+\widetilde{V}_{\mathrm{eff}}^{a}\right|\widetilde{\phi}_{j}\right\rangle +\int\widehat{Q}_{ij}^{L}(\mathbf{r})\widetilde{V}_{\mathrm{eff}}^{a}(\mathbf{r})\ \mathrm{d}\mathbf{r}\right]
+\]
+
+\end_inset
+
+dengan
+\begin_inset Formula 
+\[
+\widetilde{V}_{\mathrm{eff}}^{a}=V_{\mathrm{H}}\left[\widetilde{n}_{a}^{1}+\widetilde{n}_{a}+\widetilde{n}_{Zc}\right]+V_{\mathrm{xc}}\left[\widetilde{n}_{a}^{1}+\widetilde{n}_{a}+\widetilde{n}_{c}\right]
+\]
+
+\end_inset
+
+adalah pseudopotensial atomik lokal pada atom referensi.
+\end_layout
+
+\begin_layout Standard
+Dengan menggabungkan antara dua ekspresi terlinearisasi tersebut dengan 
+\begin_inset Formula $\widetilde{E}$
+\end_inset
+
+ diperoleh:
+\begin_inset Formula 
+\begin{align*}
+E & =\sum_{n}f_{n}\left\langle \widetilde{\Psi}_{n}\left|-\frac{1}{2}\nabla^{2}+\sum_{i,j}\left|\widetilde{p}_{i}\right\rangle \left\langle \widetilde{p}_{j}\right|G_{ij}^{US}\right|\widetilde{\Psi}_{n}\right\rangle +E_{\mathrm{xc}}\left[\widetilde{n}+\widehat{n}+\widetilde{n}_{c}\right]+E_{\mathrm{H}}\left[\widetilde{n}+\widehat{n}\right]\\
+ & +\int V_{\mathrm{H}}\left[\widetilde{n}_{Zc}\right]\left[\widetilde{n}(\mathbf{r})+\widehat{n}(\mathbf{r})\right]\ \mathrm{d}\mathbf{r}+U(\mathbf{R},Z_{\mathrm{ion}})
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
+E.
+ Compensation charge
+\end_layout
+
+\begin_layout Standard
+Compensation charges 
+\begin_inset Formula $\hat{n}$
+\end_inset
+
+ harus dipilih sedemikian rupa sehingga 
+\begin_inset Formula $\tilde{n}^{1}+\hat{n}$
+\end_inset
+
+ memiliki momen yang sama dengan exact AE charge density 
+\begin_inset Formula $n^{1}$
+\end_inset
+
+ di dalam daerah augmentasi yang berpusat pada 
+\begin_inset Formula $\mathbf{R}$
+\end_inset
+
+.
+ Hal ini memerlukan hubungan berikut ini berlaku:
+\begin_inset Formula 
+\[
+\int_{\Omega_{r}}\left(n^{1}-\tilde{n}^{1}-\hat{n}\right)\left|\mathbf{r}-\mathbf{R}\right|^{l}Y_{L}^{*}\left(\widehat{\mathbf{r}-\mathbf{R}}\right)\,\mathrm{d\mathbf{r}=0}
+\]
+
+\end_inset
+
+Perbedaaan kerapatan muatan antara AE dan PS partial wave untuk channel 
+\begin_inset Formula $(i,j)$
+\end_inset
+
+ dalam daerah augmentasi dijelaskan oleh fungsi:
+\begin_inset Formula 
+\[
+Q_{ij}(\mathbf{r})=\phi_{i}^{*}(\mathbf{r})\phi_{j}(\mathbf{r})-\tilde{\phi_{i}^{*}}(\mathbf{r})\tilde{\phi_{j}}(\mathbf{r})
+\]
+
+\end_inset
+
+dan momen 
+\begin_inset Formula $q_{ij}^{L}$
+\end_inset
+
+ dari distribusi muatan ini adalah:
+\begin_inset Formula 
+\[
+q_{ij}^{L}=\int_{\Omega_{r}}Q_{ij}(\mathbf{r})\left|\mathbf{r}-\mathbf{R}\right|^{l}Y_{L}^{*}\left(\widehat{\mathbf{r}-\mathbf{R}}\right)
+\]
+
+\end_inset
+
+dengan 
+\begin_inset Formula $L=(l,m)$
+\end_inset
+
+.
+ Hanya kombinasi tertentu dari pasangan
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Formula $L$
+\end_inset
+
+ dan 
+\begin_inset Formula $i=k_{i}l_{i}m_{i}$
+\end_inset
+
+ dan 
+\begin_inset Formula $j=k_{j}l_{j}m_{j}$
+\end_inset
+
+ yang memberikan kontribusi tidak 0 berdasarkan aturan berikut:
+\begin_inset Formula 
+\[
+m=m_{i}+m_{j}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+l=\left|l_{i}-l_{j}\right|,\left|l_{i}-l_{j}\right|+2,\ldots,l_{i}+l_{j}
+\]
+
+\end_inset
+
+Momen 
+\begin_inset Formula $q_{ij}^{L}$
+\end_inset
+
+ dapat diperoleh dari koefisien Clebsh-Gordan dan integrasi radial.
+\end_layout
+
+\begin_layout Standard
+Kombinasi distribusi muatan yang memenuhi persyaratan Pers.
+ 24 kemudian dapat didefinisikan sebagai penjumlahan dari suku one-center:
+\begin_inset Formula 
+\[
+\hat{n}=\sum_{(i,j),L}\rho_{ij}\hat{Q}_{ij}^{L}(\mathbf{r})
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\hat{Q}_{ij}^{L}(\mathbf{r})=q_{ij}^{L}\,g_{l}\left(\left|\mathbf{r-\mathbf{R}}\right|\right)\,Y_{L}\left(\widehat{\mathbf{r-\mathbf{R}}}\right)
+\]
+
+\end_inset
+
+di mana 
+\begin_inset Formula $g_{l}(r)$
+\end_inset
+
+ adalah fungsi radial dengan momen 
+\begin_inset Formula $l$
+\end_inset
+
+ sama dengan 1.
+\end_layout
+
+\end_body
+\end_document
