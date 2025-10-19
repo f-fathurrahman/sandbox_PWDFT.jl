@@ -1240,12 +1240,16 @@ match
 \end_layout
 
 \begin_layout Standard
-Computes the $({
-\backslash
-bf G+p})$-dependent matching coefficients for the APW basis functions.
- Inside muffin-tin $
-\backslash
-alpha$,
+Computes the 
+\begin_inset Formula $({\bf G+p})$
+\end_inset
+
+-dependent matching coefficients for the APW basis functions.
+ Inside muffin-tin 
+\begin_inset Formula $\alpha$
+\end_inset
+
+,
  the APW functions are given by
 \begin_inset Formula 
 \[
@@ -1284,9 +1288,11 @@ where
 \end_inset
 
  is the unit cell volume.
- Ensuring continuity up to the $(M^{
-\backslash
-alpha}_l-1)$th derivative across the muffin-tin boundary therefore requires that the matching coefficients satisfy
+ Ensuring continuity up to the 
+\begin_inset Formula $(M_{l}^{\alpha}-1)$
+\end_inset
+
+-th derivative across the muffin-tin boundary therefore requires that the matching coefficients satisfy
 \begin_inset Formula 
 \[
 \sum_{j=1}^{M_{l}^{\alpha}}D_{ij}A_{jlm}^{\alpha}({\bf G+p})=b_{i}\;,
