@@ -134,6 +134,7 @@ function init_debug_calc()
     # Otherwise call other debug subroutines below
 
     call_rhoinit()
+    call_maginit()
     
     # potks or potks_no_symm
     call_potks()
