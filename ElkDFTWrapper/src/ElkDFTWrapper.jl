@@ -152,6 +152,10 @@ function init_debug_calc()
 
     call_genevfsv()
 
+    call_occupy()
+    # this will call some other routines
+    call_my_rhomag()
+
 end
 export init_debug_calc
 
