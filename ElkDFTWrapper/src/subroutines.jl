@@ -174,6 +174,16 @@ function call_info_apwlo()
     return
 end
 
+
+function get_evecfv(ik::Int64)
+    nmatmax = get_nmatmax()
+    nstfv = get_nstfv()
+    nspnfv = get_nspnfv()
+    evecfv = zeros(ComplexF64, nmatmax, nstfv, nspnfv)
+    ccall( (:driver_getevecfv_, LIBLAPW), Cvoid, (Ref{Int32}, Ptr{ComplexF64}), Int32(ik), evecfv)
+    return evecfv
+end
+
 #=
 
 call_genevfsv()
