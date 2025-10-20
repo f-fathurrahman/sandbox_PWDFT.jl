@@ -26,3 +26,31 @@ function forward_SHT!(
     return
 end
 
+# From zfsht (ComplexF64 version)
+function forward_SHT!(
+    mt_vars, isp,
+    zfmt_in::Vector{CommplexF64},
+    zfmt_out::Vector{ComplexF64}
+)
+    nr = mt_vars.nrmt[isp]
+    nri = mt_vars.nrmti[isp]
+    nro = nr - nri
+
+    lmmaxi = mt_vars.lmmaxi
+    lmmaxo = mt_vars.lmmaxo
+
+    idx_inner = 1:lmmaxi*nri
+    ZF = mt_vars.SHT.zfshti
+    @views V_in = reshape(zfmt_in[idx_inner], (lmmaxi,nri))
+    @views V_out = reshape(zfmt_out[idx_inner], (lmmaxi,nri))
+    @views V_out[:,:] = ZF[:,:] * V_in[:,:]
+
+    idx_outer = (lmmaxi*nri + 1):(lmmaxi*nri + lmmaxo*nro)
+    ZF = mt_vars.SHT.zfshto
+    @views V_in = reshape(zfmt_in[idx_outer], (lmmaxo,nro))
+    @views V_out = reshape(zfmt_out[idx_outer], (lmmaxo,nro))
+    @views V_out[:,:] = ZF[:,:] * V_in[:,:]
+
+    return
+end
+
