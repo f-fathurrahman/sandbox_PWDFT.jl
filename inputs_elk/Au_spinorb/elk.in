@@ -1,0 +1,33 @@
+
+! Example of spin-orbit coupling for Au. Try comparing the band structure
+! without spin-orbit coupling.
+
+tasks
+  0
+  20
+
+spinorb
+  .true.
+
+avec
+  1.0  1.0  0.0
+  1.0  0.0  1.0
+  0.0  1.0  1.0
+
+scale
+  3.85
+
+sppath
+  './'
+
+atoms
+  1                                   : nspecies
+  'Au.in'                             : spfname
+  1                                   : natoms
+  0.0  0.0  0.0    0.0  0.0  0.0      : atposl, bfcmt
+
+ngridk
+  4  4  4
+
+! plot1d block is disabled
+
