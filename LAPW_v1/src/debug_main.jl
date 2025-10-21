@@ -190,6 +190,12 @@ function debug_main()
         )
     end
 
+    # Update occupation numbers
+    occupy!(
+        kpoints, apwlo_vars, elec_chgst;
+        NiterMax=1000, epsocc=1e-8
+    )
+
     @infiltrate
     # open REPL and investigate the variables
 
