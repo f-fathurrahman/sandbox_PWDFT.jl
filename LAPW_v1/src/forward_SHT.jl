@@ -29,7 +29,7 @@ end
 # From zfsht (ComplexF64 version)
 function forward_SHT!(
     mt_vars, isp,
-    zfmt_in::Vector{CommplexF64},
+    zfmt_in::Vector{ComplexF64},
     zfmt_out::Vector{ComplexF64}
 )
     nr = mt_vars.nrmt[isp]
