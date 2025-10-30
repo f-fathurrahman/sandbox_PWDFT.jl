@@ -6,6 +6,7 @@ struct ElkInput
     atomic_positions::Vector{Matrix{Float64}}
     is_molecule::Bool
     ngridk::Vector{Int64}
+    spinpol::Bool
 end
 # NOTE: species_files are assumed to be located in the current directory
 
@@ -15,6 +16,7 @@ function read_elk_input()
     lines = readlines(f)
     close(f)
 
+    # Some default values
     LatVecs = zeros(Float64, 3, 3)
     Nspecies = 0
     species_files = Vector{String}()
@@ -22,6 +24,7 @@ function read_elk_input()
     atomic_positions = Vector{Matrix{Float64}}()
     is_molecule = false
     ngridk = ones(Int64, 3)
+    spinpol = false
 
     Nlines = length(lines)
     iline = 0
@@ -108,13 +111,21 @@ function read_elk_input()
                 ngridk[i] = parse(Int64, ll[i])
             end
         end
+        #
+        if l == "spinpol"
+            iline += 1
+            ll = split(lines[iline], " ", keepempty=false)[1]
+            if lowercase(ll) == ".true."
+                spinpol = true
+            end 
+        end
     end
 
     return ElkInput(
         LatVecs, Nspecies, species_files,
         natoms_per_species, atomic_positions,
         is_molecule,
-        ngridk
+        ngridk, spinpol
     )
 end
 

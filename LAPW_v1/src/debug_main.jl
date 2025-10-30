@@ -81,7 +81,12 @@ function debug_main()
     println(pw)
 
     # XXX: use simpler name?
-    elec_chgst = ElectronicChargesStates(atoms, atsp_vars, pw.gvecw.kpoints.Nkpt)
+    spinpol = elk_input.spinpol
+    Nspin = 1
+    if spinpol
+        Nspin = 2
+    end
+    elec_chgst = ElectronicChargesStates(atoms, atsp_vars, pw.gvecw.kpoints.Nkpt, nspinor=Nspin)
 
     # Initialize rhomt and rhoir
     npmt = mt_vars.npmt
@@ -192,7 +197,7 @@ function debug_main()
 
     # Update occupation numbers
     occupy!(
-        kpoints, apwlo_vars, elec_chgst;
+        pw.gvecw.kpoints, apwlo_vars, elec_chgst;
         NiterMax=1000, epsocc=1e-8
     )
 
