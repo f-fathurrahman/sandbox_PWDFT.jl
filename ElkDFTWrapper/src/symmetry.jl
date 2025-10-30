@@ -94,7 +94,7 @@ end
 function get_nsymsite()
     symbol = :__m_symmetry_MOD_nsymsite
     natmtot = get_natmtot()
-    return _load_allocatable_array(symbol, Int64, (natmtom,))
+    return _load_allocatable_array(symbol, Int64, (natmtot,))
 end
 
 

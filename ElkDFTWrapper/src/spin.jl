@@ -23,52 +23,90 @@ function get_nspinor()
     return unsafe_load(cglobal((:__m_spin_MOD_nspinor, LIBLAPW), Int32)) |> Int64
 end
 
-#=
 # scale factor of spin-orbit coupling term in Hamiltonian
-real(8) socscf
+function get_socscf()
+    return unsafe_load(cglobal((:__m_spin_MOD_socscf, LIBLAPW), Float64))
+end
 
 # ncmag is .true. if the magnetisation is non-collinear, i.e. when ndmag = 3
-logical ncmag
+function get_ncmag()
+    return unsafe_load(cglobal((:__m_spin_MOD_ncmag, LIBLAPW), Bool))
+end
+
 
 # if cmagz is .true. then collinear magnetism along the z-axis is enforced
-logical cmagz
+function get_cmagz()
+    return unsafe_load(cglobal((:__m_spin_MOD_cmagz, LIBLAPW), Bool))
+end
 
 # spcpl is .true. if the up and down spins are coupled
-logical spcpl
+function get_spcpl()
+    return unsafe_load(cglobal((:__m_spin_MOD_spcpl, LIBLAPW), Bool))
+end
 
 # fixed spin moment type
 #  0      : none
 #  1 (-1) : total moment (direction)
 #  2 (-2) : individual muffin-tin moments (direction)
 #  3 (-3) : total and muffin-tin moments (direction)
-integer fsmtype
+function get_fsmtype()
+    return unsafe_load(cglobal((:__m_spin_MOD_fsmtype, LIBLAPW), Int32)) |> Int64
+end
 
 # fixed total spin magnetic moment
-real(8) momfix(3)
+function get_momfix()
+    symbol = :__m_spin_MOD_momfix
+    return _load_automatic_array(symbol, Float64, (3,))
+end
 
 # fixed spin moment global effective field in Cartesian coordinates
-real(8) bfsmc(3)
+function get_bfsmc()
+    symbol = :__m_spin_MOD_bfsmc
+    return _load_automatic_array(symbol, Float64, (3,))
+end
 
 # muffin-tin fixed spin moments
-real(8) mommtfix(3,maxatoms,maxspecies)
+function get_mommtfx()
+    symbol = :__m_spin_MOD_mommtfix
+    maxatoms = get_maxatoms()
+    maxspecies = get_maxspecies()
+    return _load_automatic_array(symbol, Float64, (3,maxatoms,maxspecies))
+end
 
+# global external magnetic field in Cartesian coordinates
+function get_bfieldc()
+    symbol = :__m_spin_MOD_bfieldc
+    return _load_automatic_array(symbol, Float64, (3,))
+end
+
+# initial field
+function get_bfieldc0()
+    symbol = :__m_spin_MOD_bfieldc0
+    return _load_automatic_array(symbol, Float64, (3,))
+end
+
+# external magnetic field in each muffin-tin in Cartesian coordinates
+function get_bfcmt()
+    symbol = :__m_spin_MOD_bfcmt
+    maxatoms = get_maxatoms()
+    maxspecies = get_maxspecies()
+    return _load_automatic_array(symbol, Float64, (3,maxatoms,maxspecies))
+end
+
+# initial field as read in from input file
+function get_bfcmt0()
+    symbol = :__m_spin_MOD_bfcmt0
+    maxatoms = get_maxatoms()
+    maxspecies = get_maxspecies()
+    return _load_automatic_array(symbol, Float64, (3,maxatoms,maxspecies))
+end
+
+#=
 # muffin-tin fixed spin moment effective fields in Cartesian coordinates
 real(8), allocatable :: bfsmcmt(:,:)
 
 # fixed spin moment field step size
 real(8) taufsm
-
-# global external magnetic field in Cartesian coordinates
-real(8) bfieldc(3)
-
-# initial field
-real(8) bfieldc0(3)
-
-# external magnetic field in each muffin-tin in Cartesian coordinates
-real(8) bfcmt(3,maxatoms,maxspecies)
-
-# initial field as read in from input file
-real(8) bfcmt0(3,maxatoms,maxspecies)
 
 # magnitude of random vectors added to muffin-tin fields
 real(8) rndbfcmt

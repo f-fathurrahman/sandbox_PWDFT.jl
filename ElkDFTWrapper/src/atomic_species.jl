@@ -24,6 +24,13 @@ function get_nrsp()
     return _load_automatic_array(symbol, Int64, (nspecies,))
 end
 
+# effective infinity for species
+function get_rmaxsp()
+    symbol = :__m_atomic_species_MOD_rmaxsp
+    nspecies = get_nspecies()
+    return _load_automatic_array(symbol, Float64, (nspecies,))
+end
+
 
 # Radial grid for each species
 function get_rsp()
