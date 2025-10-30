@@ -81,12 +81,10 @@ function debug_main()
     println(pw)
 
     # XXX: use simpler name?
-    spinpol = elk_input.spinpol
-    Nspin = 1
-    if spinpol
-        Nspin = 2
-    end
-    elec_chgst = ElectronicChargesStates(atoms, atsp_vars, pw.gvecw.kpoints.Nkpt, nspinor=Nspin)
+    elec_chgst = ElectronicChargesStates(
+        atoms, atsp_vars, pw.gvecw.kpoints.Nkpt,
+        spinpol=elk_input.spinpol
+    )
 
     # Initialize rhomt and rhoir
     npmt = mt_vars.npmt
@@ -183,6 +181,7 @@ function debug_main()
     end
     nmatmax = maximum(nmat) # not used?
 
+#=
     # TODO: generate Hamiltonians for each kpoints, diagonalize them
     # and store the results to files (to be read later)
     # Using local variables for Hamiltonians, eigenvectors and eigenvalues
@@ -200,6 +199,7 @@ function debug_main()
         pw.gvecw.kpoints, apwlo_vars, elec_chgst;
         NiterMax=1000, epsocc=1e-8
     )
+=#
 
     @infiltrate
     # open REPL and investigate the variables

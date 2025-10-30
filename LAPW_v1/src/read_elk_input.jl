@@ -6,10 +6,12 @@ struct ElkInput
     atomic_positions::Vector{Matrix{Float64}}
     is_molecule::Bool
     ngridk::Vector{Int64}
+    nempty::Int64
     spinpol::Bool
+    bfieldc::Vector{Float64}
 end
 # NOTE: species_files are assumed to be located in the current directory
-
+# For bfieldc, I think it is more flexible to use Vector{Float64} rather than Tuple
 
 function read_elk_input()
     f = open("elk.in", "r")
@@ -24,8 +26,10 @@ function read_elk_input()
     atomic_positions = Vector{Matrix{Float64}}()
     is_molecule = false
     ngridk = ones(Int64, 3)
+    nempty = 0
     spinpol = false
     scale = 1.0
+    bfieldc = zeros(Float64, 3)
 
     Nlines = length(lines)
     iline = 0
@@ -113,6 +117,12 @@ function read_elk_input()
             end
         end
         #
+        if l == "nempty"
+            iline += 1
+            ll = split(lines[iline], " ", keepempty=false)[1]
+            nempty = parse(Int64, ll)
+        end
+        #
         if l == "spinpol"
             iline += 1
             ll = split(lines[iline], " ", keepempty=false)[1]
@@ -126,6 +136,14 @@ function read_elk_input()
             ll = split(lines[iline], " ", keepempty=false)[1]
             scale = parse(Float64, ll)
         end
+        #
+        if l == "bfieldc"
+            iline += 1
+            ll = split(lines[iline], " ", keepempty=false)
+            bfieldc[1] = parse(Float64, ll[1])
+            bfieldc[2] = parse(Float64, ll[2])
+            bfieldc[3] = parse(Float64, ll[3])
+        end
     end
 
     # Scale LatVecs
@@ -135,7 +153,8 @@ function read_elk_input()
         LatVecs, Nspecies, species_files,
         natoms_per_species, atomic_positions,
         is_molecule,
-        ngridk, spinpol
+        ngridk, nempty,
+        spinpol, bfieldc
     )
 end
 

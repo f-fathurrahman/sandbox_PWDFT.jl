@@ -1,4 +1,7 @@
+# Stuffs related to states, spins, magnetic moments go here
+
 mutable struct ElectronicChargesStates
+    spinpol::Bool
     nspinor::Int64
     nempty0::Float64 #!!! This is Float64
     nempty::Int64
@@ -16,12 +19,14 @@ mutable struct ElectronicChargesStates
     occsv::Matrix{Float64}
     evalsv::Matrix{Float64}
     efermi::Float64
+    occmax::Float64
 end
 
 function ElectronicChargesStates(
     atoms::Atoms, atsp_vars, Nkpt::Int64;
-    nempty0=4.0, nspinor=1, chgexs=0.0,
-    swidth=0.001
+    nempty0=4.0, spinpol=false, chgexs=0.0,
+    swidth=0.001,
+    nempty::Union{Int64,Nothing}=nothing
 )
     # nempty0 is number of empty states per atom. It is a Float64
     # nspinor should be read from something else?
@@ -58,9 +63,20 @@ function ElectronicChargesStates(
     # total charge
     chgtot = chgcrtot + chgval
   
-    nempty = round(Int64, nempty0*max(Natoms,1))
-    if nempty < 1
-        nempty = 1
+    # nempty is integer, while nempty0 is Float64
+    if isnothing(nempty)
+        nempty = round(Int64, nempty0*max(Natoms,1))
+        if nempty < 1
+            nempty = 1
+        end
+    end
+
+    if spinpol
+        nspinor = 2
+        occmax = 1.0
+    else
+        nspinor = 1
+        occmax = 2.0
     end
 
     nstfv = round(Int64, chgval/2.0) + nempty + 1
@@ -70,10 +86,10 @@ function ElectronicChargesStates(
     evalsv = zeros(Float64, nstsv, Nkpt)
     efermi = 0.0
     return ElectronicChargesStates(
-        nspinor, nempty0, nempty,
+        spinpol, nspinor, nempty0, nempty,
         chgzn, chgval, chgcr,
         chgcrtot, chgexs, chgtot,
         nstfv, nstsv, swidth, occsv, evalsv,
-        efermi
+        efermi, occmax
     )
 end
