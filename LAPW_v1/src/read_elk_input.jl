@@ -25,6 +25,7 @@ function read_elk_input()
     is_molecule = false
     ngridk = ones(Int64, 3)
     spinpol = false
+    scale = 1.0
 
     Nlines = length(lines)
     iline = 0
@@ -119,7 +120,16 @@ function read_elk_input()
                 spinpol = true
             end 
         end
+        #
+        if l == "scale"
+            iline += 1
+            ll = split(lines[iline], " ", keepempty=false)[1]
+            scale = parse(Float64, ll)
+        end
     end
+
+    # Scale LatVecs
+    LatVecs *= scale
 
     return ElkInput(
         LatVecs, Nspecies, species_files,
