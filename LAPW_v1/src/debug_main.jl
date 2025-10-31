@@ -5,15 +5,35 @@ function debug_main()
 
     # Read the input file
     elk_input = read_elk_input()
-    
+    # assign some variables
+    spinpol = elk_input.spinpol
+    #
+    bfieldc = elk_input.bfieldc
+    bfieldc0 = elk_input.bfieldc
+    # NOTE: in Elk, the input variable name is bfieldc,
+    #       but this is assigned to bfieldc0
+    #bfcmt = elk_input.bfcmt
+    #bfcmt0 = elk_input.bfcmt
+    #
+    spinorb = elk_input.spinorb
+    spinsprl = elk_input.spinsprl
+    nosource = elk_input.nosource
+    cmagz = elk_input.cmagz
+
+    ncmag = false # read from elk.in ?
+
     # Initialize Atoms
     atoms = create_atoms_from_elk_input(elk_input)
+
+    # FIXME: bfcmt shoule be read from elk.in
+    bfcmt = zeros(Float64, 3, atoms.Natoms)
+    bfcmt0 = zeros(Float64, 3, atoms.Natoms)
 
     # Setup symmetry variables
     sym_vars = SymmetryVars()
     findsymlat!(sym_vars, atoms)
-    findsymcrys!(sym_vars, atoms, spinpol = elk_input.spinpol)
-    findsymsite!(sym_vars, atoms, spinpol = elk_input.spinpol)
+    findsymcrys!(sym_vars, atoms, spinpol = spinpol, bfieldc0 = bfieldc0)
+    findsymsite!(sym_vars, atoms, spinpol = spinpol, bfieldc0 = bfieldc0)
 
     Nspecies = atoms.Nspecies
     spsymb = atoms.SpeciesSymbols
@@ -75,15 +95,49 @@ function debug_main()
     @info "KPoints read from pwdftjl_kpoints.jldat"
     pw = PWGrid(
         ecutwfc, atoms.LatVecs, dual=dual,
+        Ns_ = deserialize("pwdftjl_Ns.jldat"), # XXX
         #kpoints=KPoints(atoms, elk_input.ngridk, [0,0,0], sym_info.s)
         kpoints = deserialize("pwdftjl_kpoints.jldat")
     )
     println(pw)
 
+    # check for collinearity in the z-direction and set the dimension of the
+    # magnetization and exchange-correlation vector fields
+    epslat  = 1e-6
+    if spinpol
+        ndmag = 1
+        if ( abs(bfieldc0[1]) > epslat) || (abs(bfieldc0[2]) > epslat)
+            ndmag = 3
+            @info "ndmag is set to 3"
+        end
+        for ia in 1:Natoms
+            if (abs(bfcmt0[1,ia]) > epslat || (abs(bfcmt0[2,ia]) > epslat))
+                ndmag = 3
+                @info "ndmag is set to 3"
+            end
+        end
+        # spin-orbit coupling is non-collinear in general
+        if spinorb
+            ndmag = 3
+        end
+        # source-free fields and spin-spirals must be non-collinear
+        if nosource || spinsprl
+            ndmag = 3
+            cmagz = false
+        end
+        # force collinear magnetism along the z-axis if required
+        if cmagz
+            ndmag = 1
+        end
+    else
+        ndmag = 0
+    end
+
+
     # XXX: use simpler name?
     elec_chgst = ElectronicChargesStates(
         atoms, atsp_vars, pw.gvecw.kpoints.Nkpt,
-        spinpol=elk_input.spinpol
+        spinpol = spinpol
     )
 
     # Initialize rhomt and rhoir
@@ -97,6 +151,18 @@ function debug_main()
     rhoir = zeros(Float64, Npoints)
     #
     rhoinit!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
+
+    # magnetization
+    if ndmag > 0
+        magmt = Vector{Vector{Float64}}(undef, Natoms)
+        for ia in 1:Natoms
+            isp = atm2species[ia]
+            magmt[ia] = zeros(Float64, npmt[isp])
+        end
+        magir = zeros(Float64, Npoints, ndmag)
+        maginit!(atoms, rhomt, rhoir, ncmag, ndmag, bfcmt, bfieldc, magmt, magir)
+    end
+
 
     # .... This is starting point of potks
     # XXX Need to wrap into functions, preallocate all arrays

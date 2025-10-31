@@ -163,8 +163,8 @@ export genffacgp!
 include("gencfun.jl")
 export gencfun
 
-include("rhoinit.jl")
-export rhoinit!
+include("rhoinit.jl"); export rhoinit!
+include("maginit.jl"); export maginit!
 
 include("sbessel.jl"); export sbessel!
 include("sbesseldm.jl"); export sbesseldm!
