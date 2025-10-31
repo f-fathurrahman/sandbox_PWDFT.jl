@@ -13,7 +13,11 @@ function findsym!(
     atoms::Atoms,
     apl1, apl2,
     lspl, lspn, iea;
-    epslat=1e-6
+    epslat = 1e-6,
+    spinpol = false,
+    spinorb = false,
+    bfcmt0::Union{Matrix{Float64}, Nothing} = nothing,
+    bfieldc0::Union{Matrix{Float64}, Nothing} = nothing
 )
 
     Natoms = atoms.Natoms
@@ -43,6 +47,16 @@ function findsym!(
     sl = zeros(Float64, 3, 3)
     apl3 = zeros(Float64, 3, Natoms)
     v = zeros(Float64, 3)
+
+    # These variables are not used if spinpol=true
+    sc = zeros(Float64, 3, 3)
+    if isnothing(bfcmt0)
+        bfcmt0 = zeros(Float64, 3, Natoms)
+    end
+    if isnothing(bfieldc0)
+        bfieldc0 = zeros(Float64, 3)
+    end
+
 
     nsym = 0
     sl = zeros(Float64, 3, 3)
@@ -91,8 +105,53 @@ function findsym!(
 
         # 
         # .... spin polarized stuffs is removed
-        # spinpol    
-    
+        # spinpol
+        if spinpol
+            symlatd = sym_vars.symlatd
+            symlatc = sym_vars.symlatc
+            # check invariance of magnetic fields under global spin rotation
+            if spinorb 
+                # with spin-orbit coupling spin rotation equals spatial rotation
+                jsym0 = isym
+                jsym1 = isym
+            else
+                # without spin-orbit coupling spin rotation independent of spatial rotation
+                jsym0 = 1
+                jsym1 = nsymlat
+            end
+            #
+            for jsym in jsym0:jsym1
+                # determinant of the symmetry matrix
+                md = symlatd[jsym]
+                sc[:,:] = md*symlatc[jsym]
+                # rotate global field and check invariance using proper part of symmetry matrix
+                v[:] = sc[:,1]*bfieldc0[1] + sc[:,2]*bfieldc0[2] + sc[:,3]*bfieldc0[3]
+                t1 = abs(bfieldc0[1]-v[1]) + abs(bfieldc0[2] - v[2]) + abs(bfieldc0[3] - v[3])
+                # if not invariant try a different global spin rotation
+                if t1 > epslat
+                    @goto LABEL20
+                end
+                # rotate muffin-tin magnetic fields and check invariance
+                for ia in 1:Natoms
+                    isp = atm2species[ia]
+                    # equivalent atom
+                    ja = jea[ia]
+                    v[:] = sc[:,1]*bfcmt0[1,ja] + sc[:,2]*bfcmt0[2,ja] + sc[:,3]*bfcmt0[3,ja]
+                    t1 = abs(bfcmt0[1,ia] - v[1]) + abs(bfcmt0[2,ia] - v[2]) + abs(bfcmt0[3,ia] - v[3])
+                    # if not invariant try a different global spin rotation
+                    if t1 > epslat
+                        @goto LABEL20
+                    end 
+                end
+                # all fields invariant
+                @goto LABEL30
+                @label LABEL20 # continue
+            end # end loop over global spin rotations 
+            # magnetic fields not invariant so try different spatial rotation
+            @goto LABEL40  # nsym is not incremented
+        end
+
+        @label LABEL30
         # everything invariant so add symmetry to set
         nsym += 1
         lspl[nsym] = isym

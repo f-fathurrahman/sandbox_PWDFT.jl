@@ -29,9 +29,13 @@ J. Phys. F: Met. Phys. 16, L43 (1986) and the routine findsym.
 function findsymcrys!(
     sym_vars::SymmetryVars,
     atoms;
-    tshift=true,
-    epslat=1e-6,
-    symtype=1
+    tshift = true,
+    epslat = 1e-6,
+    symtype = 1,
+    spinpol = false,
+    spinorb = false,
+    bfcmt0::Union{Matrix{Float64}, Nothing} = nothing,
+    bfieldc0::Union{Matrix{Float64}, Nothing} = nothing
 )
 
     Natoms = atoms.Natoms
@@ -171,7 +175,8 @@ function findsymcrys!(
             apl[:,ia] = atposl[:,ia] + vtl[:,i]
         end
         # find the symmetries for current translation
-        nsym = findsym!(sym_vars, atoms, atposl, apl, lspl, lspn, iea)
+        nsym = findsym!(sym_vars, atoms, atposl, apl, lspl, lspn, iea, 
+            spinpol = spinpol, spinorb = spinorb, bfieldc0 = bfieldc0, bfcmt0 = bfcmt0)
         #
         for isym in 1:nsym
             nsymcrys = nsymcrys + 1

@@ -12,8 +12,8 @@ function debug_main()
     # Setup symmetry variables
     sym_vars = SymmetryVars()
     findsymlat!(sym_vars, atoms)
-    findsymcrys!(sym_vars, atoms)
-    findsymsite!(sym_vars, atoms)
+    findsymcrys!(sym_vars, atoms, spinpol = elk_input.spinpol)
+    findsymsite!(sym_vars, atoms, spinpol = elk_input.spinpol)
 
     Nspecies = atoms.Nspecies
     spsymb = atoms.SpeciesSymbols

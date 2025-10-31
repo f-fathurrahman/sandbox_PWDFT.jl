@@ -1,4 +1,10 @@
-function findsymsite!(sym_vars::SymmetryVars, atoms::Atoms)
+function findsymsite!(
+    sym_vars::SymmetryVars, atoms::Atoms;
+    spinpol = false,
+    spinorb = false,
+    bfcmt0::Union{Matrix{Float64}, Nothing} = nothing,
+    bfieldc0::Union{Matrix{Float64}, Nothing} = nothing
+)
 
     Natoms = atoms.Natoms
     atposc = atoms.positions
@@ -15,7 +21,8 @@ function findsymsite!(sym_vars::SymmetryVars, atoms::Atoms)
         for ja in 1:Natoms
             apl[:,ja] = atposl[:,ja] - atposl[:,ia]
         end
-        @views nsymsite[ia] = findsym!(sym_vars, atoms, apl, apl, lsplsyms[:,ia], lspnsyms[:,ia], iea)
+        @views nsymsite[ia] = findsym!(sym_vars, atoms, apl, apl, lsplsyms[:,ia], lspnsyms[:,ia], iea,
+            spinpol = spinpol, spinorb = spinorb, bfieldc0 = bfieldc0, bfcmt0 = bfcmt0)
     end
 
     # update the corresponding variables in sym_vars
