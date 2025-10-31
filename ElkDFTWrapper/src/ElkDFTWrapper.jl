@@ -117,7 +117,19 @@ function export_pwdft_kpoints(; filename="pwdftjl_kpoints.jldat")
     )
     @info "PWDFT.jl KPoints will be serialized to $filename"
     serialize(filename, kpoints)
+    return
 end
+
+# Sometimes no. FFT points are different
+function export_pwdft_Ns(; filename="pwdftjl_Ns.jldat")
+    ngridg = get_ngridg()
+    # Need to convert to Tuple{Int64,Int64,Int64}
+    Ns = (ngridg[1], ngridg[2], ngridg[3])
+    @info "PWDFT.jl Ns (FFT grid or ngridg in Elk) will be serialized to $filename"
+    serialize(filename, Ns)
+    return
+end
+
 
 #=
 This is the function that we need to modify in most debugging case.
@@ -128,6 +140,7 @@ function init_debug_calc()
     
     init_run()
     export_pwdft_kpoints()
+    export_pwdft_Ns()
     
     # Only call after init_run
     #call_my_gndstate(1)
@@ -135,7 +148,7 @@ function init_debug_calc()
 
     call_rhoinit()
     call_maginit()
-    
+ #=   
     # potks or potks_no_symm
     call_potks()
     #call_potks_no_symm() # only for debugging
@@ -156,7 +169,7 @@ function init_debug_calc()
     call_occupy()
     # this will call some other routines
     call_my_rhomag()
-
+=#
 end
 export init_debug_calc
 
