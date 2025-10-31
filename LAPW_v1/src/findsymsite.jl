@@ -3,7 +3,7 @@ function findsymsite!(
     spinpol = false,
     spinorb = false,
     bfcmt0::Union{Matrix{Float64}, Nothing} = nothing,
-    bfieldc0::Union{Matrix{Float64}, Nothing} = nothing
+    bfieldc0::Union{Vector{Float64}, Nothing} = nothing
 )
 
     Natoms = atoms.Natoms
