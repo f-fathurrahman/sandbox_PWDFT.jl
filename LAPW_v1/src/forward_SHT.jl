@@ -1,8 +1,8 @@
 # From rfsht
 function forward_SHT!(
     mt_vars, isp,
-    rfmt_in::Vector{Float64},
-    rfmt_out::Vector{Float64}
+    rfmt_in::AbstractVector{Float64},
+    rfmt_out::AbstractVector{Float64}
 )
     nr = mt_vars.nrmt[isp]
     nri = mt_vars.nrmti[isp]
@@ -29,8 +29,8 @@ end
 # From zfsht (ComplexF64 version)
 function forward_SHT!(
     mt_vars, isp,
-    zfmt_in::Vector{ComplexF64},
-    zfmt_out::Vector{ComplexF64}
+    zfmt_in::AbstractVector{ComplexF64},
+    zfmt_out::AbstractVector{ComplexF64}
 )
     nr = mt_vars.nrmt[isp]
     nri = mt_vars.nrmti[isp]
