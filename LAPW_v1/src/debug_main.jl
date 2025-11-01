@@ -153,7 +153,7 @@ function debug_main()
     rhoinit!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir )
 
     # magnetization
-    if ndmag > 0
+    if spinpol
         magmt = Vector{Vector{Float64}}(undef, Natoms)
         for ia in 1:Natoms
             isp = atm2species[ia]
@@ -183,16 +183,39 @@ function debug_main()
         epsxcmt[ia] = zeros(Float64, npmt[isp])
         vxcmt[ia] = zeros(Float64, npmt[isp])
     end
+    if spinpol
+        bxcmt = Vector{Matrix{Float64}}(undef,Natoms)
+        for ia in 1:Natoms
+            isp = atm2species[ia]
+            bxcmt[ia] = zeros(Float64, npmt[isp], ndmag)
+        end
+    end
 
-    potxcmt!(atoms, mt_vars, rhomt, epsxcmt, vxcmt)
+    if spinpol
+        potxcmt!(atoms, mt_vars, rhomt, magmt, epsxcmt, vxcmt, bxcmt)
+    else
+        potxcmt!(atoms, mt_vars, rhomt, epsxcmt, vxcmt)
+    end
 
     epsxcir = zeros(Float64, Npoints)
     vxcir = zeros(Float64, Npoints)
-    potxcir!(rhoir, epsxcir, vxcir)
+    if spinpol
+        bxcir = zeros(Float64, Npoints, ndmag)
+    end
+
+    if spinpol
+        potxcir!(rhoir, magir, epsxcir, vxcir, bxcir)
+    else
+        potxcir!(rhoir, epsxcir, vxcir)
+    end
 
     # Symmetrize
     symrfmt!(atoms, mt_vars, sym_vars, vxcmt)
     symrfir!(pw, sym_vars, vxcir)
+    if spinpol
+        symrfmt!(atoms, mt_vars, sym_vars, bxcmt)
+        symrfir!(pw, sym_vars, bxcir)
+    end
 
     # effective potential from sum of Coulomb and exchange-correlation potentials
     vsmt = Vector{Vector{Float64}}(undef, Natoms)
