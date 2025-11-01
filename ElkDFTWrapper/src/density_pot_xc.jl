@@ -8,7 +8,16 @@ function get_ssxc()
     return unsafe_load(cglobal((:__m_density_pot_xc_MOD_ssxc, LIBLAPW), Float64))
 end
 
+# constant part of exchange-correlation potential
+function get_vxc0()
+    return unsafe_load(cglobal((:__m_density_pot_xc_MOD_vxc0, LIBLAPW), Float64))
+end
 
+# tbdip is .true. if the spin and current dipole fields are to be added to the
+# Kohn-Sham magnetic field
+function get_tbdip()
+    return unsafe_load(cglobal((:__m_density_pot_xc_MOD_tbdip, LIBLAPW), Bool))
+end
 
 function get_msmooth()
     return unsafe_load(cglobal((:__m_density_pot_xc_MOD_msmooth, LIBLAPW), Int32)) |> Int64
@@ -136,3 +145,35 @@ function get_magir()
     return _load_allocatable_array(symbol, Float64, (ngtot,ndmag))
 end
 
+# muffin-tin and interstitial exchange-correlation magnetic field
+function get_bxcmt()
+    symbol = :__m_density_pot_xc_MOD_bxcmt
+    npmtmax = get_npmtmax()
+    natmtot = get_natmtot()
+    ndmag = get_ndmag()
+    return _load_allocatable_array(symbol, Float64, (npmtmax,natmtot,ndmag))
+end
+
+function get_bxcir()
+    symbol = :__m_density_pot_xc_MOD_bxcir
+    ngtot = get_ngtot()
+    ndmag = get_ndmag()
+    return _load_allocatable_array(symbol, Float64, (ngtot,ndmag))
+end
+
+# muffin-tin Kohn-Sham effective magnetic field in spherical coordinates and on
+# a coarse radial mesh
+function get_bsmt()
+    symbol = :__m_density_pot_xc_MOD_bsmt
+    npmtmax = get_npmtmax()
+    natmtot = get_natmtot()
+    ndmag = get_ndmag()
+    return _load_allocatable_array(symbol, Float64, (npmtmax,natmtot,ndmag))
+end
+
+function get_bsir()
+    symbol = :__m_density_pot_xc_MOD_bsir
+    ngtot = get_ngtot()
+    ndmag = get_ndmag()
+    return _load_allocatable_array(symbol, Float64, (ngtot,ndmag))
+end

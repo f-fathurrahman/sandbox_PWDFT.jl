@@ -148,7 +148,7 @@ function init_debug_calc()
 
     call_rhoinit()
     call_maginit()
- #=   
+
     # potks or potks_no_symm
     call_potks()
     #call_potks_no_symm() # only for debugging
@@ -166,6 +166,7 @@ function init_debug_calc()
 
     call_genevfsv()
 
+#=
     call_occupy()
     # this will call some other routines
     call_my_rhomag()
