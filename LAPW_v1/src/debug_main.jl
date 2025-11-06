@@ -134,6 +134,14 @@ function debug_main()
     end
 
 
+    # Create a version for full GVectors, where Ng=Npoints
+    gvec_full = GVectorsFull(pw.Ns, pw.RecVecs)
+    ffacg = genffacgp(pw, mt_vars.rmt, gvec_full=gvec_full)
+    cfunig, cfunir = gencfun(pw, atoms, ffacg, gvec_full=gvec_full)
+    vsig = zeros(ComplexF64, pw.gvec.Ng)
+
+
+
     # XXX: use simpler name?
     elec_chgst = ElectronicChargesStates(
         atoms, atsp_vars, pw.gvecw.kpoints.Nkpt,
@@ -231,22 +239,29 @@ function debug_main()
 
     # smoothing vsir is skipped (default is zero)
     
-    # generating the effective magnetic fields is skipped
+    # Generate the effective magnetic fields
+    if spinpol
+        bsir = zeros(Float64, Npoints, ndmag)
+        bsmt = Vector{Matrix{Float64}}(undef,Natoms)
+        for ia in 1:Natoms
+            isp = atm2species[ia]
+            bsmt[ia] = zeros(Float64, npmt[isp], ndmag)
+        end
+        genbs!( atoms, mt_vars, cfunir, ncmag,
+            bfcmt, bfieldc, bxcmt, bxcir, bsmt, bsir
+        )
+    end
+
 
     # generating the tau-DFT effective potential is skipped
     
     # .... This is the end of potks
 
 
-    # Create a version for full GVectors, where Ng=Npoints
-
-    gvec_full = GVectorsFull(pw.Ns, pw.RecVecs)
-
-    ffacg = genffacgp(pw, mt_vars.rmt, gvec_full=gvec_full)
-    cfunig, cfunir = gencfun(pw, atoms, ffacg, gvec_full=gvec_full)
-    vsig = zeros(ComplexF64, pw.gvec.Ng)
+    # Fourier transform of interstitial Kohn-SHam equation
     genvsig!(pw, vsir, cfunir, vsig)
     # XXX vsig will be different from Elk result because Elk uses more G-vectors
+
     
     core_states = CoreStatesVars(atoms, atsp_vars, mt_vars)
     gencore!(atoms, sym_vars.eqatoms, atsp_vars, mt_vars, vsmt, core_states)

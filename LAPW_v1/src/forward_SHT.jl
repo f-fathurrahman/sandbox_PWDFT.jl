@@ -2,10 +2,16 @@
 function forward_SHT!(
     mt_vars, isp,
     rfmt_in::AbstractVector{Float64},
-    rfmt_out::AbstractVector{Float64}
+    rfmt_out::AbstractVector{Float64};
+    coarse = false
 )
-    nr = mt_vars.nrmt[isp]
-    nri = mt_vars.nrmti[isp]
+    if coarse
+        nr = mt_vars.nrcmt[isp]
+        nri = mt_vars.nrcmti[isp]
+    else
+        nr = mt_vars.nrmt[isp]
+        nri = mt_vars.nrmti[isp]
+    end
     nro = nr - nri
 
     lmmaxi = mt_vars.lmmaxi
@@ -30,10 +36,16 @@ end
 function forward_SHT!(
     mt_vars, isp,
     zfmt_in::AbstractVector{ComplexF64},
-    zfmt_out::AbstractVector{ComplexF64}
+    zfmt_out::AbstractVector{ComplexF64};
+    coarse = false
 )
-    nr = mt_vars.nrmt[isp]
-    nri = mt_vars.nrmti[isp]
+    if coarse
+        nr = mt_vars.nrcmt[isp]
+        nri = mt_vars.nrcmti[isp]
+    else
+        nr = mt_vars.nrmt[isp]
+        nri = mt_vars.nrmti[isp]
+    end
     nro = nr - nri
 
     lmmaxi = mt_vars.lmmaxi

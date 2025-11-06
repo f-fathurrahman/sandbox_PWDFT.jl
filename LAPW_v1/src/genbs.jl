@@ -1,9 +1,9 @@
 function genbs!(
     atoms, mt_vars,
-    cfunir,
+    cfunir, ncmag::Bool,
     bfcmt, bfieldc,
     bxcmt, bxcir,
-    bsmt, bsir
+    bsmt, bsir,
 )
     #=
   ! local variables
@@ -14,16 +14,16 @@ function genbs!(
   REAL(8), ALLOCATABLE :: rfmt(:)
     =#
 
-    # check spinpol
-    if ndmag == 0
-        return
-    end
+    ndmag = size(bsir, 2)
+    # check spinpol (probably not needed?)
+    @assert ndmag >= 1
     
     Natoms = atoms.Natoms
     atm2species = atoms.atm2species
     nrcmt = mt_vars.nrcmt
     nrcmti = mt_vars.nrcmti
     npcmt = mt_vars.npcmt
+    npcmtmax = maximum(npcmt)
 
     solsc = 137.035999084 # XXX: not scaled
     gfacte = 2.00231930436256
@@ -35,22 +35,23 @@ function genbs!(
     
     for ia in 1:Natoms
         isp = atm2species[ia]
-        nrc = nrcmt[ip]
+        nrc = nrcmt[isp]
         nrci = nrcmti[isp]
         npc = npcmt[isp]
+        println("npc = ", npc, " nrc = ", nrc, " npcmtmax = ", npcmtmax)
         # exchange-correlation magnetic field in spherical coordinates
         for idm in 1:ndmag
-            @views rf_mt_f_to_c( mt_vars, nrc, nrci, bxcmt[ia][:,idm], rfmt )
+            @views rf_mt_f_to_c!( mt_vars, nrc, nrci, bxcmt[ia][:,idm], rfmt[1:npc] )
             # rbsht(nrc,nrci,rfmt,bsmt(:,ias,idm))
-            @views backward_SHT!( mt_vars, isp, rfmt[ia], bsmt[ia][:,idm] )
+            @views backward_SHT!( mt_vars, isp, rfmt[1:npc], bsmt[ia][:,idm], coarse = true )
         end 
         # add the external magnetic field
         t1 = cb*( bfcmt[3,ia] + bfieldc[3] )
-        bsmt[ia][1:npc,ndmag] = bsmt[ia][1:npc,ndmag] + t1
+        @. bsmt[ia][1:npc,ndmag] = bsmt[ia][1:npc,ndmag] + t1
         if ncmag 
             for idm in 1:2
                 t1 = cb*( bfcmt[idm,ia] + bfieldc[idm] )
-                bsmt[ia][1:npc,idm] = bsmt[ia][1:npc,idm] + t1
+                @. bsmt[ia][1:npc,idm] = bsmt[ia][1:npc,idm] + t1
             end
         end # if
     end # do
@@ -64,7 +65,7 @@ function genbs!(
             t1 = cb*bfieldc[3]
         end
         # multiply by characteristic function
-        bsir[:,idm] = ( bxcir[:,idm] + t1)*cfunir[:]
+        @. bsir[:,idm] = ( bxcir[:,idm] + t1)*cfunir[:]
     end
     
     # add the magnetic dipole field if required

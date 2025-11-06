@@ -180,20 +180,17 @@ include("r_to_zf_mt.jl")
 include("r_to_zf_lm.jl")
 export r_to_zf_lm!, r_to_zf_mt!
 
-include("rf_mt_c_to_f.jl")
-export rf_mt_c_to_f!
+include("rf_mt_c_to_f.jl"); export rf_mt_c_to_f!
+include("rf_mt_f_to_c.jl"); export rf_mt_f_to_c!
 
-include("rf_interp.jl")
-export rf_interp!
+include("rf_interp.jl"); export rf_interp!
 
-include("genylmv.jl")
-include("genylmg.jl")
-include("genrlmv.jl")
-export genylmg!, genylmv!, genrlmv!
+include("genylmv.jl"); export genylmg!
+include("genylmg.jl"); export genylmv!
+include("genrlmv.jl"); export genrlmv!
 
-include("sphcover.jl")
-include("sctovec.jl")
-export sphcover!, sctovec!
+include("sphcover.jl"); export sphcover!
+include("sctovec.jl"); export sctovec!
 
 include("roteuler.jl")
 export roteuler!
@@ -219,44 +216,31 @@ export zpotclmt!
 include("zpotcoul.jl")
 export zpotcoul!
 
-include("potcoul.jl")
-export potcoul!
+include("potcoul.jl"); export potcoul!
+include("potxcmt.jl"); export potxcmt!
+include("potxcir.jl"); export potxcir!
 
-include("potxcmt.jl")
-export potxcmt!
+include("genvsig.jl"); export genvsig!
 
-include("potxcir.jl")
-export potxcir!
+include("rf_mt_lm.jl"); export rf_mt_lm!
 
-include("genvsig.jl")
-export genvsig!
+include("genbs.jl"); export genbs!
 
-include("rf_mt_lm.jl")
-export rf_mt_lm!
+include("gencore.jl"); export gencore!
 
-include("gencore.jl")
-export gencore!
+include("rschrodint.jl"); export rschrodint!
 
-include("rschrodint.jl")
-export rschrodint!
+include("findband.jl"); export findband!
 
-include("findband.jl")
-export findband!
+include("linengy.jl"); export linengy!
 
-include("linengy.jl")
-export linengy!
+include("genapwfr.jl"); export genapwfr!
 
-include("genapwfr.jl")
-export genapwfr!
+include("genlofr.jl"); export genlofr!
 
-include("genlofr.jl")
-export genlofr!
+include("olprad.jl"); export olprad!
 
-include("olprad.jl");
-export olprad!
-
-include("hmlrad.jl")
-export hmlrad!
+include("hmlrad.jl"); export hmlrad!
 
 include("factr.jl"); export factr
 include("wigner3j.jl"); export wigner3j
