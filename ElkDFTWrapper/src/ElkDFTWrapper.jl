@@ -164,7 +164,8 @@ function init_debug_calc()
     call_olprad()
     call_hmlrad()
 
-    call_genevfsv()
+    #call_genevfsv()
+    call_my_genevfsv() # debug version
 
 #=
     call_occupy()

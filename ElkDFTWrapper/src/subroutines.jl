@@ -93,6 +93,11 @@ function call_genevfsv()
     return
 end
 
+function call_my_genevfsv()
+    ccall( (:my_genevfsv_, LIBLAPW), Cvoid, () )
+    return
+end
+
 function call_occupy()
     ccall( (:occupy_, LIBLAPW), Cvoid, () )
     return
