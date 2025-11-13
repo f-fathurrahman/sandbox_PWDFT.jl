@@ -247,7 +247,7 @@ include("wigner3j.jl"); export wigner3j
 include("gaunt.jl"); export gaunt
 include("gauntyry.jl"); export gauntyry
 
-include("calc_match_coeffs.jl"); export calc_match_coeffs!
+include("calc_match_coeffs.jl"); export calc_match_coeffs!, calc_match_coeffs
 
 include("zmctmu.jl"); export zmctmu!
 include("hmlaa.jl"); export hmlaa!
@@ -262,6 +262,8 @@ include("olplolo.jl"); export olplolo!
 include("APWLOIntegrals.jl"); export APWLOIntegrals, calc_apwlo_integrals!
 
 include("gen_eigensystem.jl"); export gen_eigensystem
+
+include("wavefmt.jl"); export wavefmt!
 
 include("stheta_fd.jl"); export stheta_fd
 include("sdelta_fd.jl"); export sdelta_fd

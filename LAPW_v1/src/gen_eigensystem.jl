@@ -18,11 +18,10 @@ function gen_eigensystem(
         lmmaxapw = mt_vars.lmmaxapw
         apwalm[ia] = zeros(ComplexF64, Ngk, apwordmax, lmmaxapw)
     end
-
     calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm)
 
+
     # For testing Hamiltonian construction
-    #
     H = zeros(ComplexF64, nmat[ik], nmat[ik])
 
     for ia in 1:atoms.Natoms
@@ -51,17 +50,18 @@ function gen_eigensystem(
     # calc eigenvalues and eigenvectors
     evals, evecs = eigen(Hermitian(H), Hermitian(O))
 
+    nstsv = elec_chgst.nstsv
+    nstfv = elec_chgst.nstfv
+
     # FIXME: save full size (?)
     serialize("H_ispin_$(ispin)_ik_$(ik).dat", H)
     serialize("O_ispin_$(ispin)_ik_$(ik).dat", O)
-    serialize("evals_1st_ispin_$(ispin)_ik_$(ik).dat", evals)
-    serialize("evecs_1st_ispin_$(ispin)_ik_$(ik).dat", evecs)
-
+    serialize("evals_1st_ispin_$(ispin)_ik_$(ik).dat", evals[1:nstfv])
+    serialize("evecs_1st_ispin_$(ispin)_ik_$(ik).dat", evecs[:,1:nstfv])
     
     # Set eigenvalues
     # FIXME: only for the case of nstfv == nstsv
     #@assert elec_chgst.nspinor == 1
-    nstsv = elec_chgst.nstsv
     @views elec_chgst.evalsv[1:nstsv,ik] = evals[1:nstsv]
 
     return

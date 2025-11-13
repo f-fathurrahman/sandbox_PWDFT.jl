@@ -19,7 +19,28 @@ integer nrc,nrci,nrco,iro
 integer l,m,lm,npc,npci,i
 complex(8) z1
 =#
-function wavefmt!(lrstp, ia, ngp, apwalm, evecfv, wfmt)
+function wavefmt!(lrstp, ia, atoms, mt_vars, apwlo_vars, ngp, apwalm, evecfv, wfmt)
+
+    atm2species = atoms.atm2species
+
+    lmaxo = mt_vars.lmaxo
+    lmaxi = mt_vars.lmaxi
+    lmmaxi = mt_vars.lmmaxi
+    lmmaxo = mt_vars.lmmaxo
+    nrmti = mt_vars.nrmti
+    nrcmt = mt_vars.nrcmt
+    nrcmti = mt_vars.nrcmti
+    npcmt = mt_vars.npcmt
+    npcmti = mt_vars.npcmti
+    lradstp = mt_vars.lradstp
+    idxlm = mt_vars.idxlm
+
+    apword = apwlo_vars.apword
+    apwfr = apwlo_vars.apwfr
+    nlorb = apwlo_vars.nlorb
+    lorbl = apwlo_vars.lorbl
+    idxlo = apwlo_vars.idxlo
+    lofr = apwlo_vars.lofr
 
     isp = atm2species[ia]
     ldi = 2*lmmaxi
@@ -45,7 +66,8 @@ function wavefmt!(lrstp, ia, ngp, apwalm, evecfv, wfmt)
     nrco = nrc - nrci
     #
     # zero the wavefunction
-    @views wfmt[:,1:npc] .= 0.0
+    @views wfmt[1:npc] .= 0.0
+    # in the original Elk code this array have leading dimension of 2 and of type real(8)
     #
     # APW functions     
     #
@@ -57,9 +79,9 @@ function wavefmt!(lrstp, ia, ngp, apwalm, evecfv, wfmt)
             for io in 1:apword[isp][l]
                 z1 = BLAS.dotu(ngp, evecfv, 1, apwalm[:,io,lm], 1)
                 if l <= lmaxi
-                    @views wfmt[1:nrci,lm] .+= z1 * apwfr[ia][l][io][1:nrci,1]
+                    @views wfmt[1:nrci] .+= z1 * apwfr[ia][l][io][1:nrci,1]
                 end
-                wfmt[iro:(iro+nrco-1),i] .+= z1 * apwfr[ia][l][io][iro:(iro+nrco-1),1]
+                wfmt[iro:(iro+nrco-1)] .+= z1 * apwfr[ia][l][io][iro:(iro+nrco-1),1]
             end
         end
     end
@@ -71,11 +93,11 @@ function wavefmt!(lrstp, ia, ngp, apwalm, evecfv, wfmt)
         for m in -l:l
             lm = idxlm[l,m]
             i = npci + lm
-            z1 = evecfv[ngp+idxlo[ia][lm,ilo]]
+            z1 = evecfv[ngp+idxlo[ia][ilo][lm]]
             if l <= lmaxi
-                @views wfmt[1:nrci,lm] .+= z1 * lofr[ia][ilo][1:nrci,1]
+                @views wfmt[1:nrci] .+= z1 * lofr[ia][ilo][1:nrci,1]
             end
-            wfmt[iro:(iro+nrco-1),i] .+= z1 * lofr[ia][ilo][iro:(iro+nrco-1),1]
+            wfmt[iro:(iro+nrco-1)] .+= z1 * lofr[ia][ilo][iro:(iro+nrco-1),1]
         end
     end
     return

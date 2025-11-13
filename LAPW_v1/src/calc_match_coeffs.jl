@@ -1,3 +1,16 @@
+function calc_match_coeffs(ik, atoms, pw, mt_vars, apwlo_vars)
+    apwalm = Vector{Array{ComplexF64,3}}(undef, atoms.Natoms)
+    for ia in 1:atoms.Natoms
+        isp = atoms.atm2species[ia]
+        apwordmax = maximum(apwlo_vars.apword[isp])
+        Ngk = pw.gvecw.Ngw[ik]
+        lmmaxapw = mt_vars.lmmaxapw
+        apwalm[ia] = zeros(ComplexF64, Ngk, apwordmax, lmmaxapw)
+    end
+    calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm)
+    return apwalm
+end
+
 function calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm)
     # XXX: Need to test in case of omax > 1
     # apword must be at least 2, however it is quite difficult to figure out
