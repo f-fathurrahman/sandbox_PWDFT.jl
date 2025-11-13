@@ -54,8 +54,8 @@ function gen_eigensystem(
     # FIXME: save full size (?)
     serialize("H_ispin_$(ispin)_ik_$(ik).dat", H)
     serialize("O_ispin_$(ispin)_ik_$(ik).dat", O)
-    serialize("evals_ispin_$(ispin)_ik_$(ik).dat", evals)
-    serialize("evecs_ispin_$(ispin)_ik_$(ik).dat", evecs)
+    serialize("evals_1st_ispin_$(ispin)_ik_$(ik).dat", evals)
+    serialize("evecs_1st_ispin_$(ispin)_ik_$(ik).dat", evecs)
 
     
     # Set eigenvalues

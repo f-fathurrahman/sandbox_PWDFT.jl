@@ -136,6 +136,7 @@ function debug_main()
 
     # Create a version for full GVectors, where Ng=Npoints
     gvec_full = GVectorsFull(pw.Ns, pw.RecVecs)
+    # Some quantities for interstitial density and potentials can use gvec_full
     ffacg = genffacgp(pw, mt_vars.rmt, gvec_full=gvec_full)
     cfunig, cfunir = gencfun(pw, atoms, ffacg, gvec_full=gvec_full)
     vsig = zeros(ComplexF64, pw.gvec.Ng)
@@ -145,7 +146,8 @@ function debug_main()
     # XXX: use simpler name?
     elec_chgst = ElectronicChargesStates(
         atoms, atsp_vars, pw.gvecw.kpoints.Nkpt,
-        spinpol = spinpol
+        spinpol = spinpol,
+        nempty = elk_input.nempty
     )
 
     # Initialize rhomt and rhoir
