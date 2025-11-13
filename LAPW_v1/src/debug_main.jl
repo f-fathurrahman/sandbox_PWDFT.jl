@@ -285,7 +285,7 @@ function debug_main()
     end
     nmatmax = maximum(nmat) # not used?
 
-#=
+
     # TODO: generate Hamiltonians for each kpoints, diagonalize them
     # and store the results to files (to be read later)
     # Using local variables for Hamiltonians, eigenvectors and eigenvalues
@@ -298,6 +298,7 @@ function debug_main()
         )
     end
 
+#=
     # Update occupation numbers
     occupy!(
         pw.gvecw.kpoints, apwlo_vars, elec_chgst;

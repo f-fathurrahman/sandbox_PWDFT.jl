@@ -180,7 +180,7 @@ function call_info_apwlo()
 end
 
 
-function get_evecfv(ik::Int64)
+function get_evecfv_from_file(ik::Int64)
     nmatmax = get_nmatmax()
     nstfv = get_nstfv()
     nspnfv = get_nspnfv()
@@ -188,6 +188,23 @@ function get_evecfv(ik::Int64)
     ccall( (:driver_getevecfv_, LIBLAPW), Cvoid, (Ref{Int32}, Ptr{ComplexF64}), Int32(ik), evecfv)
     return evecfv
 end
+
+function get_evalfv_from_file(ik::Int64)
+    nstfv = get_nstfv()
+    nspnfv = get_nspnfv()
+    evalfv = zeros(Float64, nstfv, nspnfv)
+    ccall( (:driver_getevalfv_, LIBLAPW), Cvoid, (Ref{Int32}, Ptr{ComplexF64}), Int32(ik), evalfv)
+    return evalfv
+end
+
+
+function get_evalsv_from_file(ik::Int64)
+    nstsv = get_nstsv()
+    evalsv = zeros(Float64, nstsv)
+    ccall( (:driver_getevalfv_, LIBLAPW), Cvoid, (Ref{Int32}, Ptr{ComplexF64}), Int32(ik), evalsv)
+    return evalsv
+end
+
 
 #=
 

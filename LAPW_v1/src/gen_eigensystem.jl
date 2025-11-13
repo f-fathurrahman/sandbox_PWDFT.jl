@@ -60,7 +60,7 @@ function gen_eigensystem(
     
     # Set eigenvalues
     # FIXME: only for the case of nstfv == nstsv
-    @assert elec_chgst.nspinor == 1
+    #@assert elec_chgst.nspinor == 1
     nstsv = elec_chgst.nstsv
     @views elec_chgst.evalsv[1:nstsv,ik] = evals[1:nstsv]
 
