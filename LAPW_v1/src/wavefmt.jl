@@ -78,7 +78,7 @@ function wavefmt!(
                 end
                 # call daxpy(nrco,dble(z1), apwfr(iro,1,io,l,ias),lrstp, wfmt(1,i),ldo)
                 ix = iro
-                iy = 1
+                iy = i
                 #println("\nsize apwfr[ia][l][io] = ", size(apwfr[ia][l][io]))
                 #println("size wfmt = ", size(wfmt))
                 for ii in 1:nrco
@@ -112,7 +112,7 @@ function wavefmt!(
             end
             #daxpy(nrco,dble(z1),lofr(iro,1,ilo,ias),lrstp,wfmt(1,i),ldo)
             ix = iro
-            iy = 1
+            iy = i
             for i in 1:nrco
                 wfmt[iy] += z1 * lofr[ia][ilo][ix,1]
                 ix += lrstp
