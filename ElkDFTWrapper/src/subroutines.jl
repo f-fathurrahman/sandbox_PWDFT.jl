@@ -201,7 +201,7 @@ end
 function get_evalsv_from_file(ik::Int64)
     nstsv = get_nstsv()
     evalsv = zeros(Float64, nstsv)
-    ccall( (:driver_getevalfv_, LIBLAPW), Cvoid, (Ref{Int32}, Ptr{ComplexF64}), Int32(ik), evalsv)
+    ccall( (:driver_getevalsv_, LIBLAPW), Cvoid, (Ref{Int32}, Ptr{ComplexF64}), Int32(ik), evalsv)
     return evalsv
 end
 
