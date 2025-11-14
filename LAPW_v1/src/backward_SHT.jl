@@ -18,13 +18,13 @@ function backward_SHT!(
     lmmaxo = mt_vars.lmmaxo
 
     idx_inner = 1:lmmaxi*nri
-    RB = mt_vars.SHT.rbshti
+    RB = mt_vars.SHT.rbshti # REAL
     @views V_in = reshape(rfmt_in[idx_inner], (lmmaxi,nri))
     @views V_out = reshape(rfmt_out[idx_inner], (lmmaxi,nri))
     @views V_out[:,:] = RB[:,:] * V_in[:,:]
 
     idx_outer = (lmmaxi*nri + 1):(lmmaxi*nri + lmmaxo*nro)
-    RB = mt_vars.SHT.rbshto
+    RB = mt_vars.SHT.rbshto # REAL
     @views V_in = reshape(rfmt_in[idx_outer], (lmmaxo,nro))
     @views V_out = reshape(rfmt_out[idx_outer], (lmmaxo,nro))
     @views V_out[:,:] = RB[:,:] * V_in[:,:]
@@ -39,6 +39,7 @@ function backward_SHT!(
     zfmt_out::AbstractVector{ComplexF64};
     coarse = false
 )
+
     if coarse
         nr = mt_vars.nrcmt[isp]
         nri = mt_vars.nrcmti[isp]
@@ -52,13 +53,13 @@ function backward_SHT!(
     lmmaxo = mt_vars.lmmaxo
 
     idx_inner = 1:lmmaxi*nri
-    ZB = mt_vars.SHT.zbshti
+    ZB = mt_vars.SHT.zbshti # COMPLEX
     @views V_in = reshape(zfmt_in[idx_inner], (lmmaxi,nri))
     @views V_out = reshape(zfmt_out[idx_inner], (lmmaxi,nri))
     @views V_out[:,:] = ZB[:,:] * V_in[:,:]
 
     idx_outer = (lmmaxi*nri + 1):(lmmaxi*nri + lmmaxo*nro)
-    ZB = mt_vars.SHT.zbshto
+    ZB = mt_vars.SHT.zbshto  # COMPLEX
     @views V_in = reshape(zfmt_in[idx_outer], (lmmaxo,nro))
     @views V_out = reshape(zfmt_out[idx_outer], (lmmaxo,nro))
     @views V_out[:,:] = ZB[:,:] * V_in[:,:]

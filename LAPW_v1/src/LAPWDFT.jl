@@ -261,7 +261,9 @@ include("olpalo.jl"); export olpalo!
 include("olplolo.jl"); export olplolo!
 include("APWLOIntegrals.jl"); export APWLOIntegrals, calc_apwlo_integrals!
 
-include("gen_eigensystem.jl"); export gen_eigensystem
+include("zfmtinp.jl"); export zfmtinp
+include("gen_eigensystem_2nd.jl"); export gen_eigensystem_2nd!
+include("gen_eigensystem.jl"); export gen_eigensystem!
 
 include("wavefmt.jl"); export wavefmt!
 

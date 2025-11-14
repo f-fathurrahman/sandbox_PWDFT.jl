@@ -1,8 +1,9 @@
-function gen_eigensystem(
+function gen_eigensystem!(
     ispin::Int64, ik::Int64,
     atoms::Atoms, pw::PWGrid, mt_vars::MuffinTins, apwlo_vars::APWLOVars,
     apwlo_ints, elec_chgst,
-    nmat, cfunig, vsig
+    nmat, cfunig, vsig;
+    bsmt=nothing, bsir=nothing, ndmag=0
 )
     haa = apwlo_ints.haa
     hloa = apwlo_ints.hloa
@@ -62,7 +63,13 @@ function gen_eigensystem(
     # Set eigenvalues
     # FIXME: only for the case of nstfv == nstsv
     #@assert elec_chgst.nspinor == 1
-    @views elec_chgst.evalsv[1:nstsv,ik] = evals[1:nstsv]
+    #@views elec_chgst.evalsv[1:nstsv,ik] = evals[1:nstsv]
+
+    gen_eigensystem_2nd!(
+        ispin, ik,
+        atoms, pw, mt_vars, apwlo_vars,
+        apwalm, elec_chgst, bsmt, bsir, ndmag
+    )
 
     return
 end

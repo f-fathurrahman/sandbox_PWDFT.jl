@@ -1,25 +1,7 @@
-#=
-! !INPUT/OUTPUT PARAMETERS:
-!   lrstp  : radial step length (in,integer)
-!   ias    : joint atom and species number (in,integer)
-!   ngp    : number of G+p-vectors (in,integer)
-!   apwalm : APW matching coefficients (in,complex(ngkmax,apwordmax,lmmaxapw))
-!   evecfv : first-variational eigenvector (in,complex(nmatmax))
-!   wfmt   : complex muffin-tin wavefunction passed in as real array
-!            (out,real(2,*))
 
-integer, intent(in) :: lrstp,ias,ngp
-complex(8), intent(in) :: apwalm(ngkmax,apwordmax,lmmaxapw)
-complex(8), intent(in) :: evecfv(nmatmax)
-real(8), intent(out) :: wfmt(2,*)
-
-! local variables
-integer is,ldi,ldo,io,ilo
-integer nrc,nrci,nrco,iro
-integer l,m,lm,npc,npci,i
-complex(8) z1
-=#
-function wavefmt!(lrstp, ia, atoms, mt_vars, apwlo_vars, ngp, apwalm, evecfv, wfmt)
+function wavefmt!(
+    lrstp, ia, atoms, mt_vars, apwlo_vars, ngp, apwalm_ia, evecfv_ist, wfmt
+)
 
     atm2species = atoms.atm2species
 
@@ -43,8 +25,8 @@ function wavefmt!(lrstp, ia, atoms, mt_vars, apwlo_vars, ngp, apwalm, evecfv, wf
     lofr = apwlo_vars.lofr
 
     isp = atm2species[ia]
-    ldi = 2*lmmaxi
-    ldo = 2*lmmaxo
+    ldi = lmmaxi # in Elk this is 2 times larger because it uses real arrays
+    ldo = lmmaxo
     iro = nrmti[isp] + lrstp
 
     if lrstp == 1
@@ -64,6 +46,10 @@ function wavefmt!(lrstp, ia, atoms, mt_vars, apwlo_vars, ngp, apwalm, evecfv, wf
         error("Invalid lrstp = $(lrstp)")
     end
     nrco = nrc - nrci
+    
+    #println("ldi=$ldi ldo=$ldo npc = $npc lrstp=$lrstp")
+    #println("nrci=$nrci nrco=$nrco iro=$iro")
+    
     #
     # zero the wavefunction
     @views wfmt[1:npc] .= 0.0
@@ -77,11 +63,31 @@ function wavefmt!(lrstp, ia, atoms, mt_vars, apwlo_vars, ngp, apwalm, evecfv, wf
             lm = lm + 1
             i = npci + lm
             for io in 1:apword[isp][l]
-                z1 = BLAS.dotu(ngp, evecfv, 1, apwalm[:,io,lm], 1)
+                z1 = BLAS.dotu(ngp, evecfv_ist, 1, apwalm_ia[:,io,lm], 1)
+                #println("lm=$lm io=$io z1 = $z1")
                 if l <= lmaxi
-                    @views wfmt[1:nrci] .+= z1 * apwfr[ia][l][io][1:nrci,1]
+                    # call daxpy(nrci,dble(z1),apwfr(1,1,io,l,ias),lrstp,wfmt(1,lm),ldi)
+                    ix = 1
+                    iy = 1
+                    for ii in 1:nrci
+                        #println("ii=$ii ix=$ix iy=$iy")
+                        wfmt[iy] += z1 * apwfr[ia][l][io][ix,1]
+                        ix += lrstp
+                        iy += ldi
+                    end
                 end
-                wfmt[iro:(iro+nrco-1)] .+= z1 * apwfr[ia][l][io][iro:(iro+nrco-1),1]
+                # call daxpy(nrco,dble(z1), apwfr(iro,1,io,l,ias),lrstp, wfmt(1,i),ldo)
+                ix = iro
+                iy = 1
+                #println("\nsize apwfr[ia][l][io] = ", size(apwfr[ia][l][io]))
+                #println("size wfmt = ", size(wfmt))
+                for ii in 1:nrco
+                    #println("ii=$ii ix=$ix iy=$iy")
+                    wfmt[iy] += z1 * apwfr[ia][l][io][ix,1]
+                    ix += lrstp
+                    iy += ldo
+                end
+                #println(" temp sum wfmt = ", sum(wfmt))
             end
         end
     end
@@ -93,12 +99,27 @@ function wavefmt!(lrstp, ia, atoms, mt_vars, apwlo_vars, ngp, apwalm, evecfv, wf
         for m in -l:l
             lm = idxlm[l,m]
             i = npci + lm
-            z1 = evecfv[ngp+idxlo[ia][ilo][lm]]
+            z1 = evecfv_ist[ngp+idxlo[ia][ilo][lm]]
             if l <= lmaxi
-                @views wfmt[1:nrci] .+= z1 * lofr[ia][ilo][1:nrci,1]
+                # daxpy(nrci,dble(z1),lofr(1,1,ilo,ias),lrstp,wfmt(1,lm),ldi)
+                ix = 1
+                iy = 1
+                for i in 1:nrci
+                    wfmt[iy] += z1 * lofr[ia][ilo][ix,1]
+                    ix += lrstp
+                    iy += ldi
+                end
             end
-            wfmt[iro:(iro+nrco-1)] .+= z1 * lofr[ia][ilo][iro:(iro+nrco-1),1]
+            #daxpy(nrco,dble(z1),lofr(iro,1,ilo,ias),lrstp,wfmt(1,i),ldo)
+            ix = iro
+            iy = 1
+            for i in 1:nrco
+                wfmt[iy] += z1 * lofr[ia][ilo][ix,1]
+                ix += lrstp
+                iy += ldo
+            end
         end
     end
+
     return
 end

@@ -252,6 +252,9 @@ function debug_main()
         genbs!( atoms, mt_vars, cfunir, ncmag,
             bfcmt, bfieldc, bxcmt, bxcir, bsmt, bsir
         )
+    else
+        bsmt = nothing
+        bsir = nothing
     end
 
 
@@ -293,10 +296,11 @@ function debug_main()
     # Using local variables for Hamiltonians, eigenvectors and eigenvalues
     ispin = 1
     for ik in 1:Nkpt
-        gen_eigensystem( ispin, ik,
+        gen_eigensystem!( ispin, ik,
             atoms, pw, mt_vars, apwlo_vars,
             apwlo_ints, elec_chgst,
-            nmat, cfunig, vsig
+            nmat, cfunig, vsig;
+            bsmt=bsmt, bsir=bsir, ndmag=ndmag
         )
     end
 

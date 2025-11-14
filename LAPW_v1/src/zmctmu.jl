@@ -5,9 +5,9 @@ function zmctmu!(a, b, c; tcr=false)
     @assert l == size(b, 1)
     @assert n == size(b, 2)
     ld = size(c, 1)
-    @info "ld = $ld"
+    #@info "ld = $ld"
     # XXX need tcr? or use dot for both case
-    @info "tcr = $tcr"
+    #@info "tcr = $tcr"
     if tcr 
         # matrix c is real valued
         #l2 = 2*l  # should use 2*l
