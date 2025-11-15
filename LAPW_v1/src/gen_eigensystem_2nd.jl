@@ -103,13 +103,13 @@ function gen_eigensystem_2nd!(
         #
         # compute the first-variational wavefunctions
         for ist in 1:nstfv
-            println("sum evecfv[:,ist] = ", sum(evecfv[:,ist]))
+            #println("sum evecfv[:,ist] = ", sum(evecfv[:,ist]))
             @views wavefmt!( lradstp, ia, atoms, mt_vars, apwlo_vars,
                 pw.gvecw.Ngw[ik], apwalm[ia], evecfv[:,ist], wfmt1[:,ist] )
-            println("sum wfmt1[:,ist] = ", sum(wfmt1[:,ist]))
+            #println("sum wfmt1[:,ist] = ", sum(wfmt1[:,ist]))
         end
-        println("sum(wfmt1) = ", sum(wfmt1))
-        println("sum bsmt[ia][1:npc,ndmag] = ", sum(bsmt[ia][1:npc,ndmag]))
+        #println("sum(wfmt1) = ", sum(wfmt1))
+        #println("sum bsmt[ia][1:npc,ndmag] = ", sum(bsmt[ia][1:npc,ndmag]))
         #
         # begin loop over states
         for jst in 1:nstfv
@@ -154,7 +154,7 @@ function gen_eigensystem_2nd!(
             # upper diagonal block
             for ist in 1:jst
                 z1 = zfmtinp(mt_vars, isp, wrcmt[isp], wfmt1[:,ist], wfmt4[:,1], coarse=true)
-                println("Upper diagonal block: ist=$ist z1 from zfmtinp = $z1")
+                #println("Upper diagonal block: ist=$ist z1 from zfmtinp = $z1")
                 evecsv[ist,jst] += z1
             end
             #
