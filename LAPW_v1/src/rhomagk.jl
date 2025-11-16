@@ -1,30 +1,59 @@
 
-function rhomagk(
-    atoms, atsp_vars,
-    mt_vars, pw,
+function rhomagk!(
+    ik, atoms, pw, mt_vars, apwlo_vars, elec_chgst,
     apwalm, evecfv, evecsv,
-    rhomt, rhoir
+    rhomt, rhoir;
+    magmt=nothing, magir=nothing
 )
-# FIXME: need magir and magmt for spinpol
+
+    println("\n----- ENTER rhomagk for ik=$ik")
+
+    epsocc = 1e-8
+
+    # FIXME: need magir and magmt for spinpol
     Natoms = atoms.Natoms
+    atm2species = atoms.atm2species
+
     nrcmt = mt_vars.nrcmt
     nrcmti = mt_vars.nrcmti
-    npcmt = mt_vars.npcmti
+    npcmt = mt_vars.npcmt
+    npcmtmax = maximum(npcmt)
+    lradstp = mt_vars.lradstp
     
+    Ngw = pw.gvecw.Ngw
+    wppt = pw.gvecw.kpoints.wk[ik]
+    idx_gw2r = pw.gvecw.idx_gw2r
+    Npoints = prod(pw.Ns)
+    CellVolume = pw.CellVolume
+
+    nstfv = elec_chgst.nstfv
+    nstsv = elec_chgst.nstsv
+    occsv = elec_chgst.occsv
+    spinpol = elec_chgst.spinpol
+    nspinor = elec_chgst.nspinor
+    ncmag = false  # HARDCODED
+
+    if spinpol
+        tevecsv = true
+    end
+
+    done = zeros(Bool, nstfv)
+    if tevecsv
+        wfmt1 = zeros(ComplexF64, npcmtmax, nstfv)
+    end
+    wfmt2 = zeros(ComplexF64, npcmtmax)
+    wfmt3 = zeros(ComplexF64, npcmtmax, nspinor)
+
     # loop over all atoms
     for ia in 1:Natoms
         isp = atm2species[ia]
         npc = npcmt[isp]
         # de-phasing factor for spin-spirals
-        #if ssdph then 
-        #    t1 = -0.5d0*dot_product(vqcss(:),atposc(:,ia,is))
-        #    zq(1) = cmplx(cos(t1),sin(t1),8)
-        #    zq(2) = conjg(zq(1))
-        #end
-        done[:,:] .= false
+        # SKIPPED
+        fill!(done, false)
         # loop over all second-variational state
         for j in 1:nstsv
-            wo = occsvp[j] # occupation number
+            wo = occsv[j,ik] # occupation number
             # skip this state if it is empty or nearly empty
             if abs(wo) < epsocc
                 continue
@@ -37,22 +66,21 @@ function rhomagk(
                 # generate spinor wavefunction from second-variational eigenvectors
                 i = 0
                 for ispn in 1:nspinor
-                    jspn = jspnfv[ispn]
-                    wfmt3[1:npc,ispn] = 0.0
+                    #jspn = jspnfv[ispn] # XXX jspn is always 1
+                    wfmt3[1:npc,ispn] .= 0.0
                     for ist in 1:nstfv
                         i = i + 1
                         z1 = evecsv[i,j]
                         if abs(real(z1)) + abs(imag(z1)) > epsocc
-                            #IF(ssdph) z1=z1*zq(ispn)
-                            if !done[ist,jspn]
-                                wavefmt(lradstp, ias, ngp(jspn), apwalm(:,:,:,ias,jspn), evecfv(:,ist,jspn), wfmt2)
+                            if !done[ist]
+                                @views wavefmt!(lradstp, ia, atoms, mt_vars, apwlo_vars, Ngw[ik], apwalm[ia], evecfv[:,ist], wfmt2)
                                 # convert to spherical coordinates
-                                backward_SHT!(mt_vars, isp, wfmt2, wfmt1)
-                                done[ist,jspn] = true
+                                @views backward_SHT!(mt_vars, isp, wfmt2, wfmt1[:,ist], coarse=true)
+                                done[ist] = true
                             end # if
                             # add to spinor wavefunction
                             #CALL zaxpy(npc,z1,wfmt1(:,ist,jspn),1,wfmt3(:,ispn),1)
-                            wfmt3[:,ispn] += wfmt1[1:npc,ist,jspn] * wfmt3[1:npc,ispn]
+                            @. wfmt3[1:npc,ispn] += z1 * wfmt1[1:npc,ist]
                         end
                     end # do
                 end # do
@@ -60,27 +88,30 @@ function rhomagk(
                 # not using 2nd variational scheme
                 #
                 # spin-unpolarised wavefunction
-                wavefmt(lradstp, ias, ngp, apwalm[:,:,:,ias,1], evecfv[:,j,1], wfmt2)
+                @views wavefmt!(lradstp, ia, atoms, mt_vars, apwlo_vars, ngp, apwalm[ia], evecfv[:,j], wfmt2)
                 # The result is stored in wfmt2
                 #
                 # convert to spherical coordinates
-                backward_SHT!(mt_vars, isp, wfmt2, wfmt1)
+                backward_SHT!(mt_vars, isp, wfmt2, wfmt1, coarse=true)
             end
             #
             # add to density and magnetisation
             if spinpol
-                error("Not supported yet")
                 # spin-polarised
                 if ncmag
                     # non-collinear
                     #rhomagk_rmk1(npc, wo, wfmt3, wfmt3[:,2], rhomt[:,ias], magmt[:,ias,1], magmt[:,ias,2], magmt[:,ias,3])
+                    println("SHOULD NOT PASS HERE")
                 else
                     # collinear
-                    rhomagk_rmk2(npc, wo, wfmt3, wfmt3[:,2], rhomt[ia], magmt[:,ias,1])
+                    #println("sum rhomt before: ", sum(rhomt[ia]))
+                    #println("sum wfmt3 = ", sum(wfmt3))
+                    @views rhomagk_rmk2!(npc, wo, wfmt3[:,1], wfmt3[:,2], rhomt[ia], magmt[ia][:,1])
+                    #println("sum rhomt after: ", sum(rhomt[ia]))
                 end
             else
-                # spin-unpolarised
-                rhomagk_rmk3(npc, wo, wfmt3, rhomt[:,ia])
+                # spin-unpolarized
+                @views rhomagk_rmk3!(npc, wo, wfmt3, rhomt[:,ia])
             end 
   
         end # over states
@@ -91,17 +122,15 @@ function rhomagk(
     #------------------------------------------------!
     #     interstitial density and magnetisation     !
     #------------------------------------------------!
-    Npoints = prod(pw.Ns)
-    CellVolume = pw.CellVolume
-    nspinor = elec_chgst.nspinor
     #
     wfir = zeros(ComplexF64, Npoints, nspinor)
     #
     # loop over all states
     #
     for j in 1:nstsv
-        wo = occsvp[j]
+        wo = occsv[j,ik]
         if abs(wo) < epsocc
+            #println("Skipped for j = $j")
             continue
         end
         wo = wo*wppt/CellVolume
@@ -111,40 +140,41 @@ function rhomagk(
             # generate spinor wavefunction from second-variational eigenvectors
             i = 0 # idx for accessing basis function in evecsv
             for ispn in 1:nspinor
-                jspn = jspnfv[ispn]
-                for ist = 1:nstfv
+                for ist in 1:nstfv
                     i = i + 1
                     z1 = evecsv[i,j]
                     if abs(real(z1)) + abs(imag(z1)) > epsocc # XXX why check with epsocc?
-                        for igp in 1:ngp(jspn)
-                            ifg = igfft[igpig[igp,jspn]]
-                            wfir[ifg,ispn] += z1*evecfv[igp,ist,jspn]
+                        for igw in 1:Ngw[ik]
+                            ip = idx_gw2r[ik][igw]
+                            wfir[ip,ispn] += z1*evecfv[igw,ist]
                         end
                     end # if
                 end
             end
         else
             # spin-unpolarised wavefunction
-            for igw in 1:Ngwk
-                ip = idx_gw2r[igw]
-                wfir[ip,1] = evecfv[igp,j,1]
+            for igw in 1:Ngw[ik]
+                ip = idx_gw2r[ik][igw]
+                wfir[ip,1] = evecfv[igw,j]
             end
         end
     
         # Fourier transform wavefunction to real-space
+        println("sum wfir before FFT: ", sum(wfir))
         for ispn in 1:nspinor
-            #zfftifc(3,ngridg,1,wfir(:,ispn))
             @views G_to_R!(pw, wfir[:,ispn])
         end
+        wfir *= Npoints # scale to match Elk convention
+        println("sum wfir after FFT: ", sum(wfir))
         # add to density and magnetisation
         if spinpol 
             # spin-polarised
             if ncmag
                 # non-collinear
-                @views rhomagk_rmk1!(ngtot, wo, wfir, wfir[:,2], rhoir, magir, magir[:,2], magir[:,3])
+                @views rhomagk_rmk1!(Npoints, wo, wfir[:,1], wfir[:,2], rhoir, magir, magir[:,2], magir[:,3])
             else
                 # collinear
-                @views rhomagk_rmk2!(ngtot, wo, wfir, wfir[:,2], rhoir, magir)
+                @views rhomagk_rmk2!(Npoints, wo, wfir[:,1], wfir[:,2], rhoir, magir)
             end
         else
             # XXX We pass full FFT grid array here, so ngtot -> Npoints
@@ -167,7 +197,7 @@ function rhomagk_rmk1!(n, wo, wf1, wf2, rho, mag1, mag2, mag3)
         mag1[i] = mag1[i] + wo2*dble(z1)
         mag2[i] = mag2[i] + wo2*aimag(z1)
         mag3[i] = mag3[i] + wo*(t1-t2)
-        rho[i] = rho[i] + wo*(t1 + t2)
+        rho[i] += wo*(t1 + t2)
     end
     return
 end

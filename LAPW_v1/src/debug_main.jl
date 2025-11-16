@@ -171,6 +171,9 @@ function debug_main()
         end
         magir = zeros(Float64, Npoints, ndmag)
         maginit!(atoms, rhomt, rhoir, ncmag, ndmag, bfcmt, bfieldc, magmt, magir)
+    else
+        magmt = nothing
+        magir = nothing
     end
 
 
@@ -304,13 +307,43 @@ function debug_main()
         )
     end
 
-#=
     # Update occupation numbers
     occupy!(
         pw.gvecw.kpoints, apwlo_vars, elec_chgst;
         NiterMax=1000, epsocc=1e-8
     )
-=#
+
+
+    # rho, muffin tin
+    for ia in 1:Natoms
+        fill!(rhomt[ia], 0.0)
+    end
+    # interstitial
+    fill!(rhoir, 0.0)
+    if spinpol
+        # magnetization, muffin tin
+        for ia in 1:Natoms
+            fill!(magmt[ia], 0.0)
+        end
+        # interstitial
+        fill!(magir, 0.0)
+    end
+
+    for ik in 1:pw.gvecw.kpoints.Nkpt
+
+        evecfv = deserialize("evecs_1st_ispin_$(ispin)_ik_$(ik).dat");
+        evecsv = deserialize("evecs_2nd_ispin_$(ispin)_ik_$(ik).dat");
+        apwalm = calc_match_coeffs(ik, atoms, pw, mt_vars, apwlo_vars);
+
+        rhomagk!(
+            ik, atoms, pw, mt_vars, apwlo_vars, elec_chgst,
+            apwalm, evecfv, evecsv,
+            rhomt, rhoir;
+            magmt=magmt, magir=magir
+        )
+
+    end
+
 
     @infiltrate
     # open REPL and investigate the variables

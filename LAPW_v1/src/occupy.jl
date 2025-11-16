@@ -5,7 +5,6 @@ function occupy!(
 
     evalsv = elec_chgst.evalsv
     swidth = elec_chgst.swidth
-    efermi = elec_chgst.efermi
     occsv = elec_chgst.occsv
     chgval = elec_chgst.chgval
 

@@ -271,6 +271,8 @@ include("stheta_fd.jl"); export stheta_fd
 include("sdelta_fd.jl"); export sdelta_fd
 include("occupy.jl"); export occupy!
 
+include("rhomagk.jl"); export rhomagk!
+
 include("debug_main.jl")
 
 end
