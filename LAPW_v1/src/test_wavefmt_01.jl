@@ -13,7 +13,7 @@ ispin = 1;
 #apwalm = calc_match_coeffs(ik, atoms, pw, mt_vars, apwlo_vars);
 
 evecfv = deserialize("evecs_1st_ispin_$(ispin)_ik_$(ik)_elk.dat");
-apwalm_ia = deserialize("apwalm_ispin_1_ik_1_elk.dat")
+apwalm_ia = deserialize("apwalm_ispin_$(ispin)_ik_$(ik)_elk.dat");
 
 ia = 1; isp = 1;
 npcmtmax = maximum(mt_vars.npcmt);
