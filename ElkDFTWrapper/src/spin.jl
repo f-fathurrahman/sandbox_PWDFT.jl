@@ -101,6 +101,12 @@ function get_bfcmt0()
     return _load_automatic_array(symbol, Float64, (3,maxatoms,maxspecies))
 end
 
+# map from second- to first-variational spin index
+function get_jspnfv()
+    symbol = :__m_spin_MOD_jspnfv
+    return _load_automatic_array(symbol, Int64, (2,))
+end
+
 #=
 # muffin-tin fixed spin moment effective fields in Cartesian coordinates
 real(8), allocatable :: bfsmcmt(:,:)
@@ -119,9 +125,6 @@ logical spinsprl
 
 # ssdph is .true. if the muffin-tin spin-spiral magnetisation is de-phased
 logical ssdph
-
-# map from second- to first-variational spin index
-integer jspnfv(2)
 
 # spin-spiral q-vector in lattice coordinates
 real(8) vqlss(3)

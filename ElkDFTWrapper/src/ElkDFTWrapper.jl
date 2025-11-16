@@ -164,14 +164,13 @@ function init_debug_calc()
     call_olprad()
     call_hmlrad()
 
-    #call_genevfsv()
-    call_my_genevfsv() # debug version
+    call_genevfsv()
+    #call_my_genevfsv() # debug version
 
-#=
     call_occupy()
     # this will call some other routines
     call_my_rhomag()
-=#
+
 end
 export init_debug_calc
 
