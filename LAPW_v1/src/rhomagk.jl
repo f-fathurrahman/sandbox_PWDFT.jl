@@ -32,10 +32,7 @@ function rhomagk!(
     spinpol = elec_chgst.spinpol
     nspinor = elec_chgst.nspinor
     ncmag = false  # HARDCODED
-
-    if spinpol
-        tevecsv = true
-    end
+    tevecsv = elec_chgst.tevecsv
 
     done = zeros(Bool, nstfv)
     if tevecsv
@@ -88,11 +85,11 @@ function rhomagk!(
                 # not using 2nd variational scheme
                 #
                 # spin-unpolarised wavefunction
-                @views wavefmt!(lradstp, ia, atoms, mt_vars, apwlo_vars, ngp, apwalm[ia], evecfv[:,j], wfmt2)
+                @views wavefmt!(lradstp, ia, atoms, mt_vars, apwlo_vars, Ngw[ik], apwalm[ia], evecfv[:,j], wfmt2)
                 # The result is stored in wfmt2
                 #
                 # convert to spherical coordinates
-                backward_SHT!(mt_vars, isp, wfmt2, wfmt1, coarse=true)
+                @views backward_SHT!(mt_vars, isp, wfmt2, wfmt3[:,1], coarse=true)
             end
             #
             # add to density and magnetisation
@@ -111,7 +108,7 @@ function rhomagk!(
                 end
             else
                 # spin-unpolarized
-                @views rhomagk_rmk3!(npc, wo, wfmt3, rhomt[:,ia])
+                @views rhomagk_rmk3!(npc, wo, wfmt3[:,1], rhomt[ia])
             end 
   
         end # over states
@@ -160,12 +157,12 @@ function rhomagk!(
         end
     
         # Fourier transform wavefunction to real-space
-        println("sum wfir before FFT: ", sum(wfir))
+        #println("sum wfir before FFT: ", sum(wfir))
         for ispn in 1:nspinor
             @views G_to_R!(pw, wfir[:,ispn])
         end
         wfir *= Npoints # scale to match Elk convention
-        println("sum wfir after FFT: ", sum(wfir))
+        #println("sum wfir after FFT: ", sum(wfir))
         # add to density and magnetisation
         if spinpol 
             # spin-polarised

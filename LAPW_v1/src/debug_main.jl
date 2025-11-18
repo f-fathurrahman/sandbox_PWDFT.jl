@@ -332,7 +332,11 @@ function debug_main()
     for ik in 1:pw.gvecw.kpoints.Nkpt
 
         evecfv = deserialize("evecs_1st_ispin_$(ispin)_ik_$(ik).dat");
-        evecsv = deserialize("evecs_2nd_ispin_$(ispin)_ik_$(ik).dat");
+        if elec_chgst.tevecsv
+            evecsv = deserialize("evecs_2nd_ispin_$(ispin)_ik_$(ik).dat");
+        else
+            evecsv = nothing
+        end
         apwalm = calc_match_coeffs(ik, atoms, pw, mt_vars, apwlo_vars);
 
         rhomagk!(

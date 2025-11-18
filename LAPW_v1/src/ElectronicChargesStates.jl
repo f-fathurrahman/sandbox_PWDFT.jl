@@ -20,6 +20,8 @@ mutable struct ElectronicChargesStates
     evalsv::Matrix{Float64}
     efermi::Float64
     occmax::Float64
+    #
+    tevecsv::Bool
 end
 
 function ElectronicChargesStates(
@@ -85,11 +87,19 @@ function ElectronicChargesStates(
     occsv = zeros(Float64, nstsv, Nkpt)
     evalsv = zeros(Float64, nstsv, Nkpt)
     efermi = 0.0
+
+    if spinpol
+        tevecsv = true
+    else
+        tevecsv = false
+    end
+
     return ElectronicChargesStates(
         spinpol, nspinor, nempty0, nempty,
         chgzn, chgval, chgcr,
         chgcrtot, chgexs, chgtot,
         nstfv, nstsv, swidth, occsv, evalsv,
-        efermi, occmax
+        efermi, occmax,
+        tevecsv
     )
 end
