@@ -1,7 +1,12 @@
-function rotrfmt!(mt_vars, isp::Int64, R, rfmt1, rfmt2)
+function rotrfmt!(mt_vars, isp::Int64, R, rfmt1, rfmt2; coarse=false)
     # XXX It seems that `isp` can be mistaken as `ia` (?)
-    nr = mt_vars.nrmt[isp]
-    nri = mt_vars.nrmti[isp]
+    if coarse
+        nr = mt_vars.nrcmt[isp]
+        nri = mt_vars.nrcmti[isp]        
+    else
+        nr = mt_vars.nrmt[isp]
+        nri = mt_vars.nrmti[isp]
+    end
     nro = nr - nri
 
     # inner part of muffin-tin

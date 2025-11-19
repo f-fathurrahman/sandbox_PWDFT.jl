@@ -1,21 +1,20 @@
-function symrvfir!(tspin, tnc, rvfir)
-#=
-  
-    use modmain
-  implicit none
-  ! arguments
-  logical, intent(in) :: tspin,tnc
-  real(8), intent(inout) :: rvfir(ngtot,*)
-  ! local variables
-  logical tv0
-  integer nd,isym,lspl,ilspl,lspn
-  integer sym(3,3),ig,ifg,jfg
-  integer i1,i2,i3,j1,j2,j3,i
-  real(8) sc(3,3),v1,v2,v3,t1
-  complex(8) zv1(3),zv2(3),z1
-  ! allocatable arrays
-  complex(8), allocatable :: zfft1(:,:),zfft2(:,:)
-=#
+function symrvfir!(pw, sym_vars, rvfir; tspin = true, tnc = false)
+
+    Npoints = prod(pw.Ns)
+    G = pw.gvec.G
+    Ng = pw.gvec.Ng
+    idx_g2r = pw.gvec.idx_g2r
+    idx_g2miller = pw.gvec.idx_g2miller
+
+    nsymcrys = sym_vars.nsymcrys
+    vtcsymc = sym_vars.vtcsymc
+    tv0symc = sym_vars.tv0symc
+    lsplsymc = sym_vars.lsplsymc
+    symlat = sym_vars.symlat
+    isymlat = sym_vars.isymlat
+    lspnsymc = sym_vars.lspnsymc
+    symlatd = sym_vars.symlatd
+    symlatc = sym_vars.symlatc
 
     # dimension of the vector field
     if tnc
@@ -24,17 +23,23 @@ function symrvfir!(tspin, tnc, rvfir)
       nd = 1
     end
   
-    azfft1 = zeros(ComplexF64, Npoints,nd)
+    zfft1 = zeros(ComplexF64, Npoints, nd)
     zfft2 = zeros(ComplexF64, Npoints, nd)
+
+    sc = zeros(Float64, 3, 3)
+    zv1 = zeros(ComplexF64, 3)
+    zv2 = zeros(ComplexF64, 3)
+    sym = zeros(Int64, 3, 3)
+
     # Fourier transform vector function to G-space
     for i in 1:nd
         zfft1[:,i] = rvfir[:,i]
         @views R_to_G!(pw, zfft1[:,i])
     end
-    zfft2[:,:] = 0.0
+
     for isym in 1:nsymcrys
         # zero translation vector flag
-        tv0 = tv0symc(isym)
+        tv0 = tv0symc[isym]
         # translation vector in Cartesian coordinates
         if !tv0
             v1 = vtcsymc[1,isym]
@@ -59,7 +64,7 @@ function symrvfir!(tspin, tnc, rvfir)
             ip = idx_g2r[ig]
             # multiply the transpose of the inverse symmetry matrix with the G-vector
             if lspl == 1
-                jfg = ifg
+                jp = ip
             else
                 i1, i2, i3 = idx_g2miller[ig]
                 j1 = sym[1,1]*i1 + sym[2,1]*i2 + sym[3,1]*i3

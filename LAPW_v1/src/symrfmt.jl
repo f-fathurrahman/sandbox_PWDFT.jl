@@ -1,4 +1,4 @@
-function symrfmt!(atoms, mt_vars, sym_vars, rfmt)
+function symrfmt!(atoms, mt_vars, sym_vars, rfmt; coarse=false)
   
     Natoms = atoms.Natoms
     Nspecies = atoms.Nspecies
@@ -52,7 +52,7 @@ function symrfmt!(atoms, mt_vars, sym_vars, rfmt)
                 ja = ieqatom[ia,isym]
                 #
                 # apply the rotation to the muffin-tin function
-                @views rotrfmt!(mt_vars, isp, symlatc[lspl], rfmt1[:,ja], rfmt2)
+                @views rotrfmt!(mt_vars, isp, symlatc[lspl], rfmt1[:,ja], rfmt2; coarse=coarse)
                 # XXX rfmt1 is a 2d array
                 #
                 # accumulate in original function array
@@ -74,7 +74,7 @@ function symrfmt!(atoms, mt_vars, sym_vars, rfmt)
                 lspl = isymlat[lsplsymc[isym]]
                 #
                 # rotate symmetrized function into equivalent muffin-tin
-                rotrfmt!(mt_vars, isp, symlatc[lspl], rfmt[ia], rfmt[ja])
+                rotrfmt!(mt_vars, isp, symlatc[lspl], rfmt[ia], rfmt[ja]; coarse=coarse)
                 #println("CHECK3: sum abs rfmt[ja] = ", sum(abs.(rfmt[ja])))
                 done[ja] = true
             end

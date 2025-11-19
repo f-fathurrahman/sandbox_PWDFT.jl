@@ -272,6 +272,10 @@ include("sdelta_fd.jl"); export sdelta_fd
 include("occupy.jl"); export occupy!
 
 include("rhomagk.jl"); export rhomagk!
+include("rhomagsh.jl"); export rhomagsh!
+
+include("symrvfmt.jl"); export symrvfmt!
+include("symrvfir.jl"); export symrvfir!
 
 include("debug_main.jl")
 

@@ -348,6 +348,20 @@ function debug_main()
 
     end
 
+    rhomagsh!(atoms, mt_vars, rhomt; magmt=magmt)
+
+    # Symmetrize, using coarse grid
+    symrfmt!(atoms, mt_vars, sym_vars, rhomt; coarse=true)
+    symrfir!(pw, sym_vars, rhoir)
+
+    rf_mt_c_to_f!(atoms, atsp_vars, mt_vars, rhomt)
+
+    symrvfmt!(atoms, sym_vars, mt_vars, magmt; tspin = true, coarse = true)
+    symrvfir!(pw, sym_vars, magir; tspin = true, tnc = false)
+
+    for i in 1:ndmag
+        @views rf_mt_c_to_f!(atoms, atsp_vars, mt_vars, magmt[:,i])
+    end
 
     @infiltrate
     # open REPL and investigate the variables

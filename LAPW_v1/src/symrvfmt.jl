@@ -1,4 +1,4 @@
-function symrvfmt!(tspin,tnc,nr,nri,np,ld,rvfmt)
+function symrvfmt!( atoms, sym_vars, mt_vars, rvfmt; tspin=true, coarse=false)
     
     tnc = false
     # dimension of the vector field
@@ -8,14 +8,34 @@ function symrvfmt!(tspin,tnc,nr,nri,np,ld,rvfmt)
         nd = 1
     end
 
+    if coarse
+        np = mt_vars.npcmt
+    else
+        np = mt_vars.npmt
+    end
+    npmtmax = maximum(mt_vars.npmt) # use coarse grid?
+
+    Natoms = atoms.Natoms
+    Nspecies = atoms.Nspecies
+    atm2species = atoms.atm2species
+    
+    nsymcrys = sym_vars.nsymcrys
+    symlatc = sym_vars.symlatc
+    ieqatom = sym_vars.ieqatom
+    lsplsymc = sym_vars.lsplsymc
+    isymlat = sym_vars.isymlat
+    lspnsymc = sym_vars.lspnsymc
+    symlatd = sym_vars.symlatd
+
     rvfmt1 = zeros(Float64, npmtmax, Natoms, nd)
     rvfmt2 = zeros(Float64, npmtmax, nd)
     sc = zeros(Float64, 3, 3)
     v1 = zeros(Float64, 3)
     v2 = zeros(Float64, 3)
+    done = zeros(Bool, Natoms)
     #
     t0 = 1.0/nsymcrys
-    for isp in 1:nspecies
+    for isp in 1:Nspecies
         # make copy of vector field for all atoms of current species
         for i in 1:nd, ia in 1:Natoms
             if atm2species[ia] != isp
@@ -23,7 +43,7 @@ function symrvfmt!(tspin,tnc,nr,nri,np,ld,rvfmt)
             end
             rvfmt1[:,ia,i] = rvfmt[ia][:,i]
         end
-        done[:] = false
+        done[:] .= false
         for ia in 1:Natoms
             if atm2species[ia] != isp
                 continue
@@ -36,11 +56,11 @@ function symrvfmt!(tspin,tnc,nr,nri,np,ld,rvfmt)
             # begin loop over crystal symmetries
             for isym in 1:nsymcrys
                 # equivalent atom
-                ja = ieqatom[ia][isym]
+                ja = ieqatom[isym][ia]
                 # parallel transport of vector field
                 lspl = lsplsymc[isym]
                 for i in 1:nd
-                    @views rotrfmt!(mt_vars, isp, symlatc[lspl], rvfmt1[:,ja,i], rvfmt2[:,i])
+                    @views rotrfmt!(mt_vars, isp, symlatc[lspl], rvfmt1[:,ja,i], rvfmt2[:,i], coarse=coarse)
                 end
                 #
                 if tspin
@@ -65,26 +85,26 @@ function symrvfmt!(tspin,tnc,nr,nri,np,ld,rvfmt)
                 else
                     # collinear case
                     #call daxpy(np(is),sc(3,3),rvfmt2,1,rvfmt(:,ias,1),1)
-                    rvfmt[ia][:,ias] += sc[3,3]*rvfmt2[1:np[isp]]
+                    rvfmt[ia][1:np[isp],ia] += sc[3,3]*rvfmt2[1:np[isp]]
                 end
             end # end loop over crystal symmetries
             # normalize
             for i in 1:nd
                 #call dscal(np(is),t0,rvfmt(:,ias,i),1)
-                rvfmt[ia][:,i] *= t0
+                rvfmt[ia][1:np[isp],i] *= t0
             end
             # mark atom as done
             done[ia] = true
             # rotate into equivalent atoms
             for isym in 1:nsymcrys
-                ja = ieqatom[ia][isym]
+                ja = ieqatom[isym][ia]
                 if done[ja]
                     continue
                 end
                 # parallel transport of vector field (using operation inverse)
                 lspl = isymlat(lsplsymc(isym))
                 for i in 1:nd
-                    @views rotrfmt!(mt_vars, isp, symlatc[lspl], rvfmt[ia][:,i], rvfmt[ja][:,i])
+                    @views rotrfmt!(mt_vars, isp, symlatc[lspl], rvfmt[ia][:,i], rvfmt[ja][:,i]; coarse = coarse)
                 end
                 if tspin
                     # inverse of global proper rotation matrix in Cartesian coordinates
