@@ -365,6 +365,8 @@ function debug_main()
 
     rhocore!(atoms, mt_vars, elec_chgst, core_states, rhomt; magmt=magmt)
 
+    calc_charge!(atoms, pw, mt_vars, elec_chgst, rhomt, rhoir, cfunir)
+
     @infiltrate
     # open REPL and investigate the variables
 

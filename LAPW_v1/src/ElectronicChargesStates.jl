@@ -11,8 +11,12 @@ mutable struct ElectronicChargesStates
     chgcr::Vector{Float64}
     chgcrlk::Vector{Float64}
     chgcrtot::Float64
+    chgmt::Vector{Float64}
+    chgmttot::Float64
+    chgir::Float64
     chgexs::Float64
     chgtot::Float64
+    chgcalc::Float64
     #
     nstfv::Int64
     nstsv::Int64
@@ -96,10 +100,16 @@ function ElectronicChargesStates(
         tevecsv = false
     end
 
+    chgmt = zeros(Float64, Natoms)
+    chgmttot = 0.0
+    chgir = 0.0
+    chgcalc = 0.0
+
     return ElectronicChargesStates(
         spinpol, nspinor, nempty0, nempty,
-        chgzn, chgval, chgcr, chgcrlk,
-        chgcrtot, chgexs, chgtot,
+        chgzn, chgval, chgcr, chgcrlk, chgcrtot,
+        chgmt, chgmttot, chgir,
+        chgexs, chgtot, chgcalc,
         nstfv, nstsv, swidth, occsv, evalsv,
         efermi, occmax,
         tevecsv
