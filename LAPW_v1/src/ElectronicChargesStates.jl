@@ -9,6 +9,7 @@ mutable struct ElectronicChargesStates
     chgzn::Float64
     chgval::Float64
     chgcr::Vector{Float64}
+    chgcrlk::Vector{Float64}
     chgcrtot::Float64
     chgexs::Float64
     chgtot::Float64
@@ -45,6 +46,7 @@ function ElectronicChargesStates(
     chgzn = 0.0
     chgval = 0.0
     chgcr = zeros(Float64, Nspecies)
+    chgcrlk = zeros(Float64, Natoms)
     chgcrtot = 0.0
 
     for ia in 1:Natoms
@@ -96,7 +98,7 @@ function ElectronicChargesStates(
 
     return ElectronicChargesStates(
         spinpol, nspinor, nempty0, nempty,
-        chgzn, chgval, chgcr,
+        chgzn, chgval, chgcr, chgcrlk,
         chgcrtot, chgexs, chgtot,
         nstfv, nstsv, swidth, occsv, evalsv,
         efermi, occmax,

@@ -3,7 +3,7 @@ mutable struct CoreStatesVars
     nspncr::Int64  # number of core spin-channels
     occcr::Vector{Vector{Float64}} # occupancies for core states
     evalcr::Vector{Vector{Float64}} # eigenvalues for core states
-    rhocr::Matrix{Vector{Float64}} # radial charge density for core states
+    rhocr::Vector{Matrix{Float64}} # radial charge density for core states
     rwfcr::Vector{Array{Float64,3}} # radial wavefunctions for core states
 end
 
@@ -34,10 +34,10 @@ function CoreStatesVars(atoms, atsp_vars, mt_vars; spincore=false)
         evalcr[ia][:] = atsp_vars.evalsp[isp][:]
     end
     #
-    rhocr = Matrix{Vector{Float64}}(undef,Natoms,nspncr)
+    rhocr = Vector{Matrix{Float64}}(undef,Natoms)
     for ispin_core in 1:nspncr, ia in 1:Natoms
         isp = atm2species[ia]
-        rhocr[ia,ispin_core] = zeros(Float64, nrmt[isp])
+        rhocr[ia] = zeros(Float64, nrmt[isp], ispin_core)
     end
     #
     rwfcr = Vector{Array{Float64,3}}(undef,Natoms)

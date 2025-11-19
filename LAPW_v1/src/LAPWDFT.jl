@@ -277,6 +277,8 @@ include("rhomagsh.jl"); export rhomagsh!
 include("symrvfmt.jl"); export symrvfmt!
 include("symrvfir.jl"); export symrvfir!
 
+include("rhocore.jl"); export rhocore!
+
 include("debug_main.jl")
 
 end

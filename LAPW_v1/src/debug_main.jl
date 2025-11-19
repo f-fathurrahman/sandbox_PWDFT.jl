@@ -363,6 +363,8 @@ function debug_main()
         @views rf_mt_c_to_f!(atoms, atsp_vars, mt_vars, magmt[:,i])
     end
 
+    rhocore!(atoms, mt_vars, elec_chgst, core_states, rhomt; magmt=magmt)
+
     @infiltrate
     # open REPL and investigate the variables
 

@@ -59,7 +59,7 @@ function gencore!(atoms, eqatoms, atsp_vars, mt_vars, vsmt, core_states)
                 vr[ir] = vrsp[isp][ir] + t1
             end
             # ispin_core index is not implemented
-            rhocr[ia,ispincr][1:nr] .= 0.0
+            rhocr[ia][1:nr,ispincr] .= 0.0
             for ist in 1:nstsp[isp]
                 # skip if this state is not core state
                 if !spcore[isp][ist]
@@ -82,11 +82,11 @@ function gencore!(atoms, eqatoms, atsp_vars, mt_vars, vsmt, core_states)
                 t1 = occcr[ia][ist]
                 # add to the core density
                 for ir in 1:nr
-                    rhocr[ia,ispincr][ir] += t1*( rwfcr[ia][ir,1,ist]^2 + rwfcr[ia][ir,2,ist]^2 )
+                    rhocr[ia][ir,ispincr] += t1*( rwfcr[ia][ir,1,ist]^2 + rwfcr[ia][ir,2,ist]^2 )
                 end
             end
             for ir in 1:nr
-                rhocr[ia,ispincr][ir] *= ( rlmt[isp][ir,-2]*y00 )
+                rhocr[ia][ir,ispincr] *= ( rlmt[isp][ir,-2]*y00 )
             end
         end # end loop over spin channels
         #
@@ -104,7 +104,7 @@ function gencore!(atoms, eqatoms, atsp_vars, mt_vars, vsmt, core_states)
                     rwfcr[ja][1:nrs,:,ist] .= rwfcr[ias][1:nrs,:,ist]
                 end
                 for ispincr in 1:NspinCore
-                    rhocr[ja,ispincr][1:nr] .= rhocr[ia,ispincr][1:nr]
+                    rhocr[ja][1:nr,ispincr] .= rhocr[ia][1:nr,ispincr]
                 end
                 done[ja] = true
             end
