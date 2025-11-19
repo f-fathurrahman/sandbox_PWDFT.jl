@@ -18,38 +18,96 @@ function get_chgtot()
     return unsafe_load(cglobal((:__m_charge_moment_current_MOD_chgtot, LIBLAPW), Float64))
 end
 
-
-#=
-# core charges
-REAL(8) chgcr(maxspecies)
 # total core charge
-REAL(8) chgcrtot
-# core leakage charge
-REAL(8), ALLOCATABLE :: chgcrlk(:)
+function get_chgcrtot()
+    return unsafe_load(cglobal((:__m_charge_moment_current_MOD_chgcrtot, LIBLAPW), Float64))
+end
+
 # excess charge
-REAL(8) chgexs
+function get_chgexs()
+    return unsafe_load(cglobal((:__m_charge_moment_current_MOD_chgexs, LIBLAPW), Float64))
+end
+
 # calculated total charge
-REAL(8) chgcalc
+function get_chgcalc()
+    return unsafe_load(cglobal((:__m_charge_moment_current_MOD_chgcalc, LIBLAPW), Float64))
+end
+
 # interstitial region charge
-REAL(8) chgir
-# muffin-tin charges
-REAL(8), ALLOCATABLE :: chgmt(:)
+function get_chgir()
+    return unsafe_load(cglobal((:__m_charge_moment_current_MOD_chgir, LIBLAPW), Float64))
+end
+
 # total muffin-tin charge
-REAL(8) chgmttot
+function get_chgmttot()
+    return unsafe_load(cglobal((:__m_charge_moment_current_MOD_chgmttot, LIBLAPW), Float64))
+end
+
 # effective Wigner radius
-REAL(8) rwigner
-# total moment
-REAL(8) momtot(3)
+function get_rwigner()
+    return unsafe_load(cglobal((:__m_charge_moment_current_MOD_rwigner, LIBLAPW), Float64))
+end
+
 # total moment magnitude
-REAL(8) momtotm
-# interstitial region moment
-REAL(8) momir(3)
-# muffin-tin moments
-REAL(8), ALLOCATABLE :: mommt(:,:)
-# total muffin-tin moment
-REAL(8) mommttot(3)
-# total current
-REAL(8) curtot(3)
+function get_momtotm()
+    return unsafe_load(cglobal((:__m_charge_moment_current_MOD_momtotm, LIBLAPW), Float64))
+end
+
 # total current magnitude
-REAL(8) curtotm
-=#
+function get_curtotm()
+    return unsafe_load(cglobal((:__m_charge_moment_current_MOD_curtotm, LIBLAPW), Float64))
+end
+
+# core charges
+function get_chgcr()
+    symbol = :__m_charge_moment_current_MOD_chgcr
+    maxspecies = get_maxspecies()
+    return _load_automatic_array(symbol, Float64, (maxspecies,))
+end
+
+# core leakage charge
+function get_chgcrlk()
+    symbol = :__m_charge_moment_current_MOD_chgcrlk
+    natmtot = get_natmtot()
+    return _load_allocatable_array(symbol, Float64, (natmtot,))
+end
+
+# muffin-tin charges
+function get_chgmt()
+    symbol = :__m_charge_moment_current_MOD_chgmt
+    natmtot = get_natmtot()
+    return _load_allocatable_array(symbol, Float64, (natmtot,))
+end
+
+# muffin-tin moments
+function get_mommt()
+    symbol = :__m_charge_moment_current_MOD_mommt
+    natmtot = get_natmtot()
+    return _load_allocatable_array(symbol, Float64, (3,natmtot))
+end
+
+# interstitial region moment
+function get_momir()
+    symbol = :__m_charge_moment_current_MOD_momir
+    return _load_automatic_array(symbol, Float64, (3,))
+end
+
+# total muffin-tin moment
+function get_mommttot()
+    symbol = :__m_charge_moment_current_MOD_mommttot
+    return _load_automatic_array(symbol, Float64, (3,))
+end
+
+# total current
+function get_curtot()
+    symbol = :__m_charge_moment_current_MOD_curtot
+    return _load_automatic_array(symbol, Float64, (3,))
+end
+
+# total moment
+function  get_momtot()
+    symbol = :__m_charge_moment_current_MOD_momtot
+    return _load_automatic_array(symbol, Float64, (3,))
+end
+
+
