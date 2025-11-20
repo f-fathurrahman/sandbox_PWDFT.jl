@@ -226,6 +226,8 @@ include("rf_mt_lm.jl"); export rf_mt_lm!
 
 include("genbs.jl"); export genbs!
 
+include("potks.jl"); export potks!
+
 include("gencore.jl"); export gencore!
 
 include("rschrodint.jl"); export rschrodint!

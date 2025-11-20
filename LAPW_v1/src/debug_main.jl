@@ -176,19 +176,15 @@ function debug_main()
         magir = nothing
     end
 
-
-    # .... This is starting point of potks
-    # XXX Need to wrap into functions, preallocate all arrays
-
-    # Solver Hartree equation (compute electrostatic Coulomb potential)
+    # Hartree potential (MT and interstitial)
     vclmt = Vector{Vector{Float64}}(undef,Natoms)
     for ia in 1:Natoms
         isp = atm2species[ia]
         vclmt[ia] = zeros(Float64, npmt[isp])
     end
     vclir = zeros(Float64, Npoints)
-    potcoul!( atoms, atsp_vars, mt_vars, pw, rhomt, rhoir, vclmt, vclir )
 
+    # Exchange correlation potentials
     epsxcmt = Vector{Vector{Float64}}(undef,Natoms)
     vxcmt = Vector{Vector{Float64}}(undef,Natoms)
     for ia in 1:Natoms
@@ -202,49 +198,25 @@ function debug_main()
             isp = atm2species[ia]
             bxcmt[ia] = zeros(Float64, npmt[isp], ndmag)
         end
-    end
-
-    if spinpol
-        potxcmt!(atoms, mt_vars, rhomt, magmt, epsxcmt, vxcmt, bxcmt)
     else
-        potxcmt!(atoms, mt_vars, rhomt, epsxcmt, vxcmt)
+        bxcmt = nothing
     end
-
+    #
     epsxcir = zeros(Float64, Npoints)
     vxcir = zeros(Float64, Npoints)
     if spinpol
         bxcir = zeros(Float64, Npoints, ndmag)
-    end
-
-    if spinpol
-        potxcir!(rhoir, magir, epsxcir, vxcir, bxcir)
     else
-        potxcir!(rhoir, epsxcir, vxcir)
+        bxcir = nothing
     end
 
-    # Symmetrize
-    symrfmt!(atoms, mt_vars, sym_vars, vxcmt)
-    symrfir!(pw, sym_vars, vxcir)
-    if spinpol
-        symrfmt!(atoms, mt_vars, sym_vars, bxcmt)
-        symrfir!(pw, sym_vars, bxcir)
-    end
-
-    # effective potential from sum of Coulomb and exchange-correlation potentials
     vsmt = Vector{Vector{Float64}}(undef, Natoms)
     vsir = zeros(Float64, Npoints)
     for ia in 1:Natoms
         isp = atm2species[ia]
         vsmt[ia] = zeros(Float64, npmt[isp])
     end
-    for ia in 1:Natoms
-        @views vsmt[ia][:] .= vclmt[ia][:] .+ vxcmt[ia][:]
-    end
-    vsir[:] = vclir[:] + vxcir[:]
 
-    # smoothing vsir is skipped (default is zero)
-    
-    # Generate the effective magnetic fields
     if spinpol
         bsir = zeros(Float64, Npoints, ndmag)
         bsmt = Vector{Matrix{Float64}}(undef,Natoms)
@@ -252,21 +224,29 @@ function debug_main()
             isp = atm2species[ia]
             bsmt[ia] = zeros(Float64, npmt[isp], ndmag)
         end
-        genbs!( atoms, mt_vars, cfunir, ncmag,
-            bfcmt, bfieldc, bxcmt, bxcir, bsmt, bsir
-        )
     else
-        bsmt = nothing
         bsir = nothing
+        bsmt = nothing
     end
 
 
-    # generating the tau-DFT effective potential is skipped
-    
-    # .... This is the end of potks
+    potks!(
+        atoms, atsp_vars, mt_vars, pw, sym_vars, 
+        rhomt, rhoir,
+        vclmt, vclir,
+        epsxcmt, epsxcir,
+        vxcmt, vxcir,
+        vsmt, vsir;
+        magmt = magmt, magir = magir,
+        bsmt = bsmt, bsir = bsir,
+        bxcir = bxcir, bxcmt = bxcmt,
+        cfunir = cfunir,
+        bfieldc = bfieldc, bfcmt = bfcmt,
+        spinpol = spinpol, ncmag = ncmag
+    )
 
 
-    # Fourier transform of interstitial Kohn-SHam equation
+    # Fourier transform of interstitial Kohn-Sham equation
     genvsig!(pw, vsir, cfunir, vsig)
     # XXX vsig will be different from Elk result because Elk uses more G-vectors
 
