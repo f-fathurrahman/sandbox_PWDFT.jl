@@ -2,27 +2,6 @@ function findband!(l, r, Vr, E;
     epsband=1e-12, demax=2.5, de0=0.001, maxstp=250
 )
 
-#=
-  IMPLICIT NONE
-  ! arguments
-  REAL(8), INTENT(in) :: sol
-  INTEGER, INTENT(in) :: l,nr
-  REAL(8), INTENT(in) :: r(nr),vr(nr)
-  REAL(8), INTENT(in) :: eps,demax
-  REAL(8), INTENT(inout) :: e
-  LOGICAL, INTENT(out) :: fnd
-  ! local variables
-  LOGICAL :: ft,fb
-  ! maximum number of steps
-  INTEGER, PARAMETER :: maxstp=250
-  INTEGER :: ip,ie,nn
-  ! initial step size
-  REAL(8), PARAMETER :: de0=0.001d0
-  REAL(8) :: de,et,eb,t,tp
-  ! automatic arrays
-  REAL(8) :: p0(nr),p1(nr),q0(nr),q1(nr)
-=#
-
     ft = false
     fb = false
     fnd = false

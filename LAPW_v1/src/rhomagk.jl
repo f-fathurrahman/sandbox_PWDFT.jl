@@ -6,7 +6,7 @@ function rhomagk!(
     magmt=nothing, magir=nothing
 )
 
-    println("\n----- ENTER rhomagk for ik=$ik")
+    #println("\n----- ENTER rhomagk for ik=$ik")
 
     epsocc = 1e-8
 

@@ -38,7 +38,6 @@ function genbs!(
         nrc = nrcmt[isp]
         nrci = nrcmti[isp]
         npc = npcmt[isp]
-        println("npc = ", npc, " nrc = ", nrc, " npcmtmax = ", npcmtmax)
         # exchange-correlation magnetic field in spherical coordinates
         for idm in 1:ndmag
             @views rf_mt_f_to_c!( mt_vars, nrc, nrci, bxcmt[ia][:,idm], rfmt[1:npc] )

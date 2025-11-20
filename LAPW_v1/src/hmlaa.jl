@@ -54,7 +54,7 @@ function hmlaa!(ik, ia, atoms, pw, mt_vars, apwlo_vars, apwalm, haa, H)
     a = zeros(ComplexF64, lmo, Ngwk)
     b = zeros(ComplexF64, lmo, Ngwk)
     t0 = 0.5*rmt[isp]^2
-    @info "t0 = $t0"
+    #@info "t0 = $t0"
     i = 0
     lm1 = 0
     for l1 in 0:lmaxapw, m1 in -l1:l1
@@ -93,8 +93,8 @@ function hmlaa!(ik, ia, atoms, pw, mt_vars, apwlo_vars, apwalm, haa, H)
             a[i,1:Ngwk] = apwalm[ia][1:Ngwk,io,lm1]
         end  # io
     end  # l1, m1
-    println("Before zmctmu: sum(a) = ", sum(a))
-    println("Before zmctmu: sum(b) = ", sum(b))
+    #println("Before zmctmu: sum(a) = ", sum(a))
+    #println("Before zmctmu: sum(b) = ", sum(b))
     zmctmu!(a, b, H)
     return
 end

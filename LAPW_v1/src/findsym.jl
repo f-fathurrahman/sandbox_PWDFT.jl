@@ -24,7 +24,7 @@ function findsym!(
     atm2species = atoms.atm2species
     nsymlat = sym_vars.nsymlat
     symlat = sym_vars.symlat
-
+#=
     println()
     println("--- ENTER findsym ---")
     println()
@@ -42,6 +42,7 @@ function findsym!(
     end
 
     println()
+=#
 
     jea = zeros(Int64, Natoms)
     sl = zeros(Float64, 3, 3)
@@ -63,7 +64,7 @@ function findsym!(
     # loop over lattice symmetries (spatial rotations)
     for isym in 1:nsymlat
         #
-        println("\nisym = ", isym)
+        #println("\nisym = ", isym)
         #
         # make real copy of lattice rotation symmetry
         @views sl[:,:] = Float64.(symlat[isym][:,:])
@@ -76,7 +77,7 @@ function findsym!(
             #
             for ja in 1:Natoms
                 if atm2species[ja] != isp
-                    @info "Skipping this atom index"
+                    #@info "Skipping this atom index"
                     continue
                 end
                 # apply lattice symmetry to atomic positions
@@ -86,16 +87,16 @@ function findsym!(
                 # check if atomic positions are invariant
                 t1 = abs(apl3[1,ia]-v[1]) + abs(apl3[2,ia]-v[2]) + abs(apl3[3,ia]-v[3])
                 #@info "t1 = $t1"
-                println("Checking isp=$isp ia=$ia ja=$ja")
+                #println("Checking isp=$isp ia=$ia ja=$ja")
                 if t1 < epslat 
-                    println(" *** Equivalent atoms: ia=$ia ja=$ja isym=$isym")
+                    #println(" *** Equivalent atoms: ia=$ia ja=$ja isym=$isym")
                     # equivalent atom index
                     jea[ia] = ja
                     @goto LABEL10 # continue ?
                 end
             end
             # not invariant so try new spatial rotation
-            println(" - Not invariant, trying new spatial rotation")
+            #println(" - Not invariant, trying new spatial rotation")
             @goto LABEL40 # jump to the end of loop over symlat
             @label LABEL10 #10 CONTINUE
         end
@@ -159,18 +160,18 @@ function findsym!(
         for ia in 1:Natoms
             iea[ia,nsym] = jea[ia]
         end
-        println("nsym = ", nsym)
+        #println("nsym = ", nsym)
 
-        @info "Trying new spatial rotation"
+        #@info "Trying new spatial rotation"
         @label LABEL40 # continue
     
     end # ! end loop over spatial rotations 
 
-    println("nsym = ", nsym)
+    #println("nsym = ", nsym)
 
-    println()
-    println("--- EXIT findsym ---")
-    println()
+    #println()
+    #println("--- EXIT findsym ---")
+    #println()
 
     return nsym
 

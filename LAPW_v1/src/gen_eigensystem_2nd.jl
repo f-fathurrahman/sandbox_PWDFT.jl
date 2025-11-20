@@ -75,7 +75,7 @@ function gen_eigensystem_2nd!(
     else
         socz = false
     end
-    println("nsc = $nsc nsd = $nsd socz = $socz")
+    #println("nsc = $nsc nsd = $nsd socz = $socz")
     #
     # zero the second-variational Hamiltonian (stored in the eigenvector array)
     fill!( evecsv, 0.0 )
@@ -267,7 +267,7 @@ function gen_eigensystem_2nd!(
     #
     # add the diagonal first-variational part
     i = 0
-    println("nspinor = ", nspinor)
+    #println("nspinor = ", nspinor)
     for ispn in 1:nspinor
         for ist in 1:nstfv
             i += 1
@@ -275,7 +275,7 @@ function gen_eigensystem_2nd!(
         end
     end
     #
-    println("sum evecsv before diagonalization = ", sum(evecsv))
+    #println("sum evecsv before diagonalization = ", sum(evecsv))
     serialize("Ham_2nd_ispin_$(ispin)_ik_$(ik).dat", evecsv)
     #
     spcpl = false

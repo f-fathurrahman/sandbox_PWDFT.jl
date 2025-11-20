@@ -63,16 +63,16 @@ function linengy!(atoms, eqatoms, mt_vars, vsmt, efermi::Float64, apwlo_vars)
             i = i + lmmaxo
         end 
         # APW functions
-        @info "lmaxapw = $lmaxapw"
+        #@info "lmaxapw = $lmaxapw"
         for l in 0:lmaxapw
             for io in 1:apword[isp][l]
                 if apwve[isp][l][io]
-                    @info "Enter here 69"
+                    #@info "Enter here 69"
                     # check if previous radial functions have same default energies
                     for jo in 1:(io-1)
                         if apwve[isp][l][jo] 
                             if abs(apwe0[isp][l][io] - apwe0[isp][l][jo]) < 1.e-4
-                                @info "Same default energies for apw"
+                                #@info "Same default energies for apw"
                                 apwe[ia][l][io] = apwe[ia][l][jo]
                                 @goto LABEL10 # next order io
                             end
@@ -81,9 +81,9 @@ function linengy!(atoms, eqatoms, mt_vars, vsmt, efermi::Float64, apwlo_vars)
                     # find the band energy starting from default
                     apwe[ia][l][io] = apwe0[isp][l][io]
                     @views rr = rlmt[isp][:,1]
-                    @info "Calling findband for APW"
+                    #@info "Calling findband for APW"
                     fnd, apwe[ia][l][io] = findband!(l, rr, vr, apwe[ia][l][io])
-                    @info "fnd = $fnd"
+                    #@info "fnd = $fnd"
                     if !fnd
                         nnf += 1
                     else 
@@ -102,13 +102,13 @@ function linengy!(atoms, eqatoms, mt_vars, vsmt, efermi::Float64, apwlo_vars)
         for ilo in 1:nlorb[isp]
             for io in 1:lorbord[isp][ilo]
                 if lorbve[isp][ilo][io]
-                    println("lorbve = ", lorbve[isp][ilo][io])
-                    @info "Enter here 104"
+                    #println("lorbve = ", lorbve[isp][ilo][io])
+                    #@info "Enter here 104"
                     # check if previous radial functions have same default energies
                     for jo in 1:(io-1)
                         if lorbve[isp][ilo][jo]
                             if abs(lorbe0[isp][ilo][io] - lorbe0[isp][ilo][jo]) < 1.e-4
-                                @info "Same default energies for local orbitals"
+                                #@info "Same default energies for local orbitals"
                                 lorbe[ia][ilo][io] = lorbe[ia][ilo][jo]
                                 @goto LABEL20 # next order
                             end
@@ -118,9 +118,9 @@ function linengy!(atoms, eqatoms, mt_vars, vsmt, efermi::Float64, apwlo_vars)
                     # find the band energy starting from default
                     lorbe[ia][ilo][io] = lorbe0[isp][ilo][io]
                     @views rr = rlmt[isp][:,1]
-                    @info "Calling findband for local orbitals"
+                    #@info "Calling findband for local orbitals"
                     fnd, lorbe[ia][ilo][io] = findband!(l, rr, vr, lorbe[ia][ilo][io])
-                    @info "fnd = $(fnd)"
+                    #@info "fnd = $(fnd)"
                     if !fnd
                         nnf += 1
                     end
@@ -138,7 +138,7 @@ function linengy!(atoms, eqatoms, mt_vars, vsmt, efermi::Float64, apwlo_vars)
         # copy to equivalent atoms
         for ja in 1:Natoms
             if !done[ja] && eqatoms[ia,ja]
-                @info "Do for eqatoms"
+                #@info "Do for eqatoms"
                 for l in 0:lmaxapw
                     for io in 1:apword[isp][l]
                         apwe[ja][l][io] = apwe[ia][l][io]
@@ -153,7 +153,7 @@ function linengy!(atoms, eqatoms, mt_vars, vsmt, efermi::Float64, apwlo_vars)
             end 
         end
     end # end loops over atoms
-    @info "nnf = $nnf"
+    #@info "nnf = $nnf"
     #
     if nnf > 0
         @warn "Warning(linengy): could not find $nnf linearization energies"
