@@ -14,8 +14,6 @@ function rhomagk!(
     Natoms = atoms.Natoms
     atm2species = atoms.atm2species
 
-    nrcmt = mt_vars.nrcmt
-    nrcmti = mt_vars.nrcmti
     npcmt = mt_vars.npcmt
     npcmtmax = maximum(npcmt)
     lradstp = mt_vars.lradstp
@@ -84,7 +82,7 @@ function rhomagk!(
             else 
                 # not using 2nd variational scheme
                 #
-                # spin-unpolarised wavefunction
+                # spin-unpolarized wavefunction
                 @views wavefmt!(lradstp, ia, atoms, mt_vars, apwlo_vars, Ngw[ik], apwalm[ia], evecfv[:,j], wfmt2)
                 # The result is stored in wfmt2
                 #
@@ -94,7 +92,7 @@ function rhomagk!(
             #
             # add to density and magnetisation
             if spinpol
-                # spin-polarised
+                # spin-polarized
                 if ncmag
                     # non-collinear
                     #rhomagk_rmk1(npc, wo, wfmt3, wfmt3[:,2], rhomt[:,ias], magmt[:,ias,1], magmt[:,ias,2], magmt[:,ias,3])
@@ -149,7 +147,7 @@ function rhomagk!(
                 end
             end
         else
-            # spin-unpolarised wavefunction
+            # spin-unpolarized wavefunction
             for igw in 1:Ngw[ik]
                 ip = idx_gw2r[ik][igw]
                 wfir[ip,1] = evecfv[igw,j]
@@ -165,7 +163,7 @@ function rhomagk!(
         #println("sum wfir after FFT: ", sum(wfir))
         # add to density and magnetisation
         if spinpol 
-            # spin-polarised
+            # spin-polarized
             if ncmag
                 # non-collinear
                 @views rhomagk_rmk1!(Npoints, wo, wfir[:,1], wfir[:,2], rhoir, magir, magir[:,2], magir[:,3])
@@ -175,7 +173,7 @@ function rhomagk!(
             end
         else
             # XXX We pass full FFT grid array here, so ngtot -> Npoints
-            # spin-unpolarised
+            # spin-unpolarized
             rhomagk_rmk3!(Npoints, wo, wfir, rhoir)
         end
     end # nstsv
