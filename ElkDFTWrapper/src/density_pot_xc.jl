@@ -19,6 +19,13 @@ function get_tbdip()
     return unsafe_load(cglobal((:__m_density_pot_xc_MOD_tbdip, LIBLAPW), Bool))
 end
 
+# trhonorm is .true. if the density is to be normalised after every iteration
+# LOGICAL trhonorm
+function get_trhonorm()
+    return unsafe_load(cglobal((:__m_density_pot_xc_MOD_trhonorm, LIBLAPW), Bool))
+end
+
+
 function get_msmooth()
     return unsafe_load(cglobal((:__m_density_pot_xc_MOD_msmooth, LIBLAPW), Int32)) |> Int64
 end
