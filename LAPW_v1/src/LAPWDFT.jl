@@ -282,6 +282,7 @@ include("symrvfir.jl"); export symrvfir!
 include("rhocore.jl"); export rhocore!
 
 include("calc_charge.jl"); export calc_charge!, calc_chargemt!
+include("rhonorm.jl"); export rhonorm!
 
 include("debug_main.jl")
 

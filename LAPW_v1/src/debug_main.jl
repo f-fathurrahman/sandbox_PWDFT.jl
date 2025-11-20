@@ -347,6 +347,8 @@ function debug_main()
 
     calc_charge!(atoms, pw, mt_vars, elec_chgst, rhomt, rhoir, cfunir)
 
+    rhonorm!(atoms, pw, mt_vars, elec_chgst, rhomt, rhoir)
+
     @infiltrate
     # open REPL and investigate the variables
 
