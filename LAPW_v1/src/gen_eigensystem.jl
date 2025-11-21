@@ -1,5 +1,5 @@
 function gen_eigensystem!(
-    ispin::Int64, ik::Int64,
+    ik::Int64,
     atoms::Atoms, pw::PWGrid, mt_vars::MuffinTins, apwlo_vars::APWLOVars,
     apwlo_ints, elec_chgst,
     nmat, cfunig, vsig;
@@ -55,10 +55,10 @@ function gen_eigensystem!(
     nstfv = elec_chgst.nstfv
 
     # FIXME: save full size (?)
-    serialize("H_ispin_$(ispin)_ik_$(ik).dat", H)
-    serialize("O_ispin_$(ispin)_ik_$(ik).dat", O)
-    serialize("evals_1st_ispin_$(ispin)_ik_$(ik).dat", evals[1:nstfv])
-    serialize("evecs_1st_ispin_$(ispin)_ik_$(ik).dat", evecs[:,1:nstfv])
+    serialize("H_ik_$(ik).dat", H)
+    serialize("O_ik_$(ik).dat", O)
+    serialize("evals_1st_ik_$(ik).dat", evals[1:nstfv])
+    serialize("evecs_1st_ik_$(ik).dat", evecs[:,1:nstfv])
     
     # Set eigenvalues
     # FIXME: only for the case of nstfv == nstsv
@@ -66,7 +66,7 @@ function gen_eigensystem!(
     #@views elec_chgst.evalsv[1:nstsv,ik] = evals[1:nstsv]
 
     gen_eigensystem_2nd!(
-        ispin, ik,
+        ik,
         atoms, pw, mt_vars, apwlo_vars,
         apwalm, elec_chgst, bsmt, bsir, ndmag
     )

@@ -1,7 +1,7 @@
 
 # from eveqnsv
 function gen_eigensystem_2nd!(
-    ispin::Int64, ik::Int64,
+    ik::Int64,
     atoms::Atoms, pw::PWGrid, mt_vars::MuffinTins, apwlo_vars,
     apwalm, elec_chgst, bsmt, bsir, ndmag
 )
@@ -27,8 +27,8 @@ function gen_eigensystem_2nd!(
 
     # Read 1st variational eigenvalues and eigenvectors from files
     # XXX: Read this or just make them into arguments ?
-    evalfv = deserialize("evals_1st_ispin_$(ispin)_ik_$(ik).dat")
-    evecfv = deserialize("evecs_1st_ispin_$(ispin)_ik_$(ik).dat")
+    evalfv = deserialize("evals_1st_ik_$(ik).dat")
+    evecfv = deserialize("evecs_1st_ik_$(ik).dat")
 
     evecsv = zeros(ComplexF64, nstsv, nstsv)
     @views evalsvp = elec_chgst.evalsv[:,ik]
@@ -276,7 +276,7 @@ function gen_eigensystem_2nd!(
     end
     #
     #println("sum evecsv before diagonalization = ", sum(evecsv))
-    serialize("Ham_2nd_ispin_$(ispin)_ik_$(ik).dat", evecsv)
+    serialize("Ham_2nd_ik_$(ik).dat", evecsv)
     #
     spcpl = false
     if spcpl || (!spinpol)
@@ -295,8 +295,8 @@ function gen_eigensystem_2nd!(
         end
     end
 
-    serialize("evals_2nd_ispin_$(ispin)_ik_$(ik).dat", evalsvp)
-    serialize("evecs_2nd_ispin_$(ispin)_ik_$(ik).dat", evecsv)
+    serialize("evals_2nd_ik_$(ik).dat", evalsvp)
+    serialize("evecs_2nd_ik_$(ik).dat", evecsv)
 
     return
 
