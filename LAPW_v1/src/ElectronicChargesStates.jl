@@ -18,6 +18,12 @@ mutable struct ElectronicChargesStates
     chgtot::Float64
     chgcalc::Float64
     #
+    mommt::Matrix{Float64}
+    mommttot::Vector{Float64} # tuple3?
+    momir::Vector{Float64}
+    momtot::Vector{Float64} # 
+    momtotm::Float64
+    #
     nstfv::Int64
     nstsv::Int64
     swidth::Float64
@@ -105,11 +111,18 @@ function ElectronicChargesStates(
     chgir = 0.0
     chgcalc = 0.0
 
+    mommt = zeros(Float64, 3, Natoms)
+    mommttot = zeros(Float64, 3)
+    momir = zeros(Float64, 3)
+    momtot = zeros(Float64, 3) 
+    momtotm = 0.0
+
     return ElectronicChargesStates(
         spinpol, nspinor, nempty0, nempty,
         chgzn, chgval, chgcr, chgcrlk, chgcrtot,
         chgmt, chgmttot, chgir,
         chgexs, chgtot, chgcalc,
+        mommt, mommttot, momir, momtot, momtotm,
         nstfv, nstsv, swidth, occsv, evalsv,
         efermi, occmax,
         tevecsv

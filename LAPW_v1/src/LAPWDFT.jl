@@ -283,6 +283,7 @@ include("rhocore.jl"); export rhocore!
 
 include("calc_charge.jl"); export calc_charge!, calc_chargemt!
 include("rhonorm.jl"); export rhonorm!
+include("calc_mag_moment.jl"); export calc_mag_moment!
 
 include("debug_main.jl")
 

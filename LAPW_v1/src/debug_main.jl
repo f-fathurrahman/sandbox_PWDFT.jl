@@ -349,6 +349,10 @@ function debug_main()
 
     rhonorm!(atoms, pw, mt_vars, elec_chgst, rhomt, rhoir)
 
+    if spinpol
+        calc_mag_moment!( atoms, pw, mt_vars, cfunir, elec_chgst, magmt, magir )
+    end
+
     @infiltrate
     # open REPL and investigate the variables
 
