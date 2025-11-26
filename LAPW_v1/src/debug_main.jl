@@ -299,6 +299,21 @@ function debug_main()
         magmt=magmt, magir=magir
     )
 
+    potks!(
+        atoms, atsp_vars, mt_vars, pw, sym_vars, 
+        rhomt, rhoir,
+        vclmt, vclir,
+        epsxcmt, epsxcir,
+        vxcmt, vxcir,
+        vsmt, vsir;
+        magmt = magmt, magir = magir,
+        bsmt = bsmt, bsir = bsir,
+        bxcir = bxcir, bxcmt = bxcmt,
+        cfunir = cfunir,
+        bfieldc = bfieldc, bfcmt = bfcmt,
+        spinpol = spinpol, ncmag = ncmag
+    )
+
     @infiltrate
     # open REPL and investigate the variables
 
