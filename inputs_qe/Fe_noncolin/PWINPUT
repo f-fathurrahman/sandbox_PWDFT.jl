@@ -9,30 +9,31 @@
 /
 
 &system
-  ibrav = 2
-  celldm(1) = 7.42
+  ibrav = 3
+  celldm(1) = 5.217
   nat = 1
   ntyp = 1
-  lspinorb = .true.
-  noncolin = .true.
-  starting_magnetization = 0.0
+  ecutwfc = 25.0
+  report = 1
   occupations = 'smearing'
   smearing = 'marzari-vanderbilt'
-  degauss = 0.02
-  ecutwfc = 30.0
+  degauss = 0.05
+  noncolin = .true.
+  starting_magnetization(1) = 0.5
+  angle1(1) = 90.0
+  angle2(1) = 0.0
 /
 
 &electrons
-  mixing_beta = 0.7,
-  conv_thr =  1.0d-8
+  conv_thr = 1.0e-8
+  mixing_beta = 0.2
 /
 
 ATOMIC_SPECIES
-Pt  1.0  Pt_LDA_FR.SG15v1.2.UPF
+Fe 55.847 Fe.upf
 
 ATOMIC_POSITIONS crystal
-Pt  0.0000000   0.00000000   0.0
+Fe 0.0 0.0 0.0
 
-K_POINTS AUTOMATIC
-4 4 4 1 1 1
-
+K_POINTS automatic
+6 6 6 1 1 1
