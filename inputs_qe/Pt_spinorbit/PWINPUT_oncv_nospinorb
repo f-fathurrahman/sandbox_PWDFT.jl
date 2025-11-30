@@ -3,7 +3,7 @@
   restart_mode = 'from_scratch'
   tprnfor = .true.
   tstress = .true.
-  pseudo_dir = './'
+  pseudo_dir = '../pseudo_LDA'
   outdir = './tmp'
   disk_io = 'none'
 /
@@ -13,26 +13,24 @@
   celldm(1) = 7.42
   nat = 1
   ntyp = 1
-  lspinorb = .true.
-  noncolin = .true.
-  starting_magnetization = 0.0
+  lspinorb = .false.
   occupations = 'smearing'
-  smearing = 'marzari-vanderbilt'
-  degauss = 0.02
+  smearing = 'fermi-dirac'
+  degauss = 0.01
   ecutwfc = 30.0
 /
 
 &electrons
-  mixing_beta = 0.7,
+  mixing_beta = 0.1
   conv_thr =  1.0d-8
 /
 
 ATOMIC_SPECIES
-Pt  1.0  Pt_LDA_FR.SG15v1.2.UPF
+Pt  1.0  Pt_LDA_SR.SG15v1.2.UPF
 
 ATOMIC_POSITIONS crystal
 Pt  0.0000000   0.00000000   0.0
 
 K_POINTS AUTOMATIC
-4 4 4 1 1 1
+4 4 4 0 0 0
 

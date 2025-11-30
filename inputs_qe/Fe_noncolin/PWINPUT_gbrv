@@ -13,11 +13,12 @@
   celldm(1) = 5.217
   nat = 1
   ntyp = 1
-  ecutwfc = 25.0
+  ecutwfc = 20.0
+  ecutrho = 200.0
   report = 1
   occupations = 'smearing'
-  smearing = 'marzari-vanderbilt'
-  degauss = 0.05
+  smearing = 'fermi-dirac'
+  degauss = 0.01
   noncolin = .true.
   starting_magnetization(1) = 0.5
   angle1(1) = 90.0
@@ -30,10 +31,10 @@
 /
 
 ATOMIC_SPECIES
-Fe 55.847 Fe.upf
+Fe 55.847 Fe_gbrv.UPF
 
 ATOMIC_POSITIONS crystal
 Fe 0.0 0.0 0.0
 
 K_POINTS automatic
-6 6 6 1 1 1
+6 6 6 0 0 0
