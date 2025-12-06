@@ -13,8 +13,9 @@
   celldm(1) = 7.42
   nat = 1
   ntyp = 1
-  lspinorb = .false.
+  nbnd = 13
   occupations = 'smearing'
+  input_dft = 'slater+vwn'
   smearing = 'fermi-dirac'
   degauss = 0.01
   ecutwfc = 30.0

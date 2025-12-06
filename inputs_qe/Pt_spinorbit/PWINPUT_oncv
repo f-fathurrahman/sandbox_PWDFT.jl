@@ -16,6 +16,8 @@
   lspinorb = .true.
   noncolin = .true.
   starting_magnetization = 0.0
+  nbnd = 26
+  input_dft = 'slater+vwn'
   occupations = 'smearing'
   smearing = 'fermi-dirac'
   degauss = 0.01
