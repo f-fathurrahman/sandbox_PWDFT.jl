@@ -3,7 +3,7 @@
   restart_mode = 'from_scratch'
   tprnfor = .true.
   tstress = .true.
-  pseudo_dir = './'
+  pseudo_dir = '../pseudo_LDA'
   outdir = './tmp'
   disk_io = 'none'
 /
@@ -29,7 +29,7 @@
 /
 
 ATOMIC_SPECIES
-Fe 55.847 Fe.upf
+Fe 55.847 Fe_oncv.UPF
 
 ATOMIC_POSITIONS crystal
 Fe 0.0 0.0 0.0

@@ -3,7 +3,7 @@
   restart_mode = 'from_scratch'
   tprnfor = .true.
   tstress = .true.
-  pseudo_dir = './'
+  pseudo_dir = '../pseudo_LDA'
   outdir = './tmp'
   disk_io = 'none'
 /

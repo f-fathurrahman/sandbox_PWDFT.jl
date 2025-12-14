@@ -15,7 +15,7 @@
   ntyp = 1
   lspinorb = .true.
   noncolin = .true.
-  starting_magnetization = 0.0
+  starting_magnetization(1) = 0.0
   nbnd = 26
   input_dft = 'slater+vwn'
   occupations = 'smearing'
