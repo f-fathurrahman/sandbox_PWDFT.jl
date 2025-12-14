@@ -17,30 +17,32 @@ function sph_ind( l::Int64, j::Int64, m::Int64, spin::Int64 )
     @assert m >= (-l - 1)
     @assert m <= l
     #
+    res = -1
     if abs(j - l - 0.5) < 1e-8
         if spin == 1
-            return m
+            res = m
         end
         if spin == 2
-            return m + 1
+            res = m + 1
         end
     elseif abs(j - l + 0.5) < 1e-8 # check if j - l == 1/2
         if m < (-l + 1)
-            return 0
+            res = 0
         else
             if spin == 1
-                return m - 1
+                res = m - 1
             end
             if spin == 2
-                return m
+                res = m
             end
         end
     else
         error("l=$l and j=$j are not compatible")
     end
     #
-    if (sph_ind < -l) || (sph_ind > l)
-        return 0
+    if (res < -l) || (res > l)
+        res = 0
     end
+    return res
 end
 
