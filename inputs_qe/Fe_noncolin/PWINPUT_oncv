@@ -16,6 +16,7 @@
   nbnd = 24
   ecutwfc = 50.0
   report = 1
+  input_dft = 'slater+vwn'
   occupations = 'smearing'
   smearing = 'fermi-dirac'
   degauss = 0.01
