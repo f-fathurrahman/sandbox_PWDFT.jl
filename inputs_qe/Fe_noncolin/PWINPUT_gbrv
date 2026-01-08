@@ -16,6 +16,7 @@
   ecutwfc = 20.0
   ecutrho = 200.0
   report = 1
+  input_dft = 'slater+vwn'
   occupations = 'smearing'
   smearing = 'fermi-dirac'
   degauss = 0.01

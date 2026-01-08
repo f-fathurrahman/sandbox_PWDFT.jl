@@ -12,6 +12,7 @@ Rhoe[:,:], _ = atomic_rho_g( Ham,
 );
 update_from_rhoe!(Ham, psiks, Rhoe);
 
-K_psiks = op_K(Ham, psiks);
-Vloc_psiks = op_V_loc(Ham, psiks);
-Vpsnloc_psiks = op_V_Ps_nloc(Ham, psiks);
+E_kin = calc_E_kin( Ham, psiks )
+E_Ps_loc, E_Hartree, E_xc = calc_E_local( Ham, psiks )
+E_Ps_nloc = calc_E_Ps_nloc( Ham, psiks )
+calc_E_local( Ham::Hamiltonian, psiks::BlochWavefunc )
