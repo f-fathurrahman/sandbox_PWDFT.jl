@@ -15,4 +15,3 @@ update_from_rhoe!(Ham, psiks, Rhoe);
 E_kin = calc_E_kin( Ham, psiks )
 E_Ps_loc, E_Hartree, E_xc = calc_E_local( Ham, psiks )
 E_Ps_nloc = calc_E_Ps_nloc( Ham, psiks )
-calc_E_local( Ham::Hamiltonian, psiks::BlochWavefunc )
