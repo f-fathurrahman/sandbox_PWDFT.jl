@@ -16,8 +16,8 @@ psiks = rand_BlochWavefunc(Ham);
 electrons_scf_G!(
     Ham,
     psiks = psiks,
-    NiterMax = 10,
-    betamix = 0.1,
-    starting_magn = [0.2],
+    NiterMax = 50,
+    betamix = 0.2,
+    starting_magn = Ham.options.starting_magn,
     print_final_ebands = false
 )
