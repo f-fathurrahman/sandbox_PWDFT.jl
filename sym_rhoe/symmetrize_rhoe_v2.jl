@@ -21,7 +21,7 @@ function symmetrize_rhoe_v2!(
     s = sym_info.s
     ft = sym_info.ft
     t_rev = sym_info.t_rev
-    #non_symmorphic = sym_info.non_symmorphic
+    non_symmorphic = sym_info.non_symmorphic
 
     Npoints = prod(pw.Ns)
     Nspin_dens = size(Rhoe, 2)
@@ -55,7 +55,6 @@ function symmetrize_rhoe_v2!(
     #
     # convert fractional translations to cartesian, in a0 units
     for isym in 1:Nsyms
-        non_symmorphic[isym] = ( ft[1,isym] != 0.0 || ft[2,isym] != 0.0 || ft[3,isym] != 0.0 )
         if non_symmorphic[isym]
             ft_[:,isym] = at[:,1]*ft[1,isym] + at[:,2]*ft(2,ns) + at[:,3]*ft[3,isym]
         end
