@@ -11,28 +11,45 @@ function symmetrize_rhoe_v2!(
 
     LatVecs = pw.LatVecs
     RecVecs = pw.RecVecs
+    G = pw.gvec.G
+    idx_g2r = pw.gvec.idx_g2r
+
     Nsyms = sym_info.Nsyms
     inv_s = sym_info.inv_s
+    idx_inv_s = sym_info.idx_inv_s
+    sname = sym_info.sname
+    s = sym_info.s
     ft = sym_info.ft
-    non_symmorphic = sym_info.non_symmorphic
+    t_rev = sym_info.t_rev
+    #non_symmorphic = sym_info.non_symmorphic
 
     Npoints = prod(pw.Ns)
-    Nspin = size(Rhoe)[2]
+    Nspin_dens = size(Rhoe, 2)
+    if Nspin_dens == 4
+        Nspin_lsda = 1
+    elseif Nspin_dens in [1,2]
+        Nspin_lsda = Nspin_dens
+    else
+        error("Invalid value for Nspin_dens = $Nspin_dens")
+    end
 
-    RhoeG = zeros(ComplexF64,Npoints,Nspin)
-    for ispin = 1:Nspin
+    RhoeG = zeros(ComplexF64, Npoints, Nspin_dens)
+    for ispin in 1:Nspin_dens
         @views RhoeG[:,ispin] = R_to_G(pw, Rhoe[:,ispin])
     end
 
-    sg = zeros(Float64,3)
-    irot = zeros(Int64,Nsyms)
+    sg = zeros(Float64, 3)
+    irot = zeros(Int64, Nsyms)
 
-    g0 = zeros(3,Nsyms)
-    is_done_shell = zeros(Bool,Nsyms)
+    g0 = zeros(Float64, 3, Nsyms)
+    is_done_shell = zeros(Bool, Nsyms)
 
     trmat = LatVecs'/(2*pi)
 
-    rhosum = zeros(ComplexF64,Nspin)
+    rhosum = zeros(ComplexF64, 2)
+    magsum = zeros(ComplexF64, 3)
+    mag = zeros(ComplexF64, 3)
+    magrot = zeros(ComplexF64, 3)
     
     non_symmorphic = zeros(Bool, 48)
     #
@@ -109,19 +126,19 @@ function symmetrize_rhoe_v2!(
                 #                    components 2,3,4 are the magnetization
                 # non colinear case: components 2,3,4 are the magnetization
                 #
-                if Nspin_dense == 4
+                if Nspin_dens == 4
                     # bring magnetization to crystal axis
                     mag[:] = RhoeG[ip,2] * RecVecs[1,:] +
                              RhoeG[ip,3] * RecVecs[2,:] +
                              RhoeG[ip,4] * RecVecs[3,:]
                     # rotate and add magnetization
-                    magrot[:] = s[1,:,invs[isym]] * mag[1] +
-                                s[2,:,invs[isym]] * mag[2] +
-                                s[3,:,invs[isym]] * mag[3]
-                    if sname[invs[isym]][1:3] == "inv"
+                    magrot[:] = inv_s[1,:,isym] * mag[1] +
+                                inv_s[2,:,isym] * mag[2] +
+                                inv_s[3,:,isym] * mag[3]
+                    if sname[idx_inv_s][1:3] == "inv"
                         magrot[:] = -magrot[:]
                     end
-                    if t_rev[invs[isym]]
+                    if t_rev[idx_inv_s[isym]]
                         magrot[:] = -magrot[:]
                     end
                 end
@@ -160,7 +177,7 @@ function symmetrize_rhoe_v2!(
                         RhoeG[ip,ispin] = rhosum[ispin]*fact
                     end
                 else
-                    for ispin in 1:Nspin
+                    for ispin in 1:Nspin_lsda
                         RhoeG[ip,ispin] = rhosum[ispin]
                     end
                 end
