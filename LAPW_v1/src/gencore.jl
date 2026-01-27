@@ -101,7 +101,7 @@ function gencore!(atoms, eqatoms, atsp_vars, mt_vars, vsmt, core_states)
                         continue
                     end
                     evalcr[ja][ist] = evalcr[ia][ist]
-                    rwfcr[ja][1:nrs,:,ist] .= rwfcr[ias][1:nrs,:,ist]
+                    rwfcr[ja][1:nrs,:,ist] .= rwfcr[ia][1:nrs,:,ist]
                 end
                 for ispincr in 1:NspinCore
                     rhocr[ja][1:nr,ispincr] .= rhocr[ia][1:nr,ispincr]

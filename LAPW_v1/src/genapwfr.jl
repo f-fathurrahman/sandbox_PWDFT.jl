@@ -118,7 +118,7 @@ function genapwfr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
         for ja in 1:Natoms
             if !done[ja] && eqatoms[ia,ja]
                 for l in 0:lmaxapw
-                    for io in 1:apword[is][l]
+                    for io in 1:apword[isp][l]
                         apwfr[ja][l][io][:,1] .= apwfr[ia][l][io][:,1]
                         apwfr[ja][l][io][:,2] .= apwfr[ia][l][io][:,2]
                         apwdfr[ja][l][io] = apwdfr[ia][l][io]

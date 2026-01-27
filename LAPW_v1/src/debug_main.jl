@@ -135,11 +135,13 @@ function debug_main()
 
 
     # Create a version for full GVectors, where Ng=Npoints
-    gvec_full = GVectorsFull(pw.Ns, pw.RecVecs)
+    #gvec_full = GVectorsFull(pw.Ns, pw.RecVecs)
     # Some quantities for interstitial density and potentials can use gvec_full
-    ffacg = genffacgp(pw, mt_vars.rmt, gvec_full=gvec_full)
-    cfunig, cfunir = gencfun(pw, atoms, ffacg, gvec_full=gvec_full)
-    vsig = zeros(ComplexF64, pw.gvec.Ng)
+    #ffacg = genffacgp(pw, mt_vars.rmt, gvec_full = gvec_full)
+    #cfunig, cfunir = gencfun(pw, atoms, ffacg, gvec_full = gvec_full)
+    ffacg = genffacgp(pw, mt_vars.rmt, gvec_full = nothing)
+    cfunig, cfunir = gencfun(pw, atoms, ffacg, gvec_full = nothing)
+    vsig = zeros(ComplexF64, pw.gvec.Ng) # XXX vsig also use GVectorsFull ?
 
 
 

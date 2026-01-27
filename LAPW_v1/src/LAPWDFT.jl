@@ -287,6 +287,7 @@ include("calc_mag_moment.jl"); export calc_mag_moment!
 include("rhomag.jl"); export rhomag!
 
 include("debug_main.jl")
+include("debug_scf_01.jl")
 
 end
 

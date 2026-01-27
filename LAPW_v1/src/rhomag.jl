@@ -56,11 +56,12 @@ function rhomag!(
 
     rf_mt_c_to_f!(atoms, atsp_vars, mt_vars, rhomt)
 
-    symrvfmt!(atoms, sym_vars, mt_vars, magmt; tspin = true, coarse = true)
-    symrvfir!(pw, sym_vars, magir; tspin = true, tnc = false)
-
-    for i in 1:ndmag
-        @views rf_mt_c_to_f!(atoms, atsp_vars, mt_vars, magmt[:,i])
+    if !isnothing(magmt)
+        symrvfmt!(atoms, sym_vars, mt_vars, magmt; tspin = true, coarse = true)
+        symrvfir!(pw, sym_vars, magir; tspin = true, tnc = false)
+        for i in 1:ndmag
+            @views rf_mt_c_to_f!(atoms, atsp_vars, mt_vars, magmt[:,i])
+        end
     end
 
     rhocore!(atoms, mt_vars, elec_chgst, core_states, rhomt; magmt=magmt)

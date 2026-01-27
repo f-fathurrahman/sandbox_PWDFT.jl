@@ -88,7 +88,7 @@ function occupy!(
             fermidos += wkpt[ik]*sdelta_fd(x)*t1
         end 
         if abs(occsv[nstsv,ik]) > epsocc
-            println("WARNING: not enough empty states for k-point ", ik)
+            println("WARNING: not enough empty states for k-point $ik at $(@__FILE__)")
         end
     end
     fermidos = fermidos*occmax
