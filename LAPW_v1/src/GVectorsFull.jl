@@ -33,7 +33,7 @@ function GVectorsFull( Ns::Tuple{Int64,Int64,Int64}, RecVecs::Matrix{Float64} )
         G2_temp = G_temp[1]^2 + G_temp[2]^2 + G_temp[3]^2
         # No check here if G2_temp is less than some value
         ig = ig + 1
-        @views  G[:,ig] = G_temp[:]
+        @views G[:,ig] = G_temp[:]
         G2[ig] = G2_temp
         idx_g2r[ig] = ip
         idx_g2miller[ig] = (gi, gj, gk)

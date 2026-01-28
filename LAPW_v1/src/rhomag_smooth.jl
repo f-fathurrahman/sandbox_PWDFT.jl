@@ -28,6 +28,13 @@ function rhomag!(
         fill!(magir, 0.0)
     end
 
+    if pw.using_dual_grid
+        NpointsSmooth = prod(pw.Nss)
+    else
+        NpointsSmooth = Npoints
+    end
+    rhoir_s = zeros(Float64, NpointsSmooth)
+
     for ik in 1:pw.gvecw.kpoints.Nkpt
 
         evecfv = deserialize("evecs_1st_ik_$(ik).dat");
@@ -41,11 +48,13 @@ function rhomag!(
         rhomagk!(
             ik, atoms, pw, mt_vars, apwlo_vars, elec_chgst,
             apwalm, evecfv, evecsv,
-            rhomt, rhoir;
+            rhomt, rhoir_s;
             magmt=magmt, magir=magir
         )
 
     end
+
+    PWDFT.smooth_to_dense!(pw, rhoir_s, rhoir)
 
     rhomagsh!(atoms, mt_vars, rhomt; magmt=magmt)
 

@@ -6,7 +6,7 @@ struct ElkInput
     atomic_positions::Vector{Matrix{Float64}}
     is_molecule::Bool
     ngridk::Vector{Int64}
-    nempty::Int64
+    nempty::Union{Int64,Nothing}
     spinpol::Bool
     bfieldc::Vector{Float64}
     spinorb::Bool
@@ -30,7 +30,7 @@ function read_elk_input()
     atomic_positions = Vector{Matrix{Float64}}()
     is_molecule = false
     ngridk = ones(Int64, 3)
-    nempty = 0
+    nempty = nothing
     spinpol = false
     scale = 1.0
     bfieldc = zeros(Float64, 3)

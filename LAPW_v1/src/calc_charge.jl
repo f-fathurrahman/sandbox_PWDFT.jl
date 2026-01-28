@@ -5,11 +5,16 @@ function calc_charge!(atoms, pw, mt_vars, elec_chgst, rhomt, rhoir, cfunir)
 
     # find the muffin-tin charges
     calc_chargemt!(atoms, mt_vars, elec_chgst, rhomt)
+    
     # find the interstitial charge
     t1 = dot(rhoir, cfunir)
+    println("for interstitial charge: t1 = ", t1)
     elec_chgst.chgir = t1*CellVolume/Npoints
+    println("chgir = ", elec_chgst.chgir)
+
     # total calculated charge
     elec_chgst.chgcalc = elec_chgst.chgmttot + elec_chgst.chgir
+    println("Calculated charge = $(elec_chgst.chgcalc)")
     return
 end
 
@@ -38,6 +43,7 @@ function calc_chargemt!(atoms, mt_vars, elec_chgst, rhomt)
         # integrate to the muffin-tin radius
         t1 = dot( wrmt[isp], fr[1:nr] )
         chgmt[ia] = 4π * y00 * t1
+        println("ia = $ia chgmt[ia] = $(chgmt[ia])")
     end
     elec_chgst.chgmttot = sum(chgmt)
     return

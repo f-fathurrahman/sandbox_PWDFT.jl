@@ -120,7 +120,13 @@ function rhomagk!(
 
     # interstitial contributions to density and magnetization
     #
-    wfir = zeros(ComplexF64, Npoints, nspinor)
+    if pw.using_dual_grid
+        NpointsSmooth = prod(pw.Nss)
+    else
+        NpointsSmooth = Npoints
+    end
+    wfir = zeros(ComplexF64, NpointsSmooth, nspinor)
+    rhoir_s = zeros(ComplexF64, NpointsSmooth)
     #
     # loop over all states
     #
@@ -159,7 +165,7 @@ function rhomagk!(
         # Fourier transform wavefunction to real-space
         #println("sum wfir before FFT: ", sum(wfir))
         for ispn in 1:nspinor
-            @views G_to_R!(pw, wfir[:,ispn])
+            @views G_to_R!(pw, wfir[:,ispn], smooth=pw.using_dual_grid)
         end
         wfir *= Npoints # scale to match Elk convention
         #println("sum wfir after FFT: ", sum(wfir))
@@ -168,18 +174,20 @@ function rhomagk!(
             # spin-polarized
             if ncmag
                 # non-collinear
-                @views rhomagk_rmk1!(Npoints, wo, wfir[:,1], wfir[:,2], rhoir, magir, magir[:,2], magir[:,3])
+                @views rhomagk_rmk1!(NpointsSmooth, wo, wfir[:,1], wfir[:,2], rhoir_s, magir_s, magir_s[:,2], magir_s[:,3])
             else
                 # collinear
-                @views rhomagk_rmk2!(Npoints, wo, wfir[:,1], wfir[:,2], rhoir, magir)
+                @views rhomagk_rmk2!(NpointsSmooth, wo, wfir[:,1], wfir[:,2], rhoir_s, magir_s)
             end
         else
             # XXX We pass full FFT grid array here, so ngtot -> Npoints
             # spin-unpolarized
-            rhomagk_rmk3!(Npoints, wo, wfir, rhoir)
+            rhomagk_rmk3!(NpointsSmooth, wo, wfir, rhoir_s)
             #@printf("ist = %4d sum rhoir = %18.10f\n", j, sum(rhoir))
         end
     end # nstsv
+
+    PWDFT.smooth_to_dense!(pw, rhoir_s, rhoir)
 
     return
 end

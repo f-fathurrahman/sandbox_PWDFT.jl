@@ -18,6 +18,7 @@ function rhonorm!(atoms, pw, mt_vars, elec_chgst, rhomt, rhoir)
 
     # check error in total charge
     t1 = chgcalc/chgtot - 1.0
+    println("diff charge = $t1")
     if abs(t1) > epschg
         println("WARNING: Total charge density is incorrect: calculated: $chgcalc, required: $chgtot")
     end

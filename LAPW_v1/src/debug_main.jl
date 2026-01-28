@@ -101,6 +101,12 @@ function debug_main()
     )
     println(pw)
 
+    if sym_info.Nsyms > 1
+        rhoe_symmetrizer = PWDFT.RhoeSymmetrizer( atoms, pw, sym_info )
+    else
+        rhoe_symmetrizer = PWDFT.RhoeSymmetrizer() # dummy rhoe_symmetrizer
+    end
+
     # check for collinearity in the z-direction and set the dimension of the
     # magnetization and exchange-correlation vector fields
     epslat  = 1e-6
@@ -291,29 +297,14 @@ function debug_main()
     # Update occupation numbers
     occupy!(
         pw.gvecw.kpoints, apwlo_vars, elec_chgst;
-        NiterMax=1000, epsocc=1e-8
+        NiterMax = 1000, epsocc = 1e-8
     )
 
     # Calculate electron densities, charges, magnetizations, moments
     rhomag!(
         atoms, atsp_vars, pw, sym_vars, mt_vars, apwlo_vars, core_states, elec_chgst, cfunir, 
         rhomt, rhoir;
-        magmt=magmt, magir=magir
-    )
-
-    potks!(
-        atoms, atsp_vars, mt_vars, pw, sym_vars, 
-        rhomt, rhoir,
-        vclmt, vclir,
-        epsxcmt, epsxcir,
-        vxcmt, vxcir,
-        vsmt, vsir;
-        magmt = magmt, magir = magir,
-        bsmt = bsmt, bsir = bsir,
-        bxcir = bxcir, bxcmt = bxcmt,
-        cfunir = cfunir,
-        bfieldc = bfieldc, bfcmt = bfcmt,
-        spinpol = spinpol, ncmag = ncmag
+        magmt = magmt, magir = magir
     )
 
     @infiltrate
