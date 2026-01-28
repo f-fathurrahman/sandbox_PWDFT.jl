@@ -20,7 +20,9 @@ function rhomagk!(
     
     Ngw = pw.gvecw.Ngw
     wppt = pw.gvecw.kpoints.wk[ik]
-    idx_gw2r = pw.gvecw.idx_gw2r
+    #idx_gw2r = pw.gvecw.idx_gw2r
+    idx_gw2g = pw.gvecw.idx_gw2g
+    idx_g2r = pw.gvec.idx_g2r
     Npoints = prod(pw.Ns)
     CellVolume = pw.CellVolume
 
@@ -142,7 +144,9 @@ function rhomagk!(
                     z1 = evecsv[i,j]
                     if abs(real(z1)) + abs(imag(z1)) > epsocc # XXX why check with epsocc?
                         for igw in 1:Ngw[ik]
-                            ip = idx_gw2r[ik][igw]
+                            #ip = idx_gw2r[ik][igw]
+                            ig = idx_gw2g[ik][igw]
+                            ip = idx_g2r[ig]
                             wfir[ip,ispn] += z1*evecfv[igw,ist]
                         end
                     end # if
@@ -151,7 +155,9 @@ function rhomagk!(
         else
             # spin-unpolarized wavefunction
             for igw in 1:Ngw[ik]
-                ip = idx_gw2r[ik][igw]
+                #ip = idx_gw2r[ik][igw]
+                ig = idx_gw2g[ik][igw]
+                ip = idx_g2r[ig]
                 wfir[ip,1] = evecfv[igw,j]
             end
         end
