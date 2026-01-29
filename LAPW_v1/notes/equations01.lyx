@@ -95,6 +95,255 @@
 \begin_body
 
 \begin_layout Subsection*
+energy
+\end_layout
+
+\begin_layout Standard
+Computes the total energy and its individual contributions.
+ The kinetic energy is given by
+\begin_inset Formula 
+\[
+T_{s}=\sum_{i}n_{i}\epsilon_{i}-\int\rho({\bf r})[v_{{\rm C}}({\bf r})+v_{{\rm xc}}({\bf r})]d{\bf r}-\int{\bf m}({\bf r})\cdot({\bf B}_{{\rm xc}}({\bf r})+{\bf B}_{{\rm ext}}({\bf r}))d{\bf r},
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $n_{i}$
+\end_inset
+
+ are the occupancies and 
+\begin_inset Formula $\epsilon_{i}$
+\end_inset
+
+ are the eigenvalues of both the core and valence states;
+ 
+\begin_inset Formula $\rho$
+\end_inset
+
+ is the density;
+ 
+\begin_inset Formula ${\bf m}$
+\end_inset
+
+ is the magnetisation density;
+ 
+\begin_inset Formula $v_{{\rm C}}$
+\end_inset
+
+ is the Coulomb potential;
+ 
+\begin_inset Formula $v_{{\rm xc}}$
+\end_inset
+
+ and 
+\begin_inset Formula ${\bf B}_{{\rm xc}}$
+\end_inset
+
+ are the exchange-correlation potential and magnetic field,
+ respectively;
+ and 
+\begin_inset Formula ${\bf B}_{{\rm ext}}$
+\end_inset
+
+is the external magnetic field.
+\end_layout
+
+\begin_layout Standard
+The Hartree,
+ electron-nuclear and nuclear-nuclear electrostatic energies are combined into the Coulomb energy:
+\begin_inset Formula 
+\[
+\begin{align*}E_{{\rm C}} & =E_{{\rm H}}+E_{{\rm en}}+E_{{\rm nn}}\\
+ & =\frac{1}{2}V_{{\rm C}}+E_{{\rm Mad}},
+\end{align*}
+\]
+
+\end_inset
+
+where
+\begin_inset Formula 
+\[
+V_{{\rm C}}=\int\rho({\bf r})v_{{\rm C}}({\bf r})d{\bf r}
+\]
+
+\end_inset
+
+is the Coulomb potential energy.
+ The Madelung energy is given by
+\begin_inset Formula 
+\[
+E_{{\rm Mad}}=\frac{1}{2}\sum_{\alpha}z_{\alpha}R_{\alpha},
+\]
+
+\end_inset
+
+where
+\begin_inset Formula 
+\[
+R_{\alpha}=\lim_{r\rightarrow0}\left(v_{\alpha;00}^{{\rm C}}(r)Y_{00}+\frac{z_{\alpha}}{r}\right)
+\]
+
+\end_inset
+
+for atom 
+\begin_inset Formula $\alpha$
+\end_inset
+
+,
+ with 
+\begin_inset Formula $v_{\alpha;00}^{{\rm C}}$
+\end_inset
+
+ being the 
+\begin_inset Formula $l=0$
+\end_inset
+
+ component of the spherical harmonic expansion of 
+\begin_inset Formula $v_{{\rm C}}$
+\end_inset
+
+in the muffin-tin,
+ and 
+\begin_inset Formula $z_{\alpha}$
+\end_inset
+
+ is the nuclear charge.
+ Using the nuclear-nuclear energy determined at the start of the calculation,
+ the electron-nuclear and Hartree energies can be isolated with
+\begin_inset Formula 
+\[
+E_{{\rm en}}=2\left(E_{{\rm Mad}}-E_{{\rm nn}}\right)
+\]
+
+\end_inset
+
+and
+\begin_inset Formula 
+\[
+E_{{\rm H}}=\frac{1}{2}(E_{{\rm C}}-E_{{\rm en}}).
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Finally,
+ the total energy is
+\begin_inset Formula 
+\[
+E=T_{s}+E_{{\rm C}}+E_{{\rm xc}},
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $E_{{\rm xc}}$
+\end_inset
+
+ is obtained either by integrating the exchange-correlation energy density,
+ or in the case of exact exchange,
+ the explicit calculation of the Fock exchange integral.
+ The energy from the external magnetic fields in the muffin-tins,
+ 
+\begin_inset Formula ${\tt bfcmt}$
+\end_inset
+
+,
+ is always removed from the total since these fields are non-physical:
+ their field lines DO not close.
+ The energy of the physical external field,
+ 
+\begin_inset Formula ${\tt bfieldc}$
+\end_inset
+
+,
+ is also not included in the total because this field,
+ like those in the muffin-tins,
+ is used for breaking spin symmetry and taken to be infintesimal.
+ If this field is intended to be finite,
+ then the associated energy,
+ 
+\begin_inset Formula ${\tt engybext}$
+\end_inset
+
+,
+ should be added to the total by hand.
+ See 
+\begin_inset Formula ${\tt potxc}$
+\end_inset
+
+,
+ 
+\begin_inset Formula ${\tt exxengy}$
+\end_inset
+
+ and related subroutines.
+\end_layout
+
+\begin_layout Subsection*
+rfmtinp
+\end_layout
+
+\begin_layout Standard
+Calculate the inner product of two real functions in the muffin-tin.
+ So given two real functions of the form
+\begin_inset Formula 
+\[
+f({\bf r})=\sum_{l=0}^{l_{{\rm max}}}\sum_{m=-l}^{l}f_{lm}(r)R_{lm}(\hat{{\bf r}})
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $R_{lm}$
+\end_inset
+
+ are the real spherical harmonics,
+ the function returns
+\begin_inset Formula 
+\[
+I=\int\sum_{l=0}^{l_{{\rm max}}}\sum_{m=-l}^{l}f_{lm}^{1}(r)f_{lm}^{2}(r)r^{2}dr
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
+rfinp
+\end_layout
+
+\begin_layout Standard
+Calculates the inner product of two real functions over the entire unit cell.
+ The input muffin-tin functions should have angular momentum cut-off 
+\begin_inset Formula ${\tt lmaxo}$
+\end_inset
+
+.
+ In the interstitial region,
+ the integrand is multiplied with the characteristic function,
+ 
+\begin_inset Formula $\tilde{\Theta}({\bf r})$
+\end_inset
+
+,
+ to remove the contribution from the muffin-tin.
+ See routines 
+\begin_inset Formula ${\tt rfmtinp}$
+\end_inset
+
+ and 
+\begin_inset Formula ${\tt gencfun}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection*
 wavefmt
 \end_layout
 
