@@ -26,7 +26,7 @@ function calc_mag_moment!( atoms, pw, mt_vars, cfunir, elec_chgst, magmt, magir 
         for ia in 1:Natoms
             isp = atm2species[ia]
             nr = nrmt[isp]
-            # extract the l=m=0 component from the muffin-tin magnetisation
+            # extract the l=m=0 component from the muffin-tin magnetization
             @views rf_mt_lm!(1, isp, mt_vars, magmt[ia][:,idm], fr[1:nr])
             # integrate to the muffin-tin radius
             t1 = dot( wrmt[isp], fr[1:nr])

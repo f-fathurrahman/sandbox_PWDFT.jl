@@ -280,7 +280,7 @@ function gen_eigensystem_2nd!(
     #
     spcpl = false
     if spcpl || (!spinpol)
-        # spins are coupled; or spin-unpolarised: full diagonalisation
+        # spins are coupled; or spin-unpolarized: full diagonalization
         evalsvp[:], evecsv[:,:] = eigen(Hermitian(evecsv))
     else
         # spins not coupled: block diagonalize H

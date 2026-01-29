@@ -1,5 +1,5 @@
 mutable struct CoreStatesVars
-    spincore::Bool  # spincore is .true. if the core is to be treated as spin-polarised
+    spincore::Bool  # spincore is .true. if the core is to be treated as spin-polarized
     nspncr::Int64  # number of core spin-channels
     occcr::Vector{Vector{Float64}} # occupancies for core states
     evalcr::Vector{Vector{Float64}} # eigenvalues for core states

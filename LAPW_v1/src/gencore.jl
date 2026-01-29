@@ -50,7 +50,7 @@ function gencore!(atoms, eqatoms, atsp_vars, mt_vars, vsmt, core_states)
             # use the spherical part of the crystal Kohn-Sham potential
             @views rf_mt_lm!(1, isp, mt_vars, vsmt[ia], vr[1:nr])
             @views vr[1:nr] = vr[1:nr]*y00
-            # spin-up and -down potentials for polarised core
+            # spin-up and -down potentials for polarized core
             # ... spincore case is skipped ...
             #
             # append the Kohn-Sham potential from the atomic calculation for r > R_MT

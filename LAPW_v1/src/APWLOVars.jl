@@ -15,16 +15,16 @@ mutable struct APWLOVars
     # polynomial order used for APW radial derivatives
     npapw::Int64
     #
-    # APW initial linearisation energies
+    # APW initial linearization energies
     apwe0::Vector{OffsetVector{Vector{Float64}, Vector{Vector{Float64}}}}
     #
-    # APW linearisation energies
+    # APW linearization energies
     apwe::Vector{OffsetVector{Vector{Float64}, Vector{Vector{Float64}}}}
     #
     # APW derivative order
     apwdm::Vector{OffsetVector{Vector{Int64}, Vector{Vector{Int64}}}}
     #
-    # apwve is .true. if the linearisation energies are allowed to vary
+    # apwve is .true. if the linearization energies are allowed to vary
     apwve::Vector{OffsetVector{Vector{Bool}, Vector{Vector{Bool}}}}
     #
     # APW radial functions
@@ -88,14 +88,14 @@ mutable struct APWLOVars
     # default energy is less than zero
     demaxbnd::Float64
     #
-    # minimum default linearisation energy over all APWs and local-orbitals
+    # minimum default linearization energy over all APWs and local-orbitals
     e0min::Float64
     #
-    # if autolinengy is .true. then the fixed linearisation energies are set to the
+    # if autolinengy is .true. then the fixed linearization energies are set to the
     # Fermi energy minus dlefe
     autolinengy::Bool
     #
-    # difference between linearisation and Fermi energies when autolinengy is .true.
+    # difference between linearization and Fermi energies when autolinengy is .true.
     dlefe::Float64
     #
     # lorbcnd is .true. if conduction state local-orbitals should be added
@@ -229,7 +229,7 @@ function APWLOVars(
     npapw = max(apwordmax+1, 4)
     nplorb = max(lorbordmax+1, 4)
 
-    # set the APW and local-orbital linearisation energies to the default
+    # set the APW and local-orbital linearization energies to the default
     APWE_ELTYPE = eltype(apwe0)
     apwe = Vector{APWE_ELTYPE}(undef,Natoms)
     for ia in 1:Natoms

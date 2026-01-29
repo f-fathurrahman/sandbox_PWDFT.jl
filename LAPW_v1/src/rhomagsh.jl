@@ -24,7 +24,7 @@ function rhomagsh!(atoms, mt_vars, rhomt; magmt=nothing)
         #println("npmct = ", npcmt)
         rfmt[1:npc] = rhomt[ia][1:npc]
         forward_SHT!( mt_vars, isp, rfmt, rhomt[ia], coarse=true )
-        # convert magnetisation to spherical harmonics
+        # convert magnetization to spherical harmonics
         for idm in 1:ndmag
             rfmt[1:npc] = magmt[ia][1:npc]
             @views forward_SHT!( mt_vars, isp, rfmt, magmt[ia][:,idm], coarse=true )

@@ -44,7 +44,7 @@ function rhocore!(atoms, mt_vars, elec_chgst, core_states, rhomt; magmt=nothing)
         end
         # core leakage charge
         chgcrlk[ia] = chgcr[isp] - ss
-        # add to the magnetisation in the case of a spin-polarised core
+        # add to the magnetization in the case of a spin-polarized core
         if spincore
             # compute the moment in the muffin-tin
             for idm in 1:ndmag
@@ -62,7 +62,7 @@ function rhocore!(atoms, mt_vars, elec_chgst, core_states, rhomt; magmt=nothing)
             if t1 > 1e-10
                 v[:] *= 1/t1
             end
-            # add the core magnetisation to the total
+            # add the core magnetization to the total
             i = 1
             for ir in 1:nri
                 t1 = abs( rhocr[ia][ir,1] - rhocr[ia][ir,2] )

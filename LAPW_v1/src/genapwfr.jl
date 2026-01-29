@@ -56,13 +56,13 @@ function genapwfr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
         #
         for l in 0:lmaxapw
             for io in 1:apword[isp][l]
-                # linearisation energy accounting for energy derivative
+                # linearization energy accounting for energy derivative
                 # XXX FIXME apwdm indexing apwdm[is][l][io]
                 E = apwe[ia][l][io] + apwdm[isp][l][io]*deapwlo
                 # integrate the radial Schrodinger equation
                 @views p0view = p0[1:nr,io]
                 nn = rschrodint!(l, E, rgrid, vr, p0view, p1, q0, q1)
-                # multiply by the linearisation energy
+                # multiply by the linearization energy
                 ep0[1:nr,io] .= E*p0[1:nr,io]
                 # normalize radial functions
                 fr[1:nr] .= p0[1:nr,io].^2

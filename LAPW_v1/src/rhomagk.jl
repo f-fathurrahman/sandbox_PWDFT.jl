@@ -95,7 +95,7 @@ function rhomagk!(
                 @views backward_SHT!(mt_vars, isp, wfmt2, wfmt3[:,1], coarse=true)
             end
             #
-            # add to density and magnetisation
+            # add to density and magnetization
             if spinpol
                 # spin-polarized
                 if ncmag
@@ -169,7 +169,7 @@ function rhomagk!(
         end
         wfir *= Npoints # scale to match Elk convention
         #println("sum wfir after FFT: ", sum(wfir))
-        # add to density and magnetisation
+        # add to density and magnetization
         if spinpol 
             # spin-polarized
             if ncmag

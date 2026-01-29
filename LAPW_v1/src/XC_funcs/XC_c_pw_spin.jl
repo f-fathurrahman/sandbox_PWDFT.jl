@@ -5,7 +5,7 @@ function XC_c_pw_spin( Rhoe, zeta )
     rs = pi34/Rhoe^third
 
     # J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
-    # xc parameters, unpolarised
+    # xc parameters, unpolarized
     a = 0.031091
     a1 = 0.21370
     b1 = 7.5957
@@ -19,7 +19,7 @@ function XC_c_pw_spin( Rhoe, zeta )
     d0 = 0.4335
     d1 = 1.4408
     
-    # xc parameters, polarised
+    # xc parameters, polarized
     ap = 0.015545
     a1p = 0.20548
     b1p = 14.1189
@@ -67,7 +67,7 @@ function XC_c_pw_spin( Rhoe, zeta )
     rs32 = rs * rs12
     rs2 = rs^2
   
-    # unpolarised
+    # unpolarized
     om = 2.0 * a * (b1 * rs12 + b2 * rs + b3 * rs32 + b4 * rs2)
     dom = 2.0 * a * (0.5 * b1 * rs12 + b2 * rs + 1.5 * b3 * rs32 + 2.0 * b4 * rs2)
     olog = log(1.0 + 1.0 / om)

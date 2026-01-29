@@ -98,7 +98,7 @@ function rdirac!(
         end
     end
     f0[irm:nr] .= 0.0
-    # normalise
+    # normalize
     for ir in 1:nr
       fr[ir] = g0[ir]^2 + f0[ir]^2
     end

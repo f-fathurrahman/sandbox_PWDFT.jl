@@ -63,14 +63,14 @@ function genlofr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
         for ilo in 1:nlorb[isp]
             l = lorbl[isp][ilo]
             for jo in 1:lorbord[isp][ilo]
-                # linearisation energy accounting for energy derivative
+                # linearization energy accounting for energy derivative
                 E = lorbe[ia][ilo][jo] + lorbdm[isp][ilo][jo]*deapwlo
                 # integrate the radial Schrodinger equation
                 @views p0view = p0[1:nr,jo]
                 _ = rschrodint!(l, E, rgrid, vr, p0view, p1, q0, q1)
                 #@printf("\nl, ilo, linearization energy = %4d %4d %18.10f %4d\n", l, ilo, E, nn)
                 ep0[1:nr,jo] .= E*p0[1:nr,jo]
-                # normalise radial functions
+                # normalize radial functions
                 fr[1:nr] = p0[1:nr,jo].^2
                 t1 = splint(nr, rgrid, fr)
                 t1 = 1.0/sqrt(abs(t1))

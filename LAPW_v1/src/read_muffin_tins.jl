@@ -59,7 +59,7 @@ function read_muffin_tin( filename; verbose=false)
             error("Unable to parse apwve")
         end
         # 
-        # set the APW linearisation energies, derivative orders and variability for l > 0
+        # set the APW linearization energies, derivative orders and variability for l > 0
         apwlo_vars.apwe0[iorb,2:lmaxapw+1,isp] .= apwlo_vars.apwe0[iorb,1,isp]
         apwlo_vars.apwdm[iorb,2:lmaxapw+1,isp] .= apwlo_vars.apwdm[iorb,1,isp]
         apwlo_vars.apwve[iorb,2:lmaxapw+1,isp] .= apwlo_vars.apwve[iorb,1,isp]

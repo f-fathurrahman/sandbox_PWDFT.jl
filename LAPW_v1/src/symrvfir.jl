@@ -99,7 +99,7 @@ function symrvfir!(pw, sym_vars, rvfir; tspin = true, tnc = false)
             end
         end
     end
-    # Fourier transform to real-space and normalise
+    # Fourier transform to real-space and normalize
     t1 = 1.0/nsymcrys
     for i in 1:nd
         @views G_to_R!(pw, zfft2[:,i])

@@ -157,7 +157,7 @@ function SpeciesInfo(
             error("Unable to parse apwve")
         end
         # 
-        # set the APW linearisation energies, derivative orders and variability for l > 0
+        # set the APW linearization energies, derivative orders and variability for l > 0
         for l in 1:maxlapw
             apwdm[l][iord] = apwdm[0][iord]
             apwe0[l][iord] = apwe0[0][iord]
