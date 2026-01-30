@@ -315,7 +315,7 @@ function debug_main()
         vsmt,
         vclmt, vclir,
         epsxcmt, epsxcir, vxcmt, vxcir,
-        bsmt, bsir, magmt, magir
+        bsmt, bsir, magmt, magir, bxcmt, bxcir
     )
     println("E_tot = ", E_tot)
 

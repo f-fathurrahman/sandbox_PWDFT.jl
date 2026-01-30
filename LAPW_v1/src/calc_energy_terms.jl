@@ -6,7 +6,7 @@ function calc_energy_terms!(
     vsmt,
     vclmt, vclir,
     epsxcmt, epsxcir, vxcmt, vxcir,
-    bsmt, bsir, magmt, magir
+    bsmt, bsir, magmt, magir, bxcmt, bxcir
 )
 
     Natoms = atoms.Natoms
@@ -15,6 +15,7 @@ function calc_energy_terms!(
     Nkpt = pw.gvecw.kpoints.Nkpt
     wk = pw.gvecw.kpoints.wk
     Npoints = prod(pw.Ns)
+    CellVolume = pw.CellVolume
 
     nstsv = elec_chgst.nstsv
     occsv = elec_chgst.occsv
@@ -23,10 +24,44 @@ function calc_energy_terms!(
     spinpol = elec_chgst.spinpol
 
     E_vxc = rf_inner_prod(atoms, pw, mt_vars, cfunir, rhomt, rhoir, vxcmt, vxcir)
-    #println("E_vxc = ", E_vxc)
+
+    # exchange-correlation effective field energy
+    E_bxc = 0.0
+    if spinpol
+        for idm in 1:ndmag
+            # interstitial contribution
+            for ip in 1:Npoints
+                E_bxc += magir[ip,idm]*bxcir[ip,idm]*cfunir[ip]
+            end
+            E_bxc *= CellVolume/Npoints
+            # muffin-tin contribution
+            for ia in 1:Natoms
+                isp = atm2species[ia]
+                E_bxc += rf_mt_inner_prod( isp, mt_vars, magmt[ia][:,idm], bxcmt[ia] )
+            end
+        end
+    end
+
+#=
+    momtot = elec_chgst.momtot
+    # external magnetic field energies
+    E_bext = 0.0
+    gfacte = 2.00231930436256
+    solsc = 137.035999084 # there can be additional factor
+    cb = gfacte/(4.0*solsc)
+    for idm in 1:ndmag
+        if ncmag
+            jdm = idm
+        else
+            jdm = 3
+        end
+        # energy of physical global field
+        E_bext += cb*momtot[idm]*bfieldc[jdm]
+    end
+=#
 
     E_vcl = rf_inner_prod(atoms, pw, mt_vars, cfunir, rhomt, rhoir, vclmt, vclir)
-    #println("E_vcl = ", E_vcl)
+    
 
     y00 = 0.5/sqrt(pi)
     E_mad = 0.0
@@ -35,29 +70,22 @@ function calc_energy_terms!(
         isp = atm2species[ia]
         E_mad += 0.5*Zatoms[ia]*(vclmt[ia][1] - atsp_vars.vcln[isp][1])*y00
     end
-    #println("E_mad = ", E_mad)
 
     # This should be called only once in the beginning of SCF
     E_nn = calc_engynn(atoms, atsp_vars, pw, mt_vars)
-    #println("E_nn = ", E_nn)
 
     # electron-nuclear interaction energy
     E_en = 2.0*(E_mad - E_nn)
-    #println("E_en = ", E_en)
     
     # Hartree energy
     E_har = 0.5*(E_vcl - E_en)
-    #println("E_har = ", E_har)
 
     # Coulomb energy
     E_cl = E_nn + E_en + E_har
-    #println("E_cl = ", E_cl)
 
     E_xc = rf_inner_prod(atoms, pw, mt_vars, cfunir, rhomt, rhoir, epsxcmt, epsxcir)
-    #println("E_xc = ", E_xc)
 
     E_kin_core = calc_Ekin_core(atoms, atsp_vars, core_states, mt_vars, vsmt)
-    #println("E_kin_core = ", E_kin_core)
 
     nstsp = atsp_vars.nstsp
     occcr = core_states.occcr
@@ -84,7 +112,6 @@ function calc_energy_terms!(
 
     #
     ss_mag_field = 0.0
-    CellVolume = pw.CellVolume
     if spinpol
         rfmt = Vector{Vector{Float64}}(undef, Natoms)
         # remove magnetic field contribution
@@ -107,11 +134,9 @@ function calc_energy_terms!(
             end
         end # for
     end # if
-    #println("ss_mag_field = ", ss_mag_field)
 
     E_kin = evalsum - E_vcl - E_vxc - ss_mag_field
-    #println("E_kin = ", E_kin)
-
+    
     # Move this to elec_chgst ?
     if elec_chgst.nspinor == 2
         occmax = 1.0
@@ -143,11 +168,25 @@ function calc_energy_terms!(
     entrpy = -occmax*kboltz*ss
     # contribution to free energy
     E_TS = -swidth*entrpy/kboltz
-    #println("entrpy = ", entrpy)
-    #println("E_TS = ", E_TS)
-
+    
     E_tot = E_kin + 0.5*E_vcl + E_mad + E_xc + E_TS
-    #println("E_tot = ", E_tot)
+
+    println("E_kin = ", E_kin)
+    println("E_vxc = ", E_vxc)
+    println("E_vcl = ", E_vcl)
+    println("E_mad = ", E_mad)
+    println("E_nn = ", E_nn)
+    println("E_en = ", E_en)
+    println("E_har = ", E_har)
+    println("E_cl = ", E_cl)
+    println("E_xc = ", E_xc)
+    println("E_kin_core = ", E_kin_core)
+    println("entrpy = ", entrpy)
+    println("E_TS = ", E_TS)
+    println("E_bxc = ", E_bxc)
+    println("ss_mag_field = ", ss_mag_field)
+    println("evalsum = ", evalsum)
+    println("E_tot = ", E_tot)
 
     return E_tot
 end

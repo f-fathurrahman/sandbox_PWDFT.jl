@@ -360,7 +360,7 @@ function debug_scf_01()
             vsmt,
             vclmt, vclir,
             epsxcmt, epsxcir, vxcmt, vxcir,
-            bsmt, bsir, magmt, magir
+            bsmt, bsir, magmt, magir, bxcmt, bxcir
         )
         println("E_tot = ", E_tot)
 
@@ -388,6 +388,7 @@ function debug_scf_01()
         end
         E_tot_old = E_tot
 
+        # Simple linear mixing
         β_mix = 0.1
         vsir[:] = β_mix*vsir[:] + (1 - β_mix)*vsir_old[:]
         for ia in 1:Natoms
