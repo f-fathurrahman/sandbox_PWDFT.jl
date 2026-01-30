@@ -307,6 +307,9 @@ function debug_main()
         magmt = magmt, magir = magir
     )
 
+    E_vxc = rf_inner_prod(atoms, pw, mt_vars, cfunir, rhomt, rhoir, vxcmt, vxcir)
+    println("E_vxc = ", E_vxc)
+
     @infiltrate
     # open REPL and investigate the variables
 

@@ -1,5 +1,11 @@
 # originally rfinp
-function rf_inner_prod(rfmt1, rfir1, rfmt2, rfir2)
+function rf_inner_prod(atoms, pw, mt_vars, cfunir, rfmt1, rfir1, rfmt2, rfir2)
+
+    atm2species = atoms.atm2species
+    Natoms = atoms.Natoms
+    Npoints = prod(pw.Ns)
+    CellVolume = pw.CellVolume
+
     # interstitial contribution
     res = 0.0
     for ip in 1:Npoints
@@ -10,7 +16,7 @@ function rf_inner_prod(rfmt1, rfir1, rfmt2, rfir2)
     # muffin-tin contribution
     for ia in 1:Natoms
         isp = atm2species[ia]
-        res += rf_mt_inner_prod( nrmt[isp], nrmti[isp], wrmt[isp], rfmt1[ia], rfmt2[ia] )
+        res += rf_mt_inner_prod( isp, mt_vars, rfmt1[ia], rfmt2[ia] )
     end
     return res
 end

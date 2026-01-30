@@ -1,6 +1,13 @@
 
 # originally rfmtinp
-function rf_mt_inner_prod(nr, nri, wr, rfmt1, rfmt2)
+function rf_mt_inner_prod(isp, mt_vars, rfmt1, rfmt2)
+
+    lmaxi = mt_vars.lmaxi
+    lmmaxi = mt_vars.lmmaxi
+    lmmaxo = mt_vars.lmmaxo
+    nr = mt_vars.nrmt[isp]
+    nri = mt_vars.nrmti[isp]
+    wr = mt_vars.wrmt[isp]
 
     fr = zeros(Float64, nr)
     i = 1
@@ -21,7 +28,7 @@ function rf_mt_inner_prod(nr, nri, wr, rfmt1, rfmt2)
     # outer part of muffin-tin
     n = lmmaxo - 1
     for ir in (nri+1):nr
-        fr(ir)=dot_product(rfmt1(i:i+n),rfmt2(i:i+n))
+        fr[ir] = dot( rfmt1[i:i+n], rfmt2[i:i+n])
         i += lmmaxo
     end
     # integrate
