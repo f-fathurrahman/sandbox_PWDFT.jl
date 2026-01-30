@@ -286,6 +286,7 @@ function debug_scf_01()
     genvsig!(pw, vsir, cfunir, vsig)
     # XXX vsig will be different from Elk result because Elk uses more G-vectors
 
+    E_tot_old = Inf
 
     for iter_scf in 1:50
 
@@ -351,6 +352,18 @@ function debug_scf_01()
             spinpol = spinpol, ncmag = ncmag
         )
 
+        E_tot = calc_energy_terms!(
+            atoms, atsp_vars, core_states,
+            pw, mt_vars, elec_chgst, ndmag,
+            cfunir,
+            rhomt, rhoir,
+            vsmt,
+            vclmt, vclir,
+            epsxcmt, epsxcir, vxcmt, vxcir,
+            bsmt, bsir, magmt, magir
+        )
+        println("E_tot = ", E_tot)
+
         dv_ir = sum((vsir - vsir_old).^2)/length(vsir)
         dv_mt = 0.0
         for ia in 1:Natoms
@@ -365,6 +378,15 @@ function debug_scf_01()
             end                
             println("dmag_ir = $dmag_ir dmag_mt = $dmag_mt")
         end
+
+        ΔE = abs(E_tot - E_tot_old)
+        is_converged = ΔE < 1e-6
+        @printf("%4d %18.10f %18.6e\n", iter_scf, E_tot, ΔE)
+        if is_converged
+            println("CONVERGED in total energy")
+            break
+        end
+        E_tot_old = E_tot
 
         β_mix = 0.1
         vsir[:] = β_mix*vsir[:] + (1 - β_mix)*vsir_old[:]

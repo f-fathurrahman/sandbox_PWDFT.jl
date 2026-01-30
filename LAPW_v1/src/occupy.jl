@@ -8,6 +8,7 @@ function occupy!(
     occsv = elec_chgst.occsv
     chgval = elec_chgst.chgval
 
+    # Move this to elec_chgst ?
     if elec_chgst.nspinor == 2
         occmax = 1.0
     elseif elec_chgst.nspinor == 1

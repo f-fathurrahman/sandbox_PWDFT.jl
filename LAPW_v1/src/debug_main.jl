@@ -307,8 +307,17 @@ function debug_main()
         magmt = magmt, magir = magir
     )
 
-    E_vxc = rf_inner_prod(atoms, pw, mt_vars, cfunir, rhomt, rhoir, vxcmt, vxcir)
-    println("E_vxc = ", E_vxc)
+    E_tot = calc_energy_terms!(
+        atoms, atsp_vars, core_states,
+        pw, mt_vars, elec_chgst, ndmag,
+        cfunir,
+        rhomt, rhoir,
+        vsmt,
+        vclmt, vclir,
+        epsxcmt, epsxcir, vxcmt, vxcir,
+        bsmt, bsir, magmt, magir
+    )
+    println("E_tot = ", E_tot)
 
     @infiltrate
     # open REPL and investigate the variables

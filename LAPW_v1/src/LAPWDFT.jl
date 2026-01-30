@@ -289,6 +289,10 @@ include("rhomag.jl"); export rhomag!
 include("rf_mt_inner_prod.jl")
 include("rf_inner_prod.jl")
 
+include("calc_engynn.jl") # XXX should be renamed?
+include("calc_Ekin_core.jl")
+include("calc_energy_terms.jl")
+
 include("debug_main.jl")
 include("debug_scf_01.jl")
 
