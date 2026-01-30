@@ -1,4 +1,5 @@
 function calc_energy_terms!(
+    ene_terms,
     atoms, atsp_vars, core_states,
     pw, mt_vars, elec_chgst, ndmag,
     cfunir,
@@ -171,25 +172,24 @@ function calc_energy_terms!(
     
     E_tot = E_kin + 0.5*E_vcl + E_mad + E_xc + E_TS
 
-    println("ss_mag_field = ", ss_mag_field)
+    #println("ss_mag_field = ", ss_mag_field)
+    #@printf("Fermi                   %22.12f\n", elec_chgst.efermi)
+    
+    ene_terms.evalsum    =  evalsum
+    ene_terms.E_kin      =  E_kin        
+    ene_terms.E_kin_core =  E_kin_core   
+    ene_terms.E_cl       =  E_cl        
+    ene_terms.E_vcl      =  E_vcl        
+    ene_terms.E_nn       =  E_nn        
+    ene_terms.E_en       =  E_en        
+    ene_terms.E_har      =  E_har        
+    ene_terms.E_mad      =  E_mad        
+    ene_terms.E_vxc      =  E_vxc        
+    ene_terms.E_bxc      =  E_bxc        
+    ene_terms.E_bext     =  E_bext        
+    ene_terms.E_xc       =  E_xc        
+    ene_terms.E_TS       =  E_TS        
+    ene_terms.E_tot      =  E_tot
 
-    @printf("Fermi                   %22.12f\n", elec_chgst.efermi)
-    @printf("sum of eigenvalues      %22.12f\n", evalsum)
-    @printf("electron kinetic        %22.12f\n", E_kin)
-    @printf("core electron kinetic   %22.12f\n", E_kin_core)
-    @printf("Coulomb                 %22.12f\n", E_cl)
-    @printf("Coulomb potential       %22.12f\n", E_vcl)
-    @printf("nuclear-nuclear         %22.12f\n", E_nn)
-    @printf("electron-nuclear        %22.12f\n", E_en)
-    @printf("Hartree                 %22.12f\n", E_har)
-    @printf("Madelung                %22.12f\n", E_mad)
-    @printf("xc potential            %22.12f\n", E_vxc)
-    @printf("xc effective B-field    %22.12f\n", E_bxc)
-    @printf("external B-field        %22.12f\n", E_bext)
-    @printf("XC                      %22.12f\n", E_xc)
-    @printf("electron entropic       %22.12f\n", E_TS)
-    println("----------------------------------------------")
-    @printf("Total energy            %22.12f\n", E_tot)
-
-    return E_tot
+    return
 end

@@ -307,7 +307,9 @@ function debug_main()
         magmt = magmt, magir = magir
     )
 
-    E_tot = calc_energy_terms!(
+    ene_terms = EnergyTerms()
+    calc_energy_terms!(
+        ene_terms,
         atoms, atsp_vars, core_states,
         pw, mt_vars, elec_chgst, ndmag,
         cfunir,
@@ -317,7 +319,7 @@ function debug_main()
         epsxcmt, epsxcir, vxcmt, vxcir,
         bsmt, bsir, magmt, magir, bxcmt, bxcir
     )
-    println("E_tot = ", E_tot)
+    print_info(ene_terms)
 
     @infiltrate
     # open REPL and investigate the variables

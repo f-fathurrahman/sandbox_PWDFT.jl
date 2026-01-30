@@ -291,6 +291,8 @@ include("rf_inner_prod.jl")
 
 include("calc_engynn.jl") # XXX should be renamed?
 include("calc_Ekin_core.jl")
+
+include("EnergyTerms.jl")
 include("calc_energy_terms.jl")
 
 include("BroydenMixer_LAPW.jl")

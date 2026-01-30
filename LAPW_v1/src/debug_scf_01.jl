@@ -286,12 +286,16 @@ function debug_scf_01()
     genvsig!(pw, vsir, cfunir, vsig)
     # XXX vsig will be different from Elk result because Elk uses more G-vectors
 
+    ene_terms = EnergyTerms()
+    ene_terms_old = EnergyTerms()
+
+    E_tot = ene_terms.E_tot # should be a reference?
     E_tot_old = Inf
 
-    betamix = 0.1
-    mixer = BroydenMixer_LAPW(vsmt, vsir, betamix, mixdim=8)
+    betamix = 0.5
+    mixer = BroydenMixer_LAPW(vsmt, vsir, betamix, mixdim = 8)
     if spinpol
-        mixer_b = BroydenMixer_LAPW(bsmt, bsir, betamix, mixdim=8)
+        mixer_b = BroydenMixer_LAPW(bsmt, bsir, betamix, mixdim = 8)
     end
 
     for iter_scf in 1:50
@@ -358,7 +362,8 @@ function debug_scf_01()
             spinpol = spinpol, ncmag = ncmag
         )
 
-        E_tot = calc_energy_terms!(
+        calc_energy_terms!(
+            ene_terms,
             atoms, atsp_vars, core_states,
             pw, mt_vars, elec_chgst, ndmag,
             cfunir,
@@ -368,31 +373,41 @@ function debug_scf_01()
             epsxcmt, epsxcir, vxcmt, vxcir,
             bsmt, bsir, magmt, magir, bxcmt, bxcir
         )
-        println("E_tot = ", E_tot)
+        E_tot = ene_terms.E_tot # new calc energy
+        #println("E_tot = ", E_tot)
 
-        dv_ir = sum((vsir - vsir_old).^2)/length(vsir)
+        dv_ir = sum(abs.(vsir - vsir_old))/length(vsir)
         dv_mt = 0.0
         for ia in 1:Natoms
-            dv_mt += sum((vsmt[ia] - vsmt_old[ia]).^2)/length(vsmt[ia])
+            dv_mt += sum(abs.(vsmt[ia] - vsmt_old[ia]))/length(vsmt[ia])
         end
+        dv_mt /= Natoms # Normalize by no. of atoms
         println("dv_ir = $dv_ir dv_mt = $dv_mt")
         if spinpol
-            dmag_ir = sum((bsir - bsir_old).^2)/length(bsir)
+            dmag_ir = sum(abs.(bsir - bsir_old))/length(bsir)
             dmag_mt = 0.0
             for ia in 1:Natoms
-                dmag_mt += sum( (bsmt[ia][:] - bsmt_old[ia][:]).^2 )/length(magmt[ia])
-            end                
+                dmag_mt += sum( abs.(bsmt[ia][:] - bsmt_old[ia][:]) )/length(magmt[ia])
+            end
+            dmag_mt /= Natoms # Normalize by no. of atoms
             println("dmag_ir = $dmag_ir dmag_mt = $dmag_mt")
         end
 
         ΔE = abs(E_tot - E_tot_old)
         is_converged = ΔE < 1e-3
+
+        ΔE_terms = abs(ene_terms - ene_terms_old)
+
+        #print_info(ene_terms)
+        print_info(ΔE_terms, prefix_str="Diff ")
+
         @printf("%4d %18.10f %18.6e\n", iter_scf, E_tot, ΔE)
         if is_converged
             println("CONVERGED in total energy")
             break
         end
         E_tot_old = E_tot
+        ene_terms_old = copy(ene_terms)
 
 #=
         # Simple linear mixing
@@ -419,6 +434,8 @@ function debug_scf_01()
         genvsig!(pw, vsir, cfunir, vsig)
 
     end # scf
+
+    print_info(ene_terms, prefix_str = "Final ")
 
     @infiltrate
     # open REPL and investigate the variables
