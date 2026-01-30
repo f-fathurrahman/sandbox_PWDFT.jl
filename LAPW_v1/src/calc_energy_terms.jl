@@ -42,10 +42,10 @@ function calc_energy_terms!(
         end
     end
 
+    E_bext = 0.0
 #=
     momtot = elec_chgst.momtot
     # external magnetic field energies
-    E_bext = 0.0
     gfacte = 2.00231930436256
     solsc = 137.035999084 # there can be additional factor
     cb = gfacte/(4.0*solsc)
@@ -171,22 +171,25 @@ function calc_energy_terms!(
     
     E_tot = E_kin + 0.5*E_vcl + E_mad + E_xc + E_TS
 
-    println("E_kin = ", E_kin)
-    println("E_vxc = ", E_vxc)
-    println("E_vcl = ", E_vcl)
-    println("E_mad = ", E_mad)
-    println("E_nn = ", E_nn)
-    println("E_en = ", E_en)
-    println("E_har = ", E_har)
-    println("E_cl = ", E_cl)
-    println("E_xc = ", E_xc)
-    println("E_kin_core = ", E_kin_core)
-    println("entrpy = ", entrpy)
-    println("E_TS = ", E_TS)
-    println("E_bxc = ", E_bxc)
     println("ss_mag_field = ", ss_mag_field)
-    println("evalsum = ", evalsum)
-    println("E_tot = ", E_tot)
+
+    @printf("Fermi                   %22.12f\n", elec_chgst.efermi)
+    @printf("sum of eigenvalues      %22.12f\n", evalsum)
+    @printf("electron kinetic        %22.12f\n", E_kin)
+    @printf("core electron kinetic   %22.12f\n", E_kin_core)
+    @printf("Coulomb                 %22.12f\n", E_cl)
+    @printf("Coulomb potential       %22.12f\n", E_vcl)
+    @printf("nuclear-nuclear         %22.12f\n", E_nn)
+    @printf("electron-nuclear        %22.12f\n", E_en)
+    @printf("Hartree                 %22.12f\n", E_har)
+    @printf("Madelung                %22.12f\n", E_mad)
+    @printf("xc potential            %22.12f\n", E_vxc)
+    @printf("xc effective B-field    %22.12f\n", E_bxc)
+    @printf("external B-field        %22.12f\n", E_bext)
+    @printf("XC                      %22.12f\n", E_xc)
+    @printf("electron entropic       %22.12f\n", E_TS)
+    println("----------------------------------------------")
+    @printf("Total energy            %22.12f\n", E_tot)
 
     return E_tot
 end

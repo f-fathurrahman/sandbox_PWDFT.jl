@@ -241,7 +241,7 @@ function debug_scf_01()
     end
     if spinpol
         bsir_old = zeros(Float64, Npoints, ndmag)
-        bsmt_old = Vector{Matrix{Float64}}(undef,Natoms)
+        bsmt_old = Vector{Matrix{Float64}}(undef, Natoms)
         for ia in 1:Natoms
             isp = atm2species[ia]
             bsmt_old[ia] = zeros(Float64, npmt[isp], ndmag)
@@ -287,6 +287,12 @@ function debug_scf_01()
     # XXX vsig will be different from Elk result because Elk uses more G-vectors
 
     E_tot_old = Inf
+
+    betamix = 0.1
+    mixer = BroydenMixer_LAPW(vsmt, vsir, betamix, mixdim=8)
+    if spinpol
+        mixer_b = BroydenMixer_LAPW(bsmt, bsir, betamix, mixdim=8)
+    end
 
     for iter_scf in 1:50
 
@@ -380,7 +386,7 @@ function debug_scf_01()
         end
 
         ΔE = abs(E_tot - E_tot_old)
-        is_converged = ΔE < 1e-6
+        is_converged = ΔE < 1e-3
         @printf("%4d %18.10f %18.6e\n", iter_scf, E_tot, ΔE)
         if is_converged
             println("CONVERGED in total energy")
@@ -388,6 +394,7 @@ function debug_scf_01()
         end
         E_tot_old = E_tot
 
+#=
         # Simple linear mixing
         β_mix = 0.1
         vsir[:] = β_mix*vsir[:] + (1 - β_mix)*vsir_old[:]
@@ -400,6 +407,13 @@ function debug_scf_01()
                 bsmt[ia][:,:] = β_mix*bsmt[ia][:] + (1 - β_mix)*bsmt_old[ia][:]
             end
         end
+=#
+        do_mix_LAPW!(mixer, vsir, vsir_old, vsmt, vsmt_old, iter_scf)
+        if spinpol
+            do_mix_LAPW!(mixer_b, bsir, bsir_old, bsmt, bsmt_old, iter_scf)
+        end
+
+
 
         # Fourier transform of interstitial Kohn-Sham equation
         genvsig!(pw, vsir, cfunir, vsig)

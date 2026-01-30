@@ -50,17 +50,17 @@ function rhomag!(
     rhomagsh!(atoms, mt_vars, rhomt; magmt=magmt)
 
     # Symmetrize, using coarse grid
-    println("Before symrfmt: sum(rhomt) = ", sum.(rhomt))
+    #println("Before symrfmt: sum(rhomt) = ", sum.(rhomt))
     symrfmt!(atoms, mt_vars, sym_vars, rhomt; coarse=true)
-    println("After symrfmt: sum(rhomt) = ", sum.(rhomt))
+    #println("After symrfmt: sum(rhomt) = ", sum.(rhomt))
 
-    println("Before symrfir: sum(rhoir) = ", sum(rhoir))
+    #println("Before symrfir: sum(rhoir) = ", sum(rhoir))
     symrfir!(pw, sym_vars, rhoir)
-    println("After symrfir: sum(rhoir) = ", sum(rhoir))
+    #println("After symrfir: sum(rhoir) = ", sum(rhoir))
 
     # Convert to fine grid
     rf_mt_c_to_f!(atoms, atsp_vars, mt_vars, rhomt)
-    println("After converting to fine grid: sum.(rhomt) = ", sum.(rhomt))
+    #println("After converting to fine grid: sum.(rhomt) = ", sum.(rhomt))
 
     if !isnothing(magmt)
         symrvfmt!(atoms, sym_vars, mt_vars, magmt; tspin = true, coarse = true)
