@@ -276,7 +276,7 @@ function gen_eigensystem_2nd!(
     end
     #
     #println("sum evecsv before diagonalization = ", sum(evecsv))
-    serialize("Ham_2nd_ik_$(ik).dat", evecsv)
+    #serialize("Ham_2nd_ik_$(ik).dat", evecsv)
     #
     spcpl = false
     if spcpl || (!spinpol)

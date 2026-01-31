@@ -55,8 +55,8 @@ function gen_eigensystem!(
     nstfv = elec_chgst.nstfv
 
     # FIXME: save full size (?)
-    serialize("H_ik_$(ik).dat", H)
-    serialize("O_ik_$(ik).dat", O)
+    #serialize("H_ik_$(ik).dat", H)
+    #serialize("O_ik_$(ik).dat", O)
     serialize("evals_1st_ik_$(ik).dat", evals[1:nstfv])
     serialize("evecs_1st_ik_$(ik).dat", evecs[:,1:nstfv])
     
