@@ -291,11 +291,13 @@ function debug_scf_01()
 
     E_tot = ene_terms.E_tot # should be a reference?
     E_tot_old = Inf
+    etot_conv_thr = 1e-3
+    Nconv = 0
 
-    betamix = 0.5
-    mixer = BroydenMixer_LAPW(vsmt, vsir, betamix, mixdim = 8)
+    betamix = 0.1
+    mixer = BroydenMixer_LAPW(vsmt, vsir, betamix, mixdim = 4)
     if spinpol
-        mixer_b = BroydenMixer_LAPW(bsmt, bsir, betamix, mixdim = 8)
+        mixer_b = BroydenMixer_LAPW(bsmt, bsir, betamix, mixdim = 4)
     end
 
     for iter_scf in 1:50
@@ -387,31 +389,34 @@ function debug_scf_01()
             dmag_ir = sum(abs.(bsir - bsir_old))/length(bsir)
             dmag_mt = 0.0
             for ia in 1:Natoms
-                dmag_mt += sum( abs.(bsmt[ia][:] - bsmt_old[ia][:]) )/length(magmt[ia])
+                dmag_mt += sum( abs.(bsmt[ia][:] - bsmt_old[ia][:]) )/length(bsmt[ia])
             end
             dmag_mt /= Natoms # Normalize by no. of atoms
             println("dmag_ir = $dmag_ir dmag_mt = $dmag_mt")
         end
 
         ΔE = abs(E_tot - E_tot_old)
-        is_converged = ΔE < 1e-3
+        if ΔE <= etot_conv_thr
+            Nconv = Nconv + 1
+        else
+            Nconv = 0
+        end
+        is_converged = (Nconv >= 2)
 
-        ΔE_terms = abs(ene_terms - ene_terms_old)
-
+        #ΔE_terms = abs(ene_terms - ene_terms_old)
         #print_info(ene_terms)
-        print_info(ΔE_terms, prefix_str="Diff ")
+        #print_info(ΔE_terms, prefix_str="Diff ")
 
         @printf("%4d %18.10f %18.6e\n", iter_scf, E_tot, ΔE)
         if is_converged
-            println("CONVERGED in total energy")
+            println("CONVERGED in total energy (convergence achieved two times in row)")
             break
         end
         E_tot_old = E_tot
         ene_terms_old = copy(ene_terms)
 
-#=
         # Simple linear mixing
-        β_mix = 0.1
+        β_mix = 0.2
         vsir[:] = β_mix*vsir[:] + (1 - β_mix)*vsir_old[:]
         for ia in 1:Natoms
             vsmt[ia][:] = β_mix*vsmt[ia][:] + (1-β_mix)*vsmt_old[ia][:]
@@ -419,14 +424,14 @@ function debug_scf_01()
         if spinpol
             bsir[:] = β_mix*bsir[:] + (1 - β_mix)*bsir_old[:]
             for ia in 1:Natoms
-                bsmt[ia][:,:] = β_mix*bsmt[ia][:] + (1 - β_mix)*bsmt_old[ia][:]
+                bsmt[ia][:] = β_mix*bsmt[ia][:] + (1 - β_mix)*bsmt_old[ia][:]
             end
         end
-=#
-        do_mix_LAPW!(mixer, vsir, vsir_old, vsmt, vsmt_old, iter_scf)
-        if spinpol
-            do_mix_LAPW!(mixer_b, bsir, bsir_old, bsmt, bsmt_old, iter_scf)
-        end
+
+        #do_mix_LAPW!(mixer, vsir, vsir_old, vsmt, vsmt_old, iter_scf)
+        #if spinpol
+        #    do_mix_LAPW!(mixer_b, bsir, bsir_old, bsmt, bsmt_old, iter_scf)
+        #end
 
 
 
