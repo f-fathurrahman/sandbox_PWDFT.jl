@@ -74,3 +74,11 @@ function get_evalsp()
     maxspecies = get_maxspecies()
     return _load_automatic_array(symbol, Float64, (maxstsp,maxspecies))
 end
+
+function get_spzn()
+    symbol = :__m_atomic_species_MOD_spzn
+    nspecies = get_nspecies()
+    maxspecies = get_maxspecies()
+    # only return 1:nspecies
+    return _load_automatic_array(symbol, Float64, (maxspecies,))[1:nspecies]
+end

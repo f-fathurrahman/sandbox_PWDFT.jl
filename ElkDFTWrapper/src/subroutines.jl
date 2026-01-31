@@ -16,6 +16,9 @@ function call_my_rhomag()
     ccall( (:my_rhomag_, LIBLAPW), Cvoid, () )
 end
 
+function call_my_energy()
+    ccall( (:my_energy_, LIBLAPW), Cvoid, () )
+end
 
 function call_my_gndstate(maxscl)
     ccall( (:my_gndstate_, LIBLAPW), Cvoid, 

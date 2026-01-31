@@ -171,6 +171,8 @@ function init_debug_calc()
     # this will call some other routines
     call_my_rhomag()
 
+    call_my_energy()
+
 end
 export init_debug_calc
 

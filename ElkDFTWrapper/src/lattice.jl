@@ -17,3 +17,11 @@ function get_binv()
     symbol = :__m_lattice_MOD_binv
     return _load_automatic_array(symbol, Float64, (3,3))
 end
+
+function get_omega()
+    return unsafe_load(cglobal((:__m_lattice_MOD_omega, LIBLAPW), Float64 ))
+end
+
+function get_omegabz()
+    return unsafe_load(cglobal((:__m_lattice_MOD_omegabz, LIBLAPW), Float64 ))
+end
