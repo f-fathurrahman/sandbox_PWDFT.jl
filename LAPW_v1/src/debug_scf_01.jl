@@ -1,7 +1,7 @@
 # This is currently the entry point
 # We may call @infiltrate within this function and investigate various variables
 
-function debug_scf_01()
+function debug_scf_01(; NiterSCFMax = 50)
 
     # Read the input file
     elk_input = read_elk_input()
@@ -300,7 +300,7 @@ function debug_scf_01()
         mixer_b = BroydenMixer_LAPW(bsmt, bsir, betamix, mixdim = 4)
     end
 
-    for iter_scf in 1:50
+    for iter_scf in 1:NiterSCFMax
 
         println("\n\nENTER iter_scf = ", iter_scf)
         println("-------------------------------")
@@ -442,7 +442,7 @@ function debug_scf_01()
 
     print_info(ene_terms, prefix_str = "Final ")
 
-    @infiltrate
+    #@infiltrate
     # open REPL and investigate the variables
 
     return
