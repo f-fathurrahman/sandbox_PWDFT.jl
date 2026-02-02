@@ -1,7 +1,10 @@
 using Revise, PWDFT
+using LinearAlgebra
 
 const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)),"..");
 const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials");
+
+includet("atomic_wfc_01.jl")
 
 function create_Ham_structure_01()
     atoms_tuple = (
@@ -38,42 +41,53 @@ function create_Ham_structure_01()
     return Ham
 end
 
-#=
-Ham, pwinput = init_Ham_from_pwinput(filename="PWINPUT_oncv");
-=#
+# Cu fcc
+function create_Ham_structure_02()
+    atoms = Atoms( xyz_string_frac=
+        """
+        1
 
-includet("init_tab_at.jl")
-includet("atomic_wfc_01.jl")
+        Cu  0.0  0.0  0.0
+        """, in_bohr=true,
+        LatVecs=gen_lattice_fcc(3.61496*ANG2BOHR) )
 
-function test_main(; filename=nothing, do_export_data=false)
-    Ham, pwinput = init_Ham_from_pwinput(filename=filename)
-    tab_at = init_tab_at(Ham.pspots[1], Ham.pw)
+    # Initialize Hamiltonian
+    pspfiles = [joinpath(DIR_PSP, "ONCV_v0.4.1_LDA", "Cu.upf")]
+    ecutwfc = 30.0
+
+    return Hamiltonian( atoms, pspfiles, ecutwfc, meshk=[10,10,10],
+        extra_states=4, use_smearing=true, smearing_kT=0.01 )
 end
+
 
 
 Nstates = Ham.electrons.Nstates;
 Nspin = Ham.electrons.Nspin_wf;
 Nkpt = Ham.pw.gvecw.kpoints.Nkpt;
-psiks = zeros_BlochWavefunc(Ham);
 Natomwfc = calc_Natomwfc(Ham.atoms, Ham.pspots);
 println("Natomwfc = ", Natomwfc);
 println("Nstates = ", Nstates);
+psiks = zeros_BlochWavefunc(Ham);
 for ispin in 1:Nspin, ik in 1:Nkpt
     ikspin = ik + (ispin-1)*Nkpt
-    @views atomic_wfc!(ik, Ham.atoms, Ham.pspots, Ham.pw, psiks[ikspin][:,1:Natomwfc]);
+    atomic_wfc!(ik, Ham.atoms, Ham.pspots, Ham.pw, psiks[ikspin]);
 end
 
+# XXX Explicitly diagonalize?
 for ispin in 1:Nspin, ik in 1:Nkpt
     ikspin = ik + (ispin-1)*Nkpt
     ortho_sqrt!(Ham, psiks[ikspin])
 end
 
+Nkspin = Nkpt*Nspin;
 Haux = Vector{Matrix{ComplexF64}}(undef, Nkspin);
 for ikspin in 1:Nkspin
     Haux[ikspin] = randn(ComplexF64, Nstates, Nstates);
     Haux[ikspin][:,:] = 0.5*( Haux[ikspin] + Haux[ikspin]' );
 end
 
+# Cu-fcc
+# iterCG: 4 E_new = -189.35662141833518 ΔE = 6.134200702945236e-9
 
 """
 

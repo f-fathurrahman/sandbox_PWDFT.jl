@@ -102,7 +102,7 @@ function atomic_wfc!( ik, atoms, pspots, pw, wfcatom )
     aux = zeros(ComplexF64, Ngwk)
     Sk = zeros(ComplexF64, Ngwk)
     Natomwfc = calc_Natomwfc(atoms, pspots)
-    fill!(wfcatom[:,1:Natomwfc], 0.0)
+    fill!(wfcatom, 0.0)
     #
     n_starting_wfc = 0
     for ia in 1:Natoms
@@ -136,6 +136,21 @@ function atomic_wfc!( ik, atoms, pspots, pw, wfcatom )
     end # for atoms
 
     @assert n_starting_wfc == Natomwfc
+
+    Nstates = size(wfcatom, 2)
+    @assert Nstates >= Natomwfc
+    #
+    if Natomwfc < Nstates
+        for ist in (Natomwfc+1):Nstates
+            for igw in 1:Ngwk
+                z = rand() # random modulus
+                θ = 2*pi*rand() # random angle
+                num = z*(cos(θ) + im*sin(θ))
+                denum = Gk2[igw] + 1.0
+                wfcatom[igw,ist] = num/denum
+            end
+        end
+    end
 
     return
 end
