@@ -60,7 +60,9 @@ function create_Ham_structure_02()
 end
 
 
+#=
 
+# Calculate atomic_wfc
 Nstates = Ham.electrons.Nstates;
 Nspin = Ham.electrons.Nspin_wf;
 Nkpt = Ham.pw.gvecw.kpoints.Nkpt;
@@ -89,7 +91,7 @@ end
 # Cu-fcc
 # iterCG: 4 E_new = -189.35662141833518 ΔE = 6.134200702945236e-9
 
-"""
+
 
 Ham.rhoe[:,:], _ = atomic_rho_g(
     Ham,
@@ -109,4 +111,4 @@ for ispin in 1:Nspin, ik in 1:Nkpt
     Hsub = psi' * Hpsi;
     λ, U = eigen(Hsub);
 end
-"""
+=#
