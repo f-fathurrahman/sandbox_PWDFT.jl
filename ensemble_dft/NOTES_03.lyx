@@ -1,0 +1,603 @@
+#LyX 2.4 created this file. For more info see https://www.lyx.org/
+\lyxformat 620
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+\usepackage{babel}
+% Added by lyx2lyx
+\setlength{\parskip}{\smallskipamount}
+\setlength{\parindent}{0pt}
+\end_preamble
+\use_default_options false
+\maintain_unincluded_children no
+\language american
+\language_package default
+\inputencoding iso8859-15
+\fontencoding T1
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_roman_osf false
+\font_sans_osf false
+\font_typewriter_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement class
+\float_alignment class
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 0
+\use_package esint 1
+\use_package mathdots 0
+\use_package mathtools 0
+\use_package mhchem 0
+\use_package stackrel 0
+\use_package stmaryrd 0
+\use_package undertilde 0
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\use_formatted_ref 0
+\use_minted 0
+\use_lineno 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 3cm
+\topmargin 3cm
+\rightmargin 3cm
+\bottommargin 3cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip halfline
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tablestyle default
+\tracking_changes false
+\output_changes false
+\change_bars false
+\postpone_fragile_content false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\docbook_table_output 0
+\docbook_mathml_prefix 1
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+The ensemble DFT method minimizes the finite\SpecialChar nobreakdash
+temperature free energy functional 
+\begin_inset Formula 
+\[
+A[T;\{\psi_{i}\},\{f_{ij}\}]=\sum_{ij}f_{ij}\langle\psi_{i}|\hat{T}+\hat{V}_{\text{ext}}|\psi_{j}\rangle+E_{\text{HXC}}[n]-T\,S[\{f_{ij}\}],
+\]
+
+\end_inset
+
+where the density is 
+\begin_inset Formula 
+\[
+n(\mathbf{r})=\sum_{ij}f_{ij}\psi_{i}^{*}(\mathbf{r})\psi_{j}(\mathbf{r}),
+\]
+
+\end_inset
+
+the orbitals are orthonormal,
+ and the occupation matrix 
+\begin_inset Formula $\ensuremath{\mathbf{f}}$
+\end_inset
+
+ has eigenvalues in 
+\begin_inset Formula $[0,1]$
+\end_inset
+
+ and trace 
+\begin_inset Formula $N$
+\end_inset
+
+ (number of electrons).
+ 
+\end_layout
+
+\begin_layout Standard
+The entropy for Fermi\SpecialChar nobreakdash
+Dirac statistics is 
+\begin_inset Formula $S[\{f_{ij}\}]=\mathrm{tr}\left[s(\mathbf{f})\right]$
+\end_inset
+
+ with 
+\begin_inset Formula $s(f)=-f\ln f-(1-f)\ln(1-f)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+To avoid explicit optimization of the ill\SpecialChar nobreakdash
+conditioned rotations among the orbitals,
+ the 
+\emph on
+projected functional
+\emph default
+ as follows:
+\begin_inset Formula 
+\[
+G[T;\{\psi_{i}\}]=\min_{\{f_{ij}\}}A[T;\{\psi_{i}\},\{f_{ij}\}]
+\]
+
+\end_inset
+
+is introduced.
+ The minimization over 
+\begin_inset Formula $\mathbf{f}$
+\end_inset
+
+ for fixed orbitals defines the inner loop,
+ and the outer loop minimizes 
+\begin_inset Formula $G$
+\end_inset
+
+ with respect to the orbitals under the orthonormality constraint.
+\end_layout
+
+\begin_layout Standard
+Algorithm flow
+\end_layout
+
+\begin_layout Enumerate
+Initialization
+\end_layout
+
+\begin_layout Enumerate
+Choose a set of orthonormal orbitals 
+\begin_inset Formula $\{\psi_{i}\}$
+\end_inset
+
+ (e.g.,
+ by SCF diagonalization or a simple guess).
+ 
+\end_layout
+
+\begin_layout Enumerate
+Compute the fixed part of the Hamiltonian matrix 
+\begin_inset Formula $h_{ij}=\langle\psi_{i}|\hat{T}+\hat{V}_{\text{ext}}|\psi_{j}\rangle$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Step 2:
+ Outer loop (until convergence of 
+\begin_inset Formula $G$
+\end_inset
+
+ and density).
+ For each outer iteration 
+\begin_inset Formula $k$
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Enumerate
+Inner loop
+\end_layout
+
+\begin_layout Enumerate
+minimize 
+\begin_inset Formula $A$
+\end_inset
+
+ with respect to 
+\begin_inset Formula $\mathbf{f}$
+\end_inset
+
+ while keeping 
+\begin_inset Formula $\{\psi_{i}\}$
+\end_inset
+
+ fixed.
+ 
+\end_layout
+
+\begin_layout Enumerate
+For iteration 
+\begin_inset Formula $m$
+\end_inset
+
+ in the inner loop:
+\end_layout
+
+\begin_layout Enumerate
+From current 
+\begin_inset Formula $\mathbf{f}^{(m)}$
+\end_inset
+
+ build the density 
+\begin_inset Formula $n^{(m)}(\mathbf{r})$
+\end_inset
+
+ and the Hartree and XC potentials 
+\begin_inset Formula $V_{\text{HXC}}^{(m)}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Compute the Hamiltonian matrix 
+\begin_inset Formula $H_{ij}^{(m)}=h_{ij}+\langle\psi_{i}|\hat{V}_{\text{HXC}}^{(m)}|\psi_{j}\rangle$
+\end_inset
+
+ and diagonalize it:
+\begin_inset Formula 
+\[
+H_{ij}^{(m)}=\sum_{l}Z_{il}^{(m)\dagger}\epsilon_{l}^{(m)}Z_{lj}^{(m)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Determine the chemical potential 
+\begin_inset Formula $\mu$
+\end_inset
+
+ from the Fermi\SpecialChar nobreakdash
+Dirac distribution:
+\begin_inset Formula 
+\[
+\sum_{l}f_{T}(\epsilon_{l}^{(m)}-\mu)=N,\qquad f_{T}(\epsilon)=\frac{1}{e^{\epsilon/T}+1}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Construct the target occupation matrix in the current orbital basis:
+\begin_inset Formula 
+\[
+\tilde{\mathbf{f}}^{(m)}=\mathbf{Z}^{(m)\dagger}\,\mathrm{diag}\left[f_{T}(\epsilon_{l}^{(m)}-\mu)\right]\,\mathbf{Z}^{(m)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Perform a line search along 
+\begin_inset Formula $\Delta\mathbf{f}^{(m)}=\tilde{\mathbf{f}}^{(m)}-\mathbf{f}^{(m)}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Evaluate 
+\begin_inset Formula $A$
+\end_inset
+
+ and its derivative 
+\begin_inset Formula $\dfrac{\delta A}{\delta f_{ij}}$
+\end_inset
+
+ at the endpoints 
+\begin_inset Formula $\beta=0$
+\end_inset
+
+ and 
+\begin_inset Formula $\beta=1$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Use a cubic or parabolic interpolation to find the optimal 
+\begin_inset Formula $\beta^{*}\in[0,1]$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Update 
+\begin_inset Formula $\mathbf{f}^{(m+1)}=\mathbf{f}^{(m)}+\beta^{*}\Delta\mathbf{f}^{(m)}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Repeat until the change in 
+\begin_inset Formula $\mathbf{f}$
+\end_inset
+
+ or in 
+\begin_inset Formula $A$
+\end_inset
+
+ is small (typically 2 iterations suffice).
+\end_layout
+
+\begin_layout Enumerate
+After the inner loop,
+ we have the optimal occupation matrix 
+\begin_inset Formula $\mathbf{f}^{*}$
+\end_inset
+
+ for the current orbitals.
+\end_layout
+
+\begin_layout Enumerate
+
+\emph on
+Compute preconditioned gradient
+\emph default
+ for the orbitals.
+ The gradient of $
+\begin_inset Formula $G$
+\end_inset
+
+$ with respect to 
+\begin_inset Formula $\psi_{i}^{*}$
+\end_inset
+
+ (after applying the minimum condition) is
+\begin_inset Formula 
+\[
+\mathbf{g}_{i}=-\frac{\delta G}{\delta\psi_{i}^{*}}=-\sum_{j}f_{ji}\hat{H}|\psi_{j}\rangle,
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\hat{H}=\hat{T}+\hat{V}_{\text{ext}}+\hat{V}_{\text{HXC}}$
+\end_inset
+
+ with the current density.
+ Following the paper,
+ a much cheaper 
+\emph on
+preconditioned gradient
+\emph default
+ is used:
+\begin_inset Formula 
+\[
+\mathbf{G}_{i}=-\hat{H}|\psi_{i}\rangle,
+\]
+
+\end_inset
+
+which corresponds to scaling the variables by 
+\begin_inset Formula $\sqrt{f_{i}}$
+\end_inset
+
+ in the diagonal representation.
+ This preconditioned vector is orthogonalized against the current orbitals to preserve orthonormality to first order.
+\end_layout
+
+\begin_layout Enumerate
+Conjugate gradient update:
+ Combine the current preconditioned gradient with previous search direction 
+\begin_inset Formula $\mathbf{d}_{k-1}$
+\end_inset
+
+ (Fletcher\SpecialChar nobreakdash
+Reeves):
+\begin_inset Formula 
+\[
+\mathbf{d}_{k}=\mathbf{G}+\beta_{k}\mathbf{d}_{k-1},\qquad\beta_{k}=\frac{\langle\mathbf{G},\mathbf{G}\rangle}{\langle\mathbf{d}_{k-1},\mathbf{d}_{k-1}\rangle}.
+\]
+
+\end_inset
+
+(Inner products are integrals over the real\SpecialChar nobreakdash
+space grid and sum over orbitals.)
+\end_layout
+
+\begin_layout Enumerate
+Line search for orbitals:
+ Try step lengths 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ along 
+\begin_inset Formula $\mathbf{d}_{k}\ensuremath{:}\psi_{i}'=\psi_{i}+\alpha\,\mathbf{d}_{k,i}$
+\end_inset
+
+.
+ For each trial,
+ orthonormalize the new orbitals,
+ recompute 
+\begin_inset Formula $h_{ij}$
+\end_inset
+
+,
+ run a few inner iterations (or just one) to obtain a new occupation matrix,
+ and evaluate the free energy.
+ Choose the 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ that gives the lowest free energy (backtracking or cubic interpolation).
+ Update 
+\begin_inset Formula $\{\psi_{i}\}$
+\end_inset
+
+$$ and 
+\begin_inset Formula $\mathbf{f}$
+\end_inset
+
+ accordingly.
+\end_layout
+
+\begin_layout Enumerate
+Check convergence:
+ Stop if the change in free energy 
+\begin_inset Formula $|A_{\text{new}}-A_{\text{old}}|$
+\end_inset
+
+ and the change in density 
+\begin_inset Formula $\int|n_{\text{new}}-n_{\text{old}}|d\mathbf{r}$
+\end_inset
+
+ are below prescribed tolerances.
+\end_layout
+
+\begin_layout Enumerate
+Output:
+ the converged free energy,
+ density,
+ and forces (if needed).
+\end_layout
+
+\begin_layout Standard
+Key equations summarized:
+\end_layout
+
+\begin_layout Standard
+- Free energy:
+ 
+\begin_inset Formula $A=\mathrm{tr}\left[\mathbf{f}\mathbf{h}\right]+E_{\text{HXC}}[n]-T\mathrm{tr}\left[s(\mathbf{f})\right]$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+- Density:
+ 
+\begin_inset Formula $n(\mathbf{r})=\sum_{ij}f_{ij}\psi_{i}^{*}(\mathbf{r})\psi_{j}(\mathbf{r})$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+- Stationarity condition for 
+\begin_inset Formula $\mathbf{f}$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+h_{ij}+V_{ij}^{[n]}-T[s'(\mathbf{f})]_{ij}-\mu\delta_{ij}=0
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+which implies that 
+\begin_inset Formula $\mathbf{f}$
+\end_inset
+
+ and the Hamiltonian are simultaneously diagonalisable.
+\end_layout
+
+\begin_layout Standard
+- Inner\SpecialChar nobreakdash
+loop update direction:
+ 
+\begin_inset Formula $\Delta\mathbf{f}=\tilde{\mathbf{f}}-\mathbf{f}$
+\end_inset
+
+ 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\nospellcheck off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+where 
+\begin_inset Formula $\tilde{\mathbf{f}}$
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\nospellcheck default
+\bar default
+\strikeout default
+\xout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+ is the non\SpecialChar nobreakdash
+self\SpecialChar nobreakdash
+consistent Fermi\SpecialChar nobreakdash
+Dirac occupation matrix in the current orbital basis (Eq.
+ (8)).
+\end_layout
+
+\begin_layout Standard
+- Preconditioned orbital gradient:
+ 
+\begin_inset Formula $\mathbf{G}_{i}=-\hat{H}|\psi_{i}\rangle$
+\end_inset
+
+ (Eq.
+ (11)).
+\end_layout
+
+\end_body
+\end_document

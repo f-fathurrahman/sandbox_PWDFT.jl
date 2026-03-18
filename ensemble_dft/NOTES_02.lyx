@@ -1,0 +1,289 @@
+#LyX 2.4 created this file. For more info see https://www.lyx.org/
+\lyxformat 620
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+\usepackage{babel}
+% Added by lyx2lyx
+\setlength{\parskip}{\smallskipamount}
+\setlength{\parindent}{0pt}
+\end_preamble
+\use_default_options false
+\maintain_unincluded_children no
+\language american
+\language_package default
+\inputencoding iso8859-15
+\fontencoding T1
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_roman_osf false
+\font_sans_osf false
+\font_typewriter_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement class
+\float_alignment class
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 0
+\use_package esint 1
+\use_package mathdots 0
+\use_package mathtools 0
+\use_package mhchem 0
+\use_package stackrel 0
+\use_package stmaryrd 0
+\use_package undertilde 0
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\use_formatted_ref 0
+\use_minted 0
+\use_lineno 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 3cm
+\topmargin 3cm
+\rightmargin 3cm
+\bottommargin 3cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip halfline
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tablestyle default
+\tracking_changes false
+\output_changes false
+\change_bars false
+\postpone_fragile_content false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\docbook_table_output 0
+\docbook_mathml_prefix 1
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+Phys Rev Lett Vol.
+ 79 pp 1337
+\end_layout
+
+\begin_layout Standard
+Ensemble Density-Functional Theory for Ab Initio Molecular Dynamics of Metals and Finite-Temperature Insulators
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+n(\mathbf{r})=\sum_{ij}f_{ij}\psi_{i}^{*}(\mathbf{r})\psi_{j}(\mathbf{r})
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\mathrm{tr}\mathbf{f}=N
+\]
+
+\end_inset
+
+eigenvalues of 
+\begin_inset Formula $\mathbf{f}$
+\end_inset
+
+ is restricted to [0,1].
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+A\left[T;\left\{ \psi_{i}\right\} ,\left\{ f_{ij}\right\} \right]=\sum_{ij}f_{ji}\left\langle \psi_{i}\left|\hat{T}+\hat{V}_{\mathrm{ext}}\right|\psi_{j}\right\rangle +E_{\mathrm{Hxc}}\left[n\right]-TS\left[\left\{ f_{ij}\right\} \right]
+\]
+
+\end_inset
+
+The Fermi-Dirac entropic term is a function of the eigenvalues of 
+\begin_inset Formula $\mathbf{f}$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+S\left[\left\{ f_{ij}\right\} \right]=\mathrm{Tr}\,s(\mathbf{f})
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+s=f\ln f+(1-f)\ln(1-f)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The free energy functional 
+\begin_inset Formula $A$
+\end_inset
+
+ is in the form of traces of operators,
+ and so it is covariant under change of representation (i.e.
+ for a unitary transformation 
+\begin_inset Formula $\mathbf{U}$
+\end_inset
+
+ of the orbitals 
+\begin_inset Formula $\left\{ \psi_{i}\right\} $
+\end_inset
+
+);
+ this can be verified by letting:
+\begin_inset Formula 
+\[
+\mathbf{f}\rightarrow\mathbf{f}^{\prime}=\mathbf{U}\mathbf{f}\mathbf{U}^{\dagger}
+\]
+
+\end_inset
+
+and:
+\begin_inset Formula 
+\[
+\left|\psi_{j}\right\rangle \rightarrow\left|\psi_{j}\right\rangle ^{\prime}=\sum_{m}U_{jm}^{*}\psi_{m}
+\]
+
+\end_inset
+
+The covariance of 
+\begin_inset Formula $A$
+\end_inset
+
+ allows for the definition of a new 
+\emph on
+projected functional
+\emph default
+ 
+\begin_inset Formula $G$
+\end_inset
+
+ that depends only on the orbitals 
+\begin_inset Formula $\left\{ \psi_{i}\right\} $
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+G\left[T;\left\{ \psi_{i}\right\} \right]:=\min_{\left\{ f_{ij}\right\} }A\left[T;\left\{ \psi_{i}\right\} ,\left\{ f_{ij}\right\} \right]
+\]
+
+\end_inset
+
+
+\begin_inset Formula $G$
+\end_inset
+
+ is invariant under any unitary transformation of the 
+\begin_inset Formula $\left\{ \psi_{i}\right\} $
+\end_inset
+
+:
+ the transformed orbitals cannot lead to a different value for 
+\begin_inset Formula $G$
+\end_inset
+
+,
+ by virtue of the covariance of 
+\begin_inset Formula $A$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+The projected functional 
+\begin_inset Formula $G$
+\end_inset
+
+ represents a much better conditioned choice than the original free energy A for the evolution of the orbitals towards the ground state.
+ The reasons are several,
+ albeit related.
+ (i) The functional 
+\begin_inset Formula $G$
+\end_inset
+
+ no longer depends on the occupancies of the orbitals or on their unitary transformations (“rotations”) in the occupied subspace.
+ These are ill-conditioned,
+ nonlocal degrees of freedom,
+ with the added nonlinear constraint of charge normalization.
+ (ii) The 
+\begin_inset Formula $f_{ij}$
+\end_inset
+
+ have become dependent variables,
+ implicitly defined by the minimization in Eq.
+ (3),
+ and this dependency does not enter into the calculation of the functional derivatives 
+\begin_inset Formula $\delta G/\delta\psi_{i}^{*}$
+\end_inset
+
+ since the contributions 
+\begin_inset Formula $(\partial G/\partial f_{kl})(\partial f_{kl}/\partial\psi_{i}^{*})$
+\end_inset
+
+ are zero because of the minimum condition.
+ (iii) The occupancies of the orbitals and their internal rotations are now consistently considered as part of the same problem (finding the ground state 
+\begin_inset Formula $\hat{\Gamma}$
+\end_inset
+
+),
+ and not as two independent problems.
+ (iv) The expensive and inefficient evolution for the orbital rotations is now shifted to the matrix 
+\begin_inset Formula $\mathbf{f}$
+\end_inset
+
+;
+ this implies that the associated slow frequencies [10] have now been removed (compressed to zero) by the minimization condition.
+ Subspace alignment [11,12] between subsequent orbital updates is automatically enforced.
+\end_layout
+
+\end_body
+\end_document
