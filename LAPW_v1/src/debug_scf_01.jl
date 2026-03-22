@@ -428,6 +428,7 @@ function debug_scf_01(; NiterSCFMax = 50)
             end
         end
 
+        # This is using BroydenMixer_LAPW
         #do_mix_LAPW!(mixer, vsir, vsir_old, vsmt, vsmt_old, iter_scf)
         #if spinpol
         #    do_mix_LAPW!(mixer_b, bsir, bsir_old, bsmt, bsmt_old, iter_scf)
@@ -440,7 +441,7 @@ function debug_scf_01(; NiterSCFMax = 50)
 
     end # scf
 
-    print_info(ene_terms, prefix_str = "Final ")
+    print_info(ene_terms, prefix_str = "Final")
 
     #@infiltrate
     # open REPL and investigate the variables
