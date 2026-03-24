@@ -1,6 +1,6 @@
-filename = "PWINPUT_Al_v1";
+#filename = "PWINPUT_Al_v1";
 #filename = "PWINPUT_H2O_oncv";
-Ham, pwinput, Rhoe = PWDFT.prepare_Ham_from_pwinput(filename=filename);
+#Ham, pwinput, Rhoe = PWDFT.prepare_Ham_from_pwinput(filename=filename);
 
 # Prepare Haux
 Nstates = Ham.electrons.Nstates;

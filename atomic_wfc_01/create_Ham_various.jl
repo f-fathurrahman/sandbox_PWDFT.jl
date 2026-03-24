@@ -1,10 +1,4 @@
-using Revise, PWDFT
-using LinearAlgebra
-
-const DIR_PWDFT = joinpath(dirname(pathof(PWDFT)),"..");
-const DIR_PSP = joinpath(DIR_PWDFT, "pseudopotentials");
-
-includet("atomic_wfc_01.jl")
+#includet("atomic_wfc_01.jl")
 
 function create_Ham_structure_01()
     atoms_tuple = (
@@ -57,6 +51,83 @@ function create_Ham_structure_02()
 
     return Hamiltonian( atoms, pspfiles, ecutwfc, meshk=[10,10,10],
         extra_states=4, use_smearing=true, smearing_kT=0.01 )
+end
+
+# Au fcc, 4 atoms
+function create_Ham_structure_03()
+    atoms_tuple = (
+        Natoms = 4,
+        Nspecies = 1,
+        positions = [0.0 0.0 3.9439529101367605 3.9439529101367605;
+                     0.0 3.9439529101367605 0.0 3.9439529101367605;
+                     0.0 3.9439529101367605 3.9439529101367605 0.0],
+        atm2species = [1, 1, 1, 1],
+        atsymbs = ["Au", "Au", "Au", "Au"],
+        SpeciesSymbols = ["Au"],
+        LatVecs = [7.887905820273521 0.0 0.0;
+                   0.0 7.887905820273521 0.0;
+                   0.0 0.0 7.887905820273521],
+        Zvals = [11.0],
+        masses = [0.0]
+    );
+    atoms = Atoms(atoms_tuple...);
+    pspfiles = [ joinpath(DIR_PSP, "ONCV_v0.4.1_LDA", "Au.upf") ];
+    ecutwfc = 20.0;
+    options_tuple = (
+        dual = 4.0, Nspin_wf = 1, Nspin_dens = 1,
+        meshk = [4, 4, 4], shiftk = [0, 0, 0], time_reversal = true,
+        Ns = (0, 0, 0),
+        kpoints = nothing, kpts_str = nothing,
+        xcfunc = "VWN", use_xc_internal = false,
+        extra_states = nothing, Nstates = nothing,
+        use_symmetry = true, use_smearing = true, smearing_kT = 0.005,
+        starting_magn = nothing, angle1 = nothing, angle2 = nothing,
+        lspinorb = false, noncollinear = false
+    );
+    options = HamiltonianOptions(options_tuple...);
+    pspots = Vector{PsPot_UPF}(undef, atoms.Nspecies);
+    for isp in 1:atoms.Nspecies
+        pspots[isp] = PsPot_UPF(pspfiles[isp]);
+    end
+    return Hamiltonian(atoms, pspots, ecutwfc, options);
+end
+
+# Al fcc, 4 atoms, ONCV pspot
+function create_Ham_structure_04()
+    atoms_tuple = (
+        Natoms = 4,
+        Nspecies = 1,
+        positions = [0.0 0.0 3.817445194667986 3.817445194667986;
+                     0.0 3.817445194667986 0.0 3.817445194667986;
+                     0.0 3.817445194667986 3.817445194667986 0.0],
+        atm2species = [1, 1, 1, 1],
+        atsymbs = ["Al", "Al", "Al", "Al"],
+        SpeciesSymbols = ["Al"],
+        LatVecs = [7.634890389335972 0.0 0.0;
+                   0.0 7.634890389335972 0.0;
+                   0.0 0.0 7.634890389335972],
+        Zvals = [3.0],
+        masses = [0.0]
+    );
+    atoms = Atoms(atoms_tuple...);
+    pspfiles = [ joinpath(DIR_PSP, "ONCV_v0.4.1_LDA", "Al.upf") ];
+    ecutwfc = 15.0;
+    options_tuple = (
+        dual = 4.0, Nspin_wf = 1, Nspin_dens = 1,
+        meshk = [4, 4, 4], shiftk = [0, 0, 0], time_reversal = true,
+        Ns = (0, 0, 0), kpoints = nothing, kpts_str = nothing,
+        xcfunc = "VWN", use_xc_internal = false, extra_states = nothing,
+        Nstates = nothing, use_symmetry = true,
+        use_smearing = true, smearing_kT = 0.005,
+        starting_magn = nothing, angle1 = nothing, angle2 = nothing,
+        lspinorb = false, noncollinear = false
+    );
+    options = HamiltonianOptions(options_tuple...);
+    pspots = Vector{PsPot_UPF}(undef, atoms.Nspecies);
+    for isp in 1:atoms.Nspecies
+        pspots[isp] = PsPot_UPF(pspfiles[isp]);
+    end
+    return Hamiltonian(atoms, pspots, ecutwfc, options);
 end
 
 
