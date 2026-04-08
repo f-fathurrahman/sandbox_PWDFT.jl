@@ -44,15 +44,14 @@ function debug_main()
 
     checkmt!(atoms, specs_info)
     # make the muffin-tin mesh commensurate with lradstp
-    lradstp = 4 # in muffin tin
+    lradstp = elk_input.lradstp # in muffin tin
     for isp in 1:Nspecies
         nrmt = specs_info[isp].nrmt
         specs_info[isp].nrmt -= (nrmt-1)%lradstp
-        #nrcmt[is] = (nrmt[is] - 1)/lradstp + 1
     end
 
     atsp_vars = AtomicSpeciesVars(atoms, specs_info)
-    mt_vars = MuffinTins(specs_info, atsp_vars)
+    mt_vars = MuffinTins(specs_info, atsp_vars, lradstp = lradstp)
     apwlo_vars = APWLOVars(atoms, specs_info, mt_vars)
 
     allatoms!(atsp_vars)

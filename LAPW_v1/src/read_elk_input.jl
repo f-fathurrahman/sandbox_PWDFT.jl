@@ -13,6 +13,7 @@ struct ElkInput
     cmagz::Bool
     nosource::Bool
     spinsprl::Bool
+    lradstp::Int64
 end
 # NOTE: species_files are assumed to be located in the current directory
 # For bfieldc, I think it is more flexible to use Vector{Float64} rather than Tuple
@@ -38,7 +39,7 @@ function read_elk_input()
     cmagz = false
     nosource = false
     spinsprl = false
-
+    lradstp = 4
 
     Nlines = length(lines)
     iline = 0
@@ -132,6 +133,12 @@ function read_elk_input()
             nempty = parse(Int64, ll)
         end
         #
+        if l == "lradstp"
+            iline += 1
+            ll = split(lines[iline], " ", keepempty=false)[1]
+            lradstp = parse(Int64, ll)
+        end
+        #
         if l == "spinpol"
             iline += 1
             ll = split(lines[iline], " ", keepempty=false)[1]
@@ -197,7 +204,8 @@ function read_elk_input()
         is_molecule,
         ngridk, nempty,
         spinpol, bfieldc,
-        spinorb, cmagz, nosource, spinsprl
+        spinorb, cmagz, nosource, spinsprl,
+        lradstp
     )
 end
 

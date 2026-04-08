@@ -44,11 +44,10 @@ function debug_scf_01(; NiterSCFMax = 50)
 
     checkmt!(atoms, specs_info)
     # make the muffin-tin mesh commensurate with lradstp
-    lradstp = 2 # this parameter can be read from input (supplied by user)
+    lradstp = elk_input.lradstp
     for isp in 1:Nspecies
         nrmt = specs_info[isp].nrmt
         specs_info[isp].nrmt -= (nrmt-1)%lradstp
-        #nrcmt[is] = (nrmt[is] - 1)/lradstp + 1
     end
 
     atsp_vars = AtomicSpeciesVars(atoms, specs_info)
@@ -416,23 +415,25 @@ function debug_scf_01(; NiterSCFMax = 50)
         ene_terms_old = copy(ene_terms)
 
         # Simple linear mixing
-        β_mix = 0.2
-        vsir[:] = β_mix*vsir[:] + (1 - β_mix)*vsir_old[:]
-        for ia in 1:Natoms
-            vsmt[ia][:] = β_mix*vsmt[ia][:] + (1-β_mix)*vsmt_old[ia][:]
-        end
-        if spinpol
-            bsir[:] = β_mix*bsir[:] + (1 - β_mix)*bsir_old[:]
-            for ia in 1:Natoms
-                bsmt[ia][:] = β_mix*bsmt[ia][:] + (1 - β_mix)*bsmt_old[ia][:]
-            end
-        end
+        #β_mix = 0.2
+        #println("Using simple potential mix with β_mix = $(β_mix)")
+        #vsir[:] = β_mix*vsir[:] + (1 - β_mix)*vsir_old[:]
+        #for ia in 1:Natoms
+        #    vsmt[ia][:] = β_mix*vsmt[ia][:] + (1-β_mix)*vsmt_old[ia][:]
+        #end
+        #if spinpol
+        #    bsir[:] = β_mix*bsir[:] + (1 - β_mix)*bsir_old[:]
+        #    for ia in 1:Natoms
+        #        bsmt[ia][:] = β_mix*bsmt[ia][:] + (1 - β_mix)*bsmt_old[ia][:]
+        #    end
+        #end
 
         # This is using BroydenMixer_LAPW
-        #do_mix_LAPW!(mixer, vsir, vsir_old, vsmt, vsmt_old, iter_scf)
-        #if spinpol
-        #    do_mix_LAPW!(mixer_b, bsir, bsir_old, bsmt, bsmt_old, iter_scf)
-        #end
+        do_mix_LAPW!(mixer, vsir, vsir_old, vsmt, vsmt_old, iter_scf)
+        println("Using BroydenMixer_LAPW")
+        if spinpol
+            do_mix_LAPW!(mixer_b, bsir, bsir_old, bsmt, bsmt_old, iter_scf)
+        end
 
 
 
