@@ -3,8 +3,17 @@
 
 tasks
   0
-  120
-  121
+
+!  120
+!  121
+
+mixtype
+ 3  ! 0=linear, 1=adaptive, 3=Broyden
+
+beta0
+ 0.2
+
+! betamax beta0
 
 ! the inverse lifetime is determined by swidth
 swidth

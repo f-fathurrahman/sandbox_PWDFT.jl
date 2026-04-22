@@ -290,7 +290,7 @@ function debug_scf_01(; NiterSCFMax = 50)
 
     E_tot = ene_terms.E_tot # should be a reference?
     E_tot_old = Inf
-    etot_conv_thr = 1e-3
+    etot_conv_thr = 1e-4
     Nconv = 0
 
     betamix = 0.1
@@ -400,6 +400,7 @@ function debug_scf_01(; NiterSCFMax = 50)
         else
             Nconv = 0
         end
+        # 
         is_converged = (Nconv >= 2)
 
         #ΔE_terms = abs(ene_terms - ene_terms_old)
