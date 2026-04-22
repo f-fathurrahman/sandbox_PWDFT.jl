@@ -7,9 +7,11 @@
 ! Also note that the LO-TO splitting is not included in the dispersion.
 
 tasks
-    0       : ground state calculation
-  205       : phonon calculation with DFPT
-  220       : phonon dispersion plot
+  205
+
+!    0       : ground state calculation
+!  205       : phonon calculation with DFPT
+!  220       : phonon dispersion plot
 
 ! scale up the number of radial mesh points
 nrmtscf

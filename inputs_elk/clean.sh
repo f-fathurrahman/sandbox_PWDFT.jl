@@ -1,1 +1,1 @@
-rm -v *.OUT *.dat
+rm -v RUNNING *.OUT *.dat

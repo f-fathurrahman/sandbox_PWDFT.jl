@@ -1,0 +1,45 @@
+tasks
+  0
+  205
+
+molecule
+  .true.
+
+! large smearing width improves convergence for molecules
+swidth
+  0.05
+
+nempty
+  10
+
+!ngridq
+!  1 1 1
+
+rgkmax
+  6.0
+
+! large box containing the molecule
+avec
+  10.0   0.0   0.0
+   0.0  10.0   0.0
+   0.0   0.0  10.0
+
+sppath
+  './'
+
+! note that atomic positions are now in Cartesian coordinates
+atoms
+  2                                     : nspecies
+  'Na.in'                               : spfname
+  1                                     : natoms; atposc below
+  0.0     0.0  0.0
+  'Cl.in'                               : spfname
+  1                                     : natoms; atposc below
+  4.4121  0.0  0.0
+
+plot1d
+  2  1000
+  0.0  0.0  0.0
+  1.0  0.0  0.0
+
+

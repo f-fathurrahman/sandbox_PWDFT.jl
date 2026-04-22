@@ -24,6 +24,8 @@ _compare
 WFC.data
 *.data
 
+RUNNING
+ORIG_*
 OLD_*
 LOG_*
 *.xsf
