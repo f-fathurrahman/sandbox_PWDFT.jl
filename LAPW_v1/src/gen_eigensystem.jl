@@ -3,7 +3,8 @@ function gen_eigensystem!(
     atoms::Atoms, pw::PWGrid, mt_vars::MuffinTins, apwlo_vars::APWLOVars,
     apwlo_ints, elec_chgst,
     nmat, cfunig, vsig;
-    bsmt=nothing, bsir=nothing, ndmag=0
+    bsmt=nothing, bsir=nothing, ndmag=0,
+    tmpdir = "./tmp"
 )
     haa = apwlo_ints.haa
     hloa = apwlo_ints.hloa
@@ -57,8 +58,8 @@ function gen_eigensystem!(
     # FIXME: save full size (?)
     #serialize("H_ik_$(ik).dat", H)
     #serialize("O_ik_$(ik).dat", O)
-    serialize("evals_1st_ik_$(ik).dat", evals[1:nstfv])
-    serialize("evecs_1st_ik_$(ik).dat", evecs[:,1:nstfv])
+    serialize(joinpath(tmpdir, "evals_1st_ik_$(ik).dat"), evals[1:nstfv])
+    serialize(joinpath(tmpdir, "evecs_1st_ik_$(ik).dat"), evecs[:,1:nstfv])
     
     # Set eigenvalues
     # FIXME: only for the case of nstfv == nstsv
@@ -68,7 +69,8 @@ function gen_eigensystem!(
     gen_eigensystem_2nd!(
         ik,
         atoms, pw, mt_vars, apwlo_vars,
-        apwalm, elec_chgst, bsmt, bsir, ndmag
+        apwalm, elec_chgst, bsmt, bsir, ndmag,
+        tmpdir = tmpdir
     )
 
     return

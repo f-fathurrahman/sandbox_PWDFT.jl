@@ -3,6 +3,14 @@
 
 function debug_scf_01(; NiterSCFMax = 50)
 
+    # Prepare for temporary directory for saving some data
+    tmpdir = "./tmp"
+    @info "Using $tmpdir for temporary directory"
+    if !isdir(tmpdir)
+        mkdir(tmpdir)
+        @info "$tmpdir is not yet exist. Creating it."
+    end
+
     # Read the input file
     elk_input = read_elk_input()
     # assign some variables
@@ -260,9 +268,6 @@ function debug_scf_01(; NiterSCFMax = 50)
         nmat[ik] = Ngw[ik] + apwlo_vars.nlotot
         # assert ntsfv > nmat[ik]
     end
-    nmatmax = maximum(nmat) # not used?
-    efermi = 0.0
-
 
     # Initial call to potks?
     potks!(
@@ -305,7 +310,7 @@ function debug_scf_01(; NiterSCFMax = 50)
         println("-------------------------------")
 
         gencore!(atoms, sym_vars.eqatoms, atsp_vars, mt_vars, vsmt, core_states)
-        linengy!(atoms, sym_vars.eqatoms, mt_vars, vsmt, efermi, apwlo_vars)
+        linengy!(atoms, sym_vars.eqatoms, mt_vars, vsmt, elec_chgst.efermi, apwlo_vars)
         genapwfr!(atoms, sym_vars.eqatoms, mt_vars, apwlo_vars, vsmt)
         genlofr!(atoms, sym_vars.eqatoms, mt_vars, apwlo_vars, vsmt)
         calc_apwlo_integrals!(atoms, mt_vars, apwlo_vars, vsmt, apwlo_ints)
@@ -445,7 +450,7 @@ function debug_scf_01(; NiterSCFMax = 50)
 
     print_info(ene_terms, prefix_str = "Final")
 
-    #@infiltrate
+    @infiltrate
     # open REPL and investigate the variables
 
     return

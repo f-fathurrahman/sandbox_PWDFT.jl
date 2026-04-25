@@ -1,7 +1,8 @@
 function rhomag!(
     atoms, atsp_vars, pw, sym_vars, mt_vars, apwlo_vars, core_states, elec_chgst, cfunir,
     rhomt, rhoir;
-    magmt = nothing, magir = nothing
+    magmt = nothing, magir = nothing,
+    tmpdir = "./tmp"
 )
 
     Natoms = atoms.Natoms
@@ -30,9 +31,9 @@ function rhomag!(
 
     for ik in 1:pw.gvecw.kpoints.Nkpt
 
-        evecfv = deserialize("evecs_1st_ik_$(ik).dat");
+        evecfv = deserialize(joinpath(tmpdir, "evecs_1st_ik_$(ik).dat"));
         if elec_chgst.tevecsv
-            evecsv = deserialize("evecs_2nd_ik_$(ik).dat");
+            evecsv = deserialize(joinpath(tmpdir, "evecs_2nd_ik_$(ik).dat"));
         else
             evecsv = nothing
         end

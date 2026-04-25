@@ -3,7 +3,8 @@
 function gen_eigensystem_2nd!(
     ik::Int64,
     atoms::Atoms, pw::PWGrid, mt_vars::MuffinTins, apwlo_vars,
-    apwalm, elec_chgst, bsmt, bsir, ndmag
+    apwalm, elec_chgst, bsmt, bsir, ndmag;
+    tmpdir = "./tmp"
 )
     # XXX HARDCODED!!!
     ncmag = false
@@ -27,8 +28,8 @@ function gen_eigensystem_2nd!(
 
     # Read 1st variational eigenvalues and eigenvectors from files
     # XXX: Read this or just make them into arguments ?
-    evalfv = deserialize("evals_1st_ik_$(ik).dat")
-    evecfv = deserialize("evecs_1st_ik_$(ik).dat")
+    evalfv = deserialize(joinpath(tmpdir, "evals_1st_ik_$(ik).dat"))
+    evecfv = deserialize(joinpath(tmpdir, "evecs_1st_ik_$(ik).dat"))
 
     evecsv = zeros(ComplexF64, nstsv, nstsv)
     @views evalsvp = elec_chgst.evalsv[:,ik]
@@ -295,8 +296,8 @@ function gen_eigensystem_2nd!(
         end
     end
 
-    serialize("evals_2nd_ik_$(ik).dat", evalsvp)
-    serialize("evecs_2nd_ik_$(ik).dat", evecsv)
+    serialize(joinpath(tmpdir, "evals_2nd_ik_$(ik).dat"), evalsvp)
+    serialize(joinpath(tmpdir, "evecs_2nd_ik_$(ik).dat"), evecsv)
 
     return
 
