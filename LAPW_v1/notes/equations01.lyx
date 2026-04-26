@@ -1829,5 +1829,80 @@ where
 .
 \end_layout
 
+\begin_layout Subsection*
+gradzfmt
+\end_layout
+
+\begin_layout Standard
+Calculates the gradient of a complex muffin-tin function.
+ In other words,
+ given the spherical harmonic expansion coefficients,
+ 
+\begin_inset Formula $f_{lm}(r)$
+\end_inset
+
+,
+ of a function 
+\begin_inset Formula $f({\bf r})$
+\end_inset
+
+,
+ the routine returns 
+\begin_inset Formula ${\bf F}_{lm}$
+\end_inset
+
+ where
+\begin_inset Formula 
+\[
+\sum_{lm}{\bf F}_{lm}(r)Y_{lm}(\hat{{\bf r}})=\nabla f({\bf r}).
+\]
+
+\end_inset
+
+This is done using the formula (see,
+ for example,
+ V.
+ Devanathan,
+ 
+\emph on
+Angular Momentum Techniques In Quantum Mechanics
+\emph default
+:
+\begin_inset Formula 
+\[
+\begin{align*}\nabla_{\mu}^{s}f_{lm}(r)Y_{lm}(\hat{{\bf r}}) & =\sqrt{\frac{l+1}{2l+3}}C(l,1,l+1|m,\mu,m+\mu)Y_{l+1m+\mu}(\hat{{\bf r}})\left(\frac{d}{dr}-\frac{l}{r}\right)f_{lm}(r)\\
+ & -\sqrt{\frac{l}{2l-1}}C(l,1,l-1|m,\mu,m+\mu)Y_{l-1,m+\mu}(\hat{{\bf r}})\left(\frac{d}{dr}+\frac{l+1}{r}\right)f_{lm}(r),
+\end{align*}
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $C$
+\end_inset
+
+ are Clebsch-Gordan coefficients and the gradient 
+\begin_inset Formula $\nabla_{\mu}^{s}$
+\end_inset
+
+ is in terms of the spherical unit vectors 
+\begin_inset Formula $\hat{{\bf e}}_{\mu}$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+\hat{{\bf e}}_{+1}=-\frac{\hat{{\bf x}}+i\hat{{\bf y}}}{\sqrt{2}},\qquad\hat{{\bf e}}_{0}=\hat{{\bf z}},\qquad\hat{{\bf e}}_{-1}=\frac{\hat{{\bf x}}-i\hat{{\bf y}}}{\sqrt{2}}.
+\]
+
+\end_inset
+
+Note that the gradient returned is in terms of the global 
+\begin_inset Formula $(\hat{{\bf x}},\hat{{\bf y}},\hat{{\bf z}})$
+\end_inset
+
+ coordinate system.
+\end_layout
+
 \end_body
 \end_document
