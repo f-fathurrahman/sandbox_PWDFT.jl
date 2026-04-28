@@ -99,13 +99,20 @@ function debug_scf_01(; NiterSCFMax = 50)
     @info "sym_info.Nrots = $(sym_info.Nrots)"
 
     # FIXME: need to pass k-points information from elk_input
-    @info "KPoints read from pwdftjl_kpoints.jldat"
-    pw = PWGrid(
-        ecutwfc, atoms.LatVecs, dual=dual,
-        Ns_ = deserialize("pwdftjl_Ns.jldat"), # XXX
-        #kpoints=KPoints(atoms, elk_input.ngridk, [0,0,0], sym_info.s)
-        kpoints = deserialize("pwdftjl_kpoints.jldat")
-    )
+    if isfile("./pwdftjl_kpoints.jldat") && isfile("./pwdftjl_kpoints.jldat")
+        @info "KPoints read from pwdftjl_kpoints.jldat"
+        @info "Ns is read from pwdftjl_Ns.jldat"
+        pw = PWGrid(
+            ecutwfc, atoms.LatVecs, dual=dual,
+            Ns_ = deserialize("pwdftjl_Ns.jldat"), # XXX
+            kpoints = deserialize("pwdftjl_kpoints.jldat")
+        )
+    else
+        pw = PWGrid(
+            ecutwfc, atoms.LatVecs, dual=dual,
+            kpoints=KPoints(atoms, elk_input.ngridk, [0,0,0], sym_info.s)
+        )
+    end
     println(pw)
 
     # check for collinearity in the z-direction and set the dimension of the
