@@ -69,8 +69,8 @@ export CoreStatesVars
 include("readspecies.jl")
 export readspecies!
 
-include("read_elk_input.jl")
-export read_elk_input
+include("ElkInput.jl")
+export ElkInput, read_elk_input
 export create_atoms_from_elk_input
 
 include("mtdmin.jl")
