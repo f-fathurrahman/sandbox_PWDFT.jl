@@ -69,7 +69,7 @@ function calc_energy_terms!(
     Zatoms = -PWDFT.get_Zatoms(atoms) # use minus sign
     for ia in 1:Natoms
         isp = atm2species[ia]
-        E_mad += 0.5*Zatoms[ia]*(vclmt[ia][1] - atsp_vars.vcln[isp][1])*y00
+        E_mad += 0.5*Zatoms[isp]*(vclmt[ia][1] - atsp_vars.vcln[isp][1])*y00
     end
 
     # This should be called only once in the beginning of SCF
