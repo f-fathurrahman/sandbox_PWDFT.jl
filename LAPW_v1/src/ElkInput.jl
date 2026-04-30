@@ -14,6 +14,9 @@ struct ElkInput
     nosource::Bool
     spinsprl::Bool
     lradstp::Int64
+    ncmag::Bool
+    rgkmax::Float64
+    gmaxvr::Float64
 end
 # NOTE: species_files are assumed to be located in the current directory
 # For bfieldc, I think it is more flexible to use Vector{Float64} rather than Tuple
@@ -40,6 +43,9 @@ function read_elk_input()
     nosource = false
     spinsprl = false
     lradstp = 4
+    ncmag = false
+    rgkmax = 7.0
+    gmaxvr = 12.0
 
     Nlines = length(lines)
     iline = 0
@@ -147,6 +153,26 @@ function read_elk_input()
             end 
         end
         #
+        if l == "ncmag"
+            iline += 1
+            ll = split(lines[iline], " ", keepempty=false)[1]
+            if lowercase(ll) == ".true."
+                ncmag = true
+            end 
+        end
+        #
+        if l == "rgkmax"
+            iline += 1
+            ll = split(lines[iline], " ", keepempty=false)[1]
+            rgkmax = parse(Float64, ll)
+        end
+        #
+        if l == "gmaxvr"
+            iline += 1
+            ll = split(lines[iline], " ", keepempty=false)[1]
+            gmaxvr = parse(Float64, ll)
+        end
+        #
         if l == "scale"
             iline += 1
             ll = split(lines[iline], " ", keepempty=false)[1]
@@ -205,7 +231,7 @@ function read_elk_input()
         ngridk, nempty,
         spinpol, bfieldc,
         spinorb, cmagz, nosource, spinsprl,
-        lradstp
+        lradstp, ncmag, rgkmax, gmaxvr
     )
 end
 

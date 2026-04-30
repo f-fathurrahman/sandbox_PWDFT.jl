@@ -28,7 +28,9 @@ function debug_scf_01(; NiterSCFMax = 50)
     nosource = elk_input.nosource
     cmagz = elk_input.cmagz
 
-    ncmag = false # read from elk.in ?
+    ncmag = elk_input.ncmag
+    rgkmax = elk_input.rgkmax
+    gmaxvr = elk_input.gmaxvr
 
     # Initialize Atoms
     atoms = create_atoms_from_elk_input(elk_input)
@@ -66,11 +68,6 @@ function debug_scf_01(; NiterSCFMax = 50)
 
     Natoms = atoms.Natoms
     atm2species = atoms.atm2species
-
-    # Default value for rgkmax and gmaxvr
-    rgkmax = 7.0
-    gmaxvr = 12.0
-
     # use average muffin-tin radius (default)
     rsum = 0.0
     for ia in 1:Natoms
