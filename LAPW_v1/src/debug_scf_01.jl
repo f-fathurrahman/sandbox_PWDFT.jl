@@ -20,8 +20,8 @@ function debug_scf_01(; NiterSCFMax = 50)
     bfieldc0 = elk_input.bfieldc
     # NOTE: in Elk, the input variable name is bfieldc,
     #       but this is assigned to bfieldc0
-    #bfcmt = elk_input.bfcmt
-    #bfcmt0 = elk_input.bfcmt
+    bfcmt0 = elk_input.bfcmt0
+    bfcmt = copy(bfcmt0)
     #
     spinorb = elk_input.spinorb
     spinsprl = elk_input.spinsprl
@@ -34,10 +34,6 @@ function debug_scf_01(; NiterSCFMax = 50)
 
     # Initialize Atoms
     atoms = create_atoms_from_elk_input(elk_input)
-
-    # FIXME: bfcmt shoule be read from elk.in
-    bfcmt = zeros(Float64, 3, atoms.Natoms)
-    bfcmt0 = zeros(Float64, 3, atoms.Natoms)
 
     # Setup symmetry variables
     sym_vars = SymmetryVars()
@@ -300,6 +296,7 @@ function debug_scf_01(; NiterSCFMax = 50)
     E_tot = ene_terms.E_tot # should be a reference?
     E_tot_old = Inf
     etot_conv_thr = 1e-4
+    dv_conv_thr = 1e-6
     Nconv = 0
 
     betamix = 0.1
@@ -402,6 +399,13 @@ function debug_scf_01(; NiterSCFMax = 50)
             dmag_mt /= Natoms # Normalize by no. of atoms
             println("dmag_ir = $dmag_ir dmag_mt = $dmag_mt")
         end
+        dv = dv_mt + dv_ir
+        if dv <= dv_conv_thr
+            is_converged_dv = true
+        else
+            is_converged_dv = false
+        end
+        println("is_converged_dv = ", is_converged_dv)
 
         ΔE = abs(E_tot - E_tot_old)
         if ΔE <= etot_conv_thr
@@ -410,7 +414,7 @@ function debug_scf_01(; NiterSCFMax = 50)
             Nconv = 0
         end
         # 
-        is_converged = (Nconv >= 2)
+        is_converged = (Nconv >= 2) && is_converged_dv
 
         #ΔE_terms = abs(ene_terms - ene_terms_old)
         #print_info(ene_terms)
@@ -419,6 +423,7 @@ function debug_scf_01(; NiterSCFMax = 50)
         @printf("%4d %18.10f %18.6e\n", iter_scf, E_tot, ΔE)
         if is_converged
             println("CONVERGED in total energy (convergence achieved two times in row)")
+            println("             and total potential")
             break
         end
         E_tot_old = E_tot

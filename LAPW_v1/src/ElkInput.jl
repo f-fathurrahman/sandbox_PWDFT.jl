@@ -17,9 +17,12 @@ struct ElkInput
     ncmag::Bool
     rgkmax::Float64
     gmaxvr::Float64
+    bfcmt0::Matrix{Float64}
 end
 # NOTE: species_files are assumed to be located in the current directory
 # For bfieldc, I think it is more flexible to use Vector{Float64} rather than Tuple
+#
+# bfcmt0 is already "flattened"
 
 function read_elk_input()
     f = open("elk.in", "r")
@@ -46,6 +49,11 @@ function read_elk_input()
     ncmag = false
     rgkmax = 7.0
     gmaxvr = 12.0
+
+    # Need to total number of
+    #bfcmt = zeros(Float64, 3, atoms.Natoms)
+    #bfcmt0 = zeros(Float64, 3, atoms.Natoms)
+    bfcmt0_in = Vector{Matrix{Float64}}()
 
     Nlines = length(lines)
     iline = 0
@@ -103,6 +111,7 @@ function read_elk_input()
                 @info "natmsp = $(natmsp)"
                 push!(natoms_per_species, natmsp)
                 atpos_sp = zeros(Float64, 3, natmsp)
+                bfcmt0_sp = zeros(Float64, 3, natmsp)
                 # Start reading atomic positions
                 for ia in 1:natmsp
                     iline += 1
@@ -111,8 +120,15 @@ function read_elk_input()
                     for i in 1:3
                         atpos_sp[i,ia] = parse(Float64, ll[i])
                     end
+                    # This is bfcmt0
+                    if length(ll) > 3
+                        for i in 1:3
+                            bfcmt0_sp[i,ia] = parse(Float64, ll[3+i])
+                        end
+                    end
                 end
                 push!(atomic_positions, atpos_sp)
+                push!(bfcmt0_in, bfcmt0_sp)
             end 
             @info "End of processing atoms"
         end
@@ -224,6 +240,16 @@ function read_elk_input()
     # Scale LatVecs
     LatVecs *= scale
 
+    # "Flatten" bfcmt0
+    bfcmt0 = zeros(Float64, 3, sum(natoms_per_species))
+    ia = 0
+    for isp in 1:Nspecies
+        for ias in 1:natoms_per_species[isp]
+            ia += 1
+            bfcmt0[:,ia] = bfcmt0_in[isp][:,ias]
+        end
+    end
+
     return ElkInput(
         LatVecs, Nspecies, species_files,
         natoms_per_species, atomic_positions,
@@ -231,7 +257,8 @@ function read_elk_input()
         ngridk, nempty,
         spinpol, bfieldc,
         spinorb, cmagz, nosource, spinsprl,
-        lradstp, ncmag, rgkmax, gmaxvr
+        lradstp, ncmag, rgkmax, gmaxvr,
+        bfcmt0
     )
 end
 
