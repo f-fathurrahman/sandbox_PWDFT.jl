@@ -18,7 +18,6 @@ function debug_main()
     spinorb = elk_input.spinorb
     spinsprl = elk_input.spinsprl
     nosource = elk_input.nosource
-    cmagz = elk_input.cmagz
 
     ncmag = false # read from elk.in ?
 
@@ -128,10 +127,10 @@ function debug_main()
         # source-free fields and spin-spirals must be non-collinear
         if nosource || spinsprl
             ndmag = 3
-            cmagz = false
+            elk_input.cmagz = false
         end
         # force collinear magnetism along the z-axis if required
-        if cmagz
+        if elk_input.cmagz
             ndmag = 1
         end
     else
@@ -289,7 +288,7 @@ function debug_main()
             atoms, pw, mt_vars, apwlo_vars,
             apwlo_ints, elec_chgst,
             nmat, cfunig, vsig;
-            bsmt=bsmt, bsir=bsir, ndmag=ndmag
+            bsmt = bsmt, bsir = bsir, ndmag = ndmag
         )
     end
 

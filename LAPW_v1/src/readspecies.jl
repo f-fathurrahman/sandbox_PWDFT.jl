@@ -1,3 +1,5 @@
+# XXX No longer needed? Already covered by SpeciesInfo
+
 #=
 NOTES:
 This needs overhaul.
