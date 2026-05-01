@@ -66,9 +66,6 @@ export APWLOVars
 include("CoreStatesVars.jl")
 export CoreStatesVars
 
-include("readspecies.jl")
-export readspecies!
-
 include("ElkInput.jl")
 export ElkInput, read_elk_input
 export create_atoms_from_elk_input
