@@ -307,15 +307,24 @@ function read_elk_input()
 end
 
 
+function get_spsymb_from_spfname(filename)
+    f = open(filename, "r")
+    line = readline(f) # read first line
+    spsymb = replace(split(line)[1], "'" => "")
+    close(f)
+    return spsymb
+end
+
+
 function create_atoms_from_elk_input(elk_input)
     Natoms = sum(elk_input.natoms_per_species)
     Nspecies = elk_input.Nspecies
     # Build atoms string
     atoms_string = "$Natoms\n\n"
     for isp in 1:Nspecies
-        species_name = replace(elk_input.species_files[isp], ".in" => "")
+        species_name = get_spsymb_from_spfname(elk_input.species_files[isp])
         if length(species_name) > 3
-            @warn "Too loop species_name: $(species_name)"
+            @warn "Too long species_name: $(species_name)"
         end
         atpos = elk_input.atomic_positions[isp]
         for ias in 1:elk_input.natoms_per_species[isp]
