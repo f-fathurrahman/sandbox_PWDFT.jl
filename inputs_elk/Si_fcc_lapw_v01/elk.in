@@ -1,0 +1,51 @@
+tasks
+  0
+
+! use LAPW nxoapwlo=1
+nxoapwlo
+ 1
+
+! set maximum l for APW, cannot be lower than lmaxo
+lmaxapw
+ 3
+
+lmaxo
+ 3
+
+rgkmax
+ 5.0
+
+! Libxc Slater exchange + PW92 correlation
+xctype
+ 100 1 12
+
+tforce
+ .true.
+
+! use Broyden mixing
+mixtype
+  3
+
+avec
+  5.13  5.13  0.00
+  5.13  0.00  5.13
+  0.00  5.13  5.13
+
+! this is the relative path to the species files
+sppath
+  './'
+
+atoms
+  1                                 : nspecies
+  'Si_no_lo.in'                     : spfname
+  2                                 : natoms; atposl below
+  0.0  0.0  0.0
+  0.25 0.25 0.25
+
+ngridk
+  2 2 2
+
+vkloff
+  0.0  0.0  0.0
+
+
