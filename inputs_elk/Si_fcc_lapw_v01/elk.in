@@ -2,8 +2,8 @@ tasks
   0
 
 ! use LAPW nxoapwlo=1
-!nxoapwlo
-! 1
+nxoapwlo
+ 1
 
 ! set maximum l for APW, cannot be lower than lmaxo
 !lmaxapw
