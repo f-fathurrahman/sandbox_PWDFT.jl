@@ -2,15 +2,15 @@ tasks
   0
 
 ! use LAPW nxoapwlo=1
-nxoapwlo
- 1
+!nxoapwlo
+! 1
 
 ! set maximum l for APW, cannot be lower than lmaxo
-lmaxapw
- 3
+!lmaxapw
+! 3
 
-lmaxo
- 3
+!lmaxo
+! 3
 
 rgkmax
  5.0
