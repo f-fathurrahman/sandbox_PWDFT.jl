@@ -1,4 +1,4 @@
-function calc_match_coeffs(ik, atoms, pw, mt_vars, apwlo_vars)
+function calc_match_coeffs(ik, atoms, atsp_vars, pw, mt_vars, apwlo_vars)
     apwalm = Vector{Array{ComplexF64,3}}(undef, atoms.Natoms)
     for ia in 1:atoms.Natoms
         isp = atoms.atm2species[ia]
@@ -7,11 +7,11 @@ function calc_match_coeffs(ik, atoms, pw, mt_vars, apwlo_vars)
         lmmaxapw = mt_vars.lmmaxapw
         apwalm[ia] = zeros(ComplexF64, Ngk, apwordmax, lmmaxapw)
     end
-    calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm)
+    calc_match_coeffs!(ik, atoms, atsp_vars, pw, mt_vars, apwlo_vars, apwalm)
     return apwalm
 end
 
-function calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm)
+function calc_match_coeffs!(ik, atoms, atsp_vars, pw, mt_vars, apwlo_vars, apwalm; npapw=4)
     # XXX: Need to test in case of omax > 1
     # apword must be at least 2, however it is quite difficult to figure out
     # apwe0 for this.
@@ -20,6 +20,9 @@ function calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm)
     atm2species = atoms.atm2species
     Nspecies = atoms.Nspecies
 
+    rsp = atsp_vars.rsp
+
+    apword = apwlo_vars.apword
     apwordmax = apwlo_vars.apwordmax # accross all species
 
     lmaxapw = mt_vars.lmaxapw
@@ -115,16 +118,17 @@ function calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm)
                 z1 = t0*im^l  #zil[l]
                 # set up matrix of derivatives
                 for jo in 1:apword[isp][l], io in 1:apword[isp][l]
-                    a[io,jo] = polynm(io-1, npapw, rsp[isp][ir], apwfr[ia][l][jo][ir,1], rmt[isp])
+                    #a[io,jo] = polynm(io-1, npapw, rsp[isp][ir], apwfr[ia][l][jo][ir,1], rmt[isp])
+                    a[io,jo] = polynm(io-1, npapw, rsp[isp][ir:end], apwfr[ia][l][jo][ir:end,1], rmt[isp])
                 end 
                 # set up target vectors
                 i = 0
                 for igp in 1:Ngk
                     z2 = z1*sfacgp[igp,ia]
                     for m in -l:l
-                        lm = idxlm(l,m)
+                        lm = idxlm[l,m]
                         i = i + 1
-                        z3 = z2*conjg(ylmgp[lm,igp])
+                        z3 = z2*conj(ylmgp[lm,igp])
                         for io in 1:apword[isp][l]
                             b[io,i] = djl[l,io,igp]*z3
                         end 
@@ -133,6 +137,8 @@ function calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm)
                 # solve the general complex linear systems
                 #CALL zgesv(apword(l,is),i,a,apwordmax,ipiv,b,apwordmax,info)
                 idx1 = 1:apword[isp][l]
+                #println("l = $l idx1 = $idx1")
+                #println("a = $(a[idx1,idx1]) b = $(b[idx1,idx1])")
                 b[idx1,idx1] = a[idx1,idx1] \ b[idx1,idx1]
                 #
                 i = 0

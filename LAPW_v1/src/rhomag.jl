@@ -37,7 +37,7 @@ function rhomag!(
         else
             evecsv = nothing
         end
-        apwalm = calc_match_coeffs(ik, atoms, pw, mt_vars, apwlo_vars);
+        apwalm = calc_match_coeffs(ik, atoms, atsp_vars, pw, mt_vars, apwlo_vars);
 
         rhomagk!(
             ik, atoms, pw, mt_vars, apwlo_vars, elec_chgst,

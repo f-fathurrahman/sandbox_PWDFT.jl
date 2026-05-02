@@ -20,6 +20,7 @@ struct ElkInput
     bfcmt0::Matrix{Float64}
     epslat::Float64
     ndmag::Int64
+    nxoapwlo::Int64
 end
 # NOTE: species_files are assumed to be located in the current directory
 # For bfieldc, I think it is more flexible to use Vector{Float64} rather than Tuple
@@ -53,6 +54,7 @@ function read_elk_input()
     gmaxvr = 12.0
     epslat = 1e-6
     ndmag = -1 # some invalid value
+    nxoapwlo = 0
 
     # Need to total number of
     #bfcmt = zeros(Float64, 3, atoms.Natoms)
@@ -151,6 +153,12 @@ function read_elk_input()
             for i in 1:3
                 ngridk[i] = parse(Int64, ll[i])
             end
+        end
+        #
+        if l == "nxoapwlo"
+            iline += 1
+            ll = split(lines[iline], " ", keepempty=false)[1]
+            nxoapwlo = parse(Int64, ll)
         end
         #
         if l == "nempty"
@@ -302,7 +310,8 @@ function read_elk_input()
         spinpol, bfieldc,
         spinorb, cmagz, nosource, spinsprl,
         lradstp, ncmag, rgkmax, gmaxvr,
-        bfcmt0, epslat, ndmag
+        bfcmt0, epslat, ndmag,
+        nxoapwlo
     )
 end
 

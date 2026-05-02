@@ -38,10 +38,9 @@ function debug_scf_02(; NiterSCFMax = 100)
     findsymsite!(sym_vars, atoms, spinpol = spinpol, bfieldc0 = bfieldc0)
 
     Nspecies = atoms.Nspecies
-    spsymb = atoms.SpeciesSymbols
     specs_info = Vector{SpeciesInfo}(undef,Nspecies)
     for isp in 1:Nspecies
-        specs_info[isp] = SpeciesInfo(spsymb[isp]*".in")
+        specs_info[isp] = SpeciesInfo(elk_input.species_files[isp])
     end
 
     checkmt!(atoms, specs_info)
@@ -54,7 +53,13 @@ function debug_scf_02(; NiterSCFMax = 100)
 
     atsp_vars = AtomicSpeciesVars(atoms, specs_info)
     mt_vars = MuffinTins(specs_info, atsp_vars, lradstp = lradstp)
-    apwlo_vars = APWLOVars(atoms, specs_info, mt_vars)
+    apwlo_vars = APWLOVars(
+        atoms, specs_info, mt_vars,
+        nxoapwlo = elk_input.nxoapwlo
+    )
+    #println("nxoapwlo = ", elk_input.nxoapwlo)
+    #@infiltrate
+    #return
 
     Natoms = atoms.Natoms
     atm2species = atoms.atm2species
@@ -201,7 +206,7 @@ function debug_scf_02(; NiterSCFMax = 100)
         # Using local variables for Hamiltonians, eigenvectors and eigenvalues
         for ik in 1:Nkpt
             gen_eigensystem!( ik,
-                atoms, pw, mt_vars, apwlo_vars,
+                atoms, atsp_vars, pw, mt_vars, apwlo_vars,
                 apwlo_ints, elec_chgst,
                 nmat, cfunig, potentials.vsig;
                 bsmt = potentials.bsmt, bsir = potentials.bsir, ndmag = ndmag

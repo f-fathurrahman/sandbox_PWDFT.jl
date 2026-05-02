@@ -20,7 +20,6 @@ mutable struct SpeciesInfo
     evalsp::Vector{Float64}
     #
     maxlapw::Int64
-    maxapword::Int64
     maxlorb::Int64
     maxlorbord::Int64
     #
@@ -127,10 +126,6 @@ function SpeciesInfo(
     # set the APW orders for > 0
     apword[1:maxlapw] .= apword[0] # XXX apword are the same for all l ?
     #
-    maxapword = maximum(apword)
-    MAX_APW_ORD = 4 # Hardcoded, probably not needed
-    @assert maxapword <= MAX_APW_ORD
-    #
     # XXX Generally, apword will depend on l ? Here, the order is the same for all l.
     #
     e0min = 0.0
@@ -226,7 +221,7 @@ function SpeciesInfo(
         rminsp, rmaxsp,
         rmt, nrmt,
         nstsp, nsp, lsp, ksp, spcore, occsp, evalsp,
-        maxlapw, maxapword, maxlorb, maxlorbord,
+        maxlapw, maxlorb, maxlorbord,
         e0min, apword, apwe0, apwdm, apwve,
         nlx, nlorb,
         lorbl, lorbord, lorbe0, lorbdm, lorbve

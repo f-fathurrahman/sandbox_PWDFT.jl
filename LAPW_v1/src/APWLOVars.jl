@@ -125,6 +125,9 @@ function APWLOVars(
     nxoapwlo = 0,
     nxlo = 0
 )
+
+    MAX_APW_ORD = 4 # XXX HARDCODED
+
     Natoms = atoms.Natoms
     Nspecies = atoms.Nspecies
     atm2species = atoms.atm2species
@@ -144,12 +147,14 @@ function APWLOVars(
     #
     # These arrays depend on order and angular momentum index (?)
     #
+    MAX_APW_ORD = 4
     APWE0_ELTYPE = typeof(specs_info[1].apwe0)
     apwe0 = Vector{APWE0_ELTYPE}(undef, Nspecies)
     for isp in 1:Nspecies
         apwe0[isp] = OffsetArray( Vector{Vector{Float64}}(undef, lmaxapw+1), 0:lmaxapw )
         for l in 0:lmaxapw
-            apwe0[isp][l] = zeros(Float64, apword[isp][l])
+            #apwe0[isp][l] = zeros(Float64, apword[isp][l])
+            apwe0[isp][l] = zeros(Float64, MAX_APW_ORD)
             for io in 1:apword[isp][l]
                 apwe0[isp][l][io] = specs_info[isp].apwe0[l][io]
             end
@@ -161,7 +166,8 @@ function APWLOVars(
     for isp in 1:Nspecies
         apwdm[isp] = OffsetArray( Vector{Vector{Int64}}(undef, lmaxapw+1), 0:lmaxapw )
         for l in 0:lmaxapw
-            apwdm[isp][l] = zeros(Float64, apword[isp][l])
+            #apwdm[isp][l] = zeros(Float64, apword[isp][l])
+            apwdm[isp][l] = zeros(Float64, MAX_APW_ORD)
             for io in 1:apword[isp][l]
                 apwdm[isp][l][io] = specs_info[isp].apwdm[l][io]
             end
@@ -172,11 +178,42 @@ function APWLOVars(
     for isp in 1:Nspecies
         apwve[isp] = OffsetArray( Vector{Vector{Bool}}(undef, lmaxapw+1), 0:lmaxapw )
         for l in 0:lmaxapw
-            apwve[isp][l] = zeros(Float64, apword[isp][l])
+            #apwve[isp][l] = zeros(Float64, apword[isp][l])
+            apwve[isp][l] = zeros(Float64, MAX_APW_ORD)
             for io in 1:apword[isp][l]
                 apwve[isp][l][io] = specs_info[isp].apwve[l][io]
             end
         end
+    end
+    maxapword = MAX_APW_ORD
+    #
+    # add excess order to APW functions if required
+    @info "nxoapwlo = $nxoapwlo"
+    if nxoapwlo > 0
+        for isp in 1:Nspecies, l in 0:lmaxapw
+            #
+            #
+            jo = apword[isp][l]
+            ko = jo + nxoapwlo
+            #println("l = $l jo = $jo ko = $ko maxapword = $maxapword")
+            # check requested APW order, it cannot be higher than maxapword
+            if ko > maxapword
+                ko = maxapword
+            end
+            i = 0
+            # add additional derivative order: modify apwe0, apwdm, apwve
+            # loop over apw order
+            for io in (jo+1):ko
+                #println("io = ", io)
+                i = i + 1
+                apwe0[isp][l][io] = apwe0[isp][l][jo] # the same apwe0
+                apwdm[isp][l][io] = apwdm[isp][l][jo] + i # add the order
+                #println("apwdm = ", apwdm[isp][l][io])
+                apwve[isp][l][io] = apwve[isp][l][jo]
+            end
+            # update apword
+            apword[isp][l] = ko
+        end # loop over Nspecies and lmaxapw
     end
     #
     nlorb = zeros(Int64, Nspecies)
@@ -236,7 +273,8 @@ function APWLOVars(
         isp = atm2species[ia]
         apwe[ia] = OffsetArray( Vector{Vector{Float64}}(undef, lmaxapw+1), 0:lmaxapw )
         for l in 0:lmaxapw
-            apwe[ia][l] = zeros(Float64, apword[isp][l])
+            #apwe[ia][l] = zeros(Float64, apword[isp][l])
+            apwe[ia][l] = zeros(Float64, MAX_APW_ORD)
             for io in 1:apword[isp][l]
                 apwe[ia][l][io] = apwe0[isp][l][io]
             end

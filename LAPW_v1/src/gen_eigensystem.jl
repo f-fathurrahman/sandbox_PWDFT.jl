@@ -1,6 +1,6 @@
 function gen_eigensystem!(
     ik::Int64,
-    atoms::Atoms, pw::PWGrid, mt_vars::MuffinTins, apwlo_vars::APWLOVars,
+    atoms::Atoms, atsp_vars, pw::PWGrid, mt_vars::MuffinTins, apwlo_vars::APWLOVars,
     apwlo_ints, elec_chgst,
     nmat, cfunig, vsig;
     bsmt=nothing, bsir=nothing, ndmag=0,
@@ -20,7 +20,7 @@ function gen_eigensystem!(
         lmmaxapw = mt_vars.lmmaxapw
         apwalm[ia] = zeros(ComplexF64, Ngk, apwordmax, lmmaxapw)
     end
-    calc_match_coeffs!(ik, atoms, pw, mt_vars, apwlo_vars, apwalm)
+    calc_match_coeffs!(ik, atoms, atsp_vars, pw, mt_vars, apwlo_vars, apwalm)
 
 
     # For testing Hamiltonian construction
