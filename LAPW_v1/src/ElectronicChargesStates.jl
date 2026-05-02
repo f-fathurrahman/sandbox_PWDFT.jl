@@ -37,9 +37,9 @@ end
 
 function ElectronicChargesStates(
     atoms::Atoms, atsp_vars, Nkpt::Int64;
-    nempty0=4.0, spinpol=false, chgexs=0.0,
-    swidth=0.001,
-    nempty::Union{Int64,Nothing}=nothing
+    nempty0 = 4.0, spinpol = false, chgexs = 0.0,
+    swidth = 0.001,
+    nempty::Union{Int64,Nothing} = nothing
 )
     # nempty0 is number of empty states per atom. It is a Float64
     # nspinor should be read from something else?

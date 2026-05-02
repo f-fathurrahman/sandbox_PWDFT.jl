@@ -294,8 +294,14 @@ include("calc_energy_terms.jl")
 
 include("BroydenMixer_LAPW.jl")
 
+include("LAPWDensities.jl"); export LAPWDensities
+include("LAPWPotentials.jl"); export LAPWPotentials
+include("LAPWHamiltonian.jl"); export LAPWHamiltonian
+
 include("debug_main.jl")
 include("debug_scf_01.jl")
+
+include("debug_scf_02.jl")
 
 end
 

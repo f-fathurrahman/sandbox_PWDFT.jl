@@ -18,6 +18,8 @@ struct ElkInput
     rgkmax::Float64
     gmaxvr::Float64
     bfcmt0::Matrix{Float64}
+    epslat::Float64
+    ndmag::Int64
 end
 # NOTE: species_files are assumed to be located in the current directory
 # For bfieldc, I think it is more flexible to use Vector{Float64} rather than Tuple
@@ -49,6 +51,8 @@ function read_elk_input()
     ncmag = false
     rgkmax = 7.0
     gmaxvr = 12.0
+    epslat = 1e-6
+    ndmag = -1 # some invalid value
 
     # Need to total number of
     #bfcmt = zeros(Float64, 3, atoms.Natoms)
@@ -241,7 +245,8 @@ function read_elk_input()
     LatVecs *= scale
 
     # "Flatten" bfcmt0
-    bfcmt0 = zeros(Float64, 3, sum(natoms_per_species))
+    Natoms = sum(natoms_per_species)
+    bfcmt0 = zeros(Float64, 3, Natoms)
     ia = 0
     for isp in 1:Nspecies
         for ias in 1:natoms_per_species[isp]
@@ -249,6 +254,45 @@ function read_elk_input()
             bfcmt0[:,ia] = bfcmt0_in[isp][:,ias]
         end
     end
+
+    if is_molecule
+        ngridk = ones(Int64, 3)
+        # This is the default anyway
+    end
+
+    bfieldc0 = bfieldc # need these two?
+    # check for collinearity in the z-direction and set the dimension of the
+    # magnetization and exchange-correlation vector fields
+    if spinpol
+        ndmag = 1
+        if ( abs(bfieldc0[1]) > epslat) || (abs(bfieldc0[2]) > epslat)
+            ndmag = 3
+            @info "ndmag is set to 3"
+        end
+        for ia in 1:Natoms
+            if (abs(bfcmt0[1,ia]) > epslat || (abs(bfcmt0[2,ia]) > epslat))
+                ndmag = 3
+                @info "ndmag is set to 3"
+            end
+        end
+        # spin-orbit coupling is non-collinear in general
+        if spinorb
+            ndmag = 3
+        end
+        # source-free fields and spin-spirals must be non-collinear
+        if nosource || spinsprl
+            ndmag = 3
+            cmagz = false
+        end
+        # force collinear magnetism along the z-axis if required
+        if cmagz
+            ndmag = 1
+        end
+    else
+        ndmag = 0
+    end
+
+    @assert ndmag >= 0
 
     return ElkInput(
         LatVecs, Nspecies, species_files,
@@ -258,7 +302,7 @@ function read_elk_input()
         spinpol, bfieldc,
         spinorb, cmagz, nosource, spinsprl,
         lradstp, ncmag, rgkmax, gmaxvr,
-        bfcmt0
+        bfcmt0, epslat, ndmag
     )
 end
 

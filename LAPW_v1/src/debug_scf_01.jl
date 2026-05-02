@@ -102,7 +102,7 @@ function debug_scf_01(; NiterSCFMax = 50)
     else
         pw = PWGrid(
             ecutwfc, atoms.LatVecs, dual=dual,
-            kpoints=KPoints(atoms, elk_input.ngridk, [0,0,0], sym_info.s)
+            kpoints = KPoints(atoms, elk_input.ngridk, [0,0,0], sym_info.s)
         )
     end
     println(pw)

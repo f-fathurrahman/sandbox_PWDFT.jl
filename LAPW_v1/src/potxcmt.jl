@@ -75,7 +75,7 @@ function potxcmt!(
             #
             # Convert from Ylm to "real" space
             backward_SHT!(mt_vars, isp, rhomt[ia], rho)
-            backward_SHT!(mt_vars, isp, magmt[ia], mag)
+            backward_SHT!(mt_vars, isp, magmt[ia][:,1], mag)
             #
             # prepare rhoupdn
             @views rhoupdn[:,1] = 0.5*( rho[:] + mag[:] )

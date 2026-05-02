@@ -1,4 +1,33 @@
 function potks!(
+    atoms, atsp_vars, mt_vars, pw, sym_vars, elk_input, 
+    cfunir, densities, potentials
+)
+    # Is this important
+    bfcmt = copy(elk_input.bfcmt0)
+    #
+    potks!(
+        atoms, atsp_vars, mt_vars, pw, sym_vars, 
+        densities.rhomt, densities.rhoir,
+        potentials.vclmt, potentials.vclir,
+        potentials.epsxcmt, potentials.epsxcir,
+        potentials.vxcmt, potentials.vxcir,
+        potentials.vsmt, potentials.vsir;
+        magmt = densities.magmt,
+        magir = densities.magir,
+        bxcir = potentials.bxcir,
+        bxcmt = potentials.bxcmt,
+        bsmt = potentials.bsmt,
+        bsir = potentials.bsir,
+        cfunir = cfunir,
+        bfieldc = elk_input.bfieldc,
+        bfcmt = bfcmt,
+        spinpol = elk_input.spinpol,
+        ncmag = elk_input.ncmag
+    )
+    return
+end
+
+function potks!(
     atoms, atsp_vars, mt_vars, pw, sym_vars, 
     rhomt, rhoir,
     vclmt, vclir,
