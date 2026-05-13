@@ -15,14 +15,14 @@ function debug_scf_02(; NiterSCFMax = 100)
     # assign some variables
     spinpol = elk_input.spinpol
     #
-    bfieldc = elk_input.bfieldc
+    #bfieldc = elk_input.bfieldc
     bfieldc0 = elk_input.bfieldc
     # NOTE: in Elk, the input variable name is bfieldc,
     #       but this is assigned to bfieldc0
-    bfcmt0 = elk_input.bfcmt0
-    bfcmt = copy(bfcmt0)
+    #bfcmt0 = elk_input.bfcmt0
+    #bfcmt = copy(bfcmt0)
 
-    ncmag = elk_input.ncmag
+    #ncmag = elk_input.ncmag
     ndmag = elk_input.ndmag
 
     rgkmax = elk_input.rgkmax
