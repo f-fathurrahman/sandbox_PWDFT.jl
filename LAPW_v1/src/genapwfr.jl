@@ -96,12 +96,12 @@ function genapwfr!(atoms, eqatoms, mt_vars, apwlo_vars, vsmt)
                 end
                 t1 = 1.0/sqrt(t1)
                 #CALL dscal(nr,t1,p0(:,io),1)
-                p0[:,io] .*= t1
+                @views p0[1:nr,io] .*= t1
                 #
                 p1s[io] = t1*p1s[io]
                 #
                 #CALL dscal(nr,t1,ep0(:,io),1)
-                ep0[:,io] .*= t1
+                @views ep0[1:nr,io] .*= t1
                 #
                 # divide by r and store in global array
                 for ir in 1:nr

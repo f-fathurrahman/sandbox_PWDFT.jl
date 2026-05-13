@@ -197,6 +197,9 @@ function debug_scf_02(; NiterSCFMax = 100)
 
         gencore!(atoms, sym_vars.eqatoms, atsp_vars, mt_vars, potentials.vsmt, core_states)
         linengy!(atoms, sym_vars.eqatoms, mt_vars, potentials.vsmt, elec_chgst.efermi, apwlo_vars)
+        #if iter_scf == 1
+        #    break # debug
+        #end
         genapwfr!(atoms, sym_vars.eqatoms, mt_vars, apwlo_vars, potentials.vsmt)
         genlofr!(atoms, sym_vars.eqatoms, mt_vars, apwlo_vars, potentials.vsmt)
         calc_apwlo_integrals!(atoms, mt_vars, apwlo_vars, potentials.vsmt, apwlo_ints)

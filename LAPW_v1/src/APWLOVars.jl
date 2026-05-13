@@ -273,8 +273,8 @@ function APWLOVars(
         isp = atm2species[ia]
         apwe[ia] = OffsetArray( Vector{Vector{Float64}}(undef, lmaxapw+1), 0:lmaxapw )
         for l in 0:lmaxapw
-            #apwe[ia][l] = zeros(Float64, apword[isp][l])
-            apwe[ia][l] = zeros(Float64, MAX_APW_ORD)
+            apwe[ia][l] = zeros(Float64, apword[isp][l])
+            #apwe[ia][l] = zeros(Float64, MAX_APW_ORD)
             for io in 1:apword[isp][l]
                 apwe[ia][l][io] = apwe0[isp][l][io]
             end
