@@ -154,28 +154,6 @@ function debug_main()
     genvsig!(pw, potentials.vsir, cfunir, potentials.vsig)
     # XXX vsig will be different from Elk result because Elk uses more G-vectors
 
-
-    Npoints = prod(pw.Ns)
-    npmt = mt_vars.npmt
-    # Old potentials (to be mixed)
-    vsmt_old = Vector{Vector{Float64}}(undef, Natoms)
-    vsir_old = zeros(Float64, Npoints)
-    for ia in 1:Natoms
-        isp = atm2species[ia]
-        vsmt_old[ia] = zeros(Float64, npmt[isp])
-    end
-    if spinpol
-        bsir_old = zeros(Float64, Npoints, ndmag)
-        bsmt_old = Vector{Matrix{Float64}}(undef, Natoms)
-        for ia in 1:Natoms
-            isp = atm2species[ia]
-            bsmt_old[ia] = zeros(Float64, npmt[isp], ndmag)
-        end
-    else
-        bsir_old = nothing
-        bsmt_old = nothing
-    end
-
     ene_terms = EnergyTerms()
 
     E_tot = ene_terms.E_tot # should be a reference?
@@ -214,18 +192,6 @@ function debug_main()
         magmt = densities.magmt, magir = densities.magir
     )
 
-    # Save old potentials
-    vsir_old[:] = potentials.vsir[:]
-    for ia in 1:Natoms
-        vsmt_old[ia][:] = potentials.vsmt[ia][:]
-    end
-    if spinpol
-        bsir_old[:] = potentials.bsir[:]
-        for ia in 1:Natoms
-            bsmt_old[ia][:] = potentials.bsmt[ia][:]
-        end
-    end
-
     # New potential
     potks!(
         atoms, atsp_vars, mt_vars, pw, sym_vars, elk_input, 
@@ -250,7 +216,8 @@ function debug_main()
 
     print_info(ene_terms, prefix_str = "Final")
 
-    @infiltrate
+    #@infiltrate
+    @exfiltrate()
     # open REPL and investigate the variables
 
     return
