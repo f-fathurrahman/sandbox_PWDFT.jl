@@ -94,20 +94,23 @@ function calc_match_coeffs!(ik, atoms, atsp_vars, pw, mt_vars, apwlo_vars, apwal
             end 
             continue # CYCLE  # next species
         end # if omax == 1 
+        #
         # starting point on radial mesh for fitting polynomial of order npapw
-        ir = nr-npapw+1
+        ir = nr - npapw + 1
         # evaluate the spherical Bessel function derivatives for all G+p-vectors
         for igp in 1:Ngk
             t1 = gpc[igp]*rmt[isp]
             for io in 1:omax
                 @views sbesseldm!( io-1, lmaxapw, t1, djl[:,io,igp] )
+                #println("sum djl io igp = ", sum(djl[:,io,igp]))
             end 
             t1 = 1.0
             for io in 2:omax
                 t1 = t1*gpc[igp]
                 djl[:,io,igp] = t1*djl[:,io,igp]
             end 
-        end 
+        end
+        println("sum djl = ", sum(djl))
         # loop over atoms
         for ia in 1:Natoms
             if atm2species[ia] != isp
@@ -120,6 +123,7 @@ function calc_match_coeffs!(ik, atoms, atsp_vars, pw, mt_vars, apwlo_vars, apwal
                 for jo in 1:apword[isp][l], io in 1:apword[isp][l]
                     #a[io,jo] = polynm(io-1, npapw, rsp[isp][ir], apwfr[ia][l][jo][ir,1], rmt[isp])
                     a[io,jo] = polynm(io-1, npapw, rsp[isp][ir:end], apwfr[ia][l][jo][ir:end,1], rmt[isp])
+                    println("polynm: $io $jo $(a[io,jo])")
                 end 
                 # set up target vectors
                 i = 0
@@ -131,6 +135,7 @@ function calc_match_coeffs!(ik, atoms, atsp_vars, pw, mt_vars, apwlo_vars, apwal
                         z3 = z2*conj(ylmgp[lm,igp])
                         for io in 1:apword[isp][l]
                             b[io,i] = djl[l,io,igp]*z3
+                            #println("b[io,i]: $io $i $(b[io,i])")
                         end 
                     end 
                 end 
@@ -139,7 +144,7 @@ function calc_match_coeffs!(ik, atoms, atsp_vars, pw, mt_vars, apwlo_vars, apwal
                 idx1 = 1:apword[isp][l]
                 #println("l = $l idx1 = $idx1")
                 #println("a = $(a[idx1,idx1]) b = $(b[idx1,idx1])")
-                b[idx1,idx1] = a[idx1,idx1] \ b[idx1,idx1]
+                b[idx1,:] = a[idx1,idx1] \ b[idx1,:]
                 #
                 i = 0
                 for igp in 1:Ngk
