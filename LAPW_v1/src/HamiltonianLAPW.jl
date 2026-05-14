@@ -1,4 +1,4 @@
-mutable struct LAPWHamiltonian
+mutable struct HamiltonianLAPW
     elk_input::ElkInput
     atoms::Atoms
     sym_vars::SymmetryVars
@@ -18,6 +18,6 @@ mutable struct LAPWHamiltonian
     nmat::Vector{Int64}
 end
 
-function LAPWHamiltonian()
+function HamiltonianLAPW()
     return
 end

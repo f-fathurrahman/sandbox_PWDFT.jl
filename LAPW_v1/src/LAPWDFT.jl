@@ -294,9 +294,9 @@ include("calc_energy_terms.jl")
 
 include("BroydenMixer_LAPW.jl")
 
-include("LAPWDensities.jl"); export LAPWDensities
-include("LAPWPotentials.jl"); export LAPWPotentials
-include("LAPWHamiltonian.jl"); export LAPWHamiltonian
+include("DensitiesLAPW.jl"); export DensitiesLAPW
+include("PotentialsLAPW.jl"); export PotentialsLAPW
+include("HamiltonianLAPW.jl"); export HamiltonianLAPW
 
 include("debug_main.jl")
 include("debug_scf_01.jl")

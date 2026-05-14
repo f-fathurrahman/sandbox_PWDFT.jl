@@ -129,8 +129,8 @@ function debug_main()
     )
 
     # Initialize rhomt and rhoir
-    densities = LAPWDensities(atoms, atsp_vars, mt_vars, pw, elk_input)
-    potentials = LAPWPotentials(atoms, mt_vars, pw, elk_input)
+    densities = DensitiesLAPW(atoms, atsp_vars, mt_vars, pw, elk_input)
+    potentials = PotentialsLAPW(atoms, mt_vars, pw, elk_input)
 
 
     core_states = CoreStatesVars(atoms, atsp_vars, mt_vars)

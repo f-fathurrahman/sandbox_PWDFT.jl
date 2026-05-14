@@ -1,4 +1,4 @@
-mutable struct LAPWPotentials
+mutable struct PotentialsLAPW
     vclmt::Vector{Vector{Float64}}
     vclir::Vector{Float64}
     epsxcmt::Vector{Vector{Float64}}
@@ -16,7 +16,7 @@ mutable struct LAPWPotentials
     vsig::Vector{ComplexF64}
 end
 
-function LAPWPotentials(
+function PotentialsLAPW(
     atoms, mt_vars, pw, elk_input
 )
 
@@ -82,7 +82,7 @@ function LAPWPotentials(
 
     vsig = zeros(ComplexF64, pw.gvec.Ng)
 
-    return LAPWPotentials(
+    return PotentialsLAPW(
         vclmt, vclir,
         epsxcmt, epsxcir,
         vxcmt, vxcir,

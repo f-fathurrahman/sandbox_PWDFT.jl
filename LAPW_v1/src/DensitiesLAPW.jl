@@ -1,4 +1,4 @@
-mutable struct LAPWDensities
+mutable struct DensitiesLAPW
     rhomt::Vector{Vector{Float64}}
     rhoir::Vector{Float64}
     magmt::Union{Nothing,Vector{Matrix{Float64}}}
@@ -6,7 +6,7 @@ mutable struct LAPWDensities
 end
 
 # Initialize densities by callin rhoinit and maginit
-function LAPWDensities(
+function DensitiesLAPW(
     atoms, atsp_vars, mt_vars, pw, elk_input
 )
     Natoms = atoms.Natoms
@@ -43,5 +43,5 @@ function LAPWDensities(
         magir = nothing
     end
 
-    return LAPWDensities(rhomt, rhoir, magmt, magir)
+    return DensitiesLAPW(rhomt, rhoir, magmt, magir)
 end
