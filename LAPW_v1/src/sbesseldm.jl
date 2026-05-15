@@ -1,28 +1,4 @@
-#=
-! !INPUT/OUTPUT PARAMETERS:
-!   m    : order of derivatve (in,integer)
-!   lmax : maximum order of Bessel function (in,integer)
-!   x    : real argument (in,real)
-!   djl  : array of RETURN ed values (out,real(0:lmax))
-=#
 function sbesseldm!(m, lmax, x, djl)
-    #=
-    IMPLICIT NONE 
-  ! arguments
-  INTEGER, intent(in) :: m,lmax
-  REAL(8), intent(in) :: x
-  REAL(8), intent(out) :: djl(0:lmax)
-  ! local variables
-  INTEGER i,j,l,i0
-  REAL(8) t1,sum,x2
-  INTEGER a(0:maxm+1),a1(0:maxm+1)
-  INTEGER b(0:maxm+1),b1(0:maxm+1)
-  ! automatic arrays
-  REAL(8) jl(0:lmax+1)
-  ! external functions
-  REAL(8) factnm,factr
-  external factnm,factr
-    =#
 
     MAXM = 6
     MAXNS = 20
