@@ -20,17 +20,24 @@ function gen_eigensystem!(
         lmmaxapw = mt_vars.lmmaxapw
         apwalm[ia] = zeros(ComplexF64, Ngk, apwordmax, lmmaxapw)
     end
-    calc_match_coeffs!(ik, atoms, atsp_vars, pw, mt_vars, apwlo_vars, apwalm)
 
+    println()
+
+    calc_match_coeffs!(ik, atoms, atsp_vars, pw, mt_vars, apwlo_vars, apwalm)
+    for ia in 1:atoms.Natoms
+        println("gen_eigensystem: ik = $ik, ia = $ia, sum abs apwalm = ", sum(abs.(apwalm[ia])))
+    end
 
     # For testing Hamiltonian construction
     H = zeros(ComplexF64, nmat[ik], nmat[ik])
 
     for ia in 1:atoms.Natoms
         hmlaa!(ik, ia, atoms, pw, mt_vars, apwlo_vars, apwalm, haa, H)
+        println("hmlaa, ia=$ia sum abs H = ", sum(abs.(H)))
     end
-
+    println("Before hmlist, sum abs H = ", sum(abs.(H)))
     hmlistl!(ik, pw, cfunig, vsig, H)
+    println("After hmlist, sum abs H = ", sum(abs.(H)))
 
     for ia in 1:atoms.Natoms
         hmlalo!(ik, ia, atoms, pw, mt_vars, apwlo_vars, apwalm, hloa, H)
@@ -41,14 +48,19 @@ function gen_eigensystem!(
     O = zeros(ComplexF64, nmat[ik], nmat[ik])
     for ia in 1:atoms.Natoms
         olpaa!(ik, ia, atoms, pw, mt_vars, apwlo_vars, apwalm, O)
+        println("olpaa, ia=$ia sum abs O = ", sum(abs.(O)))
     end
+    println("Before olpist, sum abs O = ", sum(abs.(O)))
     olpistl!(ik, pw, cfunig, O)
+    println("After olpist, sum abs O = ", sum(abs.(O)))
 
     for ia in 1:atoms.Natoms
         olpalo!(ik, ia, atoms, pw, mt_vars, apwlo_vars, apwalm, oalo, O)
         olplolo!(ik, ia, atoms, pw, mt_vars, apwlo_vars, ololo, O)
     end
 
+    println("sum abs H = ", sum(abs.(H)))
+    println("sum abs O = ", sum(abs.(O)))
     # calc eigenvalues and eigenvectors
     evals, evecs = eigen(Hermitian(H), Hermitian(O))
 
