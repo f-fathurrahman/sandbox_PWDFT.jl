@@ -110,7 +110,7 @@ function calc_match_coeffs!(ik, atoms, atsp_vars, pw, mt_vars, apwlo_vars, apwal
                 djl[:,io,igp] = t1*djl[:,io,igp]
             end 
         end
-        println("sum djl = ", sum(djl))
+        #println("sum djl = ", sum(djl))
         # loop over atoms
         for ia in 1:Natoms
             if atm2species[ia] != isp
@@ -123,7 +123,7 @@ function calc_match_coeffs!(ik, atoms, atsp_vars, pw, mt_vars, apwlo_vars, apwal
                 for jo in 1:apword[isp][l], io in 1:apword[isp][l]
                     #a[io,jo] = polynm(io-1, npapw, rsp[isp][ir], apwfr[ia][l][jo][ir,1], rmt[isp])
                     a[io,jo] = polynm(io-1, npapw, rsp[isp][ir:end], apwfr[ia][l][jo][ir:end,1], rmt[isp])
-                    println("polynm: $io $jo $(a[io,jo])")
+                    #println("polynm: $io $jo $(a[io,jo])")
                 end 
                 # set up target vectors
                 i = 0

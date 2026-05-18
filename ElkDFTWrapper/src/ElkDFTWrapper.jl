@@ -143,7 +143,10 @@ function init_debug_calc()
     export_pwdft_Ns()
     
     # Only call after init_run
-    #call_my_gndstate(1)
+    call_my_gndstate(1)
+
+#=
+
     # Otherwise call other debug subroutines below
 
     call_rhoinit()
@@ -172,6 +175,14 @@ function init_debug_calc()
     call_my_rhomag()
 
     call_my_energy()
+=#
+
+    serialize_variables()
+    serialize_apwalm()
+    serialize_evalfv_evecfv()
+
+    npapw = get_npapw()
+    println("npapw = ", npapw)
 
 end
 export init_debug_calc
