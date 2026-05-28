@@ -13,11 +13,27 @@ z = x + y;
 
 println("This is z = $z")
 
+#=
+This is some markdown with equation
+$$
+  \alpha + \beta = \Gamma
+$$
+=#
+
 # And this is another calculation
 xx = sin(z)
 
-using Plots
+# ## Example plot
+using Plots, PlotThemes
+theme(:dark)
 x = range(0, stop = 6π, length = 1000)
-y1 = sin.(x)
+y1 = sin.(2*x)
 y2 = cos.(x)
-plot(x, [y1, y2])
+plot(x, [y1, y2], fmt=:svg, size=(400,300))
+
+# ## Another plot
+#=
+This is another plot.
+=#
+plot(fmt=:svg, size=(400,300))
+histogram!(randn(10_000))
