@@ -57,3 +57,11 @@ mutable struct MyStruct
 end
 ```
 =#
+
+# A function with comment
+function my_func(a, b)
+    ## This is a comment (must use ##)
+    ## This is another comment
+    c = a + b
+    return sin(c)
+end
