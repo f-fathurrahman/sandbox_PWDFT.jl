@@ -1,32 +1,27 @@
+# -*- coding: utf-8 -*-
 
-#=
-Lattice vectors: $\mathbf{a}_{1}$, $\mathbf{a}_{2}$, and $\mathbf{a}_{3}$
-combined into $3\times3$ matrix $\mathbf{h}$ as follows:
-$$
-\mathbf{h}=[\mathbf{a}_{1},\mathbf{a}_{2},\mathbf{a}_{3}]
-$$
-where each lattice vectors are given by columns of $\mathbf{h}$.
-=#
+# Lattice vectors: $\mathbf{a}_{1}$, $\mathbf{a}_{2}$, and $\mathbf{a}_{3}$
+# combined into $3\times3$ matrix $\mathbf{h}$ as follows:
+# $$
+# \mathbf{h}=[\mathbf{a}_{1},\mathbf{a}_{2},\mathbf{a}_{3}]
+# $$
+# where each lattice vectors are given by columns of $\mathbf{h}$.
 
 # Volume of the cell $\Omega=\det\mathbf{h}$
 
-#=
-Scaled coordinates: $\mathbf{r}=\mathbf{h}\mathbf{s}$
-Metric tensor: $\mathcal{G}=\mathbf{h}^{\mathsf{T}}\mathbf{h}$
-The distances in scaled coordinates $\mathbf{s}$ related to distances in real coordinates $\mathbf{r}$ by metric tensor as follows
-$$
-\left(\mathbf{r}_{i}-\mathbf{r}_{j}\right)^{2}=\left(\mathbf{s}_{i}-\mathbf{s}_{j}\right)^{\mathsf{T}}\mathcal{G}\left(\mathbf{s}_{i}-\mathbf{s}_{j}\right)
-$$
-=#
+# Scaled coordinates: $\mathbf{r}=\mathbf{h}\mathbf{s}$
+# Metric tensor: $\mathcal{G}=\mathbf{h}^{\mathsf{T}}\mathbf{h}$
+# The distances in scaled coordinates $\mathbf{s}$ related to distances in real coordinates $\mathbf{r}$ by metric tensor as follows
+# $$
+# \left(\mathbf{r}_{i}-\mathbf{r}_{j}\right)^{2}=\left(\mathbf{s}_{i}-\mathbf{s}_{j}\right)^{\mathsf{T}}\mathcal{G}\left(\mathbf{s}_{i}-\mathbf{s}_{j}\right)
+# $$
 
 
-#=
-Periodic boundary condition can be enforced by
-$$
-\mathbf{r}_{\mathrm{pbc}}=\mathbf{r}-\mathbf{h}\left[\mathbf{h}^{-1}\mathbf{r}\right]_{\mathrm{NINT}}
-$$
-where $\left[\cdots\right]_{\mathrm{NINT}}$ denotes the nearest integer value so that the coordinates $\mathbf{r}_{\mathrm{pbc}}$ will always be within the box centered around the origin of the coordinates system.
-=#
+# Periodic boundary condition can be enforced by
+# $$
+# \mathbf{r}_{\mathrm{pbc}}=\mathbf{r}-\mathbf{h}\left[\mathbf{h}^{-1}\mathbf{r}\right]_{\mathrm{NINT}}
+# $$
+# where $\left[\cdots\right]_{\mathrm{NINT}}$ denotes the nearest integer value so that the coordinates $\mathbf{r}_{\mathrm{pbc}}$ will always be within the box centered around the origin of the coordinates system.
 
 # Reciprocal lattice vectors $\mathbf{b}_{i}$ are defined as $\mathbf{b}_{i}\cdot\mathbf{a}_{j}=2\pi\delta_{ij}$. They can be arranged into $3\times3$ matrix:
 # $$
