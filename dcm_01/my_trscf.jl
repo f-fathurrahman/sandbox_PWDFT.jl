@@ -42,7 +42,7 @@ function my_trscf!(
 
         update!(Ham, Rhoe)
         
-        Ham.energies = calc_energies(Ham, psiks)
+        Ham.energies = calc_energies(Ham, psiks, Rhoe)
         
         Etot = sum(Ham.energies)
 

@@ -45,7 +45,8 @@ function KS_solve_TRDCM_01!(
     Nelectrons = electrons.Nelectrons
 
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
-    Nspin = electrons.Nspin
+    Nspin = electrons.Nspin_wf
+    @assert Nspin == electrons.Nspin_dens
 
     Nkspin = Nkpt*Nspin
 
@@ -88,7 +89,7 @@ function KS_solve_TRDCM_01!(
     #update!(Ham, Rhoe)
 
     #
-    Ham.energies = calc_energies( Ham, psiks )
+    Ham.energies = calc_energies( Ham, psiks, Rhoe )
     Etot = sum(Ham.energies)
     Etot_old = Etot
 
@@ -162,7 +163,7 @@ function KS_solve_TRDCM_01!(
             update!( Ham, Rhoe )
 
             # Calculate energies once again
-            Ham.energies = calc_energies( Ham, psiks )
+            Ham.energies = calc_energies( Ham, psiks, Rhoe )
             Etot_innerscf = sum(Ham.energies)
 
             println("Etot_innerscf = ", Etot_innerscf)
@@ -239,7 +240,7 @@ function KS_solve_TRDCM_01!(
                 update!( Ham, Rhoe )
             
                 # Calculate energies once again
-                Ham.energies = calc_energies( Ham, psiks )
+                Ham.energies = calc_energies( Ham, psiks, Rhoe )
                 Etot_innerscf = sum(Ham.energies)
                 
                 if Etot_innerscf > Etot_innerscf_old
@@ -282,7 +283,7 @@ function KS_solve_TRDCM_01!(
         calc_rhoe!( Ham, psiks, Rhoe )
         update!( Ham, Rhoe )
         # Calculate energies once again
-        Ham.energies = calc_energies( Ham, psiks )
+        Ham.energies = calc_energies( Ham, psiks, Rhoe )
         Etot = sum(Ham.energies)
 
         #Etot = Etot_innerscf
@@ -354,7 +355,7 @@ function _dcm_construct_Y_and_G!(
     set5 = dcm_block_sets.set5
 
     Nstates = Ham.electrons.Nstates
-    Nspin = Ham.electrons.Nspin
+    Nspin = Ham.electrons.Nspin_wf
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
 
     for ispin in 1:Nspin, ik in 1:Nkpt
@@ -427,7 +428,7 @@ function _dcm_project_nonlinear_pot!(
 
     Nocc = Ham.electrons.Nstates_occ
     Nstates = Ham.electrons.Nstates
-    Nspin = Ham.electrons.Nspin
+    Nspin = Ham.electrons.Nspin_wf
     Nkpt = Ham.pw.gvecw.kpoints.Nkpt
 
     # Nocc should be the same as Nstates
