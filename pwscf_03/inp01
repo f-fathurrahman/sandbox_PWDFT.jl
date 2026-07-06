@@ -1,0 +1,17 @@
+&SYSTEM
+  ibrav = 0
+  A = 5.62000
+  nat = 2
+  ntyp = 2
+  ecutwfc = 40.0
+  ecutrho = 160.0
+  ecutfock = 100.0
+  input_dft = 'hf-noc'
+  nqx1 = 1
+  nqx2 = 1
+  nqx3 = 1
+  x_gamma_extrapolation = .true.
+  exxdiv_treatment = 'gygi-baldereschi'
+  ace = .false.
+  starting_magnetization(2) = 0.1
+/

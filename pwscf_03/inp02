@@ -1,0 +1,8 @@
+&SYSTEM
+  ibrav = 0
+  A = 5.62000
+  nat = 2
+  starting_magnetization(2) = 0.1
+  ecutwfc = 40.0
+/
+
