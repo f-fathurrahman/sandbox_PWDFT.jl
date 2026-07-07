@@ -1,12 +1,10 @@
-function exx_set_symm( sym_info, Ns, Nsx )
+function exx_set_symm( sym_info, Ns )
 
     Nsyms = sym_info.Nsyms
 
     nr1, nr2, nr3 = Ns
-    nr1x, nr2x, nr3x = Nsx  
-
-    nxxs = nr1x*nr2x*nr3x
-    rir = zeros(Int64, nxxs, Nsyms)
+    Npoints = nr1*nr2*nr3
+    rir = zeros(Int64, Npoints, Nsyms)
     
     ftau = zeros(Int64, 3, Nsyms)
     s_scaled = zeros(Int64, 3, 3, Nsyms)
@@ -18,8 +16,8 @@ function exx_set_symm( sym_info, Ns, Nsx )
                 s_scaled[:,:,isym], ftau[:,isym],
                 i, j, k, nr1, nr2, nr3 
             )
-            ir = i + (j-1)*nr1x + (k-1)*nr1x*nr2x
-            rir[ir,isym] = ri + (rj-1)*nr1x + (rk-1)*nr1x*nr2x
+            ir = i + (j-1)*nr1 + (k-1)*nr1*nr2
+            rir[ir,isym] = ri + (rj-1)*nr1 + (rk-1)*nr1*nr2
         end
     end
     return rir

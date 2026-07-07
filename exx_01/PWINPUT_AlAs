@@ -24,6 +24,9 @@
   x_gamma_extrapolation = .true.
   exxdiv_treatment = 'gygi-baldereschi'
   ace = .false.
+  occupations = 'smearing'
+  smearing = 'fd'
+  degauss = 0.01
 /
 
 &ELECTRONS

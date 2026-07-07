@@ -37,7 +37,7 @@ function exx_qgrid_init!(
                     dxk[:] = sxk[:] - temp_xkq[:,ikq] - round.(Int64, sxk[:] - temp_xkq[:,ikq])
                     if all( abs.(dxk) .<= SMALL_Q )
                         xk_not_found = false
-                        @printf("%4d%4d%4d%18.10f%18.10f%18.10f\n", iq1, iq2, iq3, dxk...)
+                        #@printf("%4d%4d%4d%18.10f%18.10f%18.10f\n", iq1, iq2, iq3, dxk...)
                         if new_ikq[ikq] == 0
                             nkqs += 1
                             temp_index_ikq[nkqs] = ikq
