@@ -17,7 +17,7 @@
   ecutwfc = 40.0
   ecutrho = 160.0
   ecutfock = 100.0
-  input_dft = 'hf-nox-noc'
+  input_dft = 'hf-noc'
   nqx1 = 1
   nqx2 = 1
   nqx3 = 1
