@@ -1,28 +1,38 @@
-using Printf
-using LinearAlgebra: norm, inv
-using FFTW
-
-includet("cryst_to_cart.jl")
-includet("exx_grid_check.jl")
-includet("exx_qgrid_init.jl")
-includet("scale_sym_ops.jl")
-includet("rotate_grid_point.jl")
-includet("exx_set_symm.jl")
-
 mutable struct EXXVariables
     is_active::Bool
+    #
+    eps_occ::Float64
+    eps_qdiv::Float64
+    use_coulomb_vcut_ws::Bool
+    use_coulomb_vcut_spheric::Bool
+    use_regularization::Bool
+    exxdiv::Float64
+    gau_scrlen::Float64
+    erf_scrlen::Float64
+    erfc_scrlen::Float64
+    yukawa::Float64
+    x_gamma_extrapolation::Bool
+    exxdiv_treatment::String
+    use_ace::Bool
+    #
     ecutfock::Float64
     Nq1::Int64
     Nq2::Int64
     Nq3::Int64
-    x_gamma_extrapolation::Bool
-    exxdiv_treatment::String
-    use_ace::Bool
+    nkqs::Int64
     xkq::Matrix{Float64}
+    nqs::Int64
     index_xkq::Matrix{Int64} # index_xkq(nks,nqs)
     index_xk::Vector{Int64} # index_xk(nkqs)
     index_sym::Vector{Int64} # index_sym(nkqs)
     rir::Matrix{Int64}
+    Ns::Tuple{Int64,Int64,Int64}
+    gvec::GVectors
+    planfw::PWDFT.PLANFW_TYPE
+    planbw::PWDFT.PLANBW_TYPE
+    idx_gw2r::Vector{Vector{Int64}}
+    x_occupation::Matrix{Float64}
+    buff::Array{ComplexF64,3}
 end
 
 
@@ -206,7 +216,7 @@ function init_exx_grid(Ham, pwinput)
     end
     println("qnrm = ", qnrm)
 
-    return nkqs, xkq_collect, index_xkq, index_xk, index_sym
+    return nq1, nq2, nq3, nkqs, xkq_collect, index_xkq, index_xk, index_sym
 end
 
 
@@ -277,28 +287,140 @@ function do_fft!( plan, Ns, f::AbstractVector{ComplexF64} )
 end
 
 
-function init_EXXVariables(Ham, pwinput)
-    
-    nkqs, xkq, index_xkq, index_xk, index_sym = init_exx_grid(Ham, pwinput)
+function EXXVariables(Ham, pwinput)
+        
+    Nq1, Nq2, Nq3, nkqs, xkq, index_xkq, index_xk, index_sym = init_exx_grid(Ham, pwinput)
+    nqs = Nq1*Nq2*Nq3
     
     pw = Ham.pw
     ecutfock = pwinput.ecutfock
     kpoints = pw.gvecw.kpoints
+    Nkpt = kpoints.Nkpt
+    wk = kpoints.wk
+    Ngw = pw.gvecw.Ngw
+    Nstates = Ham.electrons.Nstates
+    Focc = Ham.electrons.Focc
 
     Ns = _calc_fft_grid_size(pw.LatVecs, ecutfock)
+    Npoints_exx = prod(Ns)
     gvec = PWDFT.init_gvec(Ns, pw.RecVecs, ecutfock)
     planfw = plan_fft!(zeros(ComplexF64, Ns), flags = FFTW.MEASURE)
     planbw = plan_ifft!(zeros(ComplexF64, Ns), flags = FFTW.MEASURE)
 
     idx_gw2r = _init_g_to_r_map(gvec, kpoints, pw.ecutwfc)
 
-    rir = exx_set_symm( Ham.sym_info, Ns )
+    rir = exx_set_symm(Ham.sym_info, Ns)
 
-    @infiltrate
+    # set occupations of wavefunctions used in the calculation of exchange term
+    x_occupation = zeros(Float64, Nstates, Nkpt)
+    # do not include orbitals with small occupations (?)
+    SMALL_OCC = 1e-8 # XXX Harcoded
+    for ik in 1:Nkpt
+        if abs(wk[ik]) > SMALL_OCC # XXX why only check wk?
+            x_occupation[1:Nstates,ik] = Focc[1:Nstates,ik]
+        else
+            x_occupation[1:Nstates,ik] = 0.0
+        end
+    end
+
+    buff = zeros(ComplexF64, Npoints_exx, Nstates, nkqs)
+
+    is_active = false
+    # Some variables from pwinput
+    x_gamma_extrapolation = pwinput.x_gamma_extrapolation
+    exxdiv_treatment = pwinput.exxdiv_treatment
+    use_ace = false
+
+    eps_occ = 1e-8
+    eps_qdiv = 1e-8
+    use_coulomb_vcut_ws =  false
+    use_coulomb_vcut_spheric =  false
+    exxdiv_treatment = "gygi-baldereschi"
+    use_regularization =  true
+    exxdiv = 0.0
+    gau_scrlen = 0.0
+    erf_scrlen = 0.0
+    erfc_scrlen = 0.0
+    yukawa = 0.0
+
+    return EXXVariables(
+        is_active,
+        eps_occ, eps_qdiv,
+        use_coulomb_vcut_ws,
+        use_coulomb_vcut_spheric,
+        use_regularization,
+        exxdiv,
+        gau_scrlen, erf_scrlen, erfc_scrlen,
+        yukawa,
+        x_gamma_extrapolation,
+        exxdiv_treatment,
+        use_ace,
+        ecutfock,
+        Nq1, Nq2, Nq3,
+        nkqs,
+        xkq,
+        nqs,
+        index_xkq,
+        index_xk,
+        index_sym,
+        rir,
+        Ns, gvec, planfw, planbw, idx_gw2r,
+        x_occupation,
+        buff
+    )
+
 end
 
-function debug_main()
-    filename = "PWINPUT_AlAs"
-    Ham, pwinput = init_Ham_from_pwinput(filename=filename)
-    init_EXXVariables(Ham, pwinput)
+
+function set_exx_buffer!(Ham, exx, psiks)
+    
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
+    Nstates = Ham.electrons.Nstates
+    Ngw = Ham.pw.gvecw.Ngw
+
+    idx_gw2r = exx.idx_gw2r
+    planbw = exx.planbw
+    Ns = exx.Ns
+    nkqs = exx.nkqs
+    index_xk = exx.index_xk
+    index_sym = exx.index_sym
+    rir = exx.rir
+
+    Npoints_exx = prod(Ns)
+    psic_exx = zeros(ComplexF64, Npoints_exx)
+    temppsic = zeros(ComplexF64, Npoints_exx)
+
+    for ik in 1:Nkpt
+        Ngwk = Ngw[ik]
+        psi = psiks[ik]
+        for ist in 1:Nstates # XXX should loop over active states for EXX
+            fill!(temppsic, 0.0 + im*0.0)
+            for igw in 1:Ngwk
+                ip = idx_gw2r[ik][igw]
+                temppsic[ip] = psi[igw,ist]
+            end
+            do_fft!(planbw, Ns, temppsic)
+            #
+            for ikq in 1:nkqs
+                if index_xk[ikq] != ik
+                    continue
+                end
+                #
+                isym = abs(index_sym[ikq])
+                #
+                for ir in 1:Npoints_exx
+                    psic_exx[ir] = temppsic[rir[ir,isym]]
+                end
+                #
+                for ir in 1:Npoints_exx
+                    if index_sym[ikq] < 0
+                        psic_exx[ir] = conj(psic_exx[ir])
+                    end
+                    exx.buff[ir,ist,ikq] = psic_exx[ir]
+                end
+            end # ikq
+        end # ist
+    end # ik
+    return
 end
+
