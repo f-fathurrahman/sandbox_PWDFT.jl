@@ -18,5 +18,19 @@ function debug_main()
     psiks = deserialize("psiks_nox_noc.jldat")
     set_exx_buffer!(Ham, exx, psiks)
 
+    # Display q-points
+    q = zeros(Float64, 3)
+    xkq = zeros(Float64, 3)
+    xk = Ham.pw.gvecw.kpoints.k
+    nqs = exx.nqs
+    current_ik = 1
+    for iq in 1:nqs
+        ikq = exx.index_xkq[current_ik,iq]
+        ik = exx.index_xk[ikq]
+        xkq[:] = exx.xkq[:,ikq]
+        q[:] = xk[:,current_ik] - xkq[:]
+        println("q = ", q)
+    end
+
     @infiltrate
 end

@@ -19,18 +19,16 @@ function debug_main()
     psiks = deserialize("psiks_nox_noc.jldat")
     set_exx_buffer!(Ham, exx, psiks)
 
-    q = zeros(Float64, 3)
-    xkq = zeros(Float64, 3)
-    xk = Ham.pw.gvecw.kpoints.k
+    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
     nqs = exx.nqs
-    current_ik = 1
-    for iq in 1:nqs
-        ikq = exx.index_xkq[current_ik,iq]
-        ik = exx.index_xk[ikq]
-        xkq[:] = exx.xkq[:,ikq]
-        q[:] = xk[:,current_ik] - xkq[:]
-        println("q = ", q)
-    end
+    Ng = exx.gvec.Ng
+    #coulomb_fac = zeros(Float64, Ng, nqs, Nkpt)
+    fac = zeros(Float64, Ng)
+
+#=
+
+    g2_convolution!(exx, Ham.pw.LatVecs, Ham.pw.gvecw.kpoints.k[:,1], exx.xkq, fac)
+=#
 
     @infiltrate
 end

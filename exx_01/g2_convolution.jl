@@ -1,12 +1,14 @@
-function g2_convolution!( exx, LatVecs, gvec_exx, xk, xkq, fac )
+function g2_convolution!( exx, LatVecs, xk, xkq, fac )
 
-    Ng = gvec_exx.Ng
-    G = gvec_exx.G
+    Ng = exx.gvec.Ng
+    G = exx.gvec.G
     SMALL = 1e-6
     SMALL_QDIV = 1e-8
     grid_factor = 1.0 #XXX should be from exx
 
     gau_scrlen = exx.gau_scrlen
+    erfc_scrlen = exx.erfc_scrlen
+    erf_scrlen = exx.erf_scrlen
     x_gamma_extrapolation = exx.x_gamma_extrapolation
     exxdiv = exx.exxdiv
     yukawa = exx.yukawa
