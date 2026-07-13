@@ -1,4 +1,5 @@
 using Revise, PWDFT
+using Serialization: serialize
 
 filename = "PWINPUT_AlAs";
 Ham, pwinput = init_Ham_from_pwinput(filename=filename);
@@ -12,3 +13,5 @@ electrons_scf_G!(
     betamix = 0.1,
     starting_magn = Ham.options.starting_magn
 )
+
+serialize("psiks_nox_noc.jldat", psiks)
