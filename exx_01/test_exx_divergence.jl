@@ -10,27 +10,19 @@ includet("scale_sym_ops.jl")
 includet("rotate_grid_point.jl")
 includet("exx_set_symm.jl")
 includet("EXXVariables.jl")
-includet("g2_convolution.jl")
+includet("calc_exx_divergence.jl")
 
-function debug_main()
+function debug_exx_divergence()
     filename = "PWINPUT_AlAs"
     Ham, pwinput = init_Ham_from_pwinput(filename=filename)
     exx = EXXVariables(Ham, pwinput)
     psiks = deserialize("psiks_nox_noc.jldat")
     set_exx_buffer!(Ham, exx, psiks)
 
-    Nkpt = Ham.pw.gvecw.kpoints.Nkpt
-    nqs = exx.nqs
-    Ng = exx.gvec.Ng
-    fac = zeros(Float64, Ng)
-
-    g2_convolution!(exx, Ham.pw.LatVecs, Ham.pw.gvecw.kpoints.k[:,1], exx.xkq[:,1], fac)
-    
-    #for ik in 1:Nkpt
-    #    fill!(fac, 0.0)
-    #    g2_convolution!(exx, Ham.pw.LatVecs, Ham.pw.gvecw.kpoints.k[:,ik], exx.xkq[:,1], fac)
-    #    println("sum(fac) = ", sum(fac))
-    #end
+    #=
+    use_regularization = !(pwinput.exxdiv_treatment == "none")
+    exxdiv = calc_exx_divergence(pw, exx; use_regularization = use_regularization)
+    =#
 
     @infiltrate
 end

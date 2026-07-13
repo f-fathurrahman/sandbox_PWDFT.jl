@@ -5,6 +5,9 @@ function g2_convolution!( exx, LatVecs, xk, xkq, fac )
     SMALL = 1e-6
     SMALL_QDIV = 1e-8
     grid_factor = 1.0 #XXX should be from exx
+    if exx.x_gamma_extrapolation
+        grid_factor = 8/7
+    end
 
     gau_scrlen = exx.gau_scrlen
     erfc_scrlen = exx.erfc_scrlen
@@ -45,25 +48,27 @@ function g2_convolution!( exx, LatVecs, xk, xkq, fac )
     #
     # Set the grid_factor_track and qq_track
     #
+    #XXX: Instead of LatVecs we actually need inv(RecVecs)
     if x_gamma_extrapolation
         for ig in 1:Ng
             q[:] = xk[:] - xkq[:] + G[:,ig]
             qq_track[ig] = sum(q.^2)
             #
-            x = ( q[1]*LatVecs[1,1] + q(2)*LatVecs[2,1] + q(3)*LatVecs[3,1] ) * nqhalf[1]
-            odg[1] = abs(x - round(Int64,x)) < SMALL
+            x1 = ( q[1]*LatVecs[1,1] + q[2]*LatVecs[2,1] + q[3]*LatVecs[3,1] ) * nqhalf[1] / (2*pi)
+            odg[1] = abs(x1 - round(Int64, x1)) < SMALL
             #
-            x = ( q[1]*LatVecs[1,2] + q[2]*LatVecs[2,2] + q[3]*LatVecs[3,2] ) * nqhalf[2]
-            odg[2] = abs(x - round(Int64,x)) < SMALL
+            x2 = ( q[1]*LatVecs[1,2] + q[2]*LatVecs[2,2] + q[3]*LatVecs[3,2] ) * nqhalf[2] / (2*pi)
+            odg[2] = abs(x2 - round(Int64, x2)) < SMALL
             #
-            x = ( q[1]*LatVecs[1,3] + q[2]*LatVecs[2,3] + q[3]*LatVecs[3,3] ) * nqhalf[3]
-            odg[3] = abs(x - round(Int64,x)) < SMALL
+            x3 = ( q[1]*LatVecs[1,3] + q[2]*LatVecs[2,3] + q[3]*LatVecs[3,3] ) * nqhalf[3] / (2*pi)
+            odg[3] = abs(x3 - round(Int64, x3)) < SMALL
             #
             if all(odg)
                 grid_factor_track[ig] = 0.0 # on double grid
             else
                 grid_factor_track[ig] = grid_factor # not on double grid
             end
+            println("x1=$x1 x2=$x2 x3=$x3 odg=$odg")
         end
     else
         # No gamma extrapolation
@@ -73,6 +78,10 @@ function g2_convolution!( exx, LatVecs, xk, xkq, fac )
         end
         fill!(grid_factor_track, 1.0)
     end
+    println("xk = ", xk)
+    println("xkq = ", xkq)
+    println("sum qq_track = ", sum(qq_track))
+    println("sum grid_factor_track = ", sum(grid_factor_track))
     #
     # The big loop
     for ig in 1:Ng
@@ -91,6 +100,7 @@ function g2_convolution!( exx, LatVecs, xk, xkq, fac )
             end
         #
         else
+            # Small q
             #
             fac[ig] = -exxdiv # or rather something else (see F.Gygi)
             if yukawa > 0.0 && !x_gamma_extrapolation
@@ -102,5 +112,8 @@ function g2_convolution!( exx, LatVecs, xk, xkq, fac )
             end
         end
     end
+
+    println("sum fac = ", sum(fac)*2.0)
+
     return
 end
