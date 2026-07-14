@@ -107,8 +107,12 @@ function calc_exx_divergence(pw, exx; use_regularization = true)
     end
     println("Line 97 res = ", res)
 
-    res = res*pi/nqs
-    α = α / (4*pi^2)
+    res = res*alat^2 / pi
+    #res = res*pi/nqs
+    println("Line 111: res (in Ry) = ", 2*res)
+
+    #α = α / (4*pi^2)
+    α = α / tpiba2
     nqq = 100000
     dq = 5.0 / sqrt(α) / nqq
     aa = 0.0
@@ -123,11 +127,15 @@ function calc_exx_divergence(pw, exx; use_regularization = true)
             aa -= -exp(-α*qq) * yukawa / (qq + yukawa)*dq
         end
     end
+    println("Line 129: aa = ", aa)
     aa *= 8/(4*pi)
     aa += 1.0/sqrt(α*π)
+    println("Line 132 aa = ", aa)
     if erf_scrlen > 0
         aa = 1.0/sqrt( (α + 1.0/4.0/erf_scrlen^2) * pi )
     end
     res -= CellVolume*aa
+    println("res in Ry = ", res*2)
+
     return res*nqs
 end
