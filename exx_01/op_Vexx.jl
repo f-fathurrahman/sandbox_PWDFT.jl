@@ -5,70 +5,73 @@ function op_Vexx!(Ham, exx, psi, Vpsi)
     temppsic = zeros(ComplexF64, Npoints_exx)
     res = zeros(ComplexF64, Npoints_exx)
 
-    fac = zeros(Float64, Npoints_exx)
+    Ng_exx = exx.gvec.Ng
+    fac = zeros(Float64, Ng_exx)
     rhoc = zeros(ComplexF64, Npoints_exx)
     vc = zeros(ComplexF64, Npoints_exx)
     
     current_ik = Ham.ik # this is current index of the input wavefunction
     xkp = Ham.pw.gvecw.kpoints.k[:,current_ik]
-    exx_alpha = 1.0 # FIXME
+    exx_alpha = exx.exx_alpha
+
+    pw = Ham.pw
+    xk = pw.gvecw.kpoints.k[:,current_ik]
+    Nstates = Ham.electrons.Nstates
+    x_occupation = exx.x_occupation
     
     Ncols = size(psi, 2)
     for ic in 1:Ncols
         fill!(temppsic, 0.0)
         # Bring psi(:,im) to real space using invfft, using exx grid
-        for igw in 1:Ngwk
-            ip = idx_gw2r[ik][igw]
-            temppsic[ip] = psi[ig,ic]
+        for igw in 1:pw.gvecw.Ngw[current_ik]
+            ip = exx.idx_gw2r[current_ik][igw]
+            temppsic[ip] = psi[igw,ic]
         end
-        do_fft!(planbw, Ns, temppsic)
+        do_fft!(exx.planbw, exx.Ns, temppsic)
         #
         fill!(res, 0.0)
         #
-        for iq in 1:nqs
-            ikq = index_xkq[current_ik,iq]
-            ik = index_xk[ikq]
-            xkq = xkq_collect[:,ikq]
+        for iq in 1:exx.nqs
+            ikq = exx.index_xkq[current_ik,iq]
+            ik = exx.index_xk[ikq]
+            xkq = exx.xkq[:,ikq]
             # calculate the 1/|r-r'| (actually, k+q+g) factor and place it in fac
-            g2_convolution!( pw, exx, gt, xkp, xkq, iq, current_ik )
-            fill!(fac, 0.0)
-            for ig in 1:Ng
-                ip = idx_g2r[ig]
-                fac[ip] = coulomb_fac[ig, iq, current_ik]
-            end
+            fill!(fac, 0.0) # need this?
+            g2_convolution!( exx, pw.LatVecs, xk, xkq, fac )
             for ist in 1:Nstates
-                if abs(x_occupation[ist,ik]) < eps_occ
+                if abs(x_occupation[ist,ik]) < exx.eps_occ
                     continue
                 end
                 for ip in 1:Npoints_exx
-                    rhoc[ip] = conj(exx.buff[ip,ibnd,ikq])*temppsic[ip] / CellVolume
+                    rhoc[ip] = conj(exx.buff[ip,ist,ikq])*temppsic[ip] / pw.CellVolume
                 end
                 # to G-space
-                do_fft!(planfw, Ns, rhoc)
+                do_fft!(exx.planfw, exx.Ns, rhoc)
                 # charge done
                 fill!(vc, 0.0)
                 #
                 # multiply point by points?
-                for ip in 1:Npoints_exx
-                    vc[ip] = fac[ip] * rhoc[ip]*x_occupation[ibnd,ik]/nqs
+                for ig in 1:Ng_exx
+                    ip = exx.gvec.idx_g2r[ig]
+                    vc[ip] = fac[ig] * rhoc[ip]*x_occupation[ist,ik]/exx.nqs
                 end
                 #
                 # brings back v in real space
-                do_fft!(planbw, Ns, vc)
+                do_fft!(exx.planbw, exx.Ns, vc)
                 #
                 # accumulates over bands and k points
                 for ip in 1:Npoints_exx
-                    result[ip] += vc[ip]*exx.buff[ip,ibnd,ikq]
+                    res[ip] += vc[ip]*exx.buff[ip,ist,ikq]
                 end
             end
         end
         #
         # brings back result in G-space
-        do_fft!(planfw, Ns, result)
+        do_fft!(exx.planfw, exx.Ns, res)
         # adds it to hpsi
-        for igw in 1:Ngwk
-            ip = idx_gw2r[current_ik][igw]
-            Vpsi[igw,ic] -= exx_alpha * result[ip]
+        for igw in 1:pw.gvecw.Ngw[current_ik]
+            ip = exx.idx_gw2r[current_ik][igw] # we need to access exx grid
+            Vpsi[igw,ic] -= exx_alpha * res[ip] # the sign is negative
         end
     end
     return

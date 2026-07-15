@@ -78,10 +78,10 @@ function g2_convolution!( exx, LatVecs, xk, xkq, fac )
         end
         fill!(grid_factor_track, 1.0)
     end
-    println("xk = ", xk)
-    println("xkq = ", xkq)
-    println("sum qq_track = ", sum(qq_track))
-    println("sum grid_factor_track = ", sum(grid_factor_track))
+    #println("xk = ", xk)
+    #println("xkq = ", xkq)
+    #println("sum qq_track = ", sum(qq_track))
+    #println("sum grid_factor_track = ", sum(grid_factor_track))
     #
     # The big loop
     for ig in 1:Ng
