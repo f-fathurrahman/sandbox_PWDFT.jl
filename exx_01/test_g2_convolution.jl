@@ -9,10 +9,11 @@ includet("exx_qgrid_init.jl")
 includet("scale_sym_ops.jl")
 includet("rotate_grid_point.jl")
 includet("exx_set_symm.jl")
+includet("calc_exx_divergence.jl")
 includet("EXXVariables.jl")
 includet("g2_convolution.jl")
 
-function debug_main()
+function debug_g2_convolution()
     filename = "PWINPUT_AlAs"
     Ham, pwinput = init_Ham_from_pwinput(filename=filename)
     exx = EXXVariables(Ham, pwinput)
@@ -25,7 +26,8 @@ function debug_main()
     fac = zeros(Float64, Ng)
 
     g2_convolution!(exx, Ham.pw.LatVecs, Ham.pw.gvecw.kpoints.k[:,1], exx.xkq[:,1], fac)
-    
+    println("sum fac (in Ry) = ", sum(fac)*2.0)
+
     #for ik in 1:Nkpt
     #    fill!(fac, 0.0)
     #    g2_convolution!(exx, Ham.pw.LatVecs, Ham.pw.gvecw.kpoints.k[:,ik], exx.xkq[:,1], fac)

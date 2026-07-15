@@ -3,11 +3,8 @@ function g2_convolution!( exx, LatVecs, xk, xkq, fac )
     Ng = exx.gvec.Ng
     G = exx.gvec.G
     SMALL = 1e-6
-    SMALL_QDIV = 1e-8
-    grid_factor = 1.0 #XXX should be from exx
-    if exx.x_gamma_extrapolation
-        grid_factor = 8/7
-    end
+    SMALL_QDIV = 1e-8 # from exx
+    grid_factor = exx.grid_factor
 
     gau_scrlen = exx.gau_scrlen
     erfc_scrlen = exx.erfc_scrlen
@@ -23,6 +20,9 @@ function g2_convolution!( exx, LatVecs, xk, xkq, fac )
     grid_factor_track = zeros(Float64, Ng)
     qq_track = zeros(Float64, Ng)
     odg = zeros(Bool, 3)
+
+    alat = sqrt(LatVecs[1,1]^2 + LatVecs[2,1]^2 + LatVecs[3,1]^2)
+    tpiba2  = (2π/alat)^2
 
     # First the types of Coulomb potential that need q(3) and an external call
     #=
@@ -68,7 +68,7 @@ function g2_convolution!( exx, LatVecs, xk, xkq, fac )
             else
                 grid_factor_track[ig] = grid_factor # not on double grid
             end
-            println("x1=$x1 x2=$x2 x3=$x3 odg=$odg")
+            #println("x1=$x1 x2=$x2 x3=$x3 odg=$odg")
         end
     else
         # No gamma extrapolation
@@ -90,7 +90,7 @@ function g2_convolution!( exx, LatVecs, xk, xkq, fac )
         if gau_scrlen > 0
             fac[ig] = ( (pi/gau_scrlen)^1.5 )*exp(-qq/4/gau_scrlen) * grid_factor_track[ig]
         #
-        elseif qq > SMALL_QDIV
+        elseif qq/tpiba2 > SMALL_QDIV #XXX eps_qdiv is given in tpiba2 ?
             if erfc_scrlen > 0
                 fac[ig] = 4*pi/qq*(1.0 - exp(-qq/4/erfc_scrlen^2)) * grid_factor_track[ig]
             elseif erf_scrlen > 0
@@ -112,8 +112,6 @@ function g2_convolution!( exx, LatVecs, xk, xkq, fac )
             end
         end
     end
-
-    println("sum fac = ", sum(fac)*2.0)
 
     return
 end

@@ -19,10 +19,12 @@ function debug_exx_divergence()
     psiks = deserialize("psiks_nox_noc.jldat")
     set_exx_buffer!(Ham, exx, psiks)
 
-    #=
-    use_regularization = !(pwinput.exxdiv_treatment == "none")
-    exxdiv = calc_exx_divergence(pw, exx; use_regularization = use_regularization)
-    =#
+    exxdiv = calc_exx_divergence(
+        pw, exx.Nq1, exx.Nq2, exx.Nq3,
+        exx.x_gamma_extrapolation,
+        exx.erf_scrlen, exx.erfc_scrlen, exx.yukawa, exx.grid_factor, exx.nqs,
+        use_regularization = exx.use_regularization
+    )
 
     @infiltrate
 end

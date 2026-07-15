@@ -9,9 +9,10 @@ includet("exx_qgrid_init.jl")
 includet("scale_sym_ops.jl")
 includet("rotate_grid_point.jl")
 includet("exx_set_symm.jl")
+includet("calc_exx_divergence.jl")
 includet("EXXVariables.jl")
 
-function debug_main()
+function debug_exx_variables()
     filename = "PWINPUT_AlAs"
     Ham, pwinput = init_Ham_from_pwinput(filename=filename)
     exx = EXXVariables(Ham, pwinput)

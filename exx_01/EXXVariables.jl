@@ -1,5 +1,6 @@
 mutable struct EXXVariables
     is_active::Bool
+    exx_alpha::Float64
     #
     eps_occ::Float64
     eps_qdiv::Float64
@@ -13,6 +14,7 @@ mutable struct EXXVariables
     yukawa::Float64
     x_gamma_extrapolation::Bool
     exxdiv_treatment::String
+    grid_factor::Float64
     use_ace::Bool
     #
     ecutfock::Float64
@@ -335,16 +337,32 @@ function EXXVariables(Ham, pwinput)
     eps_qdiv = 1e-8
     use_coulomb_vcut_ws =  false
     use_coulomb_vcut_spheric =  false
-    exxdiv_treatment = "gygi-baldereschi"
-    use_regularization =  true
-    exxdiv = 0.0
+    
     gau_scrlen = 0.0
     erf_scrlen = 0.0
     erfc_scrlen = 0.0
     yukawa = 0.0
+    
+    grid_factor = 1.0
+    if x_gamma_extrapolation
+        grid_factor = 8/7
+    end
+
+    exxdiv_treatment = pwinput.exxdiv_treatment
+    use_regularization = !(exxdiv_treatment == "none")
+    # exxdiv has energy unit
+    exxdiv = calc_exx_divergence(
+        pw, Nq1, Nq2, Nq3,
+        x_gamma_extrapolation,
+        erf_scrlen, erfc_scrlen, yukawa, grid_factor, nqs,
+        use_regularization = use_regularization
+    )
+
+    exx_alpha = 1.0
 
     return EXXVariables(
         is_active,
+        exx_alpha,
         eps_occ, eps_qdiv,
         use_coulomb_vcut_ws,
         use_coulomb_vcut_spheric,
@@ -354,6 +372,7 @@ function EXXVariables(Ham, pwinput)
         yukawa,
         x_gamma_extrapolation,
         exxdiv_treatment,
+        grid_factor,
         use_ace,
         ecutfock,
         Nq1, Nq2, Nq3,
