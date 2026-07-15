@@ -34,15 +34,16 @@ function debug_op_Vexx()
 
     Nstates = Ham.electrons.Nstates
     Focc = Ham.electrons.Focc
+    wk = Ham.pw.gvecw.kpoints.wk
     ene_exx = 0.0
     for ik in 1:Nkpt
         psi = psiks_in[ik]
         Vpsi = psiks_out[ik]
         for ist in 1:Nstates
-            ene_exx += Focc[ist,ik] * dot(psi[:,ist], Vpsi[:,ist])
+            ene_exx += wk[ik] * Focc[ist,ik] * dot(psi[:,ist], Vpsi[:,ist])
         end
     end
-    println("ene_exx = ", ene_exx)
+    println("ene_exx (in Ry) = ", 2*ene_exx)
 
     @infiltrate
 end

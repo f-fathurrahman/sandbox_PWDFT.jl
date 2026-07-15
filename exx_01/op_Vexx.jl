@@ -28,6 +28,7 @@ function op_Vexx!(Ham, exx, psi, Vpsi)
             temppsic[ip] = psi[igw,ic]
         end
         do_fft!(exx.planbw, exx.Ns, temppsic)
+        temppsic *= Npoints_exx # scale here?
         #
         fill!(res, 0.0)
         #
@@ -42,8 +43,9 @@ function op_Vexx!(Ham, exx, psi, Vpsi)
                 if abs(x_occupation[ist,ik]) < exx.eps_occ
                     continue
                 end
+                # This is multiplication in real space
                 for ip in 1:Npoints_exx
-                    rhoc[ip] = conj(exx.buff[ip,ist,ikq])*temppsic[ip] / pw.CellVolume
+                    rhoc[ip] = conj(exx.buff[ip,ist,ikq]) * Npoints_exx * temppsic[ip] / pw.CellVolume
                 end
                 # to G-space
                 do_fft!(exx.planfw, exx.Ns, rhoc)
@@ -53,7 +55,7 @@ function op_Vexx!(Ham, exx, psi, Vpsi)
                 # multiply point by points?
                 for ig in 1:Ng_exx
                     ip = exx.gvec.idx_g2r[ig]
-                    vc[ip] = fac[ig] * rhoc[ip]*x_occupation[ist,ik]/exx.nqs
+                    vc[ip] = fac[ig] * rhoc[ip] * x_occupation[ist,ik] / exx.nqs
                 end
                 #
                 # brings back v in real space
