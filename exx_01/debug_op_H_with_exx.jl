@@ -3,7 +3,7 @@ using LinearAlgebra: norm, inv, dot
 using FFTW
 using Serialization: serialize, deserialize
 
-function debug_op_Vexx()
+function debug_diag_exx()
     filename = "PWINPUT_AlAs"
     Ham, pwinput = init_Ham_from_pwinput(filename=filename)
     
@@ -20,24 +20,23 @@ function debug_op_Vexx()
     for ik in 1:Nkpt
         Ham.ik = ik
         psi = psiks_in[ik]
-        Vpsi = psiks_out[ik]
-        op_Vexx!(Ham, psi, Vpsi)
+        Hpsi = psiks_out[ik]
+        op_H!(Ham, psi, Hpsi)
     end
 
-    # Test calculating exx energy
+    # Test calculating energy
     Nstates = Ham.electrons.Nstates
     Focc = Ham.electrons.Focc
     wk = Ham.pw.gvecw.kpoints.wk
-    ene_exx = 0.0
+    ene = 0.0
     for ik in 1:Nkpt
         psi = psiks_in[ik]
-        Vpsi = psiks_out[ik]
+        Hpsi = psiks_out[ik]
         for ist in 1:Nstates
-            ene_exx += wk[ik] * Focc[ist,ik] * dot(psi[:,ist], Vpsi[:,ist])
+            ene += wk[ik] * Focc[ist,ik] * dot(psi[:,ist], Hpsi[:,ist])
         end
     end
-    println("ene_exx in Ha = ", ene_exx)
-    println("ene_exx (in Ry) = ", 2*ene_exx)
+    println("ene (in Ry) = ", 2*ene)
 
     @infiltrate
 end

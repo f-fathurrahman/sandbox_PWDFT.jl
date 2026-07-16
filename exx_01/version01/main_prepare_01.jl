@@ -8,6 +8,7 @@ function do_prepare_wfc()
     Ham.xc_calc = NoneXCCalculator();
 
     psiks = rand_BlochWavefunc(Ham);
+
     electrons_scf_G!(
         Ham,
         psiks = psiks,
