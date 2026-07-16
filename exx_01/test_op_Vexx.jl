@@ -1,5 +1,5 @@
 using Printf
-using LinearAlgebra: norm, inv
+using LinearAlgebra: norm, inv, dot
 using FFTW
 using Serialization: serialize, deserialize
 

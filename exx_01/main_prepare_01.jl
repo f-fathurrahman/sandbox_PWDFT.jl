@@ -3,6 +3,7 @@ using Serialization: serialize
 
 function do_prepare_wfc()
     filename = "PWINPUT_AlAs";
+    #filename = "PWINPUT_AlAs_alat";
     Ham, pwinput = init_Ham_from_pwinput(filename=filename);
     Ham.xc_calc = NoneXCCalculator();
 
