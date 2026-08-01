@@ -8,10 +8,12 @@ function debug_diag_exx()
     Ham, pwinput = init_Ham_from_pwinput(filename=filename)
     
     Ham.exx = EXXVariables(Ham, pwinput)
-    #psiks = deserialize("psiks_nox_noc.jldat")
-    psiks = deserialize("psiks_latest.jldat")
-    Rhoe = deserialize("Rhoe_latest.jldat")
-    #Rhoe = calc_rhoe(Ham, psiks)
+    #
+    psiks = deserialize("psiks_nox_noc.jldat")
+    Rhoe = calc_rhoe(Ham, psiks)
+    #
+    #psiks = deserialize("psiks_latest.jldat")
+    #Rhoe = deserialize("Rhoe_latest.jldat")
     #psiks = deserialize("psiks_nox_noc_v01.jldat")
     Ham.exx.is_active = true
     Ham.xc_calc = NoneXCCalculator() # set XC components to zero

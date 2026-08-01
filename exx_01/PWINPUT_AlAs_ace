@@ -22,7 +22,7 @@
   nqx3 = 3
   x_gamma_extrapolation = .true.
   exxdiv_treatment = 'gygi-baldereschi'
-  ace = .false.
+  ace = .true.
   occupations = 'smearing'
   smearing = 'fd'
   degauss = 0.01
