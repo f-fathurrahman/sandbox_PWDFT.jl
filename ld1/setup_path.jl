@@ -6,6 +6,8 @@ import LinearAlgebra
 import Plots, PlotThemes
 Plots.theme(:dark)
 
+using SpecialFunctions: sphericalbesselj
+
 using PWDFT
 
 includet("LD1xInput.jl")

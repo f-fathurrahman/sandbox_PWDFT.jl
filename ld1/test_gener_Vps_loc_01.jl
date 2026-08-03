@@ -1,7 +1,8 @@
 
 function test_gener_Vps_loc_01(; NiterMax=100)
 
-    ld1x_input = create_input_Si()
+    #ld1x_input = create_input_Si()
+    ld1x_input = create_input_Pd()
 
     Zval = ld1x_input.Zval
     Zed = ld1x_input.Zed
@@ -135,7 +136,9 @@ function test_gener_Vps_loc_01(; NiterMax=100)
 
     end
 
-    rcloc = 1.9
+    # rcloc can be read from input
+    #rcloc = 1.9 # Si
+    rcloc = 2.2 # Pd 
     ir_loc = 0
     for i in 1:Nrmesh
         if grid.r[i] < rcloc
@@ -193,7 +196,7 @@ function test_gener_Vps_loc_01(; NiterMax=100)
     #
     # define the v_out function
     for ir in 1:ir_loc
-        V_Ps_loc[ir] = xc[1] * j1[ir,1] + xc[2] * j1[ir,2]
+        V_Ps_loc[ir] = xc[1]*j1[ir,1] + xc[2]*j1[ir,2]
     end
   
     for ir in (ir_loc+1):Nrmesh
