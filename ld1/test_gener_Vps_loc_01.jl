@@ -179,7 +179,7 @@ function test_gener_Vps_loc_01(; NiterMax=100)
     #
     # compute the second derivative and impose continuity of zero, 
     # first and second derivative
-    bm = zeros(Float64, 2)             # the derivative of the bessel
+    bm = zeros(Float64, 2) # the derivative of the bessel
     for ic in 1:2
         p1aep1 = ( j1[ir_loc+1,ic] - j1[ir_loc,ic] ) / ( grid.r[ir_loc+1] - grid.r[ir_loc] )
         p1aem1 = ( j1[ir_loc,ic] - j1[ir_loc-1,ic] ) / ( grid.r[ir_loc] - grid.r[ir_loc-1] )
