@@ -136,9 +136,8 @@ function test_gener_Vps_loc_01(; NiterMax=100)
 
     end
 
-    # rcloc can be read from input
-    #rcloc = 1.9 # Si
-    rcloc = 2.2 # Pd 
+    # rcloc is cutoff for 
+    rcloc = ld1x_input.rcloc
     ir_loc = 0
     for i in 1:Nrmesh
         if grid.r[i] < rcloc

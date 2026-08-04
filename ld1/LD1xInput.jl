@@ -8,6 +8,7 @@ mutable struct LD1XInput
     oc::Vector{Float64}
     iswitch::Int64
     rel::Int64
+    rcloc::Float64
 end
 
 function create_input_Si()
@@ -21,12 +22,14 @@ function create_input_Si()
     # FIXME: define isw: spin index
     rel = 1
     iswitch = 1
+    rcloc = 1.9
 
     return LD1XInput(
         Zval, Zed,
         Nspin, Nwf,
         nn, ll, oc,
-        iswitch, rel
+        iswitch, rel,
+        rcloc
     )
 
 end
@@ -47,11 +50,13 @@ function create_input_Pd()
     # FIXME: define isw: spin index
     rel = 1
     iswitch = 1
+    rcloc = 2.2
 
     return LD1XInput(
         Zval, Zed,
         Nspin, Nwf,
         nn, ll, oc,
-        iswitch, rel
+        iswitch, rel,
+        rcloc
     )
 end
