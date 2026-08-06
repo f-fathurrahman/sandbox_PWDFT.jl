@@ -1,3 +1,7 @@
+function solve_atoms_all_electrons!(ld1x_input)
+
+end
+
 
 function test_gener_Vps_loc_01(; NiterMax=100)
 
@@ -136,6 +140,8 @@ function test_gener_Vps_loc_01(; NiterMax=100)
 
     end
 
+    # We want to pseudize Vpot
+
     # rcloc is cutoff for 
     rcloc = ld1x_input.rcloc
     ir_loc = 0
@@ -197,7 +203,8 @@ function test_gener_Vps_loc_01(; NiterMax=100)
     for ir in 1:ir_loc
         V_Ps_loc[ir] = xc[1]*j1[ir,1] + xc[2]*j1[ir,2]
     end
-  
+    
+    # Beyond rcloc V_Ps_loc should be the same as Vpot
     for ir in (ir_loc+1):Nrmesh
         V_Ps_loc[ir] = Vpot[ir]
     end
