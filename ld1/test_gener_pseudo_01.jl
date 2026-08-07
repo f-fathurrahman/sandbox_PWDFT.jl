@@ -1,12 +1,12 @@
 function solve_atoms_all_electrons!(ld1x_input)
-
+    return # to be implemeted
 end
 
 
-function test_gener_Vps_loc_01(; NiterMax=100)
+function debug_gener_pseudo_01(; NiterMax=100)
 
-    #ld1x_input = create_input_Si()
-    ld1x_input = create_input_Pd()
+    ld1x_input = create_input_Si()
+    #ld1x_input = create_input_Pd()
 
     Zval = ld1x_input.Zval
     Zed = ld1x_input.Zed
@@ -15,6 +15,7 @@ function test_gener_Vps_loc_01(; NiterMax=100)
     nn = ld1x_input.nn
     ll = ld1x_input.ll
     oc = ld1x_input.oc
+    core_state = ld1x_input.core_state
 
     Enl = zeros(Float64, Nwf)
 
@@ -77,6 +78,13 @@ function test_gener_Vps_loc_01(; NiterMax=100)
 
         # FIXME: simplify this
         for iwf in 1:Nwf
+            # Skip this iwf if occupation number is negative (unbound state)
+            if oc[iwf] < 0.0
+                Enl[iwf] = 0.0
+                @views fill!(psi[:,iwf], 0.0)
+                continue
+                # The code below should not be executed 
+            end
             @views psi1 = psi[:,iwf] # zeros wavefunction
             if ld1x_input.rel == 1
                 Enl[iwf], nstop = lschps!( mode, Zval, thresh0, 
@@ -208,6 +216,52 @@ function test_gener_Vps_loc_01(; NiterMax=100)
     for ir in (ir_loc+1):Nrmesh
         V_Ps_loc[ir] = Vpot[ir]
     end
+
+    # We calculate rhoe core here
+    #
+    # calculates core charge density
+    #
+    rhov = zeros(Float64, Nrmesh)
+    rhoc = zeros(Float64, Nrmesh)
+    for ir in 1:grid.Nrmesh
+        for iwf in 1:Nwf
+            if ld1x_input.rel == 2
+                # This is the case of full relativistic (Dirac equation)
+                #XXX We need to reshape psi spinor
+                if core_state[iwf]
+                    rhoc[ir] += oc[iwf]*( psi[ir,1,iwf]^2 + psi[ir,2,iwf]^2 )
+                else
+                    rhov[ir] += oc[iwf]*( psi[ir,1,iwf]^2 + psi[ir,2,iwf]^2 )
+                end
+            else
+                # scalar relativistic and non-relativistic
+                if core_state[iwf]
+                    rhoc[ir] += oc[iwf]*psi[ir,iwf]^2
+                else
+                    rhov[ir] += oc[iwf]*psi[ir,iwf]^2
+                end
+            end
+        end
+    end
+    totrho = integ_0_inf_dr(rhoc, grid, Nrmesh, 2)
+    println("totrho = ", totrho)
+
+    # rcore determined by the condition  rhoc(rcore) = 2*rhov(rcore)
+    ir_rcore = 0
+    for ir in 1:Nrmesh
+        if rhoc[ir] < 2.0*rhov[ir]
+            ir_rcore = ir
+            break
+        end
+    end
+
+    println("ir_rcore = ", ir_rcore)
+    rcore = grid.r[ir_rcore]
+    println("rcore = ", rcore)
+
+    dd1 = rhoc[ir_rcore+1]/grid.r2[ir_rcore+1] - rhoc[ir_rcore]/grid.r2[ir_rcore]
+    drho = dd1/grid.dx/grid.r[ir_rcore]
+    println("drho = ", drho)
 
     @infiltrate
 

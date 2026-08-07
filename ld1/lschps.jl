@@ -88,10 +88,10 @@ function lschps!( mode::Int64, z, eps, grid, n, l, e_, v_, u )
         γ = l + 1
     end
 
-    @info "γ = $(γ)"
-    @info "C_AU = $(C_AU)"
-    @info "fss = $(fss)"
-    @info "n = $(n), l = $(l)"
+    #@info "γ = $(γ)"
+    #@info "C_AU = $(C_AU)"
+    #@info "fss = $(fss)"
+    #@info "n = $(n), l = $(l)"
    
     sls = l*(l + 1)
     #
