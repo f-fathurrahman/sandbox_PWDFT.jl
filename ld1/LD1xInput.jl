@@ -12,6 +12,7 @@ mutable struct LD1XInput
     el::Vector{String}
     els::Vector{String}
     core_state::Vector{Bool}
+    rcore::Float64
 end
 
 function _calc_core_state(el, els)
@@ -51,13 +52,16 @@ function create_input_Si()
 
     core_state = _calc_core_state(el, els)
 
+    rcore = 1.3
+
     return LD1XInput(
         Zval, Zed,
         Nspin, Nwf,
         nn, ll, oc,
         iswitch, rel,
         rcloc,
-        el, els, core_state
+        el, els, core_state,
+        rcore
     )
 
 end
@@ -87,12 +91,15 @@ function create_input_Pd()
     iswitch = 1
     rcloc = 2.2
 
+    rcore = 1.8
+
     return LD1XInput(
         Zval, Zed,
         Nspin, Nwf,
         nn, ll, oc,
         iswitch, rel,
         rcloc, 
-        el, els, core_state
+        el, els, core_state,
+        rcore
     )
 end

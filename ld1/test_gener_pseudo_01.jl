@@ -245,13 +245,24 @@ function debug_gener_pseudo_01(; NiterMax=100)
 
     # rcore determined by the condition  rhoc(rcore) = 2*rhov(rcore)
     ir_rcore = 0
-    for ir in 1:Nrmesh
-        if rhoc[ir] < 2.0*rhov[ir]
-            ir_rcore = ir
-            break
+    rcore = ld1x_input.rcore
+    if ld1x_input.rcore > 0.0
+        for ir in 1:Nrmesh
+            if grid.r[ir] > rcore
+                ir_rcore = ir
+                break
+            end
+        end
+    else 
+        for ir in 1:Nrmesh
+            if rhoc[ir] < 2.0*rhov[ir]
+                println("at this ir=$ir rhoc=$(rhoc[ir]) rhov=$(rhov[ir]) 2*rhov=$(2*rhov[ir])")
+                ir_rcore = ir
+                break
+            end
         end
     end
-
+    #ir_rcore = 794
     println("ir_rcore = ", ir_rcore)
     rcore = grid.r[ir_rcore]
     println("rcore = ", rcore)
@@ -265,6 +276,9 @@ function debug_gener_pseudo_01(; NiterMax=100)
     aeccharge[:] = rhoc[:]
     #xc = zeros(Float64, 8) # again?
     compute_phius!(grid, 1, ir_rcore, aeccharge, rhoc, xc, 0, " ")
+
+    totrho = integ_0_inf_dr(rhoc, grid, Nrmesh, 2)
+    println("integ rhoc = ", totrho)
 
     @infiltrate
 
