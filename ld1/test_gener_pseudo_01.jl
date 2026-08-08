@@ -1,7 +1,4 @@
-function solve_atoms_all_electrons!(ld1x_input)
-    return # to be implemeted
-end
-
+includet("compute_phius.jl")
 
 function debug_gener_pseudo_01(; NiterMax=100)
 
@@ -259,9 +256,15 @@ function debug_gener_pseudo_01(; NiterMax=100)
     rcore = grid.r[ir_rcore]
     println("rcore = ", rcore)
 
+    # This is not used?
     dd1 = rhoc[ir_rcore+1]/grid.r2[ir_rcore+1] - rhoc[ir_rcore]/grid.r2[ir_rcore]
     drho = dd1/grid.dx/grid.r[ir_rcore]
     println("drho = ", drho)
+
+    aeccharge = zeros(Float64, Nrmesh)
+    aeccharge[:] = rhoc[:]
+    #xc = zeros(Float64, 8) # again?
+    compute_phius!(grid, 1, ir_rcore, aeccharge, rhoc, xc, 0, " ")
 
     @infiltrate
 
