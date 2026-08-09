@@ -22,13 +22,15 @@ function _set_psi_in!(Zval, Vpot, grid, idx_rc, ℓ, E_in, psi_out)
     #XXX This is only for rel==1
     # CALL lschps( 3, zed, thrdum, grid, n, 1, l, e, vpot, psi_out, nstop )
     mode = 3
+    Nrmesh = grid.Nrmesh
     e, nstop = lschps!( mode, Zval, thresh0, 
-        grid, 1, ℓ, E_in, Vpot, psi_out; nin_ = 1
+        grid, 1, ℓ, E_in, Vpot, psi_out; nin_ = Nrmesh
     )
+
 
     # fix arbitrarily the norm at the cut-off radius equal to (about) 0.5**2
     nrm1 = 0.0
-    for ir in 1:idx_r
+    for ir in 1:idx_rc
         nrm1 += grid.dx * grid.r[ir] * psi_out[ir]^2
     end
     nrm1 = sqrt(nrm1)
