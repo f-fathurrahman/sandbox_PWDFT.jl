@@ -1,4 +1,5 @@
 includet("compute_phius.jl")
+includet("set_psi_in.jl")
 
 function debug_gener_pseudo_01(; NiterMax=100)
 
@@ -279,6 +280,97 @@ function debug_gener_pseudo_01(; NiterMax=100)
 
     totrho = integ_0_inf_dr(rhoc, grid, Nrmesh, 2)
     println("integ rhoc = ", totrho)
+
+    println("Setting appropriate energies Enls")
+    nstoae = ld1x_input.nstoae
+    Enls = ld1x_input.Enls
+    Nwfs = ld1x_input.Nwfs
+    #
+    SMALL_ENERGY = 1e-13
+    for iwfs in 1:Nwfs
+        iwf = nstoae[iwfs]
+        if abs(Enls[iwfs]) <= SMALL_ENERGY
+            Enls[iwfs] = Enl[iwf]  # just assign AE energy
+        end
+    end
+
+    pseudotype = 3 #XXX HARCODED
+    rcut = ld1x_input.rcut
+    rcutus = ld1x_input.rcutus
+    Nbeta = ld1x_input.Nbeta
+    fit_to_arbitrary_energy = ld1x_input.fit_to_arbitrary_energy
+    #
+    idx_rcut = zeros(Int64, Nbeta)
+    idx_rcutus = zeros(Int64, Nbeta)
+    idx_rcloc = 0
+    idx_rbeta = zeros(Int64, Nbeta)
+    # find ik, ikus, and ikloc
+    for ibeta in 1:Nbeta
+        for ir in 1:Nrmesh
+            if grid.r[ir] < rcut[ibeta]
+                idx_rcut[ibeta] = ir
+            end
+            #
+            if grid.r[ir] < rcutus[ibeta]
+                idx_rcutus[ibeta] = ir
+            end
+            #
+            if grid.r[ir] < rcloc
+                idx_rcloc = ir
+            end
+        end
+        # make idx_rcut odd
+        if idx_rcut[ibeta]%2 == 0
+            idx_rcut[ibeta] += 1
+        end
+        # make idx_rcutus odd
+        if idx_rcutus[ibeta]%2 == 0
+            idx_rcutus[ibeta] += 1
+        end
+        #
+        if pseudotype == 3
+            idx_rbeta[ibeta] = max( idx_rcutus[ibeta] + 10, idx_rcloc + 5 )
+        else
+            idx_rbeta[ibeta] = max( idx_rcut[ibeta] + 10, idx_rcloc + 5)
+        end
+        #
+        @assert idx_rbeta[ibeta] < Nrmesh
+    end
+
+    lls = ld1x_input.lls
+    for ibeta in 1:Nbeta, jbeta in 1:Nbeta
+        if (lls[ibeta] == lls[jbeta]) && (idx_rbeta[jbeta] > idx_rbeta[ibeta])
+            idx_rbeta[ibeta] = idx_rbeta[jbeta] # choose the larger
+        end
+    end
+    # XXX: is this needed?
+    irc = maximum(idx_rbeta) + 8 # offset (arbitrarily?) by 8
+    if irc%2 == 0
+        irc += 1
+    end
+
+    psipaw = zeros(Float64, Nrmesh, Nbeta)
+    gi = zeros(Float64, Nrmesh)
+    for ibeta in 1:Nbeta
+        nwf0 = nstoae[ibeta]
+        if fit_to_arbitrary_energy[ibeta]
+            @views _set_psi_in!( Zval, Vpot, grid, idx_rcutus[ibeta], lls[ibeta], Enls[ibeta], psipaw[:,ibeta] )
+            #FIXME: jjs is not yet used
+        else
+            #write(*,'(1x,A,I4,A)') 'ns = ', ns, ' new(ns) is false'
+            ℓ = lls[ibeta]
+            nst = (ℓ + 1)*2
+            psipaw[:,ibeta] = psi[:,nwf0]
+            #
+            for ir in 1:Nrmesh
+                gi[ir] = psipaw[ir,ibeta] * psipaw[ir,ibeta]
+            end
+            #
+            nrm1 = sqrt( integ_0_inf_dr(gi, grid, Nrmesh, nst) )
+            # normalize
+            psipaw[:,ibeta] = psipaw[:,ibeta]/nrm1
+        end
+    end
 
     @infiltrate
 

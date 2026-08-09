@@ -43,7 +43,7 @@ function lschps_eval_derv!(mmax, al, r, v, dv)
     return
 end
 
-function lschps!( mode::Int64, z, eps, grid, n, l, e_, v_, u )
+function lschps!( mode::Int64, z, eps, grid, n, l, e_, v_, u; nin_ = nothing )
 
     # convert to Ry
     e = 2*e_
@@ -61,7 +61,11 @@ function lschps!( mode::Int64, z, eps, grid, n, l, e_, v_, u )
     C_AU = C_SI / BOHR_RADIUS_SI * AU_SEC
 
     nstop = 0
-    nin = -1 # an invalid value, probably not used outside this function
+    if isnothing(nin_)
+        nin = -1 # an invalid value, probably not used outside this function
+    else
+        nin = nin_
+    end
     al   = grid.dx
     mmax = grid.Nrmesh
 
@@ -117,7 +121,9 @@ function lschps!( mode::Int64, z, eps, grid, n, l, e_, v_, u )
         emin = e - 10.0
     end
 
-    println("emin, emax = ", emin, " ", emax)
+    if mode in [1,2,4]
+        println("emin, emax = ", emin, " ", emax)
+    end
 
     #
     for i in 1:4
