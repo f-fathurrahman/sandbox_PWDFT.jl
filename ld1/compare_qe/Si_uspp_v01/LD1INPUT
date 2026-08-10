@@ -11,6 +11,7 @@
   lpaw = .false.
   pseudotype = 3
   file_pseudopw = 'Si.pz-n-kjpaw_psl.1.0.0.UPF'
+  file_wfcaegen = 'ld1.wfcaegen'
   lloc = -1
   rcloc = 1.9
   which_augfun = 'PSQ'
