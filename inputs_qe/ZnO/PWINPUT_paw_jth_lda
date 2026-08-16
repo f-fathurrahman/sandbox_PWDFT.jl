@@ -13,8 +13,8 @@
   A = 3.24950
   nat = 4
   ntyp = 2
-  ecutwfc = 40.0
-  ecutrho = 200.0
+  ecutwfc = 30.0
+  ecutrho = 120.0
   input_dft = 'lda_x_sla lda_c_vwn'
   occupations = 'smearing'
   smearing = 'fermi-dirac'

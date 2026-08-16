@@ -13,7 +13,8 @@
   A = 3.24950
   nat = 4
   ntyp = 2
-  ecutwfc = 70.0
+  ecutwfc = 40.0
+  ecutrho = 240.0
   input_dft = 'lda_x_sla lda_c_vwn'
   occupations = 'smearing'
   smearing = 'fermi-dirac'
@@ -27,8 +28,8 @@
 /
 
 ATOMIC_SPECIES
-  Zn   65.38000  Zn_oncv.upf
-   O   15.99900   O_oncv.upf
+  Zn   65.38000  Zn.pz-dn-kjpaw_psl.1.0.0.UPF
+   O   15.99900  O.pz-nl-kjpaw_psl.1.0.0.UPF
 
 ATOMIC_POSITIONS crystal
 Zn   0.333333333333333   0.666666666666667   0.000000000000000 
