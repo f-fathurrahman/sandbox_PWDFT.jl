@@ -1,5 +1,6 @@
 includet("compute_phius.jl")
 includet("set_psi_in.jl")
+includet("compute_chi.jl")
 
 function debug_gener_pseudo_01(; NiterMax=100)
 
@@ -304,7 +305,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
     idx_rcutus = zeros(Int64, Nbeta)
     idx_rcloc = 0
     idx_rbeta = zeros(Int64, Nbeta)
-    # find ik, ikus, and ikloc
+    # find ik=idx_rcut, ikus=idx_rcutus, and ikloc=idx_rcloc
     for ibeta in 1:Nbeta
         for ir in 1:Nrmesh
             if grid.r[ir] < rcut[ibeta]
@@ -371,6 +372,45 @@ function debug_gener_pseudo_01(; NiterMax=100)
             psipaw[:,ibeta] = psipaw[:,ibeta]/nrm1
         end
     end
+
+    ecutrho = 0.0
+    ecutwfc = 0.0
+    ocs = ld1x_input.ocs
+    els = ld1x_input.els
+    psi_in = zeros(Float64, Nrmesh)
+    psipsus = zeros(Float64, Nrmesh, Nbeta)
+    phis = zeros(Float64, Nrmesh, Nbeta)
+    chis = zeros(Float64, Nrmesh, Nbeta)
+    for ibeta in 1:Nbeta
+        ℓ = lls[ibeta]
+        nst = (ℓ + 1)*2
+        nwf0 = nstoae[ibeta]
+        if fit_to_arbitrary_energy[ibeta]
+            occ = 1.0
+        else
+            occ = ocs[ibeta]
+        end
+        #
+        # save the all-electron function for the PAW setup
+        psi_in[1:Nrmesh] = psipaw[1:Nrmesh,ibeta]
+        #
+        # compute the phi functions
+        psipsus[:,ibeta] = psi_in[:]
+        if idx_rcutus[ibeta] != idx_rcut[ibeta]
+            #
+            @views compute_phius!(grid, ℓ, idx_rcutus[ibeta], psipsus[:,ibeta], phis[:,ibeta], xc, 1, els[ibeta])
+            ecutwfc = max(ecutwfc, 2.0*xc[5]^2)
+            println("ecutwfc = $ecutwfc Ry")
+            lbes4 = true
+        end
+        println("lbes4 = ", lbes4)
+        @views compute_chi!(
+            grid, V_Ps_loc, ℓ, idx_rbeta[ibeta],
+            phis[:,ibeta], chis[:,ibeta], xc, Enls[ibeta], lbes4
+        )
+
+    end
+
 
     @infiltrate
 
