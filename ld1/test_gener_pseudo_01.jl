@@ -411,6 +411,18 @@ function debug_gener_pseudo_01(; NiterMax=100)
 
     end
 
+    bmat = zeros(Float64, Nbeta, Nbeta)
+    for ibeta in 1:Nbeta, jbeta in 1:Nbeta
+        if lls[ibeta] == lls[jbeta] # also need check jjs && abs(jjs(ns)-jjs(ns1)) < 1.e-7_dp )
+            nst = (lls[ibeta] + 1)*2
+            idx_r = idx_rbeta[ibeta]
+            for ir in 1:Nrmesh
+                gi[ir] = phis[ir,ibeta]*chis[ir,jbeta]
+            end
+            bmat[ibeta,jbeta] = integ_0_inf_dr(gi, grid, idx_r, nst)
+            println("ibeta=$ibeta jbeta=$jbeta bmat=$(bmat[ibeta,jbeta])")
+        end
+    end
 
     @infiltrate
 
