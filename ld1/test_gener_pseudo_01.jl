@@ -424,6 +424,24 @@ function debug_gener_pseudo_01(; NiterMax=100)
         end
     end
 
+    B = zeros(Float64, Nbeta, Nbeta)
+    for ibeta in 1:Nbeta, jbeta in 1:Nbeta
+        B[ibeta,jbeta] = bmat[ibeta,jbeta]
+    end
+    #
+    # compute the inverse of the matrix B_{ij}:  B_{ij}^-1
+    Binv = inv(B)
+    display(Binv); println()
+
+    # compute the beta functions
+    beta_prj = zeros(Float64, Nrmesh, Nbeta)
+    for ibeta in 1:Nbeta, jbeta in 1:Nbeta
+        for ir in 1:Nrmesh
+            beta_prj[ir,ibeta] += Binv[jbeta,ibeta]*chis[ir,jbeta]
+        end
+    end
+    # B and Binv are not used anymore
+
     @infiltrate
 
     return
