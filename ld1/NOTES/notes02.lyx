@@ -1,0 +1,569 @@
+#LyX 2.4 created this file. For more info see https://www.lyx.org/
+\lyxformat 620
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+\usepackage{babel}
+% Added by lyx2lyx
+\setlength{\parskip}{\smallskipamount}
+\setlength{\parindent}{0pt}
+\end_preamble
+\use_default_options false
+\maintain_unincluded_children no
+\language american
+\language_package default
+\inputencoding iso8859-15
+\fontencoding T1
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_roman_osf false
+\font_sans_osf false
+\font_typewriter_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement class
+\float_alignment class
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 0
+\use_package esint 1
+\use_package mathdots 0
+\use_package mathtools 0
+\use_package mhchem 0
+\use_package stackrel 0
+\use_package stmaryrd 0
+\use_package undertilde 0
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\use_formatted_ref 0
+\use_minted 0
+\use_lineno 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 3cm
+\topmargin 3cm
+\rightmargin 3cm
+\bottommargin 3cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip halfline
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tablestyle default
+\tracking_changes false
+\output_changes false
+\change_bars false
+\postpone_fragile_content false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\docbook_table_output 0
+\docbook_mathml_prefix 1
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+1.
+ Radial equation and logarithmic variable
+\end_layout
+
+\begin_layout Standard
+The radial wavefunction 
+\begin_inset Formula $R(r)$
+\end_inset
+
+ is written as 
+\begin_inset Formula 
+\[
+u(r)=rR(r),
+\]
+
+\end_inset
+
+which satisfies the radial equation
+\begin_inset Formula 
+\[
+-\frac{1}{2}\frac{d^{2}u}{dr^{2}}+\left[\frac{\ell(\ell+1)}{2r^{2}}+V(r)\right]u(r)=E\,u(r),\qquad V(r)=-\frac{Z}{r}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We define a new variable 
+\begin_inset Formula 
+\[
+y(r)=\frac{u(r)}{\sqrt{r}}=\sqrt{r}\,R(r),
+\]
+
+\end_inset
+
+and change the independent variable to a logarithmic grid
+\begin_inset Formula 
+\[
+x=\ln(Zr),\qquad r(x)=\frac{e^{x}}{Z}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The grid is uniform in 
+\begin_inset Formula $x$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+x_{i}=x_{\min}+i\,\Delta x,\qquad r_{i}=\frac{e^{x_{i}}}{Z}.
+\]
+
+\end_inset
+
+Using
+\begin_inset Formula 
+\[
+\frac{d}{dr}=\frac{1}{r}\frac{d}{dx},
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Eq.
+ (1) transforms into the second-order ODE for 
+\begin_inset Formula $y(x)$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+y''(x)=\left[\left(\ell+\frac{1}{2}\right)^{2}+2r^{2}\bigl(V(r)-E\bigr)\right]y(x),
+\]
+
+\end_inset
+
+where primes denote derivatives with respect to 
+\begin_inset Formula $x$
+\end_inset
+
+.
+ This is the equation actually integrated by the code.
+\end_layout
+
+\begin_layout Standard
+2.
+ Numerov recurrence
+\end_layout
+
+\begin_layout Standard
+Equation (2) has the form
+\begin_inset Formula 
+\[
+y''(x)=F(x)\,y(x),\qquad F(x)\equiv\left(\ell+\frac{1}{2}\right)^{2}+2r(x)^{2}\bigl[V(r(x))-E\bigr].
+\]
+
+\end_inset
+
+The Numerov method approximates the solution on the uniform grid with step 
+\begin_inset Formula $\Delta x$
+\end_inset
+
+ by the three-point recurrence
+\begin_inset Formula 
+\[
+y_{i+1}=\frac{\left(12-10f_{i}\right)y_{i}-f_{i-1}y_{i-1}}{f_{i+1}},
+\]
+
+\end_inset
+
+where
+\begin_inset Formula 
+\[
+f_{i}=1-\frac{(\Delta x)^{2}}{12}F(x_{i}).
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+3.
+ Boundary conditions and integration scheme
+\end_layout
+
+\begin_layout Standard
+The code integrates outward from the origin and inward from large 
+\begin_inset Formula $r$
+\end_inset
+
+ ,
+ then matches the two pieces at the classical turning point.
+\end_layout
+
+\begin_layout Standard
+Outward integration (small 
+\begin_inset Formula $r$
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Standard
+For small 
+\begin_inset Formula $r$
+\end_inset
+
+,
+ the regular solution behaves as
+\begin_inset Formula 
+\[
+R(r)\sim r^{\ell}\left(1-\frac{2Zr}{2\ell+2}+\cdots\right),
+\]
+
+\end_inset
+
+so the initial values for 
+\begin_inset Formula $y=\sqrt{r}\,R$
+\end_inset
+
+ are
+\begin_inset Formula 
+\[
+y_{0}=r_{0}^{\ell+1}\left(1-\frac{2Zr_{0}}{2\ell+2}\right)\Big/\sqrt{r_{0}},
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+y_{1}=r_{1}^{\ell+1}\left(1-\frac{2Zr_{1}}{2\ell+2}\right)\Big/\sqrt{r_{1}}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The outward integration uses (3) repeatedly until the classical turning point 
+\begin_inset Formula $r_{{\rm cl}}$
+\end_inset
+
+,
+ where 
+\begin_inset Formula $F(x)$
+\end_inset
+
+ changes sign (in practice,
+ where 
+\begin_inset Formula $f_{i}$
+\end_inset
+
+ changes sign).
+ The number of nodes (zero crossings) of the wavefunction between 
+\begin_inset Formula $r=0$
+\end_inset
+
+ and 
+\begin_inset Formula $r_{{\rm cl}}$
+\end_inset
+
+ is monitored;
+ it must equal 
+\begin_inset Formula $n-\ell-1$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Inward integration (large 
+\begin_inset Formula $r$
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Standard
+For large 
+\begin_inset Formula $r$
+\end_inset
+
+ the bound-state solution decays exponentially.
+ This is choosen:
+\begin_inset Formula 
+\[
+y_{N}=\Delta x,\qquad y_{N-1}=\frac{\left(12-10f_{N}\right)y_{N}}{f_{N-1}},
+\]
+
+\end_inset
+
+which approximates starting from zero at 
+\begin_inset Formula $r=\infty$
+\end_inset
+
+.
+ It then integrates inward with (3) from 
+\begin_inset Formula $N-1$
+\end_inset
+
+ down to 
+\begin_inset Formula $r_{{\rm cl}}$
+\end_inset
+
+.
+ If the wavefunction becomes too large during the inward sweep,
+ it is rescaled to avoid overflow.
+\end_layout
+
+\begin_layout Standard
+Matching at the classical turning point
+\end_layout
+
+\begin_layout Standard
+The outward solution is rescaled so that the two pieces coincide at the matching point 
+\begin_inset Formula $i_{{\rm cl}}$
+\end_inset
+
+.
+ The full wavefunction 
+\begin_inset Formula $y_{i}$
+\end_inset
+
+ is then normalized on the logarithmic grid:
+\begin_inset Formula 
+\[
+\int_{0}^{\infty}|R(r)|^{2}r^{2}\,dr=\sum_{i=0}^{N}y_{i}^{2}\,r_{i}^{2}\,\Delta x=1.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+4.
+ Eigenvalue search and correction
+\end_layout
+
+\begin_layout Standard
+An initial energy bracket 
+\begin_inset Formula $[E_{{\rm low}},E_{{\rm up}}]$
+\end_inset
+
+ is chosen:
+\end_layout
+
+\begin_layout Standard
+- 
+\begin_inset Formula $E_{{\rm up}}=V(r_{\max})$
+\end_inset
+
+ (approximate asymptotic value),
+\end_layout
+
+\begin_layout Standard
+- 
+\begin_inset Formula $E_{{\rm low}}=\min_{i}\left[\dfrac{(\ell+\frac{1}{2})^{2}}{r_{i}^{2}}+V(r_{i})\right]$
+\end_inset
+
+ (minimum of the effective potential).
+\end_layout
+
+\begin_layout Standard
+The algorithm iterates:
+\end_layout
+
+\begin_layout Standard
+1.
+ For a trial energy 
+\begin_inset Formula $E=\frac{1}{2}(E_{{\rm low}}+E_{{\rm up}})$
+\end_inset
+
+,
+ compute 
+\begin_inset Formula $f_{i}$
+\end_inset
+
+ from (4).
+\end_layout
+
+\begin_layout Standard
+2.
+ Integrate outward and count nodes.
+ 
+\end_layout
+
+\begin_layout Standard
+- If the number of nodes is greater than 
+\begin_inset Formula $n-\ell-1$
+\end_inset
+
+,
+ the energy is too high;
+ set 
+\begin_inset Formula $E_{{\rm up}}=E$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+- If it is smaller,
+ the energy is too low;
+ set 
+\begin_inset Formula $E_{{\rm low}}=E$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+- Repeat until the node count is correct.
+\end_layout
+
+\begin_layout Standard
+3.
+ Once the correct node count is achieved,
+ match the two integrations at 
+\begin_inset Formula $r_{{\rm cl}}$
+\end_inset
+
+ and compute a first-order perturbation correction:
+\begin_inset Formula 
+\[
+\Delta E=\frac{\left[f_{i_{{\rm cl}}}\left(\frac{y_{i_{{\rm cl}}}}{y_{{\rm cusp}}}-1\right)\right]y_{{\rm cusp}}^{2}}{\Delta x^{2}/12}\,\Delta x,
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $y_{{\rm cusp}}$
+\end_inset
+
+ is the value predicted by the Numerov recurrence at the matching point using the already matched values:
+\begin_inset Formula 
+\[
+y_{{\rm cusp}}=\frac{f_{i_{{\rm cl}}-1}\,y_{i_{{\rm cl}}-1}+f_{i_{{\rm cl}}+1}\,y_{i_{{\rm cl}}+1}+10f_{i_{{\rm cl}}}\,y_{i_{{\rm cl}}}}{12}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+4.
+ Update the energy bracket:
+\end_layout
+
+\begin_layout Standard
+- If 
+\begin_inset Formula $\Delta E>0$
+\end_inset
+
+,
+ the new lower bound is 
+\begin_inset Formula $E$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+- If 
+\begin_inset Formula $\Delta E<0$
+\end_inset
+
+,
+ the new upper bound is 
+\begin_inset Formula $E$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+- The new trial energy is 
+\begin_inset Formula $E\leftarrow\min\left(\max(E+\Delta E,E_{{\rm low}}),E_{{\rm up}}\right)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+5.
+ Stop when 
+\begin_inset Formula $|\Delta E|<10^{-10}$
+\end_inset
+
+ Ha.
+\end_layout
+
+\begin_layout Standard
+5.
+ Analytic energy in Hartree units
+\end_layout
+
+\begin_layout Standard
+For a hydrogenic atom,
+ the exact bound-state energy in Hartree is
+\begin_inset Formula 
+\[
+E_{n}=-\frac{Z^{2}}{2n^{2}}.
+\]
+
+\end_inset
+
+The program reports both the numerical eigenvalue and this analytic value for comparison.
+\end_layout
+
+\end_body
+\end_document
