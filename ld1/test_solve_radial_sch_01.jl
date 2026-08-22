@@ -1,3 +1,6 @@
+# This is Julia version of hydrogen_radial.f90 program written by P. Giannozzi
+# Added alternative way to match the outward and inward wave function
+
 using Printf
 import Plots, PlotThemes
 Plots.theme(:dark)
