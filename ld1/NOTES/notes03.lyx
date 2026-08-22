@@ -1,0 +1,1796 @@
+#LyX 2.4 created this file. For more info see https://www.lyx.org/
+\lyxformat 620
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+\usepackage{babel}
+% Added by lyx2lyx
+\setlength{\parskip}{\smallskipamount}
+\setlength{\parindent}{0pt}
+\end_preamble
+\use_default_options false
+\maintain_unincluded_children no
+\language american
+\language_package default
+\inputencoding iso8859-15
+\fontencoding T1
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_roman_osf false
+\font_sans_osf false
+\font_typewriter_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement class
+\float_alignment class
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 0
+\use_package esint 1
+\use_package mathdots 0
+\use_package mathtools 0
+\use_package mhchem 0
+\use_package stackrel 0
+\use_package stmaryrd 0
+\use_package undertilde 0
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\use_formatted_ref 0
+\use_minted 0
+\use_lineno 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 3cm
+\topmargin 3cm
+\rightmargin 3cm
+\bottommargin 3cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip halfline
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tablestyle default
+\tracking_changes false
+\output_changes false
+\change_bars false
+\postpone_fragile_content false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\docbook_table_output 0
+\docbook_mathml_prefix 1
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+1.
+ Derivation of the Numerov method
+\end_layout
+
+\begin_layout Standard
+We want to solve a second-order linear ODE with no first-derivative term:
+\begin_inset Formula 
+\[
+y''(x)=f(x)y(x)
+\]
+
+\end_inset
+
+Let
+\begin_inset Formula 
+\[
+x_{n}=x_{0}+nh,\qquad y_{n}=y(x_{n}),\qquad f_{n}=f(x_{n})
+\]
+
+\end_inset
+
+Taylor expand 
+\begin_inset Formula $y(x_{n}\pm h)$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+y_{n+1}=y_{n}+hy'_{n}+\frac{h^{2}}{2}y''_{n}+\frac{h^{3}}{6}y_{n}^{(3)}+\frac{h^{4}}{24}y_{n}^{(4)}+\frac{h^{5}}{120}y_{n}^{(5)}+\frac{h^{6}}{720}y_{n}^{(6)}+\frac{h^{7}}{7!}y_{n}^{(7)}+O(h^{8})
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+y_{n-1}=y_{n}-hy'_{n}+\frac{h^{2}}{2}y''_{n}-\frac{h^{3}}{6}y_{n}^{(3)}+\frac{h^{4}}{24}y_{n}^{(4)}-\frac{h^{5}}{120}y_{n}^{(5)}+\frac{h^{6}}{720}y_{n}^{(6)}-\frac{h^{7}}{7!}y_{n}^{(7)}+O(h^{8})
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+y_{n+1}+y_{n-1}=2y_{n}+h^{2}y''_{n}+\frac{h^{4}}{12}y_{n}^{(4)}+\frac{h^{6}}{360}y_{n}^{(6)}+O(h^{8})
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Also expand 
+\begin_inset Formula $y''$
+\end_inset
+
+ on the same grid:
+\begin_inset Formula 
+\[
+y''_{n+1}=y''_{n}+hy_{n}^{(3)}+\frac{h^{2}}{2}y_{n}^{(4)}+\frac{h^{3}}{6}y^{(5)}+\frac{h^{4}}{24}y_{n}^{(6)}+\frac{h^{5}}{120}y_{n}^{(7)}+O(h^{6})
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+y''_{n-1}=y''_{n}-hy_{n}^{(3)}+\frac{h^{2}}{2}y_{n}^{(4)}-\frac{h^{3}}{6}y^{(5)}+\frac{h^{4}}{24}y_{n}^{(6)}-\frac{h^{5}}{120}y_{n}^{(7)}+O(h^{6})
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+y''_{n+1}+y''_{n-1}=2y''_{n}+h^{2}y_{n}^{(4)}+\frac{h^{4}}{12}y_{n}^{(6)}+O(h^{6})
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\Rightarrow y''_{n+1}-2y''_{n}+y''_{n-1}=h^{2}y_{n}^{(4)}+\frac{h^{4}}{12}y_{n}^{(6)}+O(h^{6})
+\]
+
+\end_inset
+
+Use the second relation to eliminate 
+\begin_inset Formula $y_{n}^{(4)}$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+h^{2}y_{n}^{(4)}=y''_{n+1}-2y''_{n}+y''_{n-1}-\frac{h^{4}}{12}y_{n}^{(6)}+O(h^{6})
+\]
+
+\end_inset
+
+(ffr:
+ kalikan kedua ruas dengan 
+\begin_inset Formula $h^{2}/12$
+\end_inset
+
+):
+\begin_inset Formula 
+\[
+\frac{h^{4}}{12}y_{n}^{(4)}=\frac{h^{2}}{12}\left(y''_{n+1}-2y''_{n}+y''_{n-1}\right)-\frac{h^{6}}{144}y_{n}^{(6)}+O(h^{8}).
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Substituting into the first expansion gives,
+ after dropping the 
+\begin_inset Formula $O(h^{6})$
+\end_inset
+
+ error,
+\end_layout
+
+\begin_layout Standard
+ffr:
+ mulai dari sini
+\begin_inset Formula 
+\[
+y_{n+1}+y_{n-1}=2y_{n}+h^{2}y''_{n}+\underbrace{\frac{h^{4}}{12}y_{n}^{(4)}}_{\text{substitusi}}+\frac{h^{6}}{360}y_{n}^{(6)}+O(h^{8})
+\]
+
+\end_inset
+
+substitusi:
+\begin_inset Formula 
+\[
+y_{n+1}+y_{n-1}=2y_{n}+h^{2}y''_{n}+\frac{h^{2}}{12}\left(y''_{n+1}-2y''_{n}+y''_{n-1}\right)-\frac{h^{6}}{144}y_{n}^{(6)}+O(h^{8})+\frac{h^{6}}{360}y_{n}^{(6)}+O(h^{8})
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+y_{n+1}+y_{n-1}=2y_{n}+h^{2}y''_{n}+\frac{h^{2}}{12}\left(y''_{n+1}-2y''_{n}+y''_{n-1}\right)-\cancelto{0}{\frac{h^{6}}{144}y_{n}^{(6)}}+O(h^{8})+\frac{h^{6}}{360}y_{n}^{(6)}+O(h^{8})
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+y_{n+1}+y_{n-1}=2y_{n}+h^{2}y''_{n}+\frac{h^{2}}{12}\left(y''_{n+1}-2y''_{n}+y''_{n-1}\right)-\cancelto{0}{\frac{h^{6}}{144}y_{n}^{(6)}}+O(h^{8})+\cancelto{0}{\frac{h^{6}}{360}y_{n}^{(6)}}+O(h^{8})
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+y_{n+1}+y_{n-1}=2y_{n}+h^{2}y''_{n}+\frac{h^{2}}{12}\left(y''_{n+1}-2y''_{n}+y''_{n-1}\right)
+\]
+
+\end_inset
+
+Now use the original ODE:
+\begin_inset Formula 
+\[
+y''_{i}=f_{i}y_{i}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Then
+\begin_inset Formula 
+\[
+y_{n+1}+y_{n-1}=2y_{n}+h^{2}f_{n}y_{n}+\frac{h^{2}}{12}\left(f_{n+1}y_{n+1}-2f_{n}y_{n}+f_{n-1}y_{n-1}\right).
+\]
+
+\end_inset
+
+Rearranging:
+\begin_inset Formula 
+\[
+\boxed{\left(1-\frac{h^{2}}{12}f_{n+1}\right)y_{n+1}=2\left(1+\frac{5h^{2}}{12}f_{n}\right)y_{n}-\left(1-\frac{h^{2}}{12}f_{n-1}\right)y_{n-1}}
+\]
+
+\end_inset
+
+or,
+ equivalently,
+\begin_inset Formula 
+\[
+\boxed{y_{n+1}=\frac{2\left(1+\frac{5h^{2}}{12}f_{n}\right)y_{n}-\left(1-\frac{h^{2}}{12}f_{n-1}\right)y_{n-1}}{1-\frac{h^{2}}{12}f_{n+1}}}.
+\]
+
+\end_inset
+
+This is the Numerov method.
+ Its local truncation error is
+\begin_inset Formula 
+\[
+-\frac{h^{6}}{240}y_{n}^{(6)}+O(h^{8}),
+\]
+
+\end_inset
+
+so it is a fourth-order method.
+\end_layout
+
+\begin_layout Standard
+2.
+ Application to the radial Schrödinger equation
+\end_layout
+
+\begin_layout Standard
+The radial Schrödinger equation for a central potential 
+\begin_inset Formula $V(r)$
+\end_inset
+
+ can be written as
+\begin_inset Formula 
+\[
+-\frac{\hbar^{2}}{2m}\frac{d^{2}u}{dr^{2}}+V_{\text{eff}}(r)u(r)=Eu(r)
+\]
+
+\end_inset
+
+where
+\begin_inset Formula 
+\[
+u(r)=rR(r),\qquad V_{\text{eff}}(r)=V(r)+\frac{\hbar^{2}l(l+1)}{2mr^{2}}.
+\]
+
+\end_inset
+
+Multiplying by 
+\begin_inset Formula $\ensuremath{2m/\hbar^{2}}$
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+u''(r)=\left[\frac{2m}{\hbar^{2}}\left(V_{\text{eff}}(r)-E\right)\right]u(r).
+\]
+
+\end_inset
+
+Define
+\begin_inset Formula 
+\[
+\boxed{F(r)=\frac{2m}{\hbar^{2}}\left(V_{\text{eff}}(r)-E\right)}
+\]
+
+\end_inset
+
+so that
+\begin_inset Formula 
+\[
+\boxed{u''(r)=F(r)u(r)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This is exactly of Numerov type.
+ In atomic units 
+\begin_inset Formula $\hbar=m=1$
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+F(r)=\frac{l(l+1)}{r^{2}}+2\left(V(r)-E\right).
+\]
+
+\end_inset
+
+The Numerov recurrence becomes
+\begin_inset Formula 
+\[
+\left(1-\frac{h^{2}}{12}F_{n+1}\right)u_{n+1}=2\left(1+\frac{5h^{2}}{12}F_{n}\right)u_{n}-\left(1-\frac{h^{2}}{12}F_{n-1}\right)u_{n-1}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+ffr:
+ note that this is symmetric in 
+\begin_inset Formula $u_{n+1}$
+\end_inset
+
+ and 
+\begin_inset Formula $u_{n-1}$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+u_{n+1}=\frac{2\left(1+\frac{5h^{2}}{12}F_{n}\right)u_{n}-\left(1-\frac{h^{2}}{12}F_{n-1}\right)u_{n-1}}{\left(1-\frac{h^{2}}{12}F_{n+1}\right)}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+u_{n-1}=\frac{2\left(1+\frac{5h^{2}}{12}F_{n}\right)u_{n}-\left(1-\frac{h^{2}}{12}F_{n+1}\right)u_{n+1}}{\left(1-\frac{h^{2}}{12}F_{n-1}\right)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Boundary conditions for bound states:
+\begin_inset Formula 
+\[
+u(r)\to0\quad\text{as }r\to\infty
+\]
+
+\end_inset
+
+3.
+ Outward integration
+\end_layout
+
+\begin_layout Standard
+Outward integration starts near the origin and integrates to larger 
+\begin_inset Formula $r$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Near 
+\begin_inset Formula $r=0$
+\end_inset
+
+,
+ the regular solution behaves as
+\begin_inset Formula 
+\[
+u(r)\sim r^{l+1}
+\]
+
+\end_inset
+
+Therefore one chooses a small 
+\begin_inset Formula $r_{0}$
+\end_inset
+
+,
+ often 
+\begin_inset Formula $r_{0}\ll1$
+\end_inset
+
+,
+ and sets
+\begin_inset Formula 
+\[
+u_{0}\approx r_{0}^{l+1},\qquad u_{1}\approx(r_{0}+h)^{l+1},
+\]
+
+\end_inset
+
+or better,
+ uses a short power-series expansion of 
+\begin_inset Formula $u(r)$
+\end_inset
+
+ near the origin.
+\end_layout
+
+\begin_layout Standard
+Then,
+ for 
+\begin_inset Formula $n=1,2,\dots$
+\end_inset
+
+,
+ one uses the forward Numerov formula:
+\begin_inset Formula 
+\[
+u_{n+1}=\frac{2\left(1+\frac{5h^{2}}{12}F_{n}\right)u_{n}-\left(1-\frac{h^{2}}{12}F_{n-1}\right)u_{n-1}}{1-\frac{h^{2}}{12}F_{n+1}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This propagates the solution outward from 
+\begin_inset Formula $r_{0}$
+\end_inset
+
+ to some matching radius 
+\begin_inset Formula $r_{m}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+4.
+ Inward integration
+\end_layout
+
+\begin_layout Standard
+Inward integration starts from large 
+\begin_inset Formula $r$
+\end_inset
+
+ and integrates toward smaller 
+\begin_inset Formula $r$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+For a bound state with energy 
+\begin_inset Formula $E<0$
+\end_inset
+
+,
+ at large 
+\begin_inset Formula $r$
+\end_inset
+
+,
+ assuming 
+\begin_inset Formula $V(r)\to0$
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+u''(r)\approx-\frac{2mE}{\hbar^{2}}u(r)=\kappa^{2}u(r)
+\]
+
+\end_inset
+
+with
+\begin_inset Formula 
+\[
+\kappa=\frac{\sqrt{-2mE}}{\hbar}
+\]
+
+\end_inset
+
+The decaying solution is
+\begin_inset Formula 
+\[
+u(r)\sim e^{-\kappa r}
+\]
+
+\end_inset
+
+Choose a large 
+\begin_inset Formula $r_{\max}$
+\end_inset
+
+ and set,
+ for example,
+\begin_inset Formula 
+\[
+u_{N}=e^{-\kappa r_{\max}},\qquad u_{N-1}=e^{-\kappa(r_{\max}-h)}
+\]
+
+\end_inset
+
+Then integrate backward using the same Numerov relation solved for 
+\begin_inset Formula $u_{n-1}$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+u_{n-1}=\frac{2\left(1+\frac{5h^{2}}{12}F_{n}\right)u_{n}-\left(1-\frac{h^{2}}{12}F_{n+1}\right)u_{n+1}}{1-\frac{h^{2}}{12}F_{n-1}}
+\]
+
+\end_inset
+
+This propagates the solution inward from 
+\begin_inset Formula $r_{\max}$
+\end_inset
+
+ down to 
+\begin_inset Formula $r_{m}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+---
+\end_layout
+
+\begin_layout Standard
+5.
+ Is inward integration just “reversing the sign”?
+\end_layout
+
+\begin_layout Standard
+Not in the sense of changing 
+\begin_inset Formula $F(r)$
+\end_inset
+
+ or the potential.
+\end_layout
+
+\begin_layout Standard
+What happens is:
+\end_layout
+
+\begin_layout Standard
+- The Numerov formula is symmetric in 
+\begin_inset Formula $h$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+- To integrate inward,
+ you use the same recurrence,
+ but solved for 
+\begin_inset Formula $u_{n-1}$
+\end_inset
+
+ instead of 
+\begin_inset Formula $u_{n+1}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+- Equivalently,
+ you can think of replacing 
+\begin_inset Formula $h$
+\end_inset
+
+ by 
+\begin_inset Formula $-h$
+\end_inset
+
+,
+ but you do not change the sign of 
+\begin_inset Formula $F(r)$
+\end_inset
+
+ or the energy term.
+\end_layout
+
+\begin_layout Standard
+So:
+\begin_inset Formula 
+\[
+\text{inward integration}\neq\text{changing }F\to-F.
+\]
+
+\end_inset
+
+It is simply solving the same Numerov equation for the previous point.
+\end_layout
+
+\begin_layout Standard
+---
+\end_layout
+
+\begin_layout Standard
+6.
+ Matching and finding eigenvalues
+\end_layout
+
+\begin_layout Standard
+For a trial energy 
+\begin_inset Formula $E$
+\end_inset
+
+,
+ compute:
+\end_layout
+
+\begin_layout Standard
+- 
+\begin_inset Formula $u_{\text{out}}(r)$
+\end_inset
+
+ by outward integration from 
+\begin_inset Formula $r_{0}$
+\end_inset
+
+ to 
+\begin_inset Formula $r_{m}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+- 
+\begin_inset Formula $u_{\text{in}}(r)$
+\end_inset
+
+ by inward integration from 
+\begin_inset Formula $r_{\max}$
+\end_inset
+
+ to 
+\begin_inset Formula $r_{m}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+At the matching radius 
+\begin_inset Formula $r_{m}$
+\end_inset
+
+,
+ the two solutions must be proportional to each other.
+ This is equivalent to matching logarithmic derivatives:
+\begin_inset Formula 
+\[
+\frac{u'_{\text{out}}(r_{m})}{u_{\text{out}}(r_{m})}=\frac{u'_{\text{in}}(r_{m})}{u_{\text{in}}(r_{m})}
+\]
+
+\end_inset
+
+In practice,
+ one forms the mismatch
+\begin_inset Formula 
+\[
+\Delta(E)=u_{\text{out}}u'_{\text{in}}-u'_{\text{out}}u_{\text{in}}
+\]
+
+\end_inset
+
+at 
+\begin_inset Formula $r_{m}$
+\end_inset
+
+,
+ and iterates 
+\begin_inset Formula $E$
+\end_inset
+
+ until 
+\begin_inset Formula $\Delta(E)=0$
+\end_inset
+
+.
+ The resulting 
+\begin_inset Formula $E$
+\end_inset
+
+ is a bound-state eigenvalue.
+\end_layout
+
+\begin_layout Standard
+After the eigenvalue is found,
+ the full radial wavefunction can be normalized (ffr:
+ this is missing 
+\begin_inset Formula $r^{2}$
+\end_inset
+
+?):
+\begin_inset Formula 
+\[
+\int_{0}^{\infty}|u(r)|^{2}\,dr=1
+\]
+
+\end_inset
+
+Thus the Numerov method plus outward/inward shooting gives both bound-state energies and radial wavefunctions.
+\end_layout
+
+\begin_layout Standard
+—
+
+\end_layout
+
+\begin_layout Standard
+1.
+ Normalization:
+ 
+\begin_inset Formula $u(r)$
+\end_inset
+
+ vs 
+\begin_inset Formula $R(r)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The full radial wavefunction is
+\begin_inset Formula 
+\[
+R(r)=\frac{u(r)}{r}
+\]
+
+\end_inset
+
+The full 3D wavefunction is
+\begin_inset Formula 
+\[
+\psi(\mathbf{r})=R(r)Y_{lm}(\theta,\phi)
+\]
+
+\end_inset
+
+The angular part is normalized as
+\begin_inset Formula 
+\[
+\int|Y_{lm}|^{2}\,d\Omega=1
+\]
+
+\end_inset
+
+For the radial part,
+ the usual normalization is
+\begin_inset Formula 
+\[
+\int_{0}^{\infty}|R(r)|^{2}r^{2}\,dr=1
+\]
+
+\end_inset
+
+Substituting 
+\begin_inset Formula $R=u/r$
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+\int_{0}^{\infty}\left|\frac{u(r)}{r}\right|^{2}r^{2}\,dr=\int_{0}^{\infty}|u(r)|^{2}\,dr=1
+\]
+
+\end_inset
+
+So both statements are equivalent:
+\begin_inset Formula 
+\[
+\boxed{\int_{0}^{\infty}|R(r)|^{2}r^{2}\,dr=1}\qquad\Longleftrightarrow\qquad\boxed{\int_{0}^{\infty}|u(r)|^{2}\,dr=1}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Thus,
+ for the Numerov variable 
+\begin_inset Formula $u(r)$
+\end_inset
+
+,
+ no 
+\begin_inset Formula $r^{2}$
+\end_inset
+
+ is needed.
+\end_layout
+
+\begin_layout Standard
+2.
+ Electron density
+\end_layout
+
+\begin_layout Standard
+Full 3D electron density
+\end_layout
+
+\begin_layout Standard
+For a single electron in orbital 
+\begin_inset Formula $(n,l,m)$
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+\rho_{nlm}(\mathbf{r})=|\psi_{nlm}(\mathbf{r})|^{2}=|R_{nl}(r)|^{2}|Y_{lm}(\theta,\phi)|^{2}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Using 
+\begin_inset Formula $u(r)=rR(r)$
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+\rho_{nlm}(r,\theta,\phi)=\frac{|u_{nl}(r)|^{2}}{r^{2}}|Y_{lm}(\theta,\phi)|^{2}
+\]
+
+\end_inset
+
+This is the full 3D density,
+ including angular dependence.
+\end_layout
+
+\begin_layout Standard
+Radial probability density
+\end_layout
+
+\begin_layout Standard
+If you integrate over angles,
+ you get the radial probability density:
+\begin_inset Formula 
+\[
+P_{nl}(r)=r^{2}|R_{nl}(r)|^{2}=|u_{nl}(r)|^{2}
+\]
+
+\end_inset
+
+This is the probability per radial distance 
+\begin_inset Formula $\mathrm{d}r$
+\end_inset
+
+.
+ It is not a volume density;
+ it is the radial distribution function.
+\end_layout
+
+\begin_layout Standard
+So:
+\begin_inset Formula 
+\[
+\boxed{P_{nl}(r)=|u_{nl}(r)|^{2}}
+\]
+
+\end_inset
+
+and
+\begin_inset Formula 
+\[
+\int_{0}^{\infty}P_{nl}(r)\,dr=1
+\]
+
+\end_inset
+
+---
+\end_layout
+
+\begin_layout Standard
+3.
+ Many-electron electron density
+\end_layout
+
+\begin_layout Standard
+For many electrons with occupation numbers 
+\begin_inset Formula $f_{nlm\sigma}$
+\end_inset
+
+,
+ the full density is
+\begin_inset Formula 
+\[
+\rho(\mathbf{r})=\sum_{n,l,m,\sigma}f_{nlm\sigma}\frac{|u_{nl}(r)|^{2}}{r^{2}}|Y_{lm}(\theta,\phi)|^{2}
+\]
+
+\end_inset
+
+If the atom is spherically symmetric or you assume a closed subshell or spherical averaging,
+ then
+\begin_inset Formula 
+\[
+\sum_{m}|Y_{lm}|^{2}=\frac{2l+1}{4\pi}
+\]
+
+\end_inset
+
+For a subshell with total occupation 
+\begin_inset Formula $q_{nl}$
+\end_inset
+
+,
+ including spin,
+ the spherically averaged density is
+\begin_inset Formula 
+\[
+\rho(r)=\frac{1}{4\pi r^{2}}\sum_{nl}q_{nl}|u_{nl}(r)|^{2}
+\]
+
+\end_inset
+
+This is the usual radial electron density used in spherical atomic codes.
+\end_layout
+
+\begin_layout Standard
+---
+\end_layout
+
+\begin_layout Standard
+Summary
+\end_layout
+
+\begin_layout Standard
+- For 
+\begin_inset Formula $u(r)$
+\end_inset
+
+:
+ normalization is 
+\begin_inset Formula $\int_{0}^{\infty}|u|^{2}\,\mathrm{d}r=1$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+- For 
+\begin_inset Formula $R(r)$
+\end_inset
+
+:
+ normalization is 
+\begin_inset Formula $\int_{0}^{\infty}|R|^{2}r^{2}\,\mathrm{d}r=1$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+- Radial density:
+ 
+\begin_inset Formula $P(r)=|u(r)|^{2}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+- Full 3D density:
+ 
+\begin_inset Formula $\rho(r,\theta,\phi)=\frac{|u(r)|^{2}}{r^{2}}|Y_{lm}(\theta,\phi)|^{2}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+- Spherical total density:
+ 
+\begin_inset Formula $\rho(r)=\frac{1}{4\pi r^{2}}\sum_{nl}q_{nl}|u_{nl}(r)|^{2}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+So whether you need the radial part or the full 3D density depends on the application.
+ For plotting radial distributions,
+ use 
+\begin_inset Formula $P(r)$
+\end_inset
+
+.
+ For Poisson solvers or full 3D calculations,
+ use the full density including angular parts.
+\end_layout
+
+\begin_layout Standard
+—
+
+\end_layout
+
+\begin_layout Standard
+When you switch to a logarithmic grid,
+ the Numerov method still works,
+ but you cannot simply use the uniform-step Numerov formula directly for 
+\begin_inset Formula $u(r)$
+\end_inset
+
+ with variable 
+\begin_inset Formula $\Delta r$
+\end_inset
+
+.
+ The standard trick is to transform to a uniform grid in 
+\begin_inset Formula $x=\ln r$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+1.
+ Logarithmic grid and transformed radial equation
+\end_layout
+
+\begin_layout Standard
+Let
+\begin_inset Formula 
+\[
+x=\ln r,\qquad r=e^{x}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+ffr:
+ we also can use 
+\begin_inset Formula $r=\dfrac{1}{Z}e^{x}$
+\end_inset
+
+ so that 
+\begin_inset Formula $x=\ln Zr$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For the radial wavefunction 
+\begin_inset Formula $u(r)=rR(r)$
+\end_inset
+
+,
+ define
+\begin_inset Formula 
+\[
+y(x)=r^{-1/2}u(r)=e^{-x/2}u(e^{x})
+\]
+
+\end_inset
+
+The reason for this choice is that it removes the first-derivative term that would otherwise appear.
+\end_layout
+
+\begin_layout Standard
+The radial equation in Hartree atomic units is
+\begin_inset Formula 
+\[
+-\frac{1}{2}u''(r)+V_{{\rm eff}}(r)u(r)=Eu(r)
+\]
+
+\end_inset
+
+where
+\begin_inset Formula 
+\[
+V_{{\rm eff}}(r)=V(r)+\frac{\ell(\ell+1)}{2r^{2}}
+\]
+
+\end_inset
+
+Equivalently,
+\begin_inset Formula 
+\[
+F(r)=2\bigl(V_{{\rm eff}}(r)-E\bigr)
+\]
+
+\end_inset
+
+Now transform the derivative.
+ With 
+\begin_inset Formula $x=\ln r$
+\end_inset
+
+,
+ (ffr:
+ how?
+ need relation between 
+\begin_inset Formula $u$
+\end_inset
+
+ and 
+\begin_inset Formula $r$
+\end_inset
+
+ ?
+ and also 
+\begin_inset Formula $x$
+\end_inset
+
+.
+ We originally have derivative with respect to 
+\begin_inset Formula $r$
+\end_inset
+
+ but now we want to change the variable from 
+\begin_inset Formula $r$
+\end_inset
+
+ to 
+\begin_inset Formula $x$
+\end_inset
+
+)
+\begin_inset Formula 
+\[
+\frac{\mathrm{d}^{2}u}{\mathrm{d}r^{2}}=e^{-2x}\left(u_{xx}-u_{x}\right)
+\]
+
+\end_inset
+
+Using 
+\begin_inset Formula $u=e^{x/2}y$
+\end_inset
+
+,
+ one obtains
+\begin_inset Formula 
+\[
+u_{xx}-u_{x}=e^{x/2}\left(y_{xx}-\frac{1}{4}y\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Therefore the radial equation becomes
+\begin_inset Formula 
+\[
+y''(x)=G(x)y(x)
+\]
+
+\end_inset
+
+with
+\begin_inset Formula 
+\[
+G(x)=\frac{1}{4}+e^{2x}F(e^{x})
+\]
+
+\end_inset
+
+or,
+ in terms of the original radial grid,
+\begin_inset Formula 
+\[
+G(r)=\frac{1}{4}+r^{2}F(r)
+\]
+
+\end_inset
+
+For a hydrogen-like potential 
+\begin_inset Formula $V=-Z/r$
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+G(r)=\left(\ell+\frac{1}{2}\right)^{2}-2Zr-2Er^{2}
+\]
+
+\end_inset
+
+This is now in standard Numerov form on a uniform grid in 
+\begin_inset Formula $x$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+---
+\end_layout
+
+\begin_layout Standard
+2.
+ Numerov recurrence on the log grid
+\end_layout
+
+\begin_layout Standard
+Let 
+\begin_inset Formula $x_{i}=x_{0}+ih$
+\end_inset
+
+,
+ so that
+\begin_inset Formula 
+\[
+r_{i}=e^{x_{i}}
+\]
+
+\end_inset
+
+Define
+\begin_inset Formula 
+\[
+G_{i}=\frac{1}{4}+r_{i}^{2}F(r_{i})
+\]
+
+\end_inset
+
+Then the standard Numerov recurrence is
+\begin_inset Formula 
+\[
+\left(1-\frac{h^{2}}{12}G_{i+1}\right)y_{i+1}=2\left(1+\frac{5h^{2}}{12}G_{i}\right)y_{i}-\left(1-\frac{h^{2}}{12}G_{i-1}\right)y_{i-1}
+\]
+
+\end_inset
+
+Equivalently,
+ if
+\begin_inset Formula 
+\[
+a_{i}=1-\frac{h^{2}}{12}G_{i}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+b_{i}=2\left(1+\frac{5h^{2}}{12}G_{i}\right)
+\]
+
+\end_inset
+
+then outward integration is
+\begin_inset Formula 
+\[
+y_{i+1}=\frac{b_{i}y_{i}-a_{i-1}y_{i-1}}{a_{i+1}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For inward integration,
+ solve the same equation for 
+\begin_inset Formula $y_{i-1}$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+y_{i-1}=\frac{b_{i}y_{i}-a_{i+1}y_{i+1}}{a_{i-1}}
+\]
+
+\end_inset
+
+So the answer is:
+ inward integration is not obtained by reversing the sign of 
+\begin_inset Formula $G$
+\end_inset
+
+ or 
+\begin_inset Formula $F$
+\end_inset
+
+.
+ It is obtained by solving the same Numerov recurrence for the previous point.
+\end_layout
+
+\begin_layout Standard
+---
+\end_layout
+
+\begin_layout Standard
+3.
+ Boundary conditions
+\end_layout
+
+\begin_layout Standard
+Near the origin
+\end_layout
+
+\begin_layout Standard
+For small 
+\begin_inset Formula $r$
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+u(r)\sim r^{l+1}
+\]
+
+\end_inset
+
+Since 
+\begin_inset Formula $y=r^{-1/2}u$
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+y(x)\sim r^{l+1/2}
+\]
+
+\end_inset
+
+Thus for the first two points,
+\begin_inset Formula 
+\[
+y_{0}\approx r_{0}^{l+1/2}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+y_{1}\approx(r_{0}e^{h})^{l+1/2}
+\]
+
+\end_inset
+
+Better accuracy can be obtained from a short power-series expansion of 
+\begin_inset Formula $u(r)$
+\end_inset
+
+ near 
+\begin_inset Formula $r=0$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+At large 
+\begin_inset Formula $r$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For a bound state with energy 
+\begin_inset Formula $E<0$
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+u(r)\sim e^{-\kappa r}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\kappa=\sqrt{-2E}
+\]
+
+\end_inset
+
+Therefore
+\begin_inset Formula 
+\[
+y(x)=r^{-1/2}u(r)\sim r^{-1/2}e^{-\kappa r}
+\]
+
+\end_inset
+
+At the outermost point 
+\begin_inset Formula $r_{N}$
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+y_{N}\approx r_{N}^{-1/2}e^{-\kappa r_{N}}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+y_{N-1}\approx(r_{N}e^{-h})^{-1/2}e^{-\kappa r_{N}e^{-h}}
+\]
+
+\end_inset
+
+Then integrate inward using the backward recurrence.
+\end_layout
+
+\begin_layout Standard
+---
+\end_layout
+
+\begin_layout Standard
+4.
+ Normalization and electron density on the log grid
+\end_layout
+
+\begin_layout Standard
+The normalization condition for 
+\begin_inset Formula $u(r)$
+\end_inset
+
+ is
+\begin_inset Formula 
+\[
+\int_{0}^{\infty}|u(r)|^{2}\,\mathrm{d}r=1
+\]
+
+\end_inset
+
+Using 
+\begin_inset Formula $r=e^{x}$
+\end_inset
+
+,
+ 
+\begin_inset Formula $\mathrm{d}r=e^{x}\mathrm{d}x$
+\end_inset
+
+,
+ and 
+\begin_inset Formula $u=e^{x/2}y$
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+|u|^{2}\,\mathrm{d}r=|y(x)|^{2}e^{2x}\,\mathrm{d}x
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Hence
+\begin_inset Formula 
+\[
+\int_{-\infty}^{\infty}|y(x)|^{2}e^{2x}\,\mathrm{d}x=1
+\]
+
+\end_inset
+
+ffr:
+ substituting 
+\begin_inset Formula $r=e^{x}$
+\end_inset
+
+,
+ we obtain 
+\begin_inset Formula $e^{2x}=r^{2}$
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\int_{-\infty}^{\infty}|y(x)|^{2}r^{2}\,\mathrm{d}x=1
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+On the uniform 
+\begin_inset Formula $x$
+\end_inset
+
+-grid,
+ this becomes approximately
+\begin_inset Formula 
+\[
+h\sum_{i}e^{2x_{i}}|y_{i}|^{2}\approx1
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Radial probability density
+\end_layout
+
+\begin_layout Standard
+The radial probability density is
+\begin_inset Formula 
+\[
+P(r)=|u(r)|^{2}
+\]
+
+\end_inset
+
+In terms of 
+\begin_inset Formula $y$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+P(r)=r|y(x)|^{2}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Full 3D electron density
+\end_layout
+
+\begin_layout Standard
+For a single orbital 
+\begin_inset Formula $(n,l,m)$
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+\rho_{nlm}(r,\theta,\phi)=\frac{|u_{nl}(r)|^{2}}{r^{2}}|Y_{lm}(\theta,\phi)|^{2}
+\]
+
+\end_inset
+
+Using 
+\begin_inset Formula $u=r^{1/2}y$
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+\rho_{nlm}(r,\theta,\phi)=\frac{1}{r}|y_{nl}(x)|^{2}|Y_{lm}(\theta,\phi)|^{2}
+\]
+
+\end_inset
+
+For a spherical average,
+ using
+\begin_inset Formula 
+\[
+\sum_{m}|Y_{lm}|^{2}=\frac{2l+1}{4\pi}
+\]
+
+\end_inset
+
+the total spherically averaged electron density is
+\begin_inset Formula 
+\[
+\rho(r)=\frac{1}{4\pi r}\sum_{nl}q_{nl}|y_{nl}(x)|^{2}
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $q_{nl}$
+\end_inset
+
+ is the occupation number of the 
+\begin_inset Formula $nl$
+\end_inset
+
+ subshell.
+\end_layout
+
+\begin_layout Standard
+---
+\end_layout
+
+\begin_layout Standard
+5.
+ Summary
+\end_layout
+
+\begin_layout Standard
+Use 
+\begin_inset Formula $x=\ln r$
+\end_inset
+
+ and store the wavefunction as 
+\begin_inset Formula 
+\[
+y(x)=r^{-1/2}u(r)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+- The transformed equation is
+\begin_inset Formula 
+\[
+y''(x)=G(x)y(x)
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+G(r)=\frac{1}{4}+r^{2}F(r)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+- Apply the standard Numerov recurrence on the uniform 
+\begin_inset Formula $x$
+\end_inset
+
+-grid.
+\end_layout
+
+\begin_layout Standard
+- Outward integration uses the recurrence for 
+\begin_inset Formula $y_{i+1}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+- Inward integration uses the same recurrence solved for 
+\begin_inset Formula $y_{i-1}$
+\end_inset
+
+;
+ no sign reversal of 
+\begin_inset Formula $F$
+\end_inset
+
+ or 
+\begin_inset Formula $G$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+- Normalize with weight 
+\begin_inset Formula $e^{2x}$
+\end_inset
+
+ on the 
+\begin_inset Formula $x$
+\end_inset
+
+-grid.
+\end_layout
+
+\begin_layout Standard
+- Electron density is obtained from 
+\begin_inset Formula $y(x)$
+\end_inset
+
+ using 
+\begin_inset Formula $r^{-1}|y|^{2}$
+\end_inset
+
+ for the full 3D density or 
+\begin_inset Formula $r|y|^{2}$
+\end_inset
+
+ for the radial probability density.
+\end_layout
+
+\end_body
+\end_document

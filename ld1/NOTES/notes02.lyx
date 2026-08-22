@@ -163,7 +163,7 @@ x_{i}=x_{\min}+i\,\Delta x,\qquad r_{i}=\frac{e^{x_{i}}}{Z}.
 Using
 \begin_inset Formula 
 \[
-\frac{d}{dr}=\frac{1}{r}\frac{d}{dx},
+\frac{\mathrm{d}}{\mathrm{d}r}=\frac{1}{r}\frac{\mathrm{d}}{\mathrm{d}x},
 \]
 
 \end_inset
