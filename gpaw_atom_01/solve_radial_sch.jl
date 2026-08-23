@@ -20,13 +20,12 @@ function solve_radial_sch!(
     # solve for each quantum state separately
     Nstates = length(n_j)
     for ist in 1:Nstates
-
-        #println("\nSolving radial Schroedinger equation for ist = $ist")
-
         n = n_j[ist]
         l = l_j[ist]
         E = e_j[ist]
         u = u_j[ist]
+        #
+        println("\nSolving radial Schroedinger equation for ist = $ist")
         #
         # initial radial integration
         nn, A = integ_radial_sch!(u, l, vr, E, r2dvdr, r, dr, c10, c2, scalarrel)
@@ -104,7 +103,7 @@ function solve_radial_sch!(
             end
             iterNo += 1
             if abs(dE) <= 1e-9
-                #println("CONVERGED!!!")
+                println("CONVERGED!!!")
                 is_converged = true
                 break 
             end

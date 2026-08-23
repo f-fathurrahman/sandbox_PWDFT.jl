@@ -1,5 +1,3 @@
-using Infiltrator
-
 using LinearAlgebra 
 using Printf
 
@@ -10,6 +8,8 @@ using PWDFT: LibxcXCCalculator, calc_epsxc_Vxc_LDA!
 
 includet("AERadialGrid.jl")
 includet("my_functions.jl")
+includet("solve_radial_sch.jl")
+includet("integ_radial_sch.jl")
 
 function main_radial_01()
 

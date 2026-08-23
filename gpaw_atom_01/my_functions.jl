@@ -97,6 +97,3 @@ function radial_wavefunc_norm(u, dr)
     idx = abs.(u) .>= 1e-160
     return dot( u[idx].^2, dr[idx] ) 
 end
-
-includet("solve_radial_sch.jl")
-includet("integ_radial_sch.jl")
