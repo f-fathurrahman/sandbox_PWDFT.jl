@@ -1,6 +1,7 @@
 using Revise, Infiltrator
 using Printf
 import LinearAlgebra
+using OffsetArrays
 
 # Use import to avoid potential name clash
 import Plots, PlotThemes

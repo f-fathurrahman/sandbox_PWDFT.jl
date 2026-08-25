@@ -1,6 +1,7 @@
 includet("compute_phius.jl")
 includet("set_psi_in.jl")
 includet("compute_chi.jl")
+includet("calc_pseudo_q.jl")
 
 function debug_gener_pseudo_01(; NiterMax=100)
 
@@ -423,6 +424,8 @@ function debug_gener_pseudo_01(; NiterMax=100)
             println("ibeta=$ibeta jbeta=$jbeta bmat=$(bmat[ibeta,jbeta])")
         end
     end
+    println("bmat = ")
+    display(bmat); println()
 
     B = zeros(Float64, Nbeta, Nbeta)
     for ibeta in 1:Nbeta, jbeta in 1:Nbeta
@@ -431,6 +434,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
     #
     # compute the inverse of the matrix B_{ij}:  B_{ij}^-1
     Binv = inv(B)
+    println("Binv = ")
     display(Binv); println()
 
     # compute the beta functions
@@ -441,6 +445,56 @@ function debug_gener_pseudo_01(; NiterMax=100)
         end
     end
     # B and Binv are not used anymore
+
+    # the following is only for pseudotype == 3
+    #
+    # compute the Q functions
+    qvan = zeros(Float64, Nrmesh, Nbeta, Nbeta)
+    qq = zeros(Float64, Nbeta, Nbeta)
+    for ibeta in 1:Nbeta, jbeta in 1:ibeta
+        idx_rbeta_max = max(idx_rbeta[ibeta], idx_rbeta[jbeta])
+        #XXX relativistic case is not covered here
+        for ir in 1:idx_rbeta_max
+            qvan[ir,ibeta,jbeta] = psipsus[ir,ibeta]*psipsus[ir,jbeta] - phis[ir,ibeta]*phis[ir,jbeta]
+            gi[ir] = qvan[ir,ibeta,jbeta]
+        end
+        for ir in idx_rbeta_max+1:Nrmesh
+            qvan[ir,ibeta,jbeta] = 0.0
+        end
+        #
+        # and puts its integral in qq
+        if lls[ibeta] == lls[jbeta]  # XXX also need to check for jjs in case of 
+            nst = (lls[ibeta] + 1)*2
+            qq[ibeta,jbeta] = integ_0_inf_dr(gi, grid, idx_rbeta_max, nst)
+        end
+        #
+        # set the bmat with the eigenvalue part
+        #
+        bmat[ibeta,jbeta] += Enls[jbeta]*qq[ibeta,jbeta]*2 #XXX Convert to Ry ???
+        #
+        # Use symmetry of the n,ns1 indices to set qvan and qq and bmat
+        if ibeta != jbeta
+            for ir in 1:Nrmesh
+                qvan[ir,jbeta,ibeta] = qvan[ir,ibeta,jbeta]
+            end
+            qq[jbeta,ibeta] = qq[ibeta,jbeta]
+            bmat[jbeta,ibeta] += Enls[ibeta]*qq[jbeta,ibeta]*2 #XXX Convert to Ry ???
+        end
+    end
+    
+    println("The bmat + epsilon qq matrix ")
+    display(bmat); println()
+    println("qq matrix ")
+    display(qq); println()
+
+
+    lmx = 3
+    lmx2 = 2*lmx # XXX HARCODED
+    qvanl = OffsetArray(
+        zeros(Nrmesh, Nbeta, Nbeta, lmx2+1),
+        1:Nrmesh, 1:Nbeta, 1:Nbeta, 0:lmx2
+    )
+    calc_pseudo_q!(ld1x_input, grid, qvan, qvanl, idx_rbeta)
 
     @infiltrate
 
