@@ -3,6 +3,10 @@ includet("set_psi_in.jl")
 includet("compute_chi.jl")
 includet("calc_pseudo_q.jl")
 
+includet("integrate_outward.jl")
+includet("integrate_inward.jl")
+includet("ascheqps.jl")
+
 function debug_gener_pseudo_01(; NiterMax=100)
 
     ld1x_input = create_input_Si()
@@ -495,6 +499,50 @@ function debug_gener_pseudo_01(; NiterMax=100)
         1:Nrmesh, 1:Nbeta, 1:Nbeta, 0:lmx2
     )
     calc_pseudo_q!(ld1x_input, grid, qvan, qvanl, idx_rbeta)
+
+    Nwfts = 0
+    for iwfs in 1:Nwfs
+        if (ocs[iwfs]  > 0.0) || ( ocs[iwfs] == 0.0 && Enls[iwfs] == 0.0 )
+            Nwfts += 1
+        end
+    end
+
+    # copy states used in the PP generation to testing configuration
+    # Only bound states must be copied. Note that this WILL NOT WORK
+    # if bound states are not used in the generation of the PP
+    elts = Vector{String}(undef, Nwfts)
+    nnts = zeros(Int64, Nwfts)
+    llts = zeros(Int64, Nwfts)
+    octs = zeros(Float64, Nwfts)
+    iswts = zeros(Int64, Nwfts)
+    #jjts = zeros(Float64, Nwfts)
+    iwfts = 0
+    nns = ld1x_input.nns
+    isws = ld1x_input.isws
+    #jjs = ld1x_input.jjs
+    for iwfs in 1:Nwfs
+        if (ocs[iwfs]  > 0.0) || ( ocs[iwfs] == 0.0 && Enls[iwfs] == 0.0 )
+            iwfts += 1
+            elts[iwfts] = els[iwfs]
+            nnts[iwfts] = nns[iwfs]
+            llts[iwfts] = lls[iwfs]
+            octs[iwfts] = ocs[iwfs]
+            iswts[iwfts]= isws[iwfs]
+            #jjts[iwfts]= jjs[iwfs]
+        end
+    end
+
+    nstoaets = zeros(Int64, Nwfts)
+    el = ld1x_input.el
+    for iwfts in 1:Nwfts
+        nstoaets[iwfts] = 0
+        for iwf in 1:Nwf
+            # XXX Spin-unpolarized
+            if elts[iwfts] == el[iwf]  # need to check for jjs
+                nstoaets[iwfts] = iwf
+            end
+        end
+    end
 
     @infiltrate
 
