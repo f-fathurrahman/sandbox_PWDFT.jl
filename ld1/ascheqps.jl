@@ -1,85 +1,27 @@
-function ascheqps!( nam, ℓ, jam, E0, Nrmesh, ndm, grid, Vpot, thresh,
-                    y, beta, ddd, qq, nbeta, nwfx, lls, jjs, ikk, nstop )
+function ascheqps!(
+    nam, ℓ, E0, grid, Vpot, y, beta, ddd, qq, lls, idx_rbeta;
+    TOL = 1e-12, NmaxIter = 5
+)
 #=
 numerical integration of a generalized radial schroedinger equation,
 using Numerov with outward and inward integration and matching.
 Works for both norm-conserving nonlocal and US pseudopotentials
 Requires in input a good estimate "E0" of the energy
-
-  integer, intent(in) :: &
-       nam, &
-       ℓ, &      ! l angular momentum
-       Nrmesh,&      ! size of radial Nrmesh
-       ndm, &      ! maximum radial Nrmesh 
-       nbeta,&     ! number of beta function  
-       nwfx, &     ! maximum number of beta functions
-       ikk(nbeta),&! for each beta the point where it become zero
-       lls(nbeta)  ! for each beta the angular momentum
-
-  real(DP), intent(in) :: &
-       jam,       & ! j angular momentum
-       Vpot(Nrmesh),& ! the local potential 
-       thresh,    & ! precision of eigenvalue
-       jjs(nwfx), & ! the j angular momentum
-       beta(ndm,nwfx), &            ! the beta functions
-       ddd(nwfx,nwfx),qq(nwfx,nwfx) ! parameters for computing B_ij
-
-  real(DP), intent(inout) :: &
-       E0,      &  ! output eigenvalue
-       y(Nrmesh)     ! the output solution
-
-  integer, intent(out) :: &
-       nstop       ! error code, used to check the behavior of the routine
-  !
-  !    the local variables
-  !
-  integer :: &
-       ndcr,  &    ! number of required nodes
-       n1, n2, &   ! counters
-       ikl         ! auxiliary variables
-  real(DP) :: &
-       work(nbeta),& ! auxiliary space
-       E,          &  ! energy
-       ddx12,      &  ! dx^2/12 used for Numerov integration
-       sqlhf,      &  ! the term for angular momentum in equation
-       ze2,        &  ! possible coulomb term aroun the origin (set 0)
-       b(0:3),     &  ! coefficients of taylor expansion of potential
-       eup,elw,    & ! actual energy interval
-       ymx,        & ! the maximum value of the function
-       fe,integ,dfe,de, &! auxiliary for numerov computation of E
-       eps,        & ! the epsilon of the delta E
-       yln, xp, expn,& ! used to compute the tail of the solution
-       int_0_inf_dr  ! integral function
-
-  real(DP), allocatable :: &
-       fun(:),  &   ! integrand function
-       f(:),    &   ! the f function
-       el(:),c(:) ! auxiliary for inward integration
-
-  integer, parameter :: &
-       NmaxIter=100    ! maximum number of iterations
-
-  integer :: &
-       n,  &    ! counter on Nrmesh points
-       iterSch,&   ! counter on iteration
-       idx_r,  &   ! matching point
-       ns,  &   ! counter on beta functions
-       l1,  &   ! ℓ+1
-       nst, &   ! used in the integration routine
-       ierr, &
-       ncross,& ! actual number of nodes
-       ir_start  ! starting point for inward integration
-
-  logical, save :: first(0:10,0:10) = .true.
 =#
 
+    println("\nEnter ascheqps")
+
     Nrmesh = grid.Nrmesh
+    Nbeta = size(beta, 2)
+    @assert Nbeta == size(ddd, 1)
+    @assert Nbeta == size(ddd, 2)
 
     # set up constants and allocate variables the 
     fun = zeros(Float64, Nrmesh)
     f = zeros(Float64, Nrmesh)
     el = zeros(Float64, Nrmesh)
     c = zeros(Float64, Nrmesh)
+    work = zeros(Float64, Nbeta)
     
     nstop = 0
     ir_start = 0
@@ -91,16 +33,18 @@ Requires in input a good estimate "E0" of the energy
     # println("entering ascheqps ", Vpot(Nrmesh-20)*grid%r(Nrmesh-20))
 
     ddx12 = grid.dx^2/12.0
-    l1 = ℓ + 1
-    nst = l1*2
+    nst = 2*(ℓ + 1)
     sqlhf = (ℓ + 0.5)^2
     #
     # series developement of the potential near the origin
     for ir in 1:4
         y[ir] = Vpot[ir]
     end
+    println("y[1:4] = ", y[1:4])
+    b = zeros(Float64, 4) # originally b(0:3)
     radial_grid_series!( y, grid.r, grid.r2, b )
-    println("enter ℓ=$ℓ, eup=$eup, elw=$elw, E=$E")
+    println("b = ", b)
+    #println("enter ℓ=$ℓ, eup=$eup, elw=$elw, E=$E")
     #
     #  set up the f-function and determine the position of its last
     #  change of sign
@@ -110,10 +54,12 @@ Requires in input a good estimate "E0" of the energy
     for iterSch in 1:NmaxIter
         println("starting iterSch=$iterSch, elw=$elw, E=$E, eup=$eup")
         idx_r = 1
-        f[1] = ddx12*(grid.r2[1]*(Vpot[1] - E) + sqlhf) # XXX change to Ha
+        #f[1] = 2 * ddx12*( grid.r2[1] * (Vpot[1] - E) + sqlhf ) # XXX change to Ha
+        f[1] = ddx12*( grid.r2[1] * (Vpot[1] - E) + sqlhf ) # XXX change to Ha
         for ir in 2:Nrmesh
-            f[ir] = ddx12*(grid.r2[ir]*(Vpot[ir] - E) + sqlhf)
-            if ( f[i] != abs(f[i])*sign(f[i-1]) ) && (ir < Nrmesh-5)
+            #f[ir] = 2 * ddx12*( grid.r2[ir] * (Vpot[ir] - E) + sqlhf ) # XXX change to Ha
+            f[ir] = ddx12*( grid.r2[ir] * (Vpot[ir] - E) + sqlhf ) # XXX change to Ha
+            if ( f[ir] != abs(f[ir])*sign(f[ir-1]) ) && (ir < Nrmesh-5)
                 idx_r = ir
             end
         end
@@ -132,6 +78,7 @@ Requires in input a good estimate "E0" of the energy
                 idx_r = idx_rbeta[ibeta] + 3
             end
         end
+        println("idx_r = ", idx_r)
         #
         # if everything is ok continue the integration and define f
         for ir in 1:Nrmesh
@@ -147,9 +94,7 @@ Requires in input a good estimate "E0" of the energy
         #
         # outward integration before idx_r
         #
-        integrate_outward( ℓ, jam, E, Nrmesh, ndm, grid, f, b, y, beta, ddd, qq,
-                          nbeta, nwfx, lls, jjs, idx_rbeta, idx_r)
-
+        integrate_outward!( ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta, idx_r)
         ncross = 0
         ymx = 0.0
         for ir in 2:(idx_r-1)
@@ -194,7 +139,7 @@ Requires in input a good estimate "E0" of the energy
         #
         # inward integration up to idx_r
         #
-        integrate_inward!(E, Nrmesh, ndm, grid, f, y, c, el, idx_r, ir_start)
+        ir_start = integrate_inward!(grid, f, y, c, el, idx_r)
         #
         # if necessary, improve the trial eigenvalue by the cooley's procedure.
         # jw cooley math of comp 15,363(1961)
@@ -211,9 +156,9 @@ Requires in input a good estimate "E0" of the energy
             if (ℓ == lls[ibeta]) # also need to check jj for relativistic case
                 idx_r_l = idx_rbeta[ibeta]
                 for ir in 1:idx_r_l
-                    fun[ir] = beta[ir,jbeta]*y[ir]*grid.sqr[ir]
+                    fun[ir] = beta[ir,ibeta]*y[ir]*sqrt(grid.r[ir])
                 end
-                work[ibeta] = integ_0_inf_dr(fun, grid, ikl, nst)
+                work[ibeta] = integ_0_inf_dr(fun, grid, idx_r_l, nst)
             else
                 work[ibeta] = 0.0
             end
@@ -226,11 +171,11 @@ Requires in input a good estimate "E0" of the energy
         for ibeta in 1:Nbeta, jbeta in 1:Nbeta
             ss += qq[ibeta,jbeta]*work[ibeta]*work[jbeta]
         end
-        dfe = -y[idx_r]*f[idx_r]/grid.dx/integ
+        dfe = -y[idx_r]*f[idx_r]/grid.dx/ss
         de = -fe*dfe
         epsE = abs(de/E)
         #  write(6,'(i5, 3f20.12)') iterSch, E, de
-        if abs(de) < thresh
+        if abs(de) < TOL
             @goto LABEL600
         end
         #
@@ -253,7 +198,7 @@ Requires in input a good estimate "E0" of the energy
         if E < elw
             E = 0.9*elw + 0.1*eup
         end
-        @LABEL300 continue
+        @label LABEL300
     end
     nstop = 1
     
@@ -261,7 +206,7 @@ Requires in input a good estimate "E0" of the energy
         @goto LABEL900 # return?
     end
   
-    @LABEL600
+    @label LABEL600
     #  
     # exponential tail of the solution if it was not computed
     #
@@ -288,24 +233,23 @@ Requires in input a good estimate "E0" of the energy
     for ir in 1:Nrmesh
         el[ir] = grid.r[ir]*y[ir]*y[ir]
     end
-    ss = int_0_inf_dr(el, grid, Nrmesh, nst)
+    ss = integ_0_inf_dr(el, grid, Nrmesh, nst)
     if ss > 0.0
         ss = sqrt(ss)
         for ir in 1:Nrmesh
-            y[ir] = grid.sqr[ir] * y[ir] / ss
+            y[ir] = sqrt(grid.r[ir]) * y[ir] / ss
         end
         E0 = E
     else
         nstop = 1
     end
-    @LABEL900
+    @label LABEL900
     return
 
 end
 
 
 #=
-
 !--------------------------------------------------------------------------
 subroutine my_ascheqps_drv(veff, ncom, thresh, flag_all, nerr)
 !--------------------------------------------------------------------------

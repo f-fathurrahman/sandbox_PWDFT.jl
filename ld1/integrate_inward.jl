@@ -1,12 +1,12 @@
-function integrate_inward!(e, Nrmesh, ndm, grid, f, y, c, el, idx_r)
-     #
+function integrate_inward!(grid, f, y, c, el, idx_r)
      # prepare inward integration
      # charlotte froese can j phys 41,1895(1963)
      #
      # start at min( rmax, 10*rmatch )
      #
+     Nrmesh = grid.Nrmesh
      ir_start = Nrmesh     
-     rstart = 10.0*grid%r[idx_r]
+     rstart = 10.0*grid.r[idx_r]
      if rstart < grid.r[Nrmesh]
           for ir in idx_r:Nrmesh
                ir_start = ir
@@ -28,7 +28,7 @@ function integrate_inward!(e, Nrmesh, ndm, grid, f, y, c, el, idx_r)
      for ir in (idx_r+2):ir_start
           di = 10.0*f[ir] - 12.0
           el[ir] = di - f[ir]*f[ir-1]/el[ir-1]
-          c[ir] = -c[ir-1]*f[ir-1]/el(n-1)
+          c[ir] = -c[ir-1]*f[ir-1]/el[ir-1]
      end
      #
      # start inward integration by the froese's tail procedure

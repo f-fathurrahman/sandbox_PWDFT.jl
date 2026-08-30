@@ -491,6 +491,11 @@ function debug_gener_pseudo_01(; NiterMax=100)
     println("qq matrix ")
     display(qq); println()
 
+    #Is it the same for all spin components? 
+    ddd = zeros(Float64, Nbeta, Nbeta, Nspin)
+    for ispin in 1:Nspin
+        ddd[:,:,ispin] = bmat[:,:]
+    end
 
     lmx = 3
     lmx2 = 2*lmx # XXX HARCODED
@@ -542,6 +547,21 @@ function debug_gener_pseudo_01(; NiterMax=100)
                 nstoaets[iwfts] = iwf
             end
         end
+    end
+
+    Enlts = zeros(Float64, Nwfts)
+    for iwfts in 1:Nwfts
+        Enlts[iwfts] = Enl[nstoaets[iwfts]]
+    end
+
+    phits = zeros(Float64, Nrmesh, Nwfts)
+    for iwfts in 1:Nwfts
+        #XXX convert energy and potential to Ry
+        @views ascheqps!(
+            nnts[iwfts], llts[iwfts], 2*Enlts[iwfts], grid, 2*V_Ps_loc, phits[:,iwfts], beta_prj, ddd, qq, lls,
+            idx_rbeta;
+            TOL = 1e-12
+        )
     end
 
     @infiltrate
