@@ -10,7 +10,7 @@ include("starting_potential.jl")
 include("start_scheq.jl")
 include("ascheq.jl")
 
-function main()
+function test_ascheq_01()
 
     Zval = 14.0
     Zed = Zval
@@ -19,6 +19,17 @@ function main()
     nn = [1, 2, 2, 3, 3]
     ll = [0, 0, 1, 0, 1] 
     oc = [2.0, 2.0, 6.0, 2.0, 2.0]
+
+#=
+    Zval = 1.0
+    Zed = Zval
+    Nspin = 1
+    Nwf = 1
+    nn = [1]
+    ll = [0] 
+    oc = [1.0]
+=#
+
     enl = zeros(Float64, Nwf)
 
     @assert length(nn) == Nwf
@@ -41,9 +52,8 @@ function main()
     starting_potential!(
         Nrmesh, Zval, Zed,
         Nwf, oc, nn, ll,
-        grid.r, enl, v0, vxt, vpot, enne, Nspin
+        grid.r, enl, v0, vxt, vpot, noscf = true
     )
-
     println("After starting_potential:")
     println("v0   = ", v0[1:2])
     println("vxt  = ", vxt[1:2])
@@ -51,22 +61,24 @@ function main()
     println("vpot2 = ", vpot[1:2,2])
     println("enl = ", enl[1:Nwf])
 
+    #@. vpot = -Zval/grid.r
+
     # Solve for all states
     ze2 = -Zval # should be 2*Zval in Ry unit
     thresh0 = 1.0e-10
     psi = zeros(Float64, Nrmesh, Nwf)
     nstop = 0
+    iwf = 3
     for iwf in 1:Nwf
+        println("\nStart iwf = ", iwf)
         @views psi1 = psi[:,iwf] # zeros wavefunction
-        enl[iwf], nstop = ascheq!( nn[iwf], ll[iwf], enl[iwf], grid, vpot, ze2, thresh0, psi1, nstop )
+        enl[iwf], nstop = ascheq!( nn[iwf], ll[iwf], enl[iwf], grid, vpot, ze2, thresh0, psi1 )
     end
 
     for iwf in 1:Nwf
         println("outside ascheq: enl = ", enl[iwf])
         # println("psi[1] = ", psi[1,iwf])
     end
-    println("Pass here")
-
 
 #=
     plt.clf()

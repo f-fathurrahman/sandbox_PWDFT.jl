@@ -53,11 +53,11 @@ Requires in input a good estimate "E0" of the energy
     for iterSch in 1:NmaxIter
         println("starting iterSch=$iterSch, elw=$elw, E=$E, eup=$eup")
         idx_r = 1
-        #f[1] = ddx12*( 2 * grid.r2[1] * (Vpot[1] - E) + sqlhf ) # XXX change to Ha
-        f[1] = ddx12*( grid.r2[1] * (Vpot[1] - E) + sqlhf ) # XXX change to Ha
+        f[1] = ddx12*( 2 * grid.r2[1] * (Vpot[1] - E) + sqlhf ) # XXX change to Ha
+        #f[1] = ddx12*( grid.r2[1] * (Vpot[1] - E) + sqlhf ) # XXX change to Ha
         for ir in 2:Nrmesh
-            #f[ir] = ddx12*( 2 * grid.r2[ir] * (Vpot[ir] - E) + sqlhf ) # XXX change to Ha
-            f[ir] = ddx12*( grid.r2[ir] * (Vpot[ir] - E) + sqlhf ) # XXX change to Ha
+            f[ir] = ddx12*( 2 * grid.r2[ir] * (Vpot[ir] - E) + sqlhf ) # XXX change to Ha
+            #f[ir] = ddx12*( grid.r2[ir] * (Vpot[ir] - E) + sqlhf )
             if ( f[ir] != abs(f[ir])*sign(f[ir-1]) ) && (ir < Nrmesh-5)
                 idx_r = ir
             end
@@ -89,7 +89,7 @@ Requires in input a good estimate "E0" of the energy
         #
         # no coulomb divergence in the origin for a pseudopotential
         ze2 = 0.0 
-        start_scheq!( ℓ, E, b, grid, ze2, y )
+        start_scheq_Ha!( ℓ, E, b, grid, ze2, y )
         #
         # outward integration before idx_r
         integrate_outward!( ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta, idx_r)
@@ -170,8 +170,8 @@ Requires in input a good estimate "E0" of the energy
             ss += qq[ibeta,jbeta]*work[ibeta]*work[jbeta]
         end
         dfe = -y[idx_r]*f[idx_r]/grid.dx/ss
-        de = -fe*dfe
-        #de = -fe*dfe/2 # Hartree?
+        #de = -fe*dfe
+        de = -fe*dfe/2 # Hartree?
         epsE = abs(de/E)
         println("iterSch = $iterSch E=$E de=$de")
         if abs(de) < TOL
@@ -248,115 +248,4 @@ Requires in input a good estimate "E0" of the energy
 
 end
 
-
-#=
-!--------------------------------------------------------------------------
-subroutine my_ascheqps_drv(veff, ncom, thresh, flag_all, nerr)
-!--------------------------------------------------------------------------
-
-  ! This routine is a driver that calculates for the test
-  ! configuration the solutions of the Kohn and Sham equation
-  ! with a fixed pseudo-potential. The potentials are assumed
-  ! to be screened. The effective potential veff is given in input.
-  ! The output wavefunctions are written in phits and are normalized.
-  ! If flag is .true. compute all wavefunctions, otherwise only
-  ! the wavefunctions with positive occupation.
-  !      
-  use kinds, only: dp
-  use ld1_parameters, only: nwfsx
-  use radial_grids, only: ndmx
-  use ld1inc, only: grid, pseudotype, rel, &
-                    lls, jjs, qq, ikk, ddd, betas, nbeta, vnl, &
-                    nwfts, iswts, octs, llts, jjts, nnts, enlts, phits 
-  implicit none
-
-  integer ::    &
-          nerr, &     ! control the errors of the routine ascheqps
-          ncom        ! number of components of the pseudopotential
-
-  real(DP) :: &
-       veff(ndmx,ncom)    ! work space for writing the potential 
-
-  logical :: flag_all    ! if true calculates all the wavefunctions
-
-  integer ::  &
-       ns,    &  ! counter on pseudo functions
-       is,    &  ! counter on spin
-       nbf,   &  ! auxiliary nbeta
-       n,     &  ! index on r point
-       nstop, &  ! errors in each wavefunction
-       ind
-
-  real(DP) :: &
-       vaux(ndmx,2)     ! work space for writing the potential 
-
-  real(DP) :: thresh         ! threshold for selfconsistency
-  
-  write(*,*)
-  write(*,*) '<div> ENTER my_ascheqps_drv'
-  write(*,*)
-  
-  !
-  ! compute the pseudowavefunctions in the test configuration
-  !
-  if (pseudotype == 1) then
-    nbf = 0
-  else
-    nbf = nbeta
-  endif
-
-  nerr = 0
-  do ns = 1,nwfts
-    if( octs(ns) > 0.0 .or. ( octs(ns) > -1.0 .and. flag_all ) ) then
-      is = iswts(ns)
-      if( ncom==1 .and. is==2) then
-        call errore('ascheqps_drv','incompatible spin',1)
-      endif
-      !
-      if( pseudotype == 1 ) then
-        !
-        if( rel < 2 .or. llts(ns) == 0 .or. &
-          & abs(jjts(ns)-llts(ns)+0.5) < 0.001) then
-          ind = 1
-        !
-        elseif( rel == 2 .and. llts(ns) > 0 .and. &
-              & abs(jjts(ns)-llts(ns)-0.5) < 0.001) then
-          ind = 2
-        else
-          call errore('my_ascheqps_drv', 'unexpected case', 1)
-        endif
-        !
-        do n = 1,grid%Nrmesh
-          vaux(n,is) = veff(n,is) + vnl(n,llts(ns),ind)
-        enddo
-      else
-        ! other pseudotypes
-        do n = 1,grid%Nrmesh
-          vaux(n,is) = veff(n,is)
-        enddo
-      endif
-      !
-      call my_ascheqps( nnts(ns),llts(ns),jjts(ns),enlts(ns),grid%Nrmesh,ndmx,&
-                    &   grid,vaux(1,is),thresh,phits(1,ns),betas,ddd(1,1,is),qq,nbf, &
-                    &   nwfsx,lls,jjs,ikk,nstop)
-      write(*,*) ns, nnts(ns),llts(ns), jjts(ns), enlts(ns)
-      !
-      ! normalize the wavefunctions 
-      !
-      call normalize(phits(1,ns), llts(ns), jjts(ns), ns)
-      !
-      !   not sure whether the "best" error code should be like this:
-      ! IF ( octs(ns) > 0.0 ) nerr = nerr + nstop
-      !   i.E. only for occupied states, or like this:
-      nerr = nerr + nstop
-    endif ! if octs is larger than zero
-  enddo
-
-  write(*,*)
-  write(*,*) '</div> EXIT my_ascheqps_drv'
-  write(*,*)
-
-  return
-end subroutine
-=#
 

@@ -1,14 +1,7 @@
-#
-# Copyright (C) 2004 PWSCF group
-# This file is distributed under the terms of the
-# GNU General Public License. See the file `License'
-# in the root directory of the present distribution,
-# or http://www.gnu.org/copyleft/gpl.txt .
-
 # Numerical integration of the radial schroedinger equation for
 # bound states in a local potential.
 # thresh determines the absolute accuracy for the eigenvalue
-function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
+function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y)
 
     # nstop is a somewhat a return code, probably can be removed.
     # Its value depends on whether the calculation is successfull or not.
@@ -31,14 +24,14 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
     
     ddx12 = grid.dx^2 / 12.0
     l1 = l + 1
-    sqlhf = 0.5*(l + 0.5)^2 # Ha unit
+    sqlhf = (l + 0.5)^2 # Ha unit
     ndcr = nn - l - 1
     
     # set initial lower and upper bounds to the eigenvalue
-    eup = vpot[Nrmesh] + sqlhf/grid.r2[Nrmesh]
+    eup = 2*( vpot[Nrmesh] + sqlhf/grid.r2[Nrmesh] )
     elw = eup
     for i in 1:Nrmesh
-       elw = min( elw, vpot[i] + sqlhf/grid.r2[i] )
+       elw = min( elw, 2*(vpot[i] + sqlhf/grid.r2[i]) )
     end
     
     nstop = 200
@@ -91,9 +84,7 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
 
     for iterSch in 1:NmaxIter
     
-        #println("===============================")
-        #println("iterSch = ", iterSch)
-        #println("===============================")
+        println("\niterSch = $iterSch, elw=$elw eup=$eup e=$e")
 
         nstop = 300
     
@@ -106,9 +97,9 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
         #
         ik = 0
         # Using Numerov algorithm
-        f[1] = ddx12*( grid.r2[1]*( vpot[1] - e ) + sqlhf)
+        f[1] = ddx12*( 2*grid.r2[1]*( vpot[1] - e ) + sqlhf)
         for i in 2:Nrmesh
-            f[i] = ddx12*( grid.r2[i]*( vpot[i] - e ) + sqlhf)
+            f[i] = ddx12*( 2*grid.r2[i]*( vpot[i] - e ) + sqlhf)
             if f[i] != abs(f[i])*sign(f[i-1])
                 ik = i
             end
@@ -124,7 +115,7 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
         end
 
         for i in 1:Nrmesh
-            f[i] = 1.0 - 2*f[i] # convert to Ry?
+            f[i] = 1.0 - f[i]
         end
         
         #for i in 1:4
@@ -138,14 +129,15 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
         # series developement
         xl1 = l + 1.0
         x4l6 = 4.0*l + 6.0
-        b0e = b[1] - e # Ha unit
+        b0e = 2*(b[1] - e) # Ha unit ????
         c1 = Zval/xl1  # in Ha?
         c2 = (c1*Zval + b0e)/x4l6 # Ha
         
         #println("e = ", e)
         
-        start_scheq!( l, e, b, grid, Zval, y )
-        
+        #start_scheq!( l, e, b, grid, Zval, y ) # in Ry unit?
+        start_scheq_Ha!( l, e, b, grid, Zval, y )
+
         #@printf("After start_scheq! ")
         #@printf("y[1] = %18.10f\n", y[1])
         #@printf("y[2] = %18.10f\n", y[2])
@@ -185,7 +177,7 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
             # increase abs(e)
             eup = e
             rap = ( Float64(ncross + l1)/nn )^2
-            e = (e - vpot[Nrmesh] )*rap + vpot[Nrmesh]
+            e = 2*( (e - vpot[Nrmesh] )*rap + vpot[Nrmesh] )
             if e < elw
                 e = 0.9*elw + 0.1*eup
             end
@@ -197,7 +189,7 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
             #
             elw = e
             rap = ( Float64(ncross+l1)/nn )^2
-            e = ( e - vpot[Nrmesh] )*rap + vpot[Nrmesh]
+            e = 2*( ( e - vpot[Nrmesh] )*rap + vpot[Nrmesh] )
             if e > eup
                 e = 0.9*eup + 0.1*elw
             end
@@ -261,7 +253,7 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
         y[nstart-1] = c[nstart-1]/( el[nstart-1] + f[nstart]*expn )
         y[nstart] = expn*y[nstart-1]
         for n in range(nstart-2, stop=ik+1, step=-1) #nstart-2,ik+1,-1
-            y[n] = ( c[n] - f[n+1]*y[n+1])/el[n]
+            y[n] = ( c[n] - f[n+1]*y[n+1] ) / el[n]
         end
         #@printf("y = %18.10f\n", y[ik+1])
         #if iter == 1
@@ -316,6 +308,7 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
         dfe = -y[ik]*f[ik]/grid.dx/ss
         de = -fe*dfe*0.5 # Ha unit?
         eeps = abs(de/e)
+        println("e=$e dfe=$dfe de=$de eeps=$eeps")
         
         #@printf("ss = %18.10f\n", ss)
         #@printf("de = %18.10f\n", de)
@@ -325,8 +318,8 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
         #    exit()
         #end
 
-        println("iterSch = ", iterSch, " e = ", e,  " de = ", de)
-        if abs(de) < 2*thresh
+        println("iterSch = $iterSch e = $e de = $de")
+        if abs(de) < thresh
             println("GOTO 600 here ....")
             break
             #go to 600
@@ -334,7 +327,7 @@ function ascheq!(nn, l, e, grid, vpot, Zval, thresh0, y, nstop)
         end
     
         if eeps > 0.25
-            #println("Updating de in 341")
+            println("Updating de in 341")
             de = 0.25*de/eeps
         end
 

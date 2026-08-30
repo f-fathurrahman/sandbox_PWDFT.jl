@@ -558,10 +558,10 @@ function debug_gener_pseudo_01(; NiterMax=100)
     for iwfts in 1:Nwfts
         #XXX convert energy and potential to Ry
         @views Enlts[iwfts] = ascheqps!(
-            nnts[iwfts], llts[iwfts], 2*Enlts[iwfts], grid, 2*V_Ps_loc, phits[:,iwfts],
+            nnts[iwfts], llts[iwfts], Enlts[iwfts], grid, V_Ps_loc, phits[:,iwfts],
             beta_prj, ddd, qq, lls, idx_rbeta
         )
-        Enlts[iwfts] *= 0.5 # scale back to Ha
+        #Enlts[iwfts] *= 0.5 # scale back to Ha
         println("Output energy (in Ha) = ", Enlts[iwfts])
     end
 

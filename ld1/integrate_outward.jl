@@ -18,8 +18,7 @@ function integrate_outward!(ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta
     xc = zeros(Float64, 4)
     #
     ddx12 = grid.dx^2/12.0
-    #b0e = 2*(b[1] - E) # b(0) - E, XXX b index is offset by 1
-    b0e = b[1] - E # b(0) - E, XXX b index is offset by 1
+    b0e = 2*(b[1] - E) #XXX in Hartree
     x4l6 = 4*ℓ + 6
     nst = (ℓ + 1)*2
     #
@@ -33,7 +32,6 @@ function integrate_outward!(ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta
     #
     # for each beta function with correct angular momentum
     # solve the inhomogeneous equation
-    #
     iib = 0
     jjb = 0
     for ibeta in 1:Nbeta
@@ -46,8 +44,8 @@ function integrate_outward!(ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta
                 if lls[jbeta] == ℓ
                     for ir in 1:idx_rbeta[jbeta]
                         #XXX check E need factor 2 ? Ha -> Ry
+                        #XXX I think what is important here is the unit of E*qq
                         c[ir] += ( ddd[jbeta,ibeta] - E*qq[jbeta,ibeta] ) * beta[ir,jbeta]
-                        #c[ir] += 2 * ( ddd[jbeta,ibeta] - E*qq[jbeta,ibeta] ) * beta[ir,jbeta]
                     end
                 end
             end
@@ -58,9 +56,9 @@ function integrate_outward!(ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta
             end
             #call seriesbes(j1, grid%r, grid%r2, 4, d)
             seriesbes!(j1, grid.r, grid.r2, 4, c)
-            delta = b0e^2 + x4l6*b[3] #XXX offset index b
+            delta = 2*( b0e^2 + x4l6*b[3] ) #XXX offset index b
             xc[1] = ( -d[1]*b0e - x4l6*d[3] )/delta
-            xc[3] = ( -b0e*d[3] + d[1]*b[3] )/delta #XXX offset index b
+            xc[3] = 2*( -b0e*d[3] + d[1]*b[3] )/delta #XXX offset index b
             xc[2] = 0.0
             xc[4] = 0.0
             for ir in 1:3
