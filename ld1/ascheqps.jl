@@ -1,7 +1,8 @@
 function ascheqps!(
     nam, ℓ, E0, grid, Vpot, y, beta, ddd, qq, lls, idx_rbeta;
-    TOL = 1e-12, NmaxIter = 5
+    TOL = 1e-12, NmaxIter = 20
 )
+    # TOL might be too small ?
 #=
 numerical integration of a generalized radial schroedinger equation,
 using Numerov with outward and inward integration and matching.
@@ -10,6 +11,7 @@ Requires in input a good estimate "E0" of the energy
 =#
 
     println("\nEnter ascheqps")
+    println("n=$nam, ℓ=$ℓ, input E0 = $E0")
 
     Nrmesh = grid.Nrmesh
     Nbeta = size(beta, 2)
@@ -26,11 +28,9 @@ Requires in input a good estimate "E0" of the energy
     nstop = 0
     ir_start = 0
     E = E0
-    # write(6,*) 'entering ', nam,ℓ, E
     eup = 0.3*E
     elw = 1.3*E
     ndcr = nam - ℓ - 1
-    # println("entering ascheqps ", Vpot(Nrmesh-20)*grid%r(Nrmesh-20))
 
     ddx12 = grid.dx^2/12.0
     nst = 2*(ℓ + 1)
@@ -38,13 +38,12 @@ Requires in input a good estimate "E0" of the energy
     #
     # series developement of the potential near the origin
     for ir in 1:4
-        y[ir] = Vpot[ir]
+        y[ir] = 2*Vpot[ir]
     end
     println("y[1:4] = ", y[1:4])
     b = zeros(Float64, 4) # originally b(0:3)
     radial_grid_series!( y, grid.r, grid.r2, b )
     println("b = ", b)
-    #println("enter ℓ=$ℓ, eup=$eup, elw=$elw, E=$E")
     #
     #  set up the f-function and determine the position of its last
     #  change of sign
@@ -54,16 +53,16 @@ Requires in input a good estimate "E0" of the energy
     for iterSch in 1:NmaxIter
         println("starting iterSch=$iterSch, elw=$elw, E=$E, eup=$eup")
         idx_r = 1
-        #f[1] = 2 * ddx12*( grid.r2[1] * (Vpot[1] - E) + sqlhf ) # XXX change to Ha
+        #f[1] = ddx12*( 2 * grid.r2[1] * (Vpot[1] - E) + sqlhf ) # XXX change to Ha
         f[1] = ddx12*( grid.r2[1] * (Vpot[1] - E) + sqlhf ) # XXX change to Ha
         for ir in 2:Nrmesh
-            #f[ir] = 2 * ddx12*( grid.r2[ir] * (Vpot[ir] - E) + sqlhf ) # XXX change to Ha
+            #f[ir] = ddx12*( 2 * grid.r2[ir] * (Vpot[ir] - E) + sqlhf ) # XXX change to Ha
             f[ir] = ddx12*( grid.r2[ir] * (Vpot[ir] - E) + sqlhf ) # XXX change to Ha
             if ( f[ir] != abs(f[ir])*sign(f[ir-1]) ) && (ir < Nrmesh-5)
                 idx_r = ir
             end
         end
-        if (idx_r == 1) || grid.r[idx_r] > 4.0
+        if (idx_r == 1) || (grid.r[idx_r] > 4.0)
             idx_r = round(Int64, Nrmesh*3/4)
         end
         #
@@ -74,7 +73,7 @@ Requires in input a good estimate "E0" of the energy
         #
         # determine if idx_r is sufficiently large
         for ibeta in 1:Nbeta
-            if (lls[ibeta] == ℓ) && ( idx_rbeta[ibeta] > idx_r )
+            if (lls[ibeta] == ℓ) && (idx_rbeta[ibeta] > idx_r)
                 idx_r = idx_rbeta[ibeta] + 3
             end
         end
@@ -93,7 +92,6 @@ Requires in input a good estimate "E0" of the energy
         start_scheq!( ℓ, E, b, grid, ze2, y )
         #
         # outward integration before idx_r
-        #
         integrate_outward!( ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta, idx_r)
         ncross = 0
         ymx = 0.0
@@ -173,9 +171,11 @@ Requires in input a good estimate "E0" of the energy
         end
         dfe = -y[idx_r]*f[idx_r]/grid.dx/ss
         de = -fe*dfe
+        #de = -fe*dfe/2 # Hartree?
         epsE = abs(de/E)
-        #  write(6,'(i5, 3f20.12)') iterSch, E, de
+        println("iterSch = $iterSch E=$E de=$de")
         if abs(de) < TOL
+            println("CONVERGED: at iterSch = $iterSch E = $E de = $de")
             @goto LABEL600
         end
         #
@@ -244,7 +244,7 @@ Requires in input a good estimate "E0" of the energy
         nstop = 1
     end
     @label LABEL900
-    return
+    return E
 
 end
 

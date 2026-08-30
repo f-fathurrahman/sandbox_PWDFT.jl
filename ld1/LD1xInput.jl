@@ -160,7 +160,6 @@ function create_input_Pd()
     nn = [1, 2, 2, 3, 3, 4, 4, 3, 5, 5, 4]
     ll = [0, 0, 1, 0, 1, 0, 1, 2, 0, 1, 2]
     oc = [2.0, 2.0, 6.0, 2.0, 6.0, 2.0, 6.0, 10.0, 1.0, 0.0, 9.0]
-    Nwfs = 6
     el = ["1S", "2S", "2P", "3S", "3P", "4S", "4P", "3D", "5S", "5P", "4D"]
 
     # FIXME: define isw: spin index
@@ -192,6 +191,14 @@ function create_input_Pd()
 
     #nsloc = -1
     Nbeta = Nwfs # XXX This is only for lloc == -1
+
+    SMALL_ENERGY = 1e-13
+    fit_to_arbitrary_energy = zeros(Bool, Nwfs)
+    for iwfs in 1:Nwfs
+        if Enls[iwfs] >= SMALL_ENERGY # or equal to zero
+            fit_to_arbitrary_energy[iwfs] = true
+        end
+    end
 
     return LD1XInput(
         Zval, Zed,

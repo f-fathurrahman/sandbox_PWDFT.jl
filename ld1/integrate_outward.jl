@@ -5,53 +5,6 @@ function integrate_outward!(ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta
    This routine assumes that y countains already the
    correct values in the first two points
    =#
-
-#=
-  integer ::   &
-       ℓ,    &     ! l angular momentum
-       Nrmesh,   &    ! size of radial Nrmesh
-       ndm,    &   ! maximum radial Nrmesh
-       nbeta,  &   ! number of beta function
-       nwfx,   &   ! maximum number of beta functions
-       lls(nbeta),&! for each beta the angular momentum
-       idx_rbeta(nbeta),&! for each beta the integration point
-       idx_r         ! the last integration point
-
-  real(DP) :: &
-       E,       &  ! output eigenvalue
-       jam,     &  ! j angular momentum
-       f(Nrmesh), &  ! the f function
-       b(0:3), &   ! the taylor expansion of the potential
-       y(Nrmesh), &  ! the output solution
-       jjs(nwfx), & ! the j angular momentum
-       beta(ndm,nwfx),& ! the beta functions
-       ddd(nwfx,nwfx),qq(nwfx,nwfx) ! parameters for computing B_ij
-
-  integer ::  &
-       nst, &      ! the exponential around the origin
-       n,    &     ! counter on Nrmesh points
-       iib,jjb, &  ! counter on beta with correct ℓ
-       ierr,    &  ! used to control allocation
-       ib,jb,   &  ! counter on beta
-       info      ! info on exit of LAPACK subroutines
-
-  integer, allocatable :: iwork(:) ! auxiliary space  
-
-  real(DP) :: &
-       b0e,     & ! the expansion of the known part
-       ddx12,   & ! the deltax entering the equations
-       x4l6,    & ! auxiliary for small r expansion
-
-       int_0_inf_dr  ! the integral function
-
-  real(DP), allocatable :: &
-       el(:), &  ! auxiliary for integration
-       cm(:,:), &! the linear system
-       bm(:), & ! the known part of the linear system
-       c(:), &   ! the chi functions
-       coef(:), & ! the solution of the linear system
-       eta(:,:) ! the partial solution of the nonomogeneous
-=#
     Nbeta = size(beta, 2)
     c = zeros(Float64, idx_r)
     el = zeros(Float64, idx_r)
@@ -65,6 +18,7 @@ function integrate_outward!(ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta
     xc = zeros(Float64, 4)
     #
     ddx12 = grid.dx^2/12.0
+    #b0e = 2*(b[1] - E) # b(0) - E, XXX b index is offset by 1
     b0e = b[1] - E # b(0) - E, XXX b index is offset by 1
     x4l6 = 4*ℓ + 6
     nst = (ℓ + 1)*2
@@ -93,6 +47,7 @@ function integrate_outward!(ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta
                     for ir in 1:idx_rbeta[jbeta]
                         #XXX check E need factor 2 ? Ha -> Ry
                         c[ir] += ( ddd[jbeta,ibeta] - E*qq[jbeta,ibeta] ) * beta[ir,jbeta]
+                        #c[ir] += 2 * ( ddd[jbeta,ibeta] - E*qq[jbeta,ibeta] ) * beta[ir,jbeta]
                     end
                 end
             end

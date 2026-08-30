@@ -557,11 +557,12 @@ function debug_gener_pseudo_01(; NiterMax=100)
     phits = zeros(Float64, Nrmesh, Nwfts)
     for iwfts in 1:Nwfts
         #XXX convert energy and potential to Ry
-        @views ascheqps!(
-            nnts[iwfts], llts[iwfts], 2*Enlts[iwfts], grid, 2*V_Ps_loc, phits[:,iwfts], beta_prj, ddd, qq, lls,
-            idx_rbeta;
-            TOL = 1e-12
+        @views Enlts[iwfts] = ascheqps!(
+            nnts[iwfts], llts[iwfts], 2*Enlts[iwfts], grid, 2*V_Ps_loc, phits[:,iwfts],
+            beta_prj, ddd, qq, lls, idx_rbeta
         )
+        Enlts[iwfts] *= 0.5 # scale back to Ha
+        println("Output energy (in Ha) = ", Enlts[iwfts])
     end
 
     @infiltrate
