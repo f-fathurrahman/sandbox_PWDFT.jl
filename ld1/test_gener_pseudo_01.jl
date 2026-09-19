@@ -6,11 +6,12 @@ includet("calc_pseudo_q.jl")
 includet("integrate_outward.jl")
 includet("integrate_inward.jl")
 includet("ascheqps.jl")
+includet("ld1x_normalize.jl")
 
 function debug_gener_pseudo_01(; NiterMax=100)
 
-    ld1x_input = create_input_Si()
-    #ld1x_input = create_input_Pd()
+    #ld1x_input = create_input_Si()
+    ld1x_input = create_input_Pd()
 
     Zval = ld1x_input.Zval
     Zed = ld1x_input.Zed
@@ -438,8 +439,8 @@ function debug_gener_pseudo_01(; NiterMax=100)
     #
     # compute the inverse of the matrix B_{ij}:  B_{ij}^-1
     Binv = inv(B)
-    println("Binv = ")
-    display(Binv); println()
+    #println("Binv = ")
+    #display(Binv); println()
 
     # compute the beta functions
     beta_prj = zeros(Float64, Nrmesh, Nbeta)
@@ -555,15 +556,20 @@ function debug_gener_pseudo_01(; NiterMax=100)
     end
 
     phits = zeros(Float64, Nrmesh, Nwfts)
+    println("ddd before = "); display(ddd); println()
     for iwfts in 1:Nwfts
         #XXX convert energy and potential to Ry
-        @views Enlts[iwfts] = ascheqps!(
-            nnts[iwfts], llts[iwfts], Enlts[iwfts], grid, V_Ps_loc, phits[:,iwfts],
+        @views Enlts[iwfts] = ascheqps_Ry!(
+            nnts[iwfts], llts[iwfts], 2*Enlts[iwfts], grid, 2*V_Ps_loc, phits[:,iwfts],
             beta_prj, ddd, qq, lls, idx_rbeta
         )
-        #Enlts[iwfts] *= 0.5 # scale back to Ha
+        Enlts[iwfts] *= 0.5 # scale back to Ha
         println("Output energy (in Ha) = ", Enlts[iwfts])
+        #
+        @views l1dx_normalize!(ld1x_input, grid, idx_rcut, qq, beta_prj, phits[:,iwfts], llts[iwfts])
+        #
     end
+    println("ddd after = "); display(ddd); println()
 
     @infiltrate
 

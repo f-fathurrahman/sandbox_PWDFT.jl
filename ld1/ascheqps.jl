@@ -1,6 +1,6 @@
-function ascheqps!(
+function ascheqps_Ry!(
     nam, ℓ, E0, grid, Vpot, y, beta, ddd, qq, lls, idx_rbeta;
-    TOL = 1e-12, NmaxIter = 20
+    TOL = 1e-10, NmaxIter = 20
 )
     # TOL might be too small ?
 #=
@@ -38,12 +38,26 @@ Requires in input a good estimate "E0" of the energy
     #
     # series developement of the potential near the origin
     for ir in 1:4
-        y[ir] = 2*Vpot[ir]
+        y[ir] = Vpot[ir]
     end
-    println("y[1:4] = ", y[1:4])
+    #
+    println()
+    println("Before radial_grid_series")
+    @printf("y[1] = %18.10f\n", y[1])
+    @printf("y[2] = %18.10f\n", y[2])
+    @printf("y[3] = %18.10f\n", y[3])
+    @printf("y[4] = %18.10f\n", y[4])
+    println()
+    #
     b = zeros(Float64, 4) # originally b(0:3)
     radial_grid_series!( y, grid.r, grid.r2, b )
-    println("b = ", b)
+    #
+    println()
+    @printf("b[1] = %18.10f\n", b[1])
+    @printf("b[2] = %18.10f\n", b[2])
+    @printf("b[3] = %18.10f\n", b[3])
+    @printf("b[4] = %18.10f\n", b[4])
+    println()
     #
     #  set up the f-function and determine the position of its last
     #  change of sign
@@ -53,11 +67,11 @@ Requires in input a good estimate "E0" of the energy
     for iterSch in 1:NmaxIter
         println("starting iterSch=$iterSch, elw=$elw, E=$E, eup=$eup")
         idx_r = 1
-        f[1] = ddx12*( 2 * grid.r2[1] * (Vpot[1] - E) + sqlhf ) # XXX change to Ha
-        #f[1] = ddx12*( grid.r2[1] * (Vpot[1] - E) + sqlhf ) # XXX change to Ha
+        #f[1] = ddx12*( 2 * grid.r2[1] * (Vpot[1] - E) + sqlhf ) # XXX change to Ha
+        f[1] = ddx12*( grid.r2[1] * (Vpot[1] - E) + sqlhf ) # XXX This is Ry
         for ir in 2:Nrmesh
-            f[ir] = ddx12*( 2 * grid.r2[ir] * (Vpot[ir] - E) + sqlhf ) # XXX change to Ha
-            #f[ir] = ddx12*( grid.r2[ir] * (Vpot[ir] - E) + sqlhf )
+            #f[ir] = ddx12*( 2 * grid.r2[ir] * (Vpot[ir] - E) + sqlhf ) # XXX change to Ha
+            f[ir] = ddx12*( grid.r2[ir] * (Vpot[ir] - E) + sqlhf ) # XXX This is in Ry
             if ( f[ir] != abs(f[ir])*sign(f[ir-1]) ) && (ir < Nrmesh-5)
                 idx_r = ir
             end
@@ -89,7 +103,8 @@ Requires in input a good estimate "E0" of the energy
         #
         # no coulomb divergence in the origin for a pseudopotential
         ze2 = 0.0 
-        start_scheq_Ha!( ℓ, E, b, grid, ze2, y )
+        #start_scheq_Ha!( ℓ, E, b, grid, ze2, y )
+        start_scheq_Ry!( ℓ, E, b, grid, ze2, y )
         #
         # outward integration before idx_r
         integrate_outward!( ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta, idx_r)
@@ -149,7 +164,7 @@ Requires in input a good estimate "E0" of the energy
             @views y[:] = y[:]/ymx
         end
         #
-        #  calculate the normalization
+        # calculate the normalization
         for ibeta in 1:Nbeta
             if (ℓ == lls[ibeta]) # also need to check jj for relativistic case
                 idx_r_l = idx_rbeta[ibeta]
@@ -170,8 +185,8 @@ Requires in input a good estimate "E0" of the energy
             ss += qq[ibeta,jbeta]*work[ibeta]*work[jbeta]
         end
         dfe = -y[idx_r]*f[idx_r]/grid.dx/ss
-        #de = -fe*dfe
-        de = -fe*dfe/2 # Hartree?
+        de = -fe*dfe #  in Ry
+        #de = -fe*dfe/2 # Hartree?
         epsE = abs(de/E)
         println("iterSch = $iterSch E=$E de=$de")
         if abs(de) < TOL

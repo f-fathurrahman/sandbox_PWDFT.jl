@@ -53,8 +53,7 @@ function ld1x_find_qi!(grid, log_der_ae, xc, ik, 𝓁, ncn, flag)
         error("𝓁=$(𝓁) is not programmed")
     end
 
-    println("log_der_ae = ", log_der_ae)
-
+    #println("log_der_ae = ", log_der_ae)
     
     # fix deltaq and the maximum step number
     dq_0 = 0.05

@@ -7,7 +7,7 @@
 # grid  the mesh
 # ze2   the zed of the mesh, changed to Zval
 # in output solution(1:2) contains the solution in the first two points
-function start_scheq!(l::Int64, e, b, grid::RadialGrid, Zval, solution)
+function start_scheq_Ry!(l::Int64, e, b, grid::RadialGrid, Zval, solution)
     #
     #  set up constants and initialize
     #
