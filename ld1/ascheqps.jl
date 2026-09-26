@@ -1,6 +1,6 @@
 function ascheqps_Ry!(
-    nam, ℓ, E0, grid, Vpot, y, beta, ddd, qq, lls, idx_rbeta;
-    TOL = 1e-10, NmaxIter = 20
+    nam, ℓ, E0, grid, Vpot, y, beta_prj, ddd, qq, lls, idx_rbeta;
+    TOL = 1e-11, NmaxIter = 20
 )
     # TOL might be too small ?
 #=
@@ -14,7 +14,7 @@ Requires in input a good estimate "E0" of the energy
     println("n=$nam, ℓ=$ℓ, input E0 = $E0")
 
     Nrmesh = grid.Nrmesh
-    Nbeta = size(beta, 2)
+    Nbeta = size(beta_prj, 2)
     @assert Nbeta == size(ddd, 1)
     @assert Nbeta == size(ddd, 2)
 
@@ -107,7 +107,7 @@ Requires in input a good estimate "E0" of the energy
         start_scheq_Ry!( ℓ, E, b, grid, ze2, y )
         #
         # outward integration before idx_r
-        integrate_outward!( ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta, idx_r)
+        integrate_outward_Ry!( ℓ, E, grid, f, b, y, beta_prj, ddd, qq, lls, idx_rbeta, idx_r)
         ncross = 0
         ymx = 0.0
         for ir in 2:(idx_r-1)
@@ -169,7 +169,7 @@ Requires in input a good estimate "E0" of the energy
             if (ℓ == lls[ibeta]) # also need to check jj for relativistic case
                 idx_r_l = idx_rbeta[ibeta]
                 for ir in 1:idx_r_l
-                    fun[ir] = beta[ir,ibeta]*y[ir]*sqrt(grid.r[ir])
+                    fun[ir] = beta_prj[ir,ibeta]*y[ir]*sqrt(grid.r[ir])
                 end
                 work[ibeta] = integ_0_inf_dr(fun, grid, idx_r_l, nst)
             else

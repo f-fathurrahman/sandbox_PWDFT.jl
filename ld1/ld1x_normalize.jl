@@ -30,7 +30,7 @@ function l1dx_normalize!(ld1x_input, grid, idx_rcut, qq, beta_prj, phi, ℓ)
     end
 
     if abs(work1) < 1e-10
-        println("Zero norm: self consistency problem; state = $ns")
+        println("Zero norm: self consistency problem")
         work1 = 1.0
     elseif work1 <= -1e-10
         error("Negative norm")   

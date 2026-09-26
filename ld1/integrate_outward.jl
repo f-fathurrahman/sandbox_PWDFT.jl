@@ -1,11 +1,11 @@
-function integrate_outward!(ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta, idx_r)
+function integrate_outward_Ry!(ℓ, E, grid, f, b, y, beta_prj, ddd, qq, lls, idx_rbeta, idx_r)
    #=
    Integrate the wavefunction from 0 to r(idx_r) 
    generalized separable or US pseudopotentials are allowed
    This routine assumes that y countains already the
    correct values in the first two points
    =#
-    Nbeta = size(beta, 2)
+    Nbeta = size(beta_prj, 2)
     c = zeros(Float64, idx_r)
     el = zeros(Float64, idx_r)
     cm = zeros(Float64, Nbeta, Nbeta)
@@ -18,7 +18,8 @@ function integrate_outward!(ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta
     xc = zeros(Float64, 4)
     #
     ddx12 = grid.dx^2/12.0
-    b0e = 2*(b[1] - E) #XXX in Hartree
+    #b0e = 2*(b[1] - E) #XXX in Hartree
+    b0e = b[1] - E #XXX this is in Ry
     x4l6 = 4*ℓ + 6
     nst = (ℓ + 1)*2
     #
@@ -30,7 +31,7 @@ function integrate_outward!(ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta
         y[ir+1] = ( 12*y[ir] - 10*f[ir]*y[ir] - f[ir-1]*y[ir-1] )/f[ir+1]
     end
     #
-    # for each beta function with correct angular momentum
+    # for each beta_prj function with correct angular momentum
     # solve the inhomogeneous equation
     iib = 0
     jjb = 0
@@ -45,7 +46,7 @@ function integrate_outward!(ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta
                     for ir in 1:idx_rbeta[jbeta]
                         #XXX check E need factor 2 ? Ha -> Ry
                         #XXX I think what is important here is the unit of E*qq
-                        c[ir] += ( ddd[jbeta,ibeta] - E*qq[jbeta,ibeta] ) * beta[ir,jbeta]
+                        c[ir] += ( ddd[jbeta,ibeta] - E*qq[jbeta,ibeta] ) * beta_prj[ir,jbeta]
                     end
                 end
             end
@@ -56,9 +57,14 @@ function integrate_outward!(ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta
             end
             #call seriesbes(j1, grid%r, grid%r2, 4, d)
             seriesbes!(j1, grid.r, grid.r2, 4, c)
-            delta = 2*( b0e^2 + x4l6*b[3] ) #XXX offset index b
+            #delta = 2*( b0e^2 + x4l6*b[3] ) #XXX offset index b, in Ha
+            delta = b0e^2 + x4l6*b[3] #XXX offset index b, in Ry
+            #
             xc[1] = ( -d[1]*b0e - x4l6*d[3] )/delta
-            xc[3] = 2*( -b0e*d[3] + d[1]*b[3] )/delta #XXX offset index b
+            #
+            #xc[3] = 2*( -b0e*d[3] + d[1]*b[3] )/delta #XXX offset index b, in Ha
+            xc[3] = ( -b0e*d[3] + d[1]*b[3] )/delta #XXX offset index b, in Ry
+            #
             xc[2] = 0.0
             xc[4] = 0.0
             for ir in 1:3
@@ -83,14 +89,14 @@ function integrate_outward!(ℓ, E, grid, f, b, y, beta, ddd, qq, lls, idx_rbeta
                 if lls[jbeta] == ℓ
                     jjb += 1
                     for ir in 1:min(idx_r, idx_rbeta[jbeta])
-                        el[ir] = beta[ir,jbeta] * eta[ir,iib] * sqrt(grid.r[ir])
+                        el[ir] = beta_prj[ir,jbeta] * eta[ir,iib] * sqrt(grid.r[ir])
                     end
                     cm[jjb,iib] = -integ_0_inf_dr(el, grid, min(idx_r, idx_rbeta[jbeta]), nst)
                 end
             end
             #
             for ir in 1:min(idx_r, idx_rbeta[ibeta])
-                el[ir] = beta[ir,ibeta] * y[ir] * sqrt(grid.r[ir])
+                el[ir] = beta_prj[ir,ibeta] * y[ir] * sqrt(grid.r[ir])
             end
             bm[iib] = integ_0_inf_dr(el, grid, min(idx_r, idx_rbeta[ibeta]), nst)
             cm[iib,iib] = 1.0 + cm[iib,iib]
