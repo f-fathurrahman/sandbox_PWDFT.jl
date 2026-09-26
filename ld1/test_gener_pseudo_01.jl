@@ -10,8 +10,8 @@ includet("ld1x_normalize.jl")
 
 function debug_gener_pseudo_01(; NiterMax=100)
 
-    #ld1x_input = create_input_Si()
-    ld1x_input = create_input_Pd()
+    ld1x_input = create_input_Si()
+    #ld1x_input = create_input_Pd()
 
     Zval = ld1x_input.Zval
     Zed = ld1x_input.Zed
@@ -556,7 +556,9 @@ function debug_gener_pseudo_01(; NiterMax=100)
     end
 
     phits = zeros(Float64, Nrmesh, Nwfts)
-    println("ddd before = "); display(ddd); println()
+    # ddd should not be modified here
+    # what about qq? beta_prj ?
+    #println("ddd before = "); display(ddd); println()
     for iwfts in 1:Nwfts
         #XXX convert energy and potential to Ry
         @views Enlts[iwfts] = ascheqps_Ry!(
@@ -569,7 +571,41 @@ function debug_gener_pseudo_01(; NiterMax=100)
         @views l1dx_normalize!(ld1x_input, grid, idx_rcut, qq, beta_prj, phits[:,iwfts], llts[iwfts])
         #
     end
-    println("ddd after = "); display(ddd); println()
+    
+    println("\nComputing bmat")
+    println("bmat before = "); display(bmat); println()
+    # this array should be local
+    vaux = zeros(Float64, Nrmesh, 2) # 2 for spin?
+    for ibeta in 1:Nbeta, jbeta in 1:ibeta
+        if lls[ibeta] == lls[jbeta] # abs(jjs(ib)-jjs(jb)) < 1.e-7_dp
+            ℓ = lls[ibeta]
+            nst = (ℓ + 1)*2
+            #
+            idx_r = idx_rbeta[ibeta]
+            # This is for PAW?
+            #if which_augfun == :PSQ
+            for ir = 1:idx_rcut[ibeta]
+                vaux[ir,1] = qvanl[ir,ibeta,jbeta,0]*V_Ps_loc[ir]*2 # to Ry
+            end
+            #ELSE
+            #for ir in 1:idx_r
+            #    vaux[ir,1] = qvan[ir,ibeta,jbeta]*V_Ps_loc[ir] # to Ry?
+            #end
+            println()
+            println("ibeta=$ibeta, jbeta=$jbeta")
+            println("idx_r = ", idx_r)
+            println("sum qvan[1:idx_r,ibeta,jbeta] = ", sum(qvan[1:idx_r,ibeta,jbeta]))
+            println("sum qvanl[1:idx_r,ibeta,jbeta,0] = ", sum(qvanl[1:idx_r,ibeta,jbeta,0]))
+            println("sum V_Ps_loc[1:idx_r] in Ry = ", 2*sum(V_Ps_loc[1:idx_r]))
+            println("sum vaux[1:idx_r,1] = ", sum(vaux[1:idx_r,1]))
+            println("integral result = ", integ_0_inf_dr(vaux[1:idx_r,1], grid, idx_r, nst))
+            # convert to Ry?
+            bmat[ibeta,jbeta] -= integ_0_inf_dr(vaux[:,1], grid, idx_r, nst)
+        end
+        bmat[jbeta,ibeta] = bmat[ibeta,jbeta]
+    end
+    println("The ddd matrix (bmat) after descreening D coefs")
+    display(bmat); println()
 
     @infiltrate
 
