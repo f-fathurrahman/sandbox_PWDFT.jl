@@ -24,3 +24,15 @@ includet("ld1x_deriv2_7pts.jl")
 includet("ld1x_find_qi.jl")
 
 includet("integ_0_inf_dr.jl")
+
+includet("compute_phius.jl")
+includet("set_psi_in.jl")
+includet("compute_chi.jl")
+includet("calc_pseudo_q.jl")
+
+includet("integrate_outward.jl")
+includet("integrate_inward.jl")
+includet("ascheqps.jl")
+includet("ld1x_normalize.jl")
+includet("calc_charge_ps.jl")
+

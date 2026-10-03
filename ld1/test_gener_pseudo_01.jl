@@ -1,12 +1,3 @@
-includet("compute_phius.jl")
-includet("set_psi_in.jl")
-includet("compute_chi.jl")
-includet("calc_pseudo_q.jl")
-
-includet("integrate_outward.jl")
-includet("integrate_inward.jl")
-includet("ascheqps.jl")
-includet("ld1x_normalize.jl")
 
 function debug_gener_pseudo_01(; NiterMax=100)
 
