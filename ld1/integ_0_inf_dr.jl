@@ -1,12 +1,12 @@
-function integ_0_inf_dr(f, grid, Nrmesh, nst)
-    # XXX Need Nrmesh?
+function integ_0_inf_dr(f, grid, Nr_stop, nst)
+    # XXX Need Nr_stop?
     #=
     integral of f from 0 to infinity
     f is given on a logarithmic mesh. 
     f(r) is assumed to be proportional to r**nst for small r
     =#
 
-    @assert Nrmesh <= grid.Nrmesh
+    @assert Nr_stop <= grid.Nrmesh
 
     fs = zeros(Float64, 4)
     b = zeros(Float64, 4)
@@ -21,7 +21,7 @@ function integ_0_inf_dr(f, grid, Nrmesh, nst)
     # simpson integration (logarithmic mesh: dr ==> r dx)
     #
     ss1 = 0.0
-    for i in range(1, stop=Nrmesh-2, step=2)
+    for i in range(1, stop=Nr_stop-2, step=2)
         ss1 += f[i]*grid.r[i] + 4.0*f[i+1]*grid.r[i+1] + f[i+2]*grid.r[i+2]
     end
     res += ss1*grid.dx/3.0
