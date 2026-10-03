@@ -598,6 +598,13 @@ function debug_gener_pseudo_01(; NiterMax=100)
     println("The ddd matrix (bmat) after descreening D coefs")
     display(bmat); println()
 
+    rhos = zeros(Float64, Nrmesh, Nspin)
+    calc_charge_ps!(
+        grid, rhos, phits, Nwfts, llts, octs,
+        beta_prj, Nbeta, lls, idx_rbeta, qvan, qvanl;
+        Nspin = Nspin
+    )
+
     @infiltrate
 
     return
