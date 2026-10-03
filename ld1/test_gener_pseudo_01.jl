@@ -41,7 +41,8 @@ function debug_gener_pseudo_01(; NiterMax=100)
     Vnew = zeros(Float64, Nrmesh, Nspin)
     psi = zeros(Float64, Nrmesh, Nwf) # spin index dropped for the moment
     
-    xc_calc = LibxcXCCalculator() # default using VWN
+    #xc_calc = LibxcXCCalculator() # default using VWN
+    xc_calc = LibxcXCCalculator(x_id=1, c_id=9)
     ispin = 1
     
     starting_potential!(
