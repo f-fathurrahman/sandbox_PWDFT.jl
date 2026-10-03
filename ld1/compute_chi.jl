@@ -30,7 +30,7 @@ function _solve_tridiag!(a, b, c, r, u, n)
     return
 end
 
-function compute_chi!(grid, V_Ps_loc, ℓ, idx_r, phi_in, chi_out, xc, E_in, lbes4)
+function compute_chi!(grid, V_ps_loc, ℓ, idx_r, phi_in, chi_out, xc, E_in, lbes4)
     #= 
     This routine computes the chi functions:
         |chi> = (\epsilon - T - V_{loc}) |psi>
@@ -98,7 +98,7 @@ function compute_chi!(grid, V_Ps_loc, ℓ, idx_r, phi_in, chi_out, xc, E_in, lbe
   
     # and the potential
     for i in 1:4
-        j1[i] = V_Ps_loc[i]
+        j1[i] = V_ps_loc[i]
     end
   
     if abs( j1[1] - j1[4]) > 1e-12
@@ -128,7 +128,7 @@ function compute_chi!(grid, V_Ps_loc, ℓ, idx_r, phi_in, chi_out, xc, E_in, lbe
         gi[ir] = phi_in[ir]/grid.sqrtr[ir]
     end
     for ir in 1:Nrmesh
-        j1[ir] = 2*grid.r2[ir]*(V_Ps_loc[ir] - E_in) + (ℓ + 0.5)^2 # this is in Hartree
+        j1[ir] = 2*grid.r2[ir]*(V_ps_loc[ir] - E_in) + (ℓ + 0.5)^2 # this is in Hartree
         j1[ir] = 1.0 - ddx12*j1[ir]
     end
     #

@@ -201,16 +201,16 @@ function debug_gener_pseudo_01(; NiterMax=100)
     xc[2] = ( f2ae - bm[1] ) / ( bm[2] - bm[1] )
     xc[1] = 1.0 - xc[2]
 
-    V_Ps_loc = zeros(Float64, Nrmesh)
+    V_ps_loc = zeros(Float64, Nrmesh)
     #
     # define the v_out function
     for ir in 1:ir_loc
-        V_Ps_loc[ir] = xc[1]*j1[ir,1] + xc[2]*j1[ir,2]
+        V_ps_loc[ir] = xc[1]*j1[ir,1] + xc[2]*j1[ir,2]
     end
     
-    # Beyond rcloc V_Ps_loc should be the same as Vpot
+    # Beyond rcloc V_ps_loc should be the same as Vpot
     for ir in (ir_loc+1):Nrmesh
-        V_Ps_loc[ir] = Vpot[ir]
+        V_ps_loc[ir] = Vpot[ir]
     end
 
     # We calculate rhoe core here
@@ -402,7 +402,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
         end
         println("lbes4 = ", lbes4)
         @views compute_chi!(
-            grid, V_Ps_loc, ℓ, idx_rbeta[ibeta],
+            grid, V_ps_loc, ℓ, idx_rbeta[ibeta],
             phis[:,ibeta], chis[:,ibeta], xc, Enls[ibeta], lbes4
         )
 
@@ -553,7 +553,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
     for iwfts in 1:Nwfts
         #XXX convert energy and potential to Ry
         @views Enlts[iwfts] = ascheqps_Ry!(
-            nnts[iwfts], llts[iwfts], 2*Enlts[iwfts], grid, 2*V_Ps_loc, phits[:,iwfts],
+            nnts[iwfts], llts[iwfts], 2*Enlts[iwfts], grid, 2*V_ps_loc, phits[:,iwfts],
             beta_prj, ddd, qq, lls, idx_rbeta
         )
         Enlts[iwfts] *= 0.5 # scale back to Ha
@@ -576,18 +576,18 @@ function debug_gener_pseudo_01(; NiterMax=100)
             # This is for PAW?
             #if which_augfun == :PSQ
             for ir = 1:idx_rcut[ibeta]
-                vaux[ir,1] = qvanl[ir,ibeta,jbeta,0]*V_Ps_loc[ir]*2 # to Ry
+                vaux[ir,1] = qvanl[ir,ibeta,jbeta,0]*V_ps_loc[ir]*2 # to Ry
             end
             #ELSE
             #for ir in 1:idx_r
-            #    vaux[ir,1] = qvan[ir,ibeta,jbeta]*V_Ps_loc[ir] # to Ry?
+            #    vaux[ir,1] = qvan[ir,ibeta,jbeta]*V_ps_loc[ir] # to Ry?
             #end
             println()
             println("ibeta=$ibeta, jbeta=$jbeta")
             println("idx_r = ", idx_r)
             println("sum qvan[1:idx_r,ibeta,jbeta] = ", sum(qvan[1:idx_r,ibeta,jbeta]))
             println("sum qvanl[1:idx_r,ibeta,jbeta,0] = ", sum(qvanl[1:idx_r,ibeta,jbeta,0]))
-            println("sum V_Ps_loc[1:idx_r] in Ry = ", 2*sum(V_Ps_loc[1:idx_r]))
+            println("sum V_ps_loc[1:idx_r] in Ry = ", 2*sum(V_ps_loc[1:idx_r]))
             println("sum vaux[1:idx_r,1] = ", sum(vaux[1:idx_r,1]))
             println("integral result = ", integ_0_inf_dr(vaux[1:idx_r,1], grid, idx_r, nst))
             # convert to Ry?
@@ -604,6 +604,29 @@ function debug_gener_pseudo_01(; NiterMax=100)
         beta_prj, Nbeta, lls, idx_rbeta, qvan, qvanl;
         Nspin = Nspin
     )
+
+    # This will calculate new potential
+    radial_poisson_solve!(0, 2, grid, rhos, V_h)
+    #
+    #Rhoe_radial[:] .= rhos[:] ./ grid.r2[:] ./ (4π) # using rhos
+    @. Rhoe_radial[:] = (rhos + rhoc) / grid.r2 / (4π) # using rhos+rhoc
+    #XXX also need rho core
+    calc_epsxc_Vxc_VWN!(
+        xc_calc, Rhoe_radial,
+        epsxc,
+        Vxc
+    )
+    ispin = 1
+    for i in 1:Nrmesh
+        vaux[i,ispin] = V_h[i] + Vxc[i,ispin]
+    end
+
+    V_ps_tot = zeros(Float64, Nrmesh, Nspin)
+    for ir in 1:Nrmesh
+        V_ps_tot[ir,1] = V_ps_loc[ir]
+        V_ps_loc[ir] -= vaux[ir,1] # subtract vaux from V_ps_loc
+    end
+
 
     @infiltrate
 
