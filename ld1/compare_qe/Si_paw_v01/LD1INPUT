@@ -4,13 +4,14 @@
   zed = 14.0
   rel = 1
   config = '[Ne] 3s2 3p2 3d-1',
-  dft = 'lda_x_sla lda_c_vwn'
+!  dft = 'lda_x_sla lda_c_vwn'
 /
 
 &inputp
   lpaw = .true.
   pseudotype = 3
-  file_pseudopw = 'Si.pz-n-kjpaw_psl.1.0.0.UPF'
+  file_pseudopw = 'Si.UPF'
+  file_wfcaegen = 'ld1.wfcaegen'
   lloc = -1
   rcloc = 1.9
   which_augfun = 'PSQ'
