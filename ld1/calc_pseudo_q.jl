@@ -2,7 +2,7 @@ function calc_pseudo_q!(ld1x_input, grid, qfunc, qfuncl, idx_rbeta)
     #=
   USE kinds, ONLY : DP
   USE ld1_parameters, ONLY : nwfsx
-  USE ld1inc, ONLY : rcut, lls,  grid, ndmx, lmx2, nbeta, ikk, ecutrho, &
+  USE ld1inc, ONLY : rcut, ll_ps,  grid, ndmx, lmx2, nbeta, ikk, ecutrho, &
               rmatch_augfun, rmatch_augfun_nc
   IMPLICIT NONE
   !
@@ -20,7 +20,7 @@ function calc_pseudo_q!(ld1x_input, grid, qfunc, qfuncl, idx_rbeta)
     
     Nrmesh = grid.Nrmesh
     Nbeta = ld1x_input.Nbeta
-    lls = ld1x_input.lls
+    ll_ps = ld1x_input.ll_ps
     rcut = ld1x_input.rcut # cutoff for projectors
     #
     ecutrho = 0.0
@@ -28,9 +28,9 @@ function calc_pseudo_q!(ld1x_input, grid, qfunc, qfuncl, idx_rbeta)
     l2_e = -1 # invalid value
     fill!(qfuncl, 0.0)
     for ibeta in 1:Nbeta
-        l1 = lls[ibeta]
+        l1 = ll_ps[ibeta]
         for jbeta in ibeta:Nbeta
-            l2 = lls[jbeta]
+            l2 = ll_ps[jbeta]
             # Find the matching point
             idx_r = 0
             #if rmatch_augfun_nc
@@ -68,9 +68,9 @@ function calc_pseudo_q!(ld1x_input, grid, qfunc, qfuncl, idx_rbeta)
     augmom = 0.0
     aux = zeros(Float64, Nrmesh)
     for ibeta in 1:Nbeta
-        l1 = lls[ibeta]
+        l1 = ll_ps[ibeta]
         for jbeta in ibeta:Nbeta
-            l2 = lls[jbeta]
+            l2 = ll_ps[jbeta]
             for l3 in range(abs(l1-l2), stop = l1+l2, step = 2)
                 for ir in 1:ir_c
                     aux[ir] = (qfuncl[ir,ibeta,jbeta,l3] - qfunc[ir,ibeta,jbeta]) * grid.r[ir]^l3
@@ -99,28 +99,6 @@ function compute_q_3bess!(grid, ldip, ℓ, idx_r, chir, phi_out)
     idx_r where the cut is done, the angular momentum lam of the 
     bessel functions and the function chir.
     Phi_out has the same ldip dipole moment of chir.
-    =#
-
-    #=
-
-  integer ::    &
-       ldip,    & ! input: the order of the dipole
-       lam,     & ! input: the angular momentum
-       idx_r         ! input: the point corresponding to rc
-
-  real(DP) :: &
-       xc(8)      ! output: the coefficients of the Bessel functions
-
-  real(DP) ::         &
-       chir(Nrmesh),    &   ! input: the all-electron function
-       phi_out(Nrmesh)      ! output: the phi function
-  !
-  real(DP) ::  &
-       ecutrho,& ! the expected cut-off on the charge density for this q
-       fae,    & ! the value of the all-electron function
-       f1ae,   & ! its first derivative
-       f2ae,   & ! the second derivative
-       dip       ! the norm of the function
     =#
 
     nbes = 3 #XXX HARCODED

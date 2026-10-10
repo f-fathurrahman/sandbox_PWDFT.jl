@@ -2,13 +2,13 @@
 function l1dx_normalize!(ld1x_input, grid, idx_rcut, qq, beta_prj, phi, ℓ)
     Nrmesh = grid.Nrmesh
     Nbeta = ld1x_input.Nbeta
-    lls = ld1x_input.lls
+    ll_ps = ld1x_input.ll_ps
     gi = zeros(Float64, Nrmesh)
     # if US pseudopotential compute the augmentation part
     nst = (ℓ + 1)*2
     work = zeros(Float64, Nbeta)
     for ibeta in 1:Nbeta
-        if ℓ == lls[ibeta] # .and. abs(j-jjs(n1)) < 1.e-7_dp ) then
+        if ℓ == ll_ps[ibeta] # .and. abs(j-jjs(n1)) < 1.e-7_dp ) then
             idx_r = idx_rcut[ibeta]
             for ir in 1:idx_r
                 gi[ir] = beta_prj[ir,ibeta]*phi[ir]

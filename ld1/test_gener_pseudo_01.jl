@@ -7,13 +7,13 @@ function debug_gener_pseudo_01(; NiterMax=100)
     Zval = ld1x_input.Zval
     Zed = ld1x_input.Zed
     Nspin = ld1x_input.Nspin
-    Nwf = ld1x_input.Nwf
+    Nwf_ps = ld1x_input.Nwf_ps
     nn = ld1x_input.nn
     ll = ld1x_input.ll
     oc = ld1x_input.oc
     core_state = ld1x_input.core_state
 
-    Enl = zeros(Float64, Nwf)
+    Enl = zeros(Float64, Nwf_ps)
 
     @assert ld1x_input.iswitch == 1
 
@@ -34,20 +34,20 @@ function debug_gener_pseudo_01(; NiterMax=100)
     Rhoe = zeros(Float64, Nrmesh, Nspin)
     Rhoe_radial = zeros(Float64, Nrmesh, Nspin)
     V_h = zeros(Float64, Nrmesh)
-    Vxc = zeros(Float64, Nrmesh, Nspin)
-    VHxc = zeros(Float64, Nrmesh, Nspin)
-    VHxc_new = zeros(Float64, Nrmesh, Nspin)
+    V_xc = zeros(Float64, Nrmesh, Nspin)
+    V_hxc = zeros(Float64, Nrmesh, Nspin)
+    V_hxc_new = zeros(Float64, Nrmesh, Nspin)
     epsxc = zeros(Float64, Nrmesh)
-    Vnew = zeros(Float64, Nrmesh, Nspin)
-    psi = zeros(Float64, Nrmesh, Nwf) # spin index dropped for the moment
+    V_new = zeros(Float64, Nrmesh, Nspin)
+    psi = zeros(Float64, Nrmesh, Nwf_ps) # spin index dropped for the moment
     
-    #xc_calc = LibxcXCCalculator() # default using VWN
-    xc_calc = LibxcXCCalculator(x_id=1, c_id=9)
+    #xc_calc = LibxcXCCalculator(x_id=1, c_id=7) # default using VWN
+    xc_calc = LibxcXCCalculator(x_id=1, c_id=9) # Perdew-Zunger LDA
     ispin = 1
     
     starting_potential!(
         Nrmesh, Zval, Zed,
-        Nwf, oc, nn, ll,
+        Nwf_ps, oc, nn, ll,
         grid.r, Enl, v0, vxt, Vpot
     )
     if Nspin == 2
@@ -56,9 +56,9 @@ function debug_gener_pseudo_01(; NiterMax=100)
            Vpot[i,2] = Vpot[i,1]
         end
     end
-    # Define VHxc input
+    # Define V_hxc input
     for i in 1:Nrmesh
-        VHxc[i,ispin] = Vpot[i,ispin] + Zed/grid.r[i]
+        V_hxc[i,ispin] = Vpot[i,ispin] + Zed/grid.r[i]
     end
 
 
@@ -66,6 +66,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
     thresh0 = 1.0e-10
     nstop = 0
     mode = 1 # for lschps
+    #XXX this is used in ascheq, using negative of Zval
     ze2 = -Zval # should be 2*Zval in Ry unit
     diff_V = Inf
 
@@ -74,7 +75,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
         println("\niterSCF = ", iterSCF)
 
         # FIXME: simplify this
-        for iwf in 1:Nwf
+        for iwf in 1:Nwf_ps
             # Skip this iwf if occupation number is negative (unbound state)
             if oc[iwf] < 0.0
                 Enl[iwf] = 0.0
@@ -95,7 +96,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
         end
 
         println("Energy levels:")
-        for iwf in 1:Nwf
+        for iwf in 1:Nwf_ps
             @printf("%3d %18.10f\n", iwf, Enl[iwf])
         end
 
@@ -103,7 +104,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
         # calculate charge density (spherical approximation)
         #
         fill!(Rhoe, 0.0)
-        for iwf in 1:Nwf, ir in 1:Nrmesh
+        for iwf in 1:Nwf_ps, ir in 1:Nrmesh
             # this is for ispin=1
             Rhoe[ir,ispin] += oc[iwf] * psi[ir,iwf]^2
         end
@@ -118,18 +119,18 @@ function debug_gener_pseudo_01(; NiterMax=100)
         calc_epsxc_Vxc_VWN!(
             xc_calc, Rhoe_radial,
             epsxc,
-            Vxc
+            V_xc
         )
         println("sum Rhoe_radial = ", sum(Rhoe_radial))
         println("sum epsxc = ", sum(epsxc))
-        println("sum Vxc = ", sum(Vxc))
+        println("sum V_xc = ", sum(V_xc))
 
         for i in 1:Nrmesh
-            VHxc_new[i,ispin] = V_h[i] + Vxc[i,ispin]
-            Vnew[i,ispin] = -Zed/grid.r[i] + vxt[i] + VHxc_new[i,ispin]
+            V_hxc_new[i,ispin] = V_h[i] + V_xc[i,ispin]
+            V_new[i,ispin] = -Zed/grid.r[i] + vxt[i] + V_hxc_new[i,ispin]
         end
 
-        diff_V = LinearAlgebra.norm(VHxc .- VHxc_new)
+        diff_V = LinearAlgebra.norm(V_hxc .- V_hxc_new)
         println("diff_V = ", diff_V)
         if diff_V < 1e-10
             println("!!!! CONVERGED !!!")
@@ -138,9 +139,9 @@ function debug_gener_pseudo_01(; NiterMax=100)
 
         for i in 1:Nrmesh
             # Mix
-            VHxc[i,ispin] = 0.5*VHxc_new[i,ispin] + 0.5*VHxc[i,ispin]
+            V_hxc[i,ispin] = 0.5*V_hxc_new[i,ispin] + 0.5*V_hxc[i,ispin]
             # Set new potential
-            Vpot[i,ispin] = -Zed/grid.r[i] + VHxc[i,ispin]
+            Vpot[i,ispin] = -Zed/grid.r[i] + V_hxc[i,ispin]
         end
 
     end
@@ -221,7 +222,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
     rhov = zeros(Float64, Nrmesh)
     rhoc = zeros(Float64, Nrmesh)
     for ir in 1:grid.Nrmesh
-        for iwf in 1:Nwf
+        for iwf in 1:Nwf_ps
             if ld1x_input.rel == 2
                 # This is the case of full relativistic (Dirac equation)
                 #XXX We need to reshape psi spinor
@@ -280,16 +281,16 @@ function debug_gener_pseudo_01(; NiterMax=100)
     totrho = integ_0_inf_dr(rhoc, grid, Nrmesh, 2)
     println("integ rhoc = ", totrho)
 
-    println("Setting appropriate energies Enls")
-    nstoae = ld1x_input.nstoae
-    Enls = ld1x_input.Enls
-    Nwfs = ld1x_input.Nwfs
+    println("Setting appropriate energies Enl_ps")
+    idx_ps_to_ae = ld1x_input.idx_ps_to_ae
+    Enl_ps = ld1x_input.Enl_ps
+    Nwf_ps = ld1x_input.Nwf_ps
     #
     SMALL_ENERGY = 1e-13
-    for iwfs in 1:Nwfs
-        iwf = nstoae[iwfs]
-        if abs(Enls[iwfs]) <= SMALL_ENERGY
-            Enls[iwfs] = Enl[iwf]  # just assign AE energy
+    for iwfs in 1:Nwf_ps
+        iwf = idx_ps_to_ae[iwfs]
+        if abs(Enl_ps[iwfs]) <= SMALL_ENERGY
+            Enl_ps[iwfs] = Enl[iwf]  # just assign AE energy
         end
     end
 
@@ -336,9 +337,9 @@ function debug_gener_pseudo_01(; NiterMax=100)
         @assert idx_rbeta[ibeta] < Nrmesh
     end
 
-    lls = ld1x_input.lls
+    ll_ps = ld1x_input.ll_ps
     for ibeta in 1:Nbeta, jbeta in 1:Nbeta
-        if (lls[ibeta] == lls[jbeta]) && (idx_rbeta[jbeta] > idx_rbeta[ibeta])
+        if (ll_ps[ibeta] == ll_ps[jbeta]) && (idx_rbeta[jbeta] > idx_rbeta[ibeta])
             idx_rbeta[ibeta] = idx_rbeta[jbeta] # choose the larger
         end
     end
@@ -351,13 +352,13 @@ function debug_gener_pseudo_01(; NiterMax=100)
     psipaw = zeros(Float64, Nrmesh, Nbeta)
     gi = zeros(Float64, Nrmesh)
     for ibeta in 1:Nbeta
-        nwf0 = nstoae[ibeta]
+        nwf0 = idx_ps_to_ae[ibeta]
         if fit_to_arbitrary_energy[ibeta]
-            @views _set_psi_in!( Zval, Vpot, grid, idx_rcutus[ibeta], lls[ibeta], Enls[ibeta], psipaw[:,ibeta] )
+            @views _set_psi_in!( Zval, Vpot, grid, idx_rcutus[ibeta], ll_ps[ibeta], Enl_ps[ibeta], psipaw[:,ibeta] )
             #FIXME: jjs is not yet used
         else
             #write(*,'(1x,A,I4,A)') 'ns = ', ns, ' new(ns) is false'
-            ℓ = lls[ibeta]
+            ℓ = ll_ps[ibeta]
             nst = (ℓ + 1)*2
             psipaw[:,ibeta] = psi[:,nwf0]
             #
@@ -373,20 +374,20 @@ function debug_gener_pseudo_01(; NiterMax=100)
 
     ecutrho = 0.0
     ecutwfc = 0.0
-    ocs = ld1x_input.ocs
-    els = ld1x_input.els
+    oc_ps = ld1x_input.oc_ps
+    state_label_ps = ld1x_input.state_label_ps
     psi_in = zeros(Float64, Nrmesh)
     psipsus = zeros(Float64, Nrmesh, Nbeta)
     phis = zeros(Float64, Nrmesh, Nbeta)
     chis = zeros(Float64, Nrmesh, Nbeta)
     for ibeta in 1:Nbeta
-        ℓ = lls[ibeta]
+        ℓ = ll_ps[ibeta]
         nst = (ℓ + 1)*2
-        nwf0 = nstoae[ibeta]
+        nwf0 = idx_ps_to_ae[ibeta]
         if fit_to_arbitrary_energy[ibeta]
             occ = 1.0
         else
-            occ = ocs[ibeta]
+            occ = oc_ps[ibeta]
         end
         #
         # save the all-electron function for the PAW setup
@@ -396,7 +397,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
         psipsus[:,ibeta] = psi_in[:]
         if idx_rcutus[ibeta] != idx_rcut[ibeta]
             #
-            @views compute_phius!(grid, ℓ, idx_rcutus[ibeta], psipsus[:,ibeta], phis[:,ibeta], xc, 1, els[ibeta])
+            @views compute_phius!(grid, ℓ, idx_rcutus[ibeta], psipsus[:,ibeta], phis[:,ibeta], xc, 1, state_label_ps[ibeta])
             ecutwfc = max(ecutwfc, 2.0*xc[5]^2)
             println("ecutwfc = $ecutwfc Ry")
             lbes4 = true
@@ -404,15 +405,15 @@ function debug_gener_pseudo_01(; NiterMax=100)
         println("lbes4 = ", lbes4)
         @views compute_chi!(
             grid, V_ps_loc, ℓ, idx_rbeta[ibeta],
-            phis[:,ibeta], chis[:,ibeta], xc, Enls[ibeta], lbes4
+            phis[:,ibeta], chis[:,ibeta], xc, Enl_ps[ibeta], lbes4
         )
 
     end
 
     bmat = zeros(Float64, Nbeta, Nbeta)
     for ibeta in 1:Nbeta, jbeta in 1:Nbeta
-        if lls[ibeta] == lls[jbeta] # also need check jjs && abs(jjs(ns)-jjs(ns1)) < 1.e-7_dp )
-            nst = (lls[ibeta] + 1)*2
+        if ll_ps[ibeta] == ll_ps[jbeta] # also need check jjs && abs(jjs(ns)-jjs(ns1)) < 1.e-7_dp )
+            nst = (ll_ps[ibeta] + 1)*2
             idx_r = idx_rbeta[ibeta]
             for ir in 1:Nrmesh
                 gi[ir] = phis[ir,ibeta]*chis[ir,jbeta]
@@ -460,14 +461,14 @@ function debug_gener_pseudo_01(; NiterMax=100)
         end
         #
         # and puts its integral in qq
-        if lls[ibeta] == lls[jbeta]  # XXX also need to check for jjs in case of 
-            nst = (lls[ibeta] + 1)*2
+        if ll_ps[ibeta] == ll_ps[jbeta]  # XXX also need to check for jjs in case of 
+            nst = (ll_ps[ibeta] + 1)*2
             qq[ibeta,jbeta] = integ_0_inf_dr(gi, grid, idx_rbeta_max, nst)
         end
         #
         # set the bmat with the eigenvalue part
         #
-        bmat[ibeta,jbeta] += Enls[jbeta]*qq[ibeta,jbeta]*2 #XXX Convert to Ry ???
+        bmat[ibeta,jbeta] += Enl_ps[jbeta]*qq[ibeta,jbeta]*2 #XXX Convert to Ry ???
         #
         # Use symmetry of the n,ns1 indices to set qvan and qq and bmat
         if ibeta != jbeta
@@ -475,7 +476,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
                 qvan[ir,jbeta,ibeta] = qvan[ir,ibeta,jbeta]
             end
             qq[jbeta,ibeta] = qq[ibeta,jbeta]
-            bmat[jbeta,ibeta] += Enls[ibeta]*qq[jbeta,ibeta]*2 #XXX Convert to Ry ???
+            bmat[jbeta,ibeta] += Enl_ps[ibeta]*qq[jbeta,ibeta]*2 #XXX Convert to Ry ???
         end
     end
     
@@ -499,8 +500,8 @@ function debug_gener_pseudo_01(; NiterMax=100)
     calc_pseudo_q!(ld1x_input, grid, qvan, qvanl, idx_rbeta)
 
     Nwfts = 0
-    for iwfs in 1:Nwfs
-        if (ocs[iwfs]  > 0.0) || ( ocs[iwfs] == 0.0 && Enls[iwfs] == 0.0 )
+    for iwfs in 1:Nwf_ps
+        if (oc_ps[iwfs]  > 0.0) || ( oc_ps[iwfs] == 0.0 && Enl_ps[iwfs] == 0.0 )
             Nwfts += 1
         end
     end
@@ -515,28 +516,28 @@ function debug_gener_pseudo_01(; NiterMax=100)
     iswts = zeros(Int64, Nwfts)
     #jjts = zeros(Float64, Nwfts)
     iwfts = 0
-    nns = ld1x_input.nns
+    nn_ps = ld1x_input.nn_ps
     isws = ld1x_input.isws
     #jjs = ld1x_input.jjs
-    for iwfs in 1:Nwfs
-        if (ocs[iwfs]  > 0.0) || ( ocs[iwfs] == 0.0 && Enls[iwfs] == 0.0 )
+    for iwfs in 1:Nwf_ps
+        if (oc_ps[iwfs]  > 0.0) || ( oc_ps[iwfs] == 0.0 && Enl_ps[iwfs] == 0.0 )
             iwfts += 1
-            elts[iwfts] = els[iwfs]
-            nnts[iwfts] = nns[iwfs]
-            llts[iwfts] = lls[iwfs]
-            octs[iwfts] = ocs[iwfs]
-            iswts[iwfts]= isws[iwfs]
+            elts[iwfts] = state_label_ps[iwfs]
+            nnts[iwfts] = nn_ps[iwfs]
+            llts[iwfts] = ll_ps[iwfs]
+            octs[iwfts] = oc_ps[iwfs]
+            iswts[iwfts] = isws[iwfs]
             #jjts[iwfts]= jjs[iwfs]
         end
     end
 
     nstoaets = zeros(Int64, Nwfts)
-    el = ld1x_input.el
+    state_label = ld1x_input.state_label
     for iwfts in 1:Nwfts
         nstoaets[iwfts] = 0
-        for iwf in 1:Nwf
+        for iwf in 1:Nwf_ps
             # XXX Spin-unpolarized
-            if elts[iwfts] == el[iwf]  # need to check for jjs
+            if elts[iwfts] == state_label[iwf]  # need to check for jjs
                 nstoaets[iwfts] = iwf
             end
         end
@@ -555,7 +556,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
         #XXX convert energy and potential to Ry
         @views Enlts[iwfts] = ascheqps_Ry!(
             nnts[iwfts], llts[iwfts], 2*Enlts[iwfts], grid, 2*V_ps_loc, phits[:,iwfts],
-            beta_prj, ddd, qq, lls, idx_rbeta
+            beta_prj, ddd, qq, ll_ps, idx_rbeta
         )
         Enlts[iwfts] *= 0.5 # scale back to Ha
         println("Output energy (in Ha) = ", Enlts[iwfts])
@@ -569,8 +570,8 @@ function debug_gener_pseudo_01(; NiterMax=100)
     # this array should be local
     vaux = zeros(Float64, Nrmesh, 2) # 2 for spin?
     for ibeta in 1:Nbeta, jbeta in 1:ibeta
-        if lls[ibeta] == lls[jbeta] # abs(jjs(ib)-jjs(jb)) < 1.e-7_dp
-            ℓ = lls[ibeta]
+        if ll_ps[ibeta] == ll_ps[jbeta] # abs(jjs(ib)-jjs(jb)) < 1.e-7_dp
+            ℓ = ll_ps[ibeta]
             nst = (ℓ + 1)*2
             #
             idx_r = idx_rbeta[ibeta]
@@ -602,7 +603,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
     rhos = zeros(Float64, Nrmesh, Nspin)
     calc_charge_ps!(
         grid, rhos, phits, Nwfts, llts, octs,
-        beta_prj, Nbeta, lls, idx_rbeta, qvan, qvanl;
+        beta_prj, Nbeta, ll_ps, idx_rbeta, qvan, qvanl;
         Nspin = Nspin
     )
 
@@ -615,11 +616,11 @@ function debug_gener_pseudo_01(; NiterMax=100)
     calc_epsxc_Vxc_VWN!(
         xc_calc, Rhoe_radial,
         epsxc,
-        Vxc
+        V_xc
     )
     ispin = 1
     for i in 1:Nrmesh
-        vaux[i,ispin] = V_h[i] + Vxc[i,ispin]
+        vaux[i,ispin] = V_h[i] + V_xc[i,ispin]
     end
 
     V_ps_tot = zeros(Float64, Nrmesh, Nspin)
