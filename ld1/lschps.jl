@@ -121,9 +121,9 @@ function lschps!( mode::Int64, z, eps, grid, n, l, e_, v_, u; nin_ = nothing )
         emin = e - 10.0
     end
 
-    if mode in [1,2,4]
-        println("emin, emax = ", emin, " ", emax)
-    end
+    #if mode in [1,2,4]
+    #    println("emin, emax = ", emin, " ", emax)
+    #end
 
     #
     for i in 1:4
@@ -136,15 +136,15 @@ function lschps!( mode::Int64, z, eps, grid, n, l, e_, v_, u; nin_ = nothing )
     # calculate dv/dr for darwin correction
     #
     lschps_eval_derv!( mmax, al, grid.r, v, dv )
-    println("dv[1] = ", dv[1])
-    println("dv[100] = ", dv[100])
-    println("dv[500] = ", dv[500])
+    #println("dv[1] = ", dv[1])
+    #println("dv[100] = ", dv[100])
+    #println("dv[500] = ", dv[500])
     #
     # starting of loop on energy for bound state
     #
     for n_it in 1:maxter
 
-        println("n_it = ", n_it, " e = ", e)
+        #println("n_it = ", n_it, " e = ", e)
 
         #
         # coefficient array for u in differential eq.
@@ -325,7 +325,7 @@ function lschps!( mode::Int64, z, eps, grid, n, l, e_, v_, u; nin_ = nothing )
 
     @label LABEL999
 
-    println("e = ", e/2, " nin = ", nin)
+    #println("e = ", e/2, " nin = ", nin)
     return e/2, nstop
 
 end

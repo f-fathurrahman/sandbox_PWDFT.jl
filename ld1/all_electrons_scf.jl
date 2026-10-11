@@ -47,7 +47,7 @@ function all_electrons_scf!(
 
     for iterSCF in 1:NiterMax
 
-        println("\niterSCF = ", iterSCF)
+        #println("\niterSCF = ", iterSCF)
 
         # FIXME: simplify this
         for iwf in 1:Nwf
@@ -72,11 +72,6 @@ function all_electrons_scf!(
             end
         end
 
-        println("Energy levels:")
-        for iwf in 1:Nwf
-            @printf("%3d %18.10f\n", iwf, Enl[iwf])
-        end
-
         #
         # calculate charge density (spherical approximation)
         #
@@ -85,11 +80,11 @@ function all_electrons_scf!(
             # this is for ispin=1
             Rhoe[ir,ispin] += oc[iwf] * psi[ir,iwf]^2
         end
-        integRho = PWDFT.integ_simpson(Nrmesh, Rhoe[:,1], grid.rab) 
-        println("integRho = ", integRho)
+        #integRho = PWDFT.integ_simpson(Nrmesh, Rhoe[:,1], grid.rab) 
+        #println("integRho = ", integRho)
 
         radial_poisson_solve!(0, 2, grid, Rhoe, V_h)
-        println("sum V_h = ", sum(V_h))
+        #println("sum V_h = ", sum(V_h))
 
         Rhoe_radial[:] .= Rhoe[:] ./ grid.r2[:] ./ (4π) # 
 
@@ -98,9 +93,9 @@ function all_electrons_scf!(
             epsxc,
             V_xc
         )
-        println("sum Rhoe_radial = ", sum(Rhoe_radial))
-        println("sum epsxc = ", sum(epsxc))
-        println("sum V_xc = ", sum(V_xc))
+        #println("sum Rhoe_radial = ", sum(Rhoe_radial))
+        #println("sum epsxc = ", sum(epsxc))
+        #println("sum V_xc = ", sum(V_xc))
 
         for i in 1:Nrmesh
             V_hxc_new[i,ispin] = V_h[i] + V_xc[i,ispin]
@@ -108,7 +103,7 @@ function all_electrons_scf!(
         end
 
         diff_V = LinearAlgebra.norm(V_hxc .- V_hxc_new)
-        println("diff_V = ", diff_V)
+        @printf("iterSCF = %3d diff_V = %18.10e\n", iterSCF, diff_V)
         if diff_V < 1e-10
             println("!!!! CONVERGED !!!")
             break
@@ -123,5 +118,19 @@ function all_electrons_scf!(
 
     end
 
+    println("\nAt the end of SCF")
+    println("Final energy levels:")
+    for iwf in 1:Nwf
+        @printf("%3d %18.10f\n", iwf, Enl[iwf])
+    end
+
+    excgga = zeros(Float64, Nrmesh)
+    energies = calc_energies_ae_atom(
+           Zval, grid, Rhoe, V_h, V_xc, epsxc, excgga, Nwf,
+           Nspin, Enl, oc
+    )
+    @show energies
+
+    return
 
 end

@@ -20,6 +20,7 @@ includet("lschps.jl")
 includet("radial_poisson_solve.jl")
 
 includet("all_electrons_scf.jl")
+includet("calc_energies_ae_atom.jl")
 
 includet("ld1x_deriv_7pts.jl")
 includet("ld1x_deriv2_7pts.jl")
@@ -37,4 +38,3 @@ includet("integrate_inward.jl")
 includet("ascheqps.jl")
 includet("ld1x_normalize.jl")
 includet("calc_charge_ps.jl")
-

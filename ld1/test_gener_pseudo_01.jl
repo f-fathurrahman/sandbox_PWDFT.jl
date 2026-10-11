@@ -46,6 +46,9 @@ function debug_gener_pseudo_01(; NiterMax=100)
         NiterMax = NiterMax
     )
 
+    #@exfiltrate
+    return
+
 
     # We want to pseudize Vpot
 
