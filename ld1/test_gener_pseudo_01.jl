@@ -7,13 +7,14 @@ function debug_gener_pseudo_01(; NiterMax=100)
     Zval = ld1x_input.Zval
     Zed = ld1x_input.Zed
     Nspin = ld1x_input.Nspin
+    Nwf = ld1x_input.Nwf
     Nwf_ps = ld1x_input.Nwf_ps
     nn = ld1x_input.nn
     ll = ld1x_input.ll
     oc = ld1x_input.oc
     core_state = ld1x_input.core_state
 
-    Enl = zeros(Float64, Nwf_ps)
+    Enl = zeros(Float64, Nwf)
 
     @assert ld1x_input.iswitch == 1
 
@@ -27,124 +28,24 @@ function debug_gener_pseudo_01(; NiterMax=100)
     println("Nrmesh = ", grid.Nrmesh)
 
     Nrmesh = grid.Nrmesh
-    v0 = zeros(Float64, Nrmesh)
-    vxt = zeros(Float64, Nrmesh)
     Vpot = zeros(Float64, Nrmesh, Nspin)
     
     Rhoe = zeros(Float64, Nrmesh, Nspin)
     Rhoe_radial = zeros(Float64, Nrmesh, Nspin)
-    V_h = zeros(Float64, Nrmesh)
-    V_xc = zeros(Float64, Nrmesh, Nspin)
-    V_hxc = zeros(Float64, Nrmesh, Nspin)
-    V_hxc_new = zeros(Float64, Nrmesh, Nspin)
-    epsxc = zeros(Float64, Nrmesh)
-    V_new = zeros(Float64, Nrmesh, Nspin)
     psi = zeros(Float64, Nrmesh, Nwf_ps) # spin index dropped for the moment
     
     #xc_calc = LibxcXCCalculator(x_id=1, c_id=7) # default using VWN
     xc_calc = LibxcXCCalculator(x_id=1, c_id=9) # Perdew-Zunger LDA
-    ispin = 1
-    
-    starting_potential!(
-        Nrmesh, Zval, Zed,
-        Nwf_ps, oc, nn, ll,
-        grid.r, Enl, v0, vxt, Vpot
+
+    rel = ld1x_input.rel
+    all_electrons_scf!(
+        grid, Zval, Zed, Nspin,
+        Nwf, oc, nn, ll, Enl,
+        xc_calc,
+        psi, Rhoe, Rhoe_radial, Vpot, rel;
+        NiterMax = NiterMax
     )
-    if Nspin == 2
-        # XXX Same starting potential for spinpol case
-        for i in 1:Nrmesh
-           Vpot[i,2] = Vpot[i,1]
-        end
-    end
-    # Define V_hxc input
-    for i in 1:Nrmesh
-        V_hxc[i,ispin] = Vpot[i,ispin] + Zed/grid.r[i]
-    end
 
-
-    # Solve for all states
-    thresh0 = 1.0e-10
-    nstop = 0
-    mode = 1 # for lschps
-    #XXX this is used in ascheq, using negative of Zval
-    ze2 = -Zval # should be 2*Zval in Ry unit
-    diff_V = Inf
-
-    for iterSCF in 1:NiterMax
-
-        println("\niterSCF = ", iterSCF)
-
-        # FIXME: simplify this
-        for iwf in 1:Nwf_ps
-            # Skip this iwf if occupation number is negative (unbound state)
-            if oc[iwf] < 0.0
-                Enl[iwf] = 0.0
-                @views fill!(psi[:,iwf], 0.0)
-                continue
-                # The code below should not be executed 
-            end
-            @views psi1 = psi[:,iwf] # zeros wavefunction
-            if ld1x_input.rel == 1
-                Enl[iwf], nstop = lschps!( mode, Zval, thresh0, 
-                    grid, nn[iwf], ll[iwf], Enl[iwf], Vpot, psi1
-                )
-            else   
-                Enl[iwf], nstop = ascheq!(
-                    nn[iwf], ll[iwf], Enl[iwf], grid, Vpot, ze2, thresh0, psi1, nstop
-                )
-            end
-        end
-
-        println("Energy levels:")
-        for iwf in 1:Nwf_ps
-            @printf("%3d %18.10f\n", iwf, Enl[iwf])
-        end
-
-        #
-        # calculate charge density (spherical approximation)
-        #
-        fill!(Rhoe, 0.0)
-        for iwf in 1:Nwf_ps, ir in 1:Nrmesh
-            # this is for ispin=1
-            Rhoe[ir,ispin] += oc[iwf] * psi[ir,iwf]^2
-        end
-        integRho = PWDFT.integ_simpson(Nrmesh, Rhoe[:,1], grid.rab) 
-        println("integRho = ", integRho)
-
-        radial_poisson_solve!(0, 2, grid, Rhoe, V_h)
-        println("sum V_h = ", sum(V_h))
-
-        Rhoe_radial[:] .= Rhoe[:] ./ grid.r2[:] ./ (4π) # 
-
-        calc_epsxc_Vxc_VWN!(
-            xc_calc, Rhoe_radial,
-            epsxc,
-            V_xc
-        )
-        println("sum Rhoe_radial = ", sum(Rhoe_radial))
-        println("sum epsxc = ", sum(epsxc))
-        println("sum V_xc = ", sum(V_xc))
-
-        for i in 1:Nrmesh
-            V_hxc_new[i,ispin] = V_h[i] + V_xc[i,ispin]
-            V_new[i,ispin] = -Zed/grid.r[i] + vxt[i] + V_hxc_new[i,ispin]
-        end
-
-        diff_V = LinearAlgebra.norm(V_hxc .- V_hxc_new)
-        println("diff_V = ", diff_V)
-        if diff_V < 1e-10
-            println("!!!! CONVERGED !!!")
-            break
-        end
-
-        for i in 1:Nrmesh
-            # Mix
-            V_hxc[i,ispin] = 0.5*V_hxc_new[i,ispin] + 0.5*V_hxc[i,ispin]
-            # Set new potential
-            Vpot[i,ispin] = -Zed/grid.r[i] + V_hxc[i,ispin]
-        end
-
-    end
 
     # We want to pseudize Vpot
 
@@ -222,7 +123,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
     rhov = zeros(Float64, Nrmesh)
     rhoc = zeros(Float64, Nrmesh)
     for ir in 1:grid.Nrmesh
-        for iwf in 1:Nwf_ps
+        for iwf in 1:Nwf
             if ld1x_input.rel == 2
                 # This is the case of full relativistic (Dirac equation)
                 #XXX We need to reshape psi spinor
@@ -410,7 +311,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
 
     end
 
-    bmat = zeros(Float64, Nbeta, Nbeta)
+    bmat_Ry = zeros(Float64, Nbeta, Nbeta)
     for ibeta in 1:Nbeta, jbeta in 1:Nbeta
         if ll_ps[ibeta] == ll_ps[jbeta] # also need check jjs && abs(jjs(ns)-jjs(ns1)) < 1.e-7_dp )
             nst = (ll_ps[ibeta] + 1)*2
@@ -418,16 +319,16 @@ function debug_gener_pseudo_01(; NiterMax=100)
             for ir in 1:Nrmesh
                 gi[ir] = phis[ir,ibeta]*chis[ir,jbeta]
             end
-            bmat[ibeta,jbeta] = integ_0_inf_dr(gi, grid, idx_r, nst)
-            println("ibeta=$ibeta jbeta=$jbeta bmat=$(bmat[ibeta,jbeta])")
+            bmat_Ry[ibeta,jbeta] = integ_0_inf_dr(gi, grid, idx_r, nst)
+            println("ibeta=$ibeta jbeta=$jbeta bmat_Ry=$(bmat_Ry[ibeta,jbeta])")
         end
     end
-    println("bmat = ")
-    display(bmat); println()
+    println("bmat_Ry = ")
+    display(bmat_Ry); println()
 
     B = zeros(Float64, Nbeta, Nbeta)
     for ibeta in 1:Nbeta, jbeta in 1:Nbeta
-        B[ibeta,jbeta] = bmat[ibeta,jbeta]
+        B[ibeta,jbeta] = bmat_Ry[ibeta,jbeta]
     end
     #
     # compute the inverse of the matrix B_{ij}:  B_{ij}^-1
@@ -466,29 +367,29 @@ function debug_gener_pseudo_01(; NiterMax=100)
             qq[ibeta,jbeta] = integ_0_inf_dr(gi, grid, idx_rbeta_max, nst)
         end
         #
-        # set the bmat with the eigenvalue part
+        # set the bmat_Ry with the eigenvalue part
         #
-        bmat[ibeta,jbeta] += Enl_ps[jbeta]*qq[ibeta,jbeta]*2 #XXX Convert to Ry ???
+        bmat_Ry[ibeta,jbeta] += Enl_ps[jbeta]*qq[ibeta,jbeta]*2 #XXX Convert to Ry ???
         #
-        # Use symmetry of the n,ns1 indices to set qvan and qq and bmat
+        # Use symmetry of the n,ns1 indices to set qvan and qq and bmat_Ry
         if ibeta != jbeta
             for ir in 1:Nrmesh
                 qvan[ir,jbeta,ibeta] = qvan[ir,ibeta,jbeta]
             end
             qq[jbeta,ibeta] = qq[ibeta,jbeta]
-            bmat[jbeta,ibeta] += Enl_ps[ibeta]*qq[jbeta,ibeta]*2 #XXX Convert to Ry ???
+            bmat_Ry[jbeta,ibeta] += Enl_ps[ibeta]*qq[jbeta,ibeta]*2 #XXX Convert to Ry ???
         end
     end
     
-    println("The bmat + epsilon qq matrix ")
-    display(bmat); println()
+    println("The bmat_Ry + epsilon qq matrix ")
+    display(bmat_Ry); println()
     println("qq matrix ")
     display(qq); println()
 
     #Is it the same for all spin components? 
     ddd = zeros(Float64, Nbeta, Nbeta, Nspin)
     for ispin in 1:Nspin
-        ddd[:,:,ispin] = bmat[:,:]
+        ddd[:,:,ispin] = bmat_Ry[:,:]
     end
 
     lmx = 3
@@ -535,7 +436,7 @@ function debug_gener_pseudo_01(; NiterMax=100)
     state_label = ld1x_input.state_label
     for iwfts in 1:Nwfts
         nstoaets[iwfts] = 0
-        for iwf in 1:Nwf_ps
+        for iwf in 1:Nwf
             # XXX Spin-unpolarized
             if elts[iwfts] == state_label[iwf]  # need to check for jjs
                 nstoaets[iwfts] = iwf
@@ -565,8 +466,8 @@ function debug_gener_pseudo_01(; NiterMax=100)
         #
     end
     
-    println("\nComputing bmat")
-    println("bmat before = "); display(bmat); println()
+    println("\nComputing bmat_Ry")
+    println("bmat_Ry before = "); display(bmat_Ry); println()
     # this array should be local
     vaux = zeros(Float64, Nrmesh, 2) # 2 for spin?
     for ibeta in 1:Nbeta, jbeta in 1:ibeta
@@ -593,12 +494,12 @@ function debug_gener_pseudo_01(; NiterMax=100)
             println("sum vaux[1:idx_r,1] = ", sum(vaux[1:idx_r,1]))
             println("integral result = ", integ_0_inf_dr(vaux[1:idx_r,1], grid, idx_r, nst))
             # convert to Ry?
-            bmat[ibeta,jbeta] -= integ_0_inf_dr(vaux[:,1], grid, idx_r, nst)
+            bmat_Ry[ibeta,jbeta] -= integ_0_inf_dr(vaux[:,1], grid, idx_r, nst)
         end
-        bmat[jbeta,ibeta] = bmat[ibeta,jbeta]
+        bmat_Ry[jbeta,ibeta] = bmat_Ry[ibeta,jbeta]
     end
-    println("The ddd matrix (bmat) after descreening D coefs")
-    display(bmat); println()
+    println("The ddd matrix (bmat_Ry) after descreening D coefs")
+    display(bmat_Ry); println()
 
     rhos = zeros(Float64, Nrmesh, Nspin)
     calc_charge_ps!(
@@ -607,26 +508,31 @@ function debug_gener_pseudo_01(; NiterMax=100)
         Nspin = Nspin
     )
 
+    V_h_ps = zeros(Float64, Nrmesh)
+    Rhoe_radial_ps = zeros(Float64, Nrmesh)
+    V_xc_ps = zeros(Float64, Nrmesh)
+    V_hxc_ps = zeros(Float64, Nrmesh)
+    epsxc = zeros(Float64, Nrmesh)
+
     # This will calculate new potential
-    radial_poisson_solve!(0, 2, grid, rhos, V_h)
+    radial_poisson_solve!(0, 2, grid, rhos, V_h_ps)
     #
-    #Rhoe_radial[:] .= rhos[:] ./ grid.r2[:] ./ (4π) # using rhos
-    @. Rhoe_radial[:] = (rhos + rhoc) / grid.r2 / (4π) # using rhos+rhoc
+    @. Rhoe_radial_ps[:] = (rhos + rhoc) / grid.r2 / (4π) # using rhos+rhoc
     #XXX also need rho core
     calc_epsxc_Vxc_VWN!(
-        xc_calc, Rhoe_radial,
+        xc_calc, Rhoe_radial_ps,
         epsxc,
-        V_xc
+        V_xc_ps
     )
     ispin = 1
     for i in 1:Nrmesh
-        vaux[i,ispin] = V_h[i] + V_xc[i,ispin]
+        V_hxc_ps[i,ispin] = V_h_ps[i] + V_xc_ps[i,ispin]
     end
 
     V_ps_tot = zeros(Float64, Nrmesh, Nspin)
     for ir in 1:Nrmesh
         V_ps_tot[ir,1] = V_ps_loc[ir]
-        V_ps_loc[ir] -= vaux[ir,1] # subtract vaux from V_ps_loc
+        V_ps_loc[ir] -= V_hxc_ps[ir,1] # subtract vaux from V_ps_loc
     end
 
 

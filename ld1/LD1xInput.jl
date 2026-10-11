@@ -1,7 +1,4 @@
 
-# zed: 
-
-
 #XXX Some of these variables are not really input variables
 mutable struct LD1XInput
     Zval::Float64  # the ionic pseudo charge
