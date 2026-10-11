@@ -3,7 +3,8 @@
   verbosity = 'high'
   zed = 14.0
   rel = 1
-  config = '[Ne] 3s2 3p2 3d-1',
+  config = '[Ne] 3s2 3p2 3d-1'
+  dft = 'pz'
 /
 
 &inputp
